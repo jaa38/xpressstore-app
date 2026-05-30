@@ -17,6 +17,7 @@ export const theme = {
     strong: colors.gray[700],
 
     secondary: colors.gray[600],
+    label: colors.gray[550],
     muted: colors.gray[500],
     placeholder: colors.gray[400],
 
@@ -123,6 +124,25 @@ export const theme = {
     },
   },
 
+  button: {
+    primary: {
+      background: colors.primary[500],
+      text: colors.neutral.white,
+      hover: colors.primary[600],
+      pressed: colors.primary[700],
+    },
+    secondary: {
+      background: colors.secondary[500],
+      text: colors.neutral.white,
+      hover: colors.secondary[600],
+      pressed: colors.secondary[700],
+    },
+    disabled: {
+      background: colors.gray[300],
+      text: colors.neutral.white,
+    },
+  },
+
   /**
    * 🧾 INPUTS
    */
@@ -195,12 +215,12 @@ export const theme = {
   badge: {
     primary: {
       background: colors.primary[100],
-      text: colors.primary[700],
+      text: colors.primary[600],
     },
 
     secondary: {
       background: colors.secondary[100],
-      text: colors.secondary[700],
+      text: colors.secondary[600],
     },
 
     success: {
@@ -221,6 +241,36 @@ export const theme = {
     info: {
       background: colors.info[100],
       text: colors.info[600],
+    },
+  },
+
+  /**
+   * 🔔 Input Fields
+   */
+
+  inputField: {
+    default: {
+      background: colors.neutral.white,
+      border: colors.gray[300],
+      text: colors.gray[400],
+    },
+
+    focus: {
+      background: colors.neutral.white,
+      border: colors.primary[500],
+      text: colors.gray[400],
+    },
+
+    error: {
+      background: colors.neutral.white,
+      border: colors.error[500],
+      text: colors.gray[400],
+    },
+
+    disabled: {
+      background: colors.gray[100],
+      border: colors.gray[300],
+      text: colors.gray[400],
     },
   },
 

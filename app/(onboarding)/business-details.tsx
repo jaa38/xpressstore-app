@@ -51,10 +51,12 @@ export default function BusinessDetailsScreen() {
 
   const values = watch();
 
-  const isValid =
+  const isValid = Boolean(
+    values.businessType?.trim() &&
     values.businessName?.trim() &&
     values.businessCategory?.trim() &&
-    values.businessAddress?.trim();
+    values.businessAddress?.trim()
+  );
 
   const { categories, isLoading } = useBusinessCategories();
 

@@ -2,51 +2,33 @@
   "expo": {
     "name": "XpressStore",
     "slug": "xpressstore-app",
-
     "version": "1.0.0",
-
     "scheme": "xpressstore",
-
     "orientation": "portrait",
-
     "icon": "./assets/icon.png",
-
     "userInterfaceStyle": "light",
-
     "ios": {
       "supportsTablet": true,
-
-      "bundleIdentifier":
-        "com.xpressstore.app"
+      "bundleIdentifier": "com.xpressstore.app"
     },
-
     "android": {
-      "package":
-        "com.xpressstore.app",
-
+      "package": "com.xpressstore.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-
-        "foregroundImage":
-          "./assets/android-icon-foreground.png",
-
-        "backgroundImage":
-          "./assets/android-icon-background.png",
-
-        "monochromeImage":
-          "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-
       "predictiveBackGestureEnabled": false
     },
-
     "web": {
       "favicon": "./assets/favicon.png"
     },
-
     "plugins": [
       "expo-router",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-font",
+      "@react-native-community/datetimepicker"
     ]
   }
 }

@@ -16,28 +16,30 @@ import { Button } from "@/components/ui/Button";
 import { AppText } from "@/components/ui/AppText";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
-import { spacing, theme } from "@/theme";
+import { radius, spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-type IdVerificationForm = {
-  idType: string;
+import { DatePicker } from "@/components/ui/DatePicker";
 
-  idNumber: string;
+type IdVerificationForm = {
+  fullName: string;
+
+  dateOfBirth: Date | null;
 };
 
 export default function IdVerificationScreen() {
   const { control, handleSubmit, watch } = useForm<IdVerificationForm>({
     defaultValues: {
-      idType: "",
+      fullName: "",
 
-      idNumber: "",
+      dateOfBirth: null,
     },
   });
 
   const values = watch();
 
-  const isValid = Boolean(values.idType && values.idNumber.trim());
+  const isValid = Boolean(values.fullName.trim() && values.dateOfBirth);
 
   function onSubmit(data: IdVerificationForm) {
     console.log("ID Verification", data);
@@ -120,98 +122,64 @@ export default function IdVerificationScreen() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <View
-            style={{
-              gap: spacing.xs,
-            }}
-          >
-            <AppText variant="h1" color="heading">
-              Verify your identity
-            </AppText>
+          <View>
+            <View style={{ gap: spacing.xs }}>
+              <AppText variant="h1" color="heading">
+                Verify your identity
+              </AppText>
 
-            <AppText variant="body" color="secondary">
-              Required by the Central Bank of Nigeria to receive payments.
-            </AppText>
+              <AppText variant="body" color="secondary">
+                Required by the Central Bank of Nigeria to receive payments.
+              </AppText>
+            </View>
+
+            <View
+              style={{
+                marginTop: spacing.lg,
+                paddingVertical: spacing.rg,
+                paddingHorizontal: spacing.md,
+                backgroundColor: theme.background.brand,
+                borderRadius: radius.sm,
+              }}
+            >
+              <AppText variant="body" color="strong">
+                Your information encrypted and securely verified to comply with
+                financial regulations
+              </AppText>
+            </View>
           </View>
 
-          <Controller
-            control={control}
-            name="idType"
-            render={({ field: { value, onChange } }) => (
-              <Dropdown
-                label="ID Type"
-                placeholder="Select ID Type"
-                value={value}
-                options={[
-                  {
-                    label: "National ID Card",
-
-                    value: "national-id",
-                  },
-
-                  {
-                    label: "International Passport",
-
-                    value: "passport",
-                  },
-
-                  {
-                    label: "Driver's License",
-
-                    value: "drivers-license",
-                  },
-
-                  {
-                    label: "Voter's Card",
-
-                    value: "voters-card",
-                  },
-                ]}
-                onSelect={onChange}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="idNumber"
-            render={({ field: { value, onChange } }) => (
-              <Input
-                label="ID Number"
-                placeholder="Enter ID Number"
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-
-          <Pressable
+          <View
             style={{
-              height: 140,
-
-              borderWidth: 1,
-
-              borderStyle: "dashed",
-
-              borderColor: theme.divider.default,
-
-              borderRadius: 12,
-
-              justifyContent: "center",
-
-              alignItems: "center",
-
-              gap: spacing.sm,
+              gap: spacing.md,
             }}
           >
-            <Ionicons
-              name="cloud-upload-outline"
-              size={32}
-              color={theme.icon.default.icon}
+            <Controller
+              control={control}
+              name="fullName"
+              render={({ field: { value, onChange } }) => (
+                <Input
+                  label="Full Name (as on ID)"
+                  placeholder="Enter full name"
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
             />
 
-            <AppText variant="body">Upload ID Document</AppText>
-          </Pressable>
+            <Controller
+              control={control}
+              name="dateOfBirth"
+              render={({ field: { value, onChange } }) => (
+                <DatePicker
+                  label="Date of Birth"
+                  placeholder="Select Date of Birth"
+                  value={value ?? undefined}
+                  onChange={onChange}
+                />
+              )}
+            />
+          </View>
         </ScrollView>
 
         <View

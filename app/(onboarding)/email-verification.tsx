@@ -1,6 +1,8 @@
 import { Pressable, View } from "react-native";
 
-import { Link } from "expo-router";
+import { useState } from "react";
+
+import { Link, router } from "expo-router";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -13,18 +15,15 @@ import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { OTPInput } from "@/components/ui/OTPInput";
 
-import {
-  spacing,
-  theme,
-} from "@/theme";
+import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
 export default function EmailVerificationScreen() {
-  function handleVerify(
-    code: string
-  ) {
-    console.log(code);
+  const [verificationCode, setVerificationCode] = useState("");
+
+  function handleVerify(code: string) {
+    setVerificationCode(code);
   }
 
   return (
@@ -32,8 +31,7 @@ export default function EmailVerificationScreen() {
       style={{
         flex: 1,
 
-        backgroundColor:
-          theme.background.primary,
+        backgroundColor: theme.background.primary,
       }}
     >
       <StatusBar style="auto" />
@@ -42,16 +40,14 @@ export default function EmailVerificationScreen() {
         style={{
           flex: 1,
 
-          paddingHorizontal:
-            spacing.lg,
+          paddingHorizontal: spacing.lg,
         }}
       >
         <View
           style={{
             flex: 1,
 
-            justifyContent:
-              "space-between",
+            justifyContent: "space-between",
           }}
         >
           <View>
@@ -59,34 +55,21 @@ export default function EmailVerificationScreen() {
 
             <View
               style={{
-                flexDirection:
-                  "row",
+                flexDirection: "row",
 
-                alignItems:
-                  "center",
+                alignItems: "center",
 
-                gap:
-                  spacing.sm,
+                gap: spacing.sm,
 
-                justifyContent:
-                  "space-between",
+                justifyContent: "space-between",
               }}
             >
-              <Link
-                href={
-                  ROUTES.SIGNUP
-                }
-                asChild
-              >
+              <Link href={ROUTES.SIGNUP} asChild>
                 <Pressable>
                   <Ionicons
                     name="chevron-back"
                     size={24}
-                    color={
-                      theme.icon
-                        .default
-                        .icon
-                    }
+                    color={theme.icon.default.icon}
                   />
                 </Pressable>
               </Link>
@@ -97,29 +80,19 @@ export default function EmailVerificationScreen() {
 
                   height: 8,
 
-                  backgroundColor:
-                    theme.divider
-                      .default,
+                  backgroundColor: theme.divider.default,
 
-                  borderRadius:
-                    999,
+                  borderRadius: 999,
 
-                  overflow:
-                    "hidden",
+                  overflow: "hidden",
 
-                  marginHorizontal:
-                    spacing.sm,
+                  marginHorizontal: spacing.sm,
                 }}
               >
-                <ProgressBar
-                  progress={25}
-                />
+                <ProgressBar progress={25} />
               </View>
 
-              <AppText
-                variant="bodySmall"
-                color="muted"
-              >
+              <AppText variant="bodySmall" color="muted">
                 Step 1 of 4
               </AppText>
             </View>
@@ -128,108 +101,66 @@ export default function EmailVerificationScreen() {
 
             <View
               style={{
-                marginTop:
-                  spacing.xl,
+                marginTop: spacing.xl,
 
-                gap:
-                  spacing.xl,
+                gap: spacing.xl,
               }}
             >
               <View
                 style={{
-                  gap:
-                    spacing.xs,
+                  gap: spacing.xs,
                 }}
               >
-                <AppText
-                  variant="h1"
-                  color="heading"
-                >
-                  Email
-                  Verification
+                <AppText variant="h1" color="heading">
+                  Email Verification
                 </AppText>
 
-                <AppText
-                  variant="body"
-                  color="secondary"
-                >
-                  A verification
-                  code has been
-                  sent to your
-                  email address.
+                <AppText variant="body" color="secondary">
+                  A verification code has been sent to your email address.
                 </AppText>
               </View>
 
-              <OTPInput
-                length={6}
-                onComplete={
-                  handleVerify
-                }
-              />
+              <OTPInput length={6} onComplete={handleVerify} />
 
               <View
                 style={{
-                  flexDirection:
-                    "row",
+                  flexDirection: "row",
 
-                  alignItems:
-                    "center",
+                  alignItems: "center",
 
-                  justifyContent:
-                    "space-between",
+                  justifyContent: "space-between",
 
-                  backgroundColor:
-                    theme
-                      .background
-                      .brand,
+                  backgroundColor: theme.background.brand,
 
-                  paddingVertical:
-                    spacing.rg,
+                  paddingVertical: spacing.rg,
 
-                  paddingHorizontal:
-                    spacing.md,
+                  paddingHorizontal: spacing.md,
 
-                  borderRadius:
-                    10,
+                  borderRadius: 10,
                 }}
               >
                 <View
                   style={{
-                    flexDirection:
-                      "row",
+                    flexDirection: "row",
 
-                    alignItems:
-                      "center",
+                    alignItems: "center",
 
-                    gap:
-                      spacing.sm,
+                    gap: spacing.sm,
                   }}
                 >
                   <Ionicons
                     name="information-circle"
                     size={24}
-                    color={
-                      theme
-                        .icon
-                        .success
-                        .icon
-                    }
+                    color={theme.icon.success.icon}
                   />
 
-                  <AppText
-                    variant="body"
-                    color="primary"
-                  >
-                    Didn't receive
-                    OTP?
+                  <AppText variant="body" color="primary">
+                    Didn't receive OTP?
                   </AppText>
                 </View>
 
                 <Pressable>
-                  <AppText
-                    variant="bodyBold"
-                    color="link"
-                  >
+                  <AppText variant="bodyBold" color="link">
                     Resend OTP
                   </AppText>
                 </Pressable>
@@ -239,14 +170,15 @@ export default function EmailVerificationScreen() {
 
           <View
             style={{
-              paddingBottom:
-                spacing.lg,
+              paddingBottom: spacing.lg,
             }}
           >
             <Button
               title="Verify Email"
               variant="primary"
               size="large"
+              disabled={verificationCode.length !== 6}
+              onPress={() => router.push(ROUTES.BUSINESS_DETAILS)}
             />
           </View>
         </View>

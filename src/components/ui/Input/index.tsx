@@ -1,16 +1,15 @@
-import React, {
-  useState,
-} from "react";
+import { useState } from "react";
 
 import {
-  Text,
   TextInput,
   TextInputProps,
   View,
   StyleSheet,
 } from "react-native";
 
-import { theme } from "@/theme/theme";
+import { AppText } from "@/components/ui/AppText";
+
+import { theme } from "@/theme";
 import { typography } from "@/theme/typography";
 import { radius } from "@/theme/radius";
 
@@ -23,21 +22,22 @@ type InputState =
 interface InputProps
   extends TextInputProps {
   label?: string;
+
   error?: string;
 
   rightIcon?: React.ReactNode;
 }
 
-export const Input = ({
+export function Input({
   label,
   error,
+  rightIcon,
   editable = true,
   onFocus,
   onBlur,
   style,
-  rightIcon,
   ...props
-}: InputProps) => {
+}: InputProps) {
   const [focused, setFocused] =
     useState(false);
 
@@ -51,35 +51,37 @@ export const Input = ({
       : "default";
 
   return (
-    <View
-      style={styles.container}
-    >
+    <View style={styles.container}>
       {label && (
-        <Text
-          style={styles.label}
+        <AppText
+          variant="caption"
+          color="secondary"
+          style={{
+            marginBottom: 8,
+          }}
         >
           {label}
-        </Text>
+        </AppText>
       )}
 
       <View
-        style={{
-          position:
-            "relative",
-        }}
+        style={[
+          styles.inputContainer,
+
+          getInputStateStyle(
+            state
+          ),
+        ]}
       >
         <TextInput
           {...props}
           editable={editable}
           placeholderTextColor={
-            theme.input
-              .placeholder
+            theme.input.placeholder
           }
           style={[
             styles.input,
-            getInputStateStyle(
-              state
-            ),
+
             style,
           ]}
           onFocus={(e) => {
@@ -97,16 +99,7 @@ export const Input = ({
         {rightIcon && (
           <View
             style={{
-              position:
-                "absolute",
-
-              right: 16,
-
-              top: 0,
-              bottom: 0,
-
-              justifyContent:
-                "center",
+              paddingRight: 16,
             }}
           >
             {rightIcon}
@@ -115,17 +108,19 @@ export const Input = ({
       </View>
 
       {error && (
-        <Text
-          style={
-            styles.errorText
-          }
+        <AppText
+          variant="caption"
+          color="error"
+          style={{
+            marginTop: 4,
+          }}
         >
           {error}
-        </Text>
+        </AppText>
       )}
     </View>
   );
-};
+}
 
 function getInputStateStyle(
   state: InputState
@@ -134,33 +129,37 @@ function getInputStateStyle(
     case "focus":
       return {
         borderColor:
-          theme.input
-            .focusBorder,
+          theme.input.focusBorder,
+
+        backgroundColor:
+          theme.input.background,
       };
 
     case "error":
       return {
         borderColor:
-          theme.input
-            .errorBorder,
+          theme.input.errorBorder,
+
+        backgroundColor:
+          theme.input.background,
       };
 
     case "disabled":
       return {
         borderColor:
-          theme.input
-            .border,
+          theme.input.border,
 
         backgroundColor:
-          theme.input
-            .disabledBackground,
+          theme.input.disabledBackground,
       };
 
     default:
       return {
         borderColor:
-          theme.input
-            .border,
+          theme.input.border,
+
+        backgroundColor:
+          theme.input.background,
       };
   }
 }
@@ -171,41 +170,29 @@ const styles =
       width: "100%",
     },
 
-    label: {
-      ...typography.caption,
-
-      color:
-        theme.input.label,
-
-      marginBottom: 8,
-    },
-
-    input: {
+    inputContainer: {
       height: 48,
-
-      width: "100%",
-
-      paddingVertical: 12,
-
-      paddingHorizontal: 16,
-
-      paddingRight: 48,
 
       borderWidth: 1,
 
       borderRadius:
         radius.md,
 
-      color:
-        theme.input.text,
+      flexDirection: "row",
+
+      alignItems: "center",
     },
 
-    errorText: {
-      ...typography.caption,
+    input: {
+      flex: 1,
+
+      height: "100%",
+
+      paddingHorizontal: 16,
 
       color:
-        theme.text.error,
+        theme.input.text,
 
-      marginTop: 4,
+      ...typography.body,
     },
   });

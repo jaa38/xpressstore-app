@@ -136,16 +136,41 @@ export default function IdVerificationScreen() {
             <View
               style={{
                 marginTop: spacing.lg,
+
                 paddingVertical: spacing.rg,
+
                 paddingHorizontal: spacing.md,
+
                 backgroundColor: theme.background.brand,
+
                 borderRadius: radius.sm,
+
+                flexDirection: "row",
+
+                alignItems: "flex-start",
+
+                gap: spacing.sm,
               }}
             >
-              <AppText variant="body" color="strong">
-                Your information encrypted and securely verified to comply with
-                financial regulations
-              </AppText>
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={24}
+                color={theme.icon.success.icon}
+                style={{
+                  alignSelf: "center",
+                }}
+              />
+
+              <View
+                style={{
+                  flex: 1,
+                }}
+              >
+                <AppText variant="bodySmall" color="strong">
+                  Your information is encrypted and securely verified to comply
+                  with financial regulations.
+                </AppText>
+              </View>
             </View>
           </View>
 

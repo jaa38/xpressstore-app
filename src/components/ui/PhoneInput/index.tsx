@@ -19,7 +19,7 @@ interface PhoneNumberInputProps {
 
   countryCode: string;
 
-  onCountryCodeChange: (code: string) => void;
+  onCountryCodeChange: (countryCode: string) => void;
 
   error?: string;
 }
@@ -34,7 +34,7 @@ export function PhoneNumberInput({
 }: PhoneNumberInputProps) {
   const [countryPickerVisible, setCountryPickerVisible] = useState(false);
 
-  const [country, setCountry] = useState<Country | null>({
+  const [country, setCountry] = useState<Country>({
     cca2: "NG",
     callingCode: ["234"],
     flag: "🇳🇬",
@@ -43,7 +43,7 @@ export function PhoneNumberInput({
   function handleCountrySelect(selectedCountry: Country) {
     setCountry(selectedCountry);
 
-    onCountryCodeChange(`+${selectedCountry.callingCode[0]}`);
+    onCountryCodeChange(selectedCountry.cca2);
   }
 
   return (
@@ -76,7 +76,7 @@ export function PhoneNumberInput({
             onClose={() => setCountryPickerVisible(false)}
           />
 
-          <AppText variant="body">{countryCode}</AppText>
+          <AppText variant="body">+{country.callingCode[0]}</AppText>
         </Pressable>
 
         <TextInput

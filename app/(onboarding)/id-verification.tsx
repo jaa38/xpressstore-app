@@ -41,7 +41,7 @@ export default function IdVerificationScreen() {
 
         phoneNumber: "",
 
-        countryCode: "+234",
+        countryCode: "NG",
 
         dateOfBirth: null,
       },
@@ -63,7 +63,7 @@ export default function IdVerificationScreen() {
     const payload = {
       ...data,
 
-      phoneNumber: formattedPhone,
+      phoneNumber: formatPhoneNumber(data.phoneNumber, data.countryCode),
     };
 
     console.log("ID Verification:", payload);
@@ -237,7 +237,7 @@ export default function IdVerificationScreen() {
                   label="Phone Number"
                   value={value}
                   onChangeText={onChange}
-                  countryCode={watch("countryCode") || "+234"}
+                  countryCode={watch("countryCode") || "NG"}
                   onCountryCodeChange={(code) =>
                     setValue("countryCode", code, {
                       shouldValidate: true,

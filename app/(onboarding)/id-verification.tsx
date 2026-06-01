@@ -1,6 +1,6 @@
 import { Pressable, View, ScrollView } from "react-native";
 
-import { Link, router } from "expo-router";
+import { Link } from "expo-router";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -10,49 +10,71 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { Controller, useForm } from "react-hook-form";
 
-import { Dropdown } from "@/components/ui/Dropdown";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { AppText } from "@/components/ui/AppText";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { PhoneNumberInput } from "@/components/ui/PhoneInput";
 
 import { radius, spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { DatePicker } from "@/components/ui/DatePicker";
+import { validatePhoneNumber, formatPhoneNumber } from "@/utils/phone";
 
 type IdVerificationForm = {
   fullName: string;
+
+  phoneNumber: string;
+
+  countryCode: string;
 
   dateOfBirth: Date | null;
 };
 
 export default function IdVerificationScreen() {
-  const { control, handleSubmit, watch } = useForm<IdVerificationForm>({
-    defaultValues: {
-      fullName: "",
+  const { control, handleSubmit, watch, setValue } =
+    useForm<IdVerificationForm>({
+      defaultValues: {
+        fullName: "",
 
-      dateOfBirth: null,
-    },
-  });
+        phoneNumber: "",
+
+        countryCode: "+234",
+
+        dateOfBirth: null,
+      },
+    });
 
   const values = watch();
 
-  const isValid = Boolean(values.fullName.trim() && values.dateOfBirth);
+  const isValid =
+    values.fullName.trim() !== "" &&
+    values.dateOfBirth !== null &&
+    validatePhoneNumber(values.phoneNumber, values.countryCode);
 
   function onSubmit(data: IdVerificationForm) {
-    console.log("ID Verification", data);
+    const formattedPhone = formatPhoneNumber(
+      data.phoneNumber,
+      data.countryCode
+    );
 
-    // Step 4
-    // router.push(ROUTES.STORE_SETUP);
+    const payload = {
+      ...data,
+
+      phoneNumber: formattedPhone,
+    };
+
+    console.log("ID Verification:", payload);
+
+    // router.push(...)
   }
 
   return (
     <SafeAreaView
       style={{
         flex: 1,
-
         backgroundColor: theme.background.primary,
       }}
     >
@@ -61,7 +83,6 @@ export default function IdVerificationScreen() {
       <View
         style={{
           flex: 1,
-
           paddingHorizontal: spacing.lg,
         }}
       >
@@ -70,11 +91,8 @@ export default function IdVerificationScreen() {
         <View
           style={{
             flexDirection: "row",
-
             alignItems: "center",
-
             gap: spacing.sm,
-
             justifyContent: "space-between",
           }}
         >
@@ -91,15 +109,10 @@ export default function IdVerificationScreen() {
           <View
             style={{
               flex: 1,
-
               height: 8,
-
               backgroundColor: theme.divider.default,
-
               borderRadius: 999,
-
               overflow: "hidden",
-
               marginHorizontal: spacing.sm,
             }}
           >
@@ -117,13 +130,20 @@ export default function IdVerificationScreen() {
           }}
           contentContainerStyle={{
             paddingTop: spacing.lg,
-
             gap: spacing.lg,
+            paddingBottom: spacing.lg,
           }}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
+          {/* TITLE */}
+
           <View>
-            <View style={{ gap: spacing.xs }}>
+            <View
+              style={{
+                gap: spacing.xs,
+              }}
+            >
               <AppText variant="h1" color="heading">
                 Verify your identity
               </AppText>
@@ -132,6 +152,8 @@ export default function IdVerificationScreen() {
                 Required by the Central Bank of Nigeria to receive payments.
               </AppText>
             </View>
+
+            {/* SECURITY BANNER */}
 
             <View
               style={{
@@ -157,7 +179,7 @@ export default function IdVerificationScreen() {
                 size={24}
                 color={theme.icon.success.icon}
                 style={{
-                  alignSelf: "center",
+                  marginTop: 2,
                 }}
               />
 
@@ -173,6 +195,8 @@ export default function IdVerificationScreen() {
               </View>
             </View>
           </View>
+
+          {/* FORM */}
 
           <View
             style={{
@@ -204,8 +228,28 @@ export default function IdVerificationScreen() {
                 />
               )}
             />
+
+            <Controller
+              control={control}
+              name="phoneNumber"
+              render={({ field: { value, onChange } }) => (
+                <PhoneNumberInput
+                  label="Phone Number"
+                  value={value}
+                  onChangeText={onChange}
+                  countryCode={watch("countryCode") || "+234"}
+                  onCountryCodeChange={(code) =>
+                    setValue("countryCode", code, {
+                      shouldValidate: true,
+                    })
+                  }
+                />
+              )}
+            />
           </View>
         </ScrollView>
+
+        {/* FOOTER */}
 
         <View
           style={{

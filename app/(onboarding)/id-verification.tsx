@@ -1,6 +1,6 @@
 import { Pressable, View, ScrollView } from "react-native";
 
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -82,7 +82,7 @@ export default function IdVerificationScreen() {
 
     console.log("ID Verification:", payload);
 
-    // router.push(...)
+    router.push(ROUTES.BIOMETRIC_VERIFICATION);
   }
 
   return (
@@ -295,9 +295,6 @@ export default function IdVerificationScreen() {
               name="idNumber"
               render={({ field: { value, onChange } }) => (
                 <Input
-                  label={
-                    watch("idType") === "nin" ? "NIN Number" : "BVN Number"
-                  }
                   placeholder="11-digit number"
                   keyboardType="number-pad"
                   maxLength={11}

@@ -27,6 +27,10 @@ export const ROUTES = {
   ID_VERIFICATION:
     "/(onboarding)/id-verification",
 
+  // STEP 4
+  BIOMETRIC_VERIFICATION:
+    "/(onboarding)/biometric-verification",
+
   /**
    * AUTH
    */

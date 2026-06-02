@@ -19,7 +19,7 @@ type InputState =
   | "error"
   | "disabled";
 
-interface InputProps
+interface TextFieldProps
   extends TextInputProps {
   label?: string;
 
@@ -30,7 +30,7 @@ interface InputProps
   rightIcon?: React.ReactNode;
 }
 
-export function Input({
+export function TextField({
   label,
   error,
   helperText,
@@ -40,7 +40,7 @@ export function Input({
   onBlur,
   style,
   ...props
-}: InputProps) {
+}: TextFieldProps) {
   const [focused, setFocused] =
     useState(false);
 
@@ -48,10 +48,10 @@ export function Input({
     !editable
       ? "disabled"
       : error
-        ? "error"
-        : focused
-          ? "focus"
-          : "default";
+      ? "error"
+      : focused
+      ? "focus"
+      : "default";
 
   return (
     <View style={styles.container}>
@@ -68,17 +68,23 @@ export function Input({
       <View
         style={[
           styles.inputContainer,
-          getInputStateStyle(state),
+
+          getInputStateStyle(
+            state
+          ),
         ]}
       >
         <TextInput
           {...props}
           editable={editable}
+          multiline
+          textAlignVertical="top"
           placeholderTextColor={
             theme.input.placeholder
           }
           style={[
             styles.input,
+
             style,
           ]}
           onFocus={(e) => {
@@ -178,8 +184,15 @@ const styles =
       marginBottom: 8,
     },
 
+    /**
+     * Text Field Container
+     *
+     * Min Height: 120px
+     * Radius: 10px
+     * Padding: 16px
+     */
     inputContainer: {
-      height: 48,
+      minHeight: 120,
 
       borderWidth: 1,
 
@@ -187,16 +200,15 @@ const styles =
         radius.md,
 
       flexDirection: "row",
-
-      alignItems: "center",
     },
 
     input: {
       flex: 1,
 
-      height: "100%",
+      minHeight: 120,
 
       paddingHorizontal: 16,
+      paddingVertical: 16,
 
       color:
         theme.input.text,
@@ -205,6 +217,7 @@ const styles =
     },
 
     iconContainer: {
+      paddingTop: 16,
       paddingRight: 16,
     },
 

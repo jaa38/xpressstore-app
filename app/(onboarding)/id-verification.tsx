@@ -23,7 +23,13 @@ import { ROUTES } from "@/navigation/routes";
 
 import { validatePhoneNumber, formatPhoneNumber } from "@/utils/phone";
 
+import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
+
 type IdVerificationForm = {
+  idType: string;
+
+  idNumber: string;
+
   fullName: string;
 
   phoneNumber: string;
@@ -37,6 +43,10 @@ export default function IdVerificationScreen() {
   const { control, handleSubmit, watch, setValue } =
     useForm<IdVerificationForm>({
       defaultValues: {
+        idType: "",
+
+        idNumber: "",
+
         fullName: "",
 
         phoneNumber: "",
@@ -49,17 +59,21 @@ export default function IdVerificationScreen() {
 
   const values = watch();
 
-  const isValid =
-    values.fullName.trim() !== "" &&
-    values.dateOfBirth !== null &&
-    validatePhoneNumber(values.phoneNumber, values.countryCode);
+  const isPhoneValid = validatePhoneNumber(
+    values.phoneNumber,
+    values.countryCode
+  );
+
+  const isValid = Boolean(
+    values.fullName.trim() &&
+    values.dateOfBirth &&
+    values.idType &&
+    values.idNumber.trim() &&
+    values.idNumber.length === 11 &&
+    isPhoneValid
+  );
 
   function onSubmit(data: IdVerificationForm) {
-    const formattedPhone = formatPhoneNumber(
-      data.phoneNumber,
-      data.countryCode
-    );
-
     const payload = {
       ...data,
 
@@ -180,6 +194,7 @@ export default function IdVerificationScreen() {
                 color={theme.icon.success.icon}
                 style={{
                   marginTop: 2,
+                  alignSelf: "center",
                 }}
               />
 
@@ -243,6 +258,52 @@ export default function IdVerificationScreen() {
                       shouldValidate: true,
                     })
                   }
+                  error={
+                    value && !validatePhoneNumber(value, watch("countryCode"))
+                      ? "Invalid phone number"
+                      : undefined
+                  }
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="idType"
+              render={({ field: { value, onChange } }) => (
+                <ToggleSwitch
+                  label="ID Type"
+                  value={value}
+                  fullWidth
+                  options={[
+                    {
+                      label: "NIN",
+                      value: "nin",
+                    },
+                    {
+                      label: "BVN",
+                      value: "bvn",
+                    },
+                  ]}
+                  onChange={onChange}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="idNumber"
+              render={({ field: { value, onChange } }) => (
+                <Input
+                  label={
+                    watch("idType") === "nin" ? "NIN Number" : "BVN Number"
+                  }
+                  placeholder="11-digit number"
+                  keyboardType="number-pad"
+                  maxLength={11}
+                  value={value}
+                  onChangeText={onChange}
+                  helperText="Must be 11 digits"
                 />
               )}
             />

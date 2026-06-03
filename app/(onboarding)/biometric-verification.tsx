@@ -1,4 +1,6 @@
-import { Pressable, View } from "react-native";
+import { useState } from "react";
+
+import { Alert, Pressable, View } from "react-native";
 
 import { Link, router } from "expo-router";
 
@@ -12,23 +14,50 @@ import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
-import {
-  radius,
-  spacing,
-  theme,
-} from "@/theme";
+import { radius, spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-export default function BiometricVerificationScreen() {
-  function handleVerification() {
-    console.log(
-      "Biometric Verification Started"
-    );
+import { authenticateWithBiometrics } from "@/services/biometrics";
+import { enableBiometrics } from "@/services/biometrics/storage";
+import { completeOnboarding } from "@/services/auth/storage";
 
-    router.push(
-      ROUTES.TABS
-    );
+export default function BiometricVerificationScreen() {
+  const [loading, setLoading] = useState(false);
+
+  async function handleVerification() {
+    await completeOnboarding();
+
+    router.replace(ROUTES.TABS);
+  }
+
+  async function handleEnableFaceId() {
+    try {
+      setLoading(true);
+
+      const result = await authenticateWithBiometrics();
+
+      if (!result.success) {
+        Alert.alert(
+          "Face ID Unavailable",
+          "Authentication failed. Please ensure Face ID or Fingerprint is configured on your device."
+        );
+
+        return;
+      }
+
+      await enableBiometrics();
+
+      await completeOnboarding();
+
+      router.replace(ROUTES.TABS);
+    } catch (error) {
+      console.log("Biometric authentication failed:", error);
+
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -36,8 +65,7 @@ export default function BiometricVerificationScreen() {
       style={{
         flex: 1,
 
-        backgroundColor:
-          theme.background.primary,
+        backgroundColor: theme.background.primary,
       }}
     >
       <StatusBar style="auto" />
@@ -46,41 +74,28 @@ export default function BiometricVerificationScreen() {
         style={{
           flex: 1,
 
-          paddingHorizontal:
-            spacing.lg,
+          paddingHorizontal: spacing.lg,
         }}
       >
         {/* HEADER */}
 
         <View
           style={{
-            flexDirection:
-              "row",
+            flexDirection: "row",
 
-            alignItems:
-              "center",
+            alignItems: "center",
 
-            gap:
-              spacing.sm,
+            gap: spacing.sm,
 
-            justifyContent:
-              "space-between",
+            justifyContent: "space-between",
           }}
         >
-          <Link
-            href={
-              ROUTES.ID_VERIFICATION
-            }
-            asChild
-          >
+          <Link href={ROUTES.ID_VERIFICATION} asChild>
             <Pressable>
               <Ionicons
                 name="chevron-back"
                 size={24}
-                color={
-                  theme.icon
-                    .default.icon
-                }
+                color={theme.icon.default.icon}
               />
             </Pressable>
           </Link>
@@ -91,29 +106,19 @@ export default function BiometricVerificationScreen() {
 
               height: 8,
 
-              backgroundColor:
-                theme.divider
-                  .default,
+              backgroundColor: theme.divider.default,
 
-              borderRadius:
-                999,
+              borderRadius: 999,
 
-              overflow:
-                "hidden",
+              overflow: "hidden",
 
-              marginHorizontal:
-                spacing.sm,
+              marginHorizontal: spacing.sm,
             }}
           >
-            <ProgressBar
-              progress={100}
-            />
+            <ProgressBar progress={100} />
           </View>
 
-          <AppText
-            variant="bodySmall"
-            color="muted"
-          >
+          <AppText variant="bodySmall" color="muted">
             Step 4 of 4
           </AppText>
         </View>
@@ -122,39 +127,42 @@ export default function BiometricVerificationScreen() {
           style={{
             flex: 1,
 
-            justifyContent:
-              "space-between",
+            justifyContent: "space-between",
           }}
         >
           <View>
             {/* TITLE */}
-
+            <Ionicons
+              name="scan-circle-outline"
+              size={156}
+              color={theme.icon.branding.icon}
+              style={{
+                marginTop: spacing.xl,
+                alignSelf: "center",
+              }}
+            />
             <View
               style={{
-                marginTop:
-                  spacing.lg,
+                marginTop: spacing.lg,
 
-                gap:
-                  spacing.xs,
+                gap: spacing.xs,
               }}
             >
               <AppText
-                variant="h1"
+                variant="displayLarge"
                 color="heading"
+                style={{ textAlign: "center" }}
               >
-                Biometric
-                Verification
+                Secure your account with biometrics
               </AppText>
 
               <AppText
-                variant="body"
+                variant="bodyLarge"
                 color="secondary"
+                style={{ textAlign: "center" }}
               >
-                Take a selfie to
-                confirm your
-                identity and
-                complete account
-                verification.
+                Use Face ID to quickly and securely access your account and
+                confirm payments.
               </AppText>
             </View>
 
@@ -162,139 +170,65 @@ export default function BiometricVerificationScreen() {
 
             <View
               style={{
-                marginTop:
-                  spacing.xl,
+                marginTop: spacing.md,
 
-                padding:
-                  spacing.lg,
+                paddingVertical: spacing.lg,
 
-                borderRadius:
-                  radius.md,
+                paddingHorizontal: spacing.md,
 
-                backgroundColor:
-                  theme.background
-                    .brand,
+                borderRadius: radius.lg,
 
-                alignItems:
-                  "center",
+                backgroundColor: theme.background.surface,
+                borderWidth: 1,
+                borderColor: theme.border.default,
 
-                gap:
-                  spacing.md,
-              }}
-            >
-              <Ionicons
-                name="person-circle-outline"
-                size={80}
-                color={
-                  theme.icon
-                    .success.icon
-                }
-              />
-
-              <AppText
-                variant="body"
-                color="strong"
-                style={{
-                  textAlign:
-                    "center",
-                }}
-              >
-                Ensure your face
-                is clearly visible
-                in a well-lit
-                environment.
-              </AppText>
-            </View>
-
-            {/* TIPS */}
-
-            <View
-              style={{
-                marginTop:
-                  spacing.xl,
-
-                gap:
-                  spacing.md,
+                gap: spacing.md,
               }}
             >
               <View
                 style={{
-                  flexDirection:
-                    "row",
-
-                  gap:
-                    spacing.sm,
+                  flexDirection: "row",
+                  gap: spacing.sm,
+                  alignContent: "center",
                 }}
               >
                 <Ionicons
                   name="checkmark-circle"
                   size={20}
-                  color={
-                    theme.icon
-                      .success.icon
-                  }
+                  color={theme.icon.success.icon}
                 />
-
-                <AppText
-                  variant="body"
-                >
-                  Remove hats,
-                  sunglasses, and
-                  face coverings.
-                </AppText>
+                <AppText variant="body">Fast sign - no password needed</AppText>
               </View>
-
               <View
                 style={{
-                  flexDirection:
-                    "row",
-
-                  gap:
-                    spacing.sm,
+                  flexDirection: "row",
+                  gap: spacing.sm,
+                  alignContent: "center",
                 }}
               >
                 <Ionicons
                   name="checkmark-circle"
                   size={20}
-                  color={
-                    theme.icon
-                      .success.icon
-                  }
+                  color={theme.icon.success.icon}
                 />
-
-                <AppText
-                  variant="body"
-                >
-                  Make sure your
-                  face fits within
-                  the camera frame.
+                <AppText variant="body">
+                  Confirm payouts and large transactions
                 </AppText>
               </View>
-
               <View
                 style={{
-                  flexDirection:
-                    "row",
-
-                  gap:
-                    spacing.sm,
+                  flexDirection: "row",
+                  gap: spacing.sm,
+                  alignContent: "center",
                 }}
               >
                 <Ionicons
                   name="checkmark-circle"
                   size={20}
-                  color={
-                    theme.icon
-                      .success.icon
-                  }
+                  color={theme.icon.success.icon}
                 />
-
-                <AppText
-                  variant="body"
-                >
-                  Use a bright
-                  environment for
-                  better accuracy.
+                <AppText variant="body">
+                  You can change this anytime in Settings
                 </AppText>
               </View>
             </View>
@@ -304,17 +238,25 @@ export default function BiometricVerificationScreen() {
 
           <View
             style={{
-              paddingBottom:
-                spacing.lg,
+              paddingBottom: spacing.lg,
+              gap: spacing.rg,
             }}
           >
             <Button
-              title="Start Verification"
+              title={loading ? "Verifying..." : "Enable Face ID"}
               variant="primary"
               size="large"
-              onPress={
-                handleVerification
-              }
+              disabled={loading}
+              onPress={handleEnableFaceId}
+            />
+            <Button
+              title="Skip for now"
+              variant="tertiary"
+              size="large"
+              onPress={handleVerification}
+              style={{
+                marginTop: spacing.sm,
+              }}
             />
           </View>
         </View>

@@ -316,6 +316,11 @@ export const theme = {
       icon: colors.gray[600],
     },
 
+    branding: {
+      background: colors.primary[100],
+      icon: colors.primary[500],
+    },
+
     active: {
       background: colors.primary[500],
       icon: colors.neutral.white,

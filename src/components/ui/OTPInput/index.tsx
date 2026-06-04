@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   TextInput,
@@ -14,45 +14,77 @@ import { spacing } from "@/theme";
 interface OTPInputProps {
   length?: number;
 
+  value?: string;
+
   onComplete?: (code: string) => void;
 }
 
-export function OTPInput({ length = 6, onComplete }: OTPInputProps) {
-  const [otp, setOtp] = useState(Array(length).fill(""));
+export function OTPInput({
+  length = 6,
+  value = "",
+  onComplete,
+}: OTPInputProps) {
+  const [otp, setOtp] = useState<string[]>(Array(length).fill(""));
 
   const refs = useRef<TextInput[]>([]);
+
+  /**
+   * Sync external value
+   * Useful for React Hook Form reset()
+   */
+  useEffect(() => {
+    if (!value) {
+      setOtp(Array(length).fill(""));
+
+      return;
+    }
+
+    const digits = value.slice(0, length).split("");
+
+    const filled = [...digits, ...Array(length - digits.length).fill("")];
+
+    setOtp(filled);
+  }, [value, length]);
 
   function handleChange(text: string, index: number) {
     const newOtp = [...otp];
 
     /**
-     * PASTE SUPPORT
+     * Paste Support
      */
 
     if (text.length > 1) {
       const digits = text.replace(/\D/g, "").slice(0, length).split("");
 
+      const filled = Array(length).fill("");
+
       digits.forEach((digit, i) => {
-        newOtp[i] = digit;
+        filled[i] = digit;
       });
 
-      setOtp(newOtp);
+      setOtp(filled);
 
-      const code = newOtp.join("");
+      const code = filled.join("");
 
-      if (code.length === length) {
+      const isComplete = filled.every((digit) => digit !== "");
+
+      if (isComplete) {
         onComplete?.(code);
       }
 
       return;
     }
 
+    /**
+     * Single Digit Entry
+     */
+
     newOtp[index] = text;
 
     setOtp(newOtp);
 
     /**
-     * NEXT INPUT
+     * Move Forward
      */
 
     if (text && index < length - 1) {
@@ -61,7 +93,9 @@ export function OTPInput({ length = 6, onComplete }: OTPInputProps) {
 
     const code = newOtp.join("");
 
-    if (code.length === length) {
+    const isComplete = newOtp.every((digit) => digit !== "");
+
+    if (isComplete) {
       onComplete?.(code);
     }
   }
@@ -85,7 +119,7 @@ export function OTPInput({ length = 6, onComplete }: OTPInputProps) {
         gap: spacing.sm,
       }}
     >
-      {otp.map((value, index) => (
+      {otp.map((digit, index) => (
         <NumberInput
           key={index}
           ref={(ref) => {
@@ -93,7 +127,7 @@ export function OTPInput({ length = 6, onComplete }: OTPInputProps) {
               refs.current[index] = ref;
             }
           }}
-          value={value}
+          value={digit}
           onChangeText={(text) => handleChange(text, index)}
           onKeyPress={(e) => handleKeyPress(e, index)}
         />

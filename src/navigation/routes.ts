@@ -9,40 +9,43 @@ export const ROUTES = {
    * ONBOARDING
    */
 
-  WELCOME:
-    "/(onboarding)/welcome",
+  WELCOME: "/(onboarding)/welcome",
 
   // STEP 1
-  SIGNUP:
-    "/(onboarding)/signup",
+  SIGNUP: "/(onboarding)/signup",
 
-  EMAIL_VERIFICATION:
-    "/(onboarding)/email-verification",
+  EMAIL_VERIFICATION: "/(onboarding)/email-verification",
 
   // STEP 2
-  BUSINESS_DETAILS:
-    "/(onboarding)/business-details",
+  BUSINESS_DETAILS: "/(onboarding)/business-details",
 
   // STEP 3
-  ID_VERIFICATION:
-    "/(onboarding)/id-verification",
+  ID_VERIFICATION: "/(onboarding)/id-verification",
 
   // STEP 4
-  BIOMETRIC_VERIFICATION:
-    "/(onboarding)/biometric-verification",
+  BIOMETRIC_VERIFICATION: "/(onboarding)/biometric-verification",
 
   /**
    * AUTH
    */
 
-  LOGIN:
-    "/(auth)/login",
+  LOGIN: "/(auth)/login",
 
-  FORGOT_PASSWORD:
-    "/(auth)/forgot-password",
+  /**
+   * PASSWORD RECOVERY
+   */
 
-  RESET_PASSWORD:
-    "/(auth)/reset-password",
+  // STEP 1
+  FORGOT_PASSWORD: "/(password-recovery)/forgot-password",
+
+  // STEP 2
+  RESET_PASSWORD: "/(password-recovery)/reset-password",
+
+  // STEP 3
+  VERIFY_OTP: "/(password-recovery)/verify-otp",
+
+  // STEP 4
+  NEW_PASSWORD: "/(password-recovery)/new-password",
 
   /**
    * APP
@@ -52,15 +55,11 @@ export const ROUTES = {
 
   HOME: "/(tabs)/home",
 
-  PRODUCTS:
-    "/(tabs)/products",
+  PRODUCTS: "/(tabs)/products",
 
-  ORDERS:
-    "/(tabs)/orders",
+  ORDERS: "/(tabs)/orders",
 
-  STORE:
-    "/(tabs)/store",
+  STORE: "/(tabs)/store",
 
-  MORE:
-    "/(tabs)/more",
+  MORE: "/(tabs)/more",
 } as const;

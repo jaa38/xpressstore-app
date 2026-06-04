@@ -22,6 +22,12 @@ import { authenticateWithBiometrics } from "@/services/biometrics";
 import { enableBiometrics } from "@/services/biometrics/storage";
 import { completeOnboarding } from "@/services/auth/storage";
 
+import { supabase } from "@/services/supabase/client";
+
+import { saveBiometricEmail } from "@/services/biometrics/user";
+
+
+
 export default function BiometricVerificationScreen() {
   const [loading, setLoading] = useState(false);
 
@@ -47,6 +53,14 @@ export default function BiometricVerificationScreen() {
       }
 
       await enableBiometrics();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user?.email) {
+        await saveBiometricEmail(user.email);
+      }
 
       await completeOnboarding();
 

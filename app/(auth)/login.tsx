@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Pressable, View } from "react-native";
+import { Pressable, View, Alert } from "react-native";
 
 import { Link, router } from "expo-router";
 
@@ -38,7 +38,9 @@ import {
   saveRefreshToken,
 } from "@/features/auth/services/session";
 
-import * as SecureStore from "expo-secure-store";
+import { getBiometricEmail } from "@/services/biometrics/user";
+
+import { saveBiometricEmail } from "@/services/biometrics/user";
 
 export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
@@ -51,6 +53,8 @@ export default function LoginScreen() {
 
   const setUser = useAuthStore((state) => state.setUser);
 
+  const [biometricEmail, setBiometricEmail] = useState("");
+
   useEffect(() => {
     checkBiometrics();
   }, []);
@@ -59,6 +63,12 @@ export default function LoginScreen() {
     const enabled = await isBiometricsEnabled();
 
     setBiometricsEnabled(enabled);
+
+    const email = await getBiometricEmail();
+
+    if (email) {
+      setBiometricEmail(email);
+    }
   }
 
   async function handleBiometricLogin() {
@@ -71,10 +81,17 @@ export default function LoginScreen() {
         return;
       }
 
+      const email = await getBiometricEmail();
+
+      console.log("Biometric User:", email);
+
       const token = await getAccessToken();
 
       if (!token) {
-        console.log("No active session found");
+        Alert.alert(
+          "Session Expired",
+          "Please sign in with your email and password."
+        );
 
         return;
       }
@@ -120,7 +137,7 @@ export default function LoginScreen() {
 
         await saveRefreshToken(response.data.session.refresh_token);
 
-        await SecureStore.setItemAsync("biometric_email", data.email);
+        await saveBiometricEmail(data.email);
 
         setAuthenticated(true);
 
@@ -179,8 +196,7 @@ export default function LoginScreen() {
                 </AppText>
 
                 <AppText variant="body" color="secondary">
-                  Sign in to access your store, manage orders, and receive
-                  payments securely.
+                  Sign in to manage your store.
                 </AppText>
               </View>
 
@@ -210,6 +226,16 @@ export default function LoginScreen() {
                     <AppText variant="body" color="strong" align="center">
                       Continue securely with Face ID
                     </AppText>
+
+                    {biometricEmail && (
+                      <AppText
+                        variant="caption"
+                        color="secondary"
+                        align="center"
+                      >
+                        {biometricEmail}
+                      </AppText>
+                    )}
 
                     <Button
                       title={
@@ -286,25 +312,45 @@ export default function LoginScreen() {
                 control={control}
                 name="password"
                 render={({ field: { value, onChange } }) => (
-                  <Input
-                    label="Password"
-                    placeholder="Enter your password"
-                    secureTextEntry={!showPassword}
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.password?.message}
-                    rightIcon={
-                      <Pressable onPress={() => setShowPassword(!showPassword)}>
-                        <Ionicons
-                          name={
-                            showPassword ? "eye-off-outline" : "eye-outline"
-                          }
-                          size={20}
-                          color={theme.icon.default.icon}
-                        />
-                      </Pressable>
-                    }
-                  />
+                  <View>
+                    <Input
+                      label="Password"
+                      placeholder="Enter your password"
+                      secureTextEntry={!showPassword}
+                      value={value}
+                      onChangeText={onChange}
+                      error={errors.password?.message}
+                      rightIcon={
+                        <Pressable
+                          onPress={() => setShowPassword(!showPassword)}
+                        >
+                          <Ionicons
+                            name={
+                              showPassword ? "eye-off-outline" : "eye-outline"
+                            }
+                            size={20}
+                            color={theme.icon.default.icon}
+                          />
+                        </Pressable>
+                      }
+                    />
+
+                    <Pressable
+                      onPress={() => router.push(ROUTES.FORGOT_PASSWORD)}
+                      style={{
+                        alignSelf: "flex-end",
+                        marginTop: spacing.xs,
+                      }}
+                    >
+                      <AppText
+                        variant="label"
+                        color="link"
+                        style={{ marginTop: spacing.xs }}
+                      >
+                        Forgot Password?
+                      </AppText>
+                    </Pressable>
+                  </View>
                 )}
               />
             </View>

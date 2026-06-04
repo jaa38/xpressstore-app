@@ -321,6 +321,11 @@ export const theme = {
       icon: colors.primary[500],
     },
 
+    tab: {
+      active: colors.primary[500],
+      inactive: colors.gray[400],
+    },
+
     active: {
       background: colors.primary[500],
       icon: colors.neutral.white,

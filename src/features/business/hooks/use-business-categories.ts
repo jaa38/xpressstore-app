@@ -8,6 +8,11 @@ export function useBusinessCategories() {
     queryFn: getBusinessCategories,
   });
 
+  console.log(
+    "React Query Categories:",
+    query.data
+  );
+
   return {
     categories: query.data ?? [],
     isLoading: query.isLoading,

@@ -1,8 +1,8 @@
-import { Pressable, View } from "react-native";
-
 import { useState } from "react";
 
-import { Link, router } from "expo-router";
+import { Alert, Pressable, View } from "react-native";
+
+import { Link, router, useLocalSearchParams } from "expo-router";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,22 +15,86 @@ import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { OTPInput } from "@/components/ui/OTPInput";
 
+import { verifyEmailOtp, resendEmailOtp } from "@/features/auth/api/otp-api";
+
 import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
 export default function EmailVerificationScreen() {
+  const { email } = useLocalSearchParams<{
+    email: string;
+  }>();
+
   const [verificationCode, setVerificationCode] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
+  const [resending, setResending] = useState(false);
 
   function handleVerify(code: string) {
     setVerificationCode(code);
+  }
+
+  async function handleSubmitOTP() {
+    try {
+      setLoading(true);
+
+      console.log("Email:", email);
+
+      console.log("Verification Code:", verificationCode);
+
+      const response = await verifyEmailOtp(email, verificationCode);
+
+      console.log("Verify Response:", JSON.stringify(response, null, 2));
+
+      if (response.error) {
+        Alert.alert("Verification Failed", response.error.message);
+
+        return;
+      }
+
+      Alert.alert(
+        "Email Verified",
+        "Your account has been verified successfully."
+      );
+
+      router.replace(ROUTES.BUSINESS_DETAILS);
+    } catch (error) {
+      console.log("OTP Verification Error:", error);
+
+      Alert.alert("Error", "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResendOTP() {
+    try {
+      setResending(true);
+
+      const response = await resendEmailOtp(email);
+
+      if (response.error) {
+        Alert.alert("Failed", response.error.message);
+
+        return;
+      }
+
+      Alert.alert("Success", "Verification code sent.");
+    } catch (error) {
+      console.log(error);
+
+      Alert.alert("Error", "Unable to resend code.");
+    } finally {
+      setResending(false);
+    }
   }
 
   return (
     <SafeAreaView
       style={{
         flex: 1,
-
         backgroundColor: theme.background.primary,
       }}
     >
@@ -39,14 +103,12 @@ export default function EmailVerificationScreen() {
       <View
         style={{
           flex: 1,
-
           paddingHorizontal: spacing.lg,
         }}
       >
         <View
           style={{
             flex: 1,
-
             justifyContent: "space-between",
           }}
         >
@@ -116,11 +178,15 @@ export default function EmailVerificationScreen() {
                 </AppText>
 
                 <AppText variant="body" color="secondary">
-                  A verification code has been sent to your email address.
+                  We've sent a 8-digit verification code to:
+                  {"\n\n"}
+                  <AppText variant="bodyBold" color="primary">
+                    {email}
+                  </AppText>
                 </AppText>
               </View>
 
-              <OTPInput length={6} onComplete={handleVerify} />
+              <OTPInput length={8} onComplete={handleVerify} />
 
               <View
                 style={{
@@ -159,14 +225,16 @@ export default function EmailVerificationScreen() {
                   </AppText>
                 </View>
 
-                <Pressable>
+                <Pressable disabled={resending} onPress={handleResendOTP}>
                   <AppText variant="bodyBold" color="link">
-                    Resend OTP
+                    {resending ? "Sending..." : "Resend OTP"}
                   </AppText>
                 </Pressable>
               </View>
             </View>
           </View>
+
+          {/* FOOTER */}
 
           <View
             style={{
@@ -174,11 +242,11 @@ export default function EmailVerificationScreen() {
             }}
           >
             <Button
-              title="Verify Email"
+              title={loading ? "Verifying..." : "Verify Email"}
               variant="primary"
               size="large"
-              disabled={verificationCode.length !== 6}
-              onPress={() => router.push(ROUTES.BUSINESS_DETAILS)}
+              disabled={verificationCode.length !== 8 || loading}
+              onPress={handleSubmitOTP}
             />
           </View>
         </View>

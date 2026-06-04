@@ -24,6 +24,8 @@ import { useState } from "react";
 
 import { useBusinessCategories } from "@/features/business/hooks/use-business-categories";
 
+import { createBusiness } from "@/features/business/api/business-api";
+
 type BusinessDetailsForm = {
   businessType: string;
 
@@ -47,8 +49,6 @@ export default function BusinessDetailsScreen() {
     },
   });
 
-  const [showBusinessTypes, setShowBusinessTypes] = useState(false);
-
   const values = watch();
 
   const isValid = Boolean(
@@ -60,10 +60,28 @@ export default function BusinessDetailsScreen() {
 
   const { categories, isLoading } = useBusinessCategories();
 
-  function onSubmit(data: BusinessDetailsForm) {
-    console.log("Business Details:", data);
+  const [loading, setLoading] = useState(false);
 
-    router.push(ROUTES.ID_VERIFICATION);
+  async function onSubmit(data: BusinessDetailsForm) {
+    try {
+      setLoading(true);
+
+      await createBusiness({
+        businessName: data.businessName,
+
+        businessType: data.businessType,
+
+        businessCategory: data.businessCategory,
+
+        businessAddress: data.businessAddress,
+      });
+
+      router.push(ROUTES.ID_VERIFICATION);
+    } catch (error) {
+      console.log("Failed to create business:", error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -207,6 +225,8 @@ export default function BusinessDetailsScreen() {
             )}
           />
 
+          
+
           <Controller
             control={control}
             name="businessCategory"
@@ -235,10 +255,10 @@ export default function BusinessDetailsScreen() {
           }}
         >
           <Button
-            title="Continue"
+            title={loading ? "Saving..." : "Continue"}
             variant="primary"
             size="large"
-            disabled={!isValid}
+            disabled={!isValid || loading}
             onPress={handleSubmit(onSubmit)}
           />
         </View>

@@ -28,6 +28,9 @@ import {
   SignupSchema,
 } from "@/features/auth/schemas/signup-schema";
 
+import { signupUser } from "@/features/auth/api/auth-api";
+import { Alert } from "react-native";
+
 function PasswordRule({ passed, text }: { passed: boolean; text: string }) {
   return (
     <View
@@ -56,6 +59,8 @@ export default function SignupScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
 
   const {
     control,
@@ -90,10 +95,42 @@ export default function SignupScreen() {
     special: /[^A-Za-z0-9]/.test(password),
   };
 
-  function onSubmit(data: SignupSchema) {
-    console.log("Signup Data:", data);
+  async function onSubmit(data: SignupSchema) {
+    try {
+      setLoading(true);
 
-    router.push(ROUTES.EMAIL_VERIFICATION);
+      const response = await signupUser(data.email, data.password);
+
+      if (response.error) {
+        console.log("Signup Error:", response.error);
+
+        Alert.alert("Sign Up Failed", response.error.message);
+
+        return;
+      }
+
+      console.log("User:", response.data.user);
+
+      console.log("Session:", response.data.session);
+
+      Alert.alert(
+        "Check Your Email",
+        "We've sent a verification code to your email address."
+      );
+
+      router.push({
+        pathname: ROUTES.EMAIL_VERIFICATION,
+        params: {
+          email: data.email,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -316,10 +353,10 @@ export default function SignupScreen() {
             }}
           >
             <Button
-              title="Get Started"
+              title={loading ? "Creating Account..." : "Get Started"}
               variant="primary"
               size="large"
-              disabled={!isValid}
+              disabled={!isValid || loading}
               onPress={handleSubmit(onSubmit)}
             />
 

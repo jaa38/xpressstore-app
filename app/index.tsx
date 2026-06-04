@@ -80,7 +80,7 @@ export default function IndexScreen() {
      */
 
     router.replace(
-      ROUTES.SIGNUP
+      ROUTES.WELCOME
     );
 
     setLoading(false);

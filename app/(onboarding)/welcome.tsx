@@ -6,24 +6,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { StatusBar } from "expo-status-bar";
 
-import { Ionicons } from "@expo/vector-icons";
-
 import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
-
-import { setOnboarded } from "@/storage/app-storage";
 
 import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function WelcomeScreen() {
-  async function handleContinue() {
-    await setOnboarded();
-
-    router.replace(ROUTES.SIGNUP);
-  }
-
   return (
     <SafeAreaView
       style={{
@@ -37,8 +28,11 @@ export default function WelcomeScreen() {
         style={{
           flex: 1,
           paddingHorizontal: spacing.lg,
+          justifyContent: "space-between",
         }}
       >
+        {/* CONTENT */}
+
         <View
           style={{
             flex: 1,
@@ -68,13 +62,8 @@ export default function WelcomeScreen() {
                 }}
               />
 
-              <AppText
-                variant="body"
-                color="secondary"
-                align="center"
-              >
-                Create your store, share your link,
-                and get paid securely.
+              <AppText variant="body" color="secondary" align="center">
+                Create your store, share your link, and get paid securely.
               </AppText>
             </View>
           </View>
@@ -93,8 +82,7 @@ export default function WelcomeScreen() {
                 justifyContent: "center",
                 height: 40,
                 borderRadius: 24,
-                backgroundColor:
-                  theme.badge.primary.background,
+                backgroundColor: theme.badge.primary.background,
                 paddingHorizontal: spacing.rg,
                 paddingVertical: spacing.sm,
                 flexDirection: "row",
@@ -123,8 +111,7 @@ export default function WelcomeScreen() {
                 justifyContent: "center",
                 height: 40,
                 borderRadius: 24,
-                backgroundColor:
-                  theme.badge.secondary.background,
+                backgroundColor: theme.badge.secondary.background,
                 paddingHorizontal: spacing.rg,
                 paddingVertical: spacing.sm,
                 flexDirection: "row",
@@ -149,30 +136,47 @@ export default function WelcomeScreen() {
           </View>
         </View>
 
+        {/* ACTIONS */}
+
         <View
           style={{
             paddingBottom: spacing.lg,
+
+            flexDirection: "row",
+
+            gap: spacing.md,
           }}
         >
-          <Button
-            title="Get Started"
-            variant="primary"
-            size="large"
-            onPress={handleContinue}
-          />
-
-          <AppText
-            variant="caption"
-            color="secondary"
-            align="center"
+          <View
             style={{
-              marginTop: spacing.md,
+              flex: 1,
             }}
           >
-            Xpress Payments Solutions Limited -
-            Licensed by the Central Bank of Nigeria
-          </AppText>
+            <Button
+              title="Log In"
+              variant="primary"
+              size="large"
+              onPress={() => router.push(ROUTES.LOGIN)}
+            />
+          </View>
+
+          <View
+            style={{
+              flex: 1,
+            }}
+          >
+            <Button
+              title="Create Account"
+              variant="tertiary"
+              size="large"
+              onPress={() => router.push(ROUTES.SIGNUP)}
+            />
+          </View>
         </View>
+        <AppText variant="caption" color="secondary" align="center">
+          Xpress Payments Solutions Limited - Licensed by the Central Bank of
+          Nigeria
+        </AppText>
       </View>
     </SafeAreaView>
   );

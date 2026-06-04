@@ -25,6 +25,8 @@ import { validatePhoneNumber, formatPhoneNumber } from "@/utils/phone";
 
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 
+import { createUserProfile } from "@/features/auth/api/profile-api";
+
 type IdVerificationForm = {
   idType: string;
 
@@ -73,14 +75,24 @@ export default function IdVerificationScreen() {
     isPhoneValid
   );
 
-  function onSubmit(data: IdVerificationForm) {
-    const payload = {
-      ...data,
+  async function onSubmit(data: IdVerificationForm) {
+    const response = await createUserProfile({
+      fullName: data.fullName,
 
       phoneNumber: formatPhoneNumber(data.phoneNumber, data.countryCode),
-    };
 
-    console.log("ID Verification:", payload);
+      dateOfBirth: data.dateOfBirth!,
+
+      idType: data.idType,
+
+      idNumber: data.idNumber,
+    });
+
+    if (response.error) {
+      console.log(response.error);
+
+      return;
+    }
 
     router.push(ROUTES.BIOMETRIC_VERIFICATION);
   }

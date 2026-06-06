@@ -181,14 +181,14 @@ export const theme = {
     dashboard: {
       background: colors.primary[500],
       headerText: colors.primary[100],
-      value: colors.primary[50],
+      text: colors.primary[50],
     },
 
     stats: {
       background: colors.primary[300],
       text: colors.primary[100],
     },
-    
+
     active: {
       background: colors.primary[50],
       border: colors.primary[500],

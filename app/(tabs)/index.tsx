@@ -128,7 +128,7 @@ export default function HomeScreen() {
               </AppText>
               <AppText
                 variant="displayLarge"
-                style={{ color: theme.card.dashboard.value }}
+                style={{ color: theme.card.dashboard.text }}
               >
                 ₦48,250
               </AppText>
@@ -147,9 +147,9 @@ export default function HomeScreen() {
               <Ionicons
                 name="trending-up"
                 size={16}
-                style={{ color: theme.card.dashboard.value }}
+                style={{ color: theme.card.dashboard.text }}
               />
-              <AppText style={{ color: theme.card.dashboard.value }}>
+              <AppText style={{ color: theme.card.dashboard.text }}>
                 24%
               </AppText>
             </View>

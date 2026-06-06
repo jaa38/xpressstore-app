@@ -12,15 +12,9 @@ import { typography } from "@/theme/typography";
 
 import { radius } from "@/theme/radius";
 
-type ButtonVariant =
-  | "primary"
-  | "secondary"
-  | "tertiary";
+type ButtonVariant = "primary" | "secondary" | "tertiary";
 
-type ButtonSize =
-  | "large"
-  | "medium"
-  | "small";
+type ButtonSize = "large" | "medium" | "small";
 
 interface ButtonProps {
   title: string;
@@ -46,8 +40,7 @@ const BUTTON_SIZES = {
 
     paddingHorizontal: 20,
 
-    textStyle:
-      typography.buttonLarge,
+    textStyle: typography.buttonLarge,
   },
 
   medium: {
@@ -57,8 +50,7 @@ const BUTTON_SIZES = {
 
     paddingHorizontal: 16,
 
-    textStyle:
-      typography.button,
+    textStyle: typography.button,
   },
 
   small: {
@@ -68,8 +60,7 @@ const BUTTON_SIZES = {
 
     paddingHorizontal: 12,
 
-    textStyle:
-      typography.buttonSmall,
+    textStyle: typography.buttonSmall,
   },
 };
 
@@ -90,18 +81,11 @@ function getVariantStyles({
 
   if (disabled) {
     return {
-      backgroundColor:
-        colors.gray[300],
+      backgroundColor: colors.gray[300],
 
-      borderWidth:
-        variant === "tertiary"
-          ? 1
-          : 0,
+      borderWidth: variant === "tertiary" ? 1 : 0,
 
-      borderColor:
-        variant === "tertiary"
-          ? colors.gray[300]
-          : "transparent",
+      borderColor: variant === "tertiary" ? colors.gray[300] : "transparent",
     };
   }
 
@@ -111,9 +95,7 @@ function getVariantStyles({
 
   if (variant === "primary") {
     return {
-      backgroundColor: pressed
-        ? colors.primary[700]
-        : colors.primary[500],
+      backgroundColor: pressed ? colors.primary[700] : colors.primary[500],
     };
   }
 
@@ -123,9 +105,7 @@ function getVariantStyles({
 
   if (variant === "secondary") {
     return {
-      backgroundColor: pressed
-        ? colors.secondary[700]
-        : colors.secondary[500],
+      backgroundColor: pressed ? colors.secondary[700] : colors.secondary[500],
     };
   }
 
@@ -134,20 +114,15 @@ function getVariantStyles({
    */
 
   return {
-    backgroundColor:
-      colors.neutral.white,
+    backgroundColor: colors.neutral.white,
 
     borderWidth: 1,
 
-    borderColor:
-      colors.gray[300],
+    borderColor: colors.gray[300],
   };
 }
 
-function getTextColor(
-  variant: ButtonVariant,
-  disabled: boolean
-): string {
+function getTextColor(variant: ButtonVariant, disabled: boolean): string {
   if (disabled) {
     return colors.neutral.white;
   }
@@ -174,35 +149,32 @@ export function Button({
 
   style,
 }: ButtonProps) {
-  const sizeStyles =
-    BUTTON_SIZES[size];
+  const sizeStyles = BUTTON_SIZES[size];
 
   return (
     <Pressable
-      disabled={
-        disabled || loading
-      }
+      accessibilityRole="button"
+      accessibilityLabel={loading ? `${title} loading` : title}
+      accessibilityState={{
+        disabled: disabled || loading,
+      }}
+      disabled={disabled || loading}
       onPress={onPress}
       style={({ pressed }) => [
         {
           width: "auto",
 
-          height:
-            sizeStyles.height,
+          height: sizeStyles.height,
 
-          paddingVertical:
-            sizeStyles.paddingVertical,
+          paddingVertical: sizeStyles.paddingVertical,
 
-          paddingHorizontal:
-            sizeStyles.paddingHorizontal,
+          paddingHorizontal: sizeStyles.paddingHorizontal,
 
-          borderRadius:
-            radius.md,
+          borderRadius: radius.md,
 
           alignItems: "center",
 
-          justifyContent:
-            "center",
+          justifyContent: "center",
 
           flexDirection: "row",
         },
@@ -219,10 +191,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={getTextColor(
-            variant,
-            disabled
-          )}
+          color={getTextColor(variant, disabled)}
         />
       ) : (
         <Text
@@ -230,13 +199,9 @@ export function Button({
             sizeStyles.textStyle,
 
             {
-              color: getTextColor(
-                variant,
-                disabled
-              ),
+              color: getTextColor(variant, disabled),
 
-              fontFamily:
-                typography.fontFamily,
+              fontFamily: typography.fontFamily,
             } as TextStyle,
           ]}
         >

@@ -174,7 +174,11 @@ export default function SignupScreen() {
               }}
             >
               <Link href={ROUTES.WELCOME} asChild>
-                <Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Go back"
+                  accessibilityHint="Returns to the welcome screen"
+                >
                   <Ionicons
                     name="chevron-back"
                     size={24}
@@ -184,6 +188,14 @@ export default function SignupScreen() {
               </Link>
 
               <View
+                accessible
+                accessibilityRole="progressbar"
+                accessibilityLabel="Signup progress"
+                accessibilityValue={{
+                  min: 0,
+                  max: 100,
+                  now: 25,
+                }}
                 style={{
                   flex: 1,
 
@@ -220,7 +232,11 @@ export default function SignupScreen() {
                   gap: spacing.xs,
                 }}
               >
-                <AppText variant="h1" color="heading">
+                <AppText
+                  accessibilityRole="header"
+                  variant="h1"
+                  color="heading"
+                >
                   Create your Account
                 </AppText>
 
@@ -261,7 +277,16 @@ export default function SignupScreen() {
                     onChangeText={onChange}
                     error={errors.password?.message}
                     rightIcon={
-                      <Pressable onPress={() => setShowPassword(!showPassword)}>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                        accessibilityState={{
+                          selected: showPassword,
+                        }}
+                        onPress={() => setShowPassword(!showPassword)}
+                      >
                         <Ionicons
                           name={
                             showPassword ? "eye-off-outline" : "eye-outline"
@@ -278,6 +303,8 @@ export default function SignupScreen() {
               {/* RULES */}
 
               <View
+                accessible
+                accessibilityLabel="Password requirements"
                 style={{
                   gap: spacing.xs,
                 }}
@@ -378,7 +405,11 @@ export default function SignupScreen() {
               </AppText>
 
               <Link href={ROUTES.LOGIN} asChild>
-                <Pressable>
+                <Pressable
+                  accessibilityRole="link"
+                  accessibilityLabel="Login"
+                  accessibilityHint="Go to login screen"
+                >
                   <AppText variant="label" color="link">
                     Login
                   </AppText>

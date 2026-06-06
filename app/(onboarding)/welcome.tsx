@@ -54,6 +54,8 @@ export default function WelcomeScreen() {
               }}
             >
               <Image
+                accessibilityRole="image"
+                accessibilityLabel="Xpress Store Logo"
                 source={require("../../assets/logo/xpressStoreLogo.png")}
                 style={{
                   width: 211,
@@ -62,7 +64,12 @@ export default function WelcomeScreen() {
                 }}
               />
 
-              <AppText variant="body" color="secondary" align="center">
+              <AppText
+                accessibilityRole="header"
+                variant="body"
+                color="secondary"
+                align="center"
+              >
                 Create your store, share your link, and get paid securely.
               </AppText>
             </View>
@@ -77,6 +84,9 @@ export default function WelcomeScreen() {
             }}
           >
             <View
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel="Secure payments"
               style={{
                 alignItems: "center",
                 justifyContent: "center",
@@ -90,6 +100,7 @@ export default function WelcomeScreen() {
               }}
             >
               <Ionicons
+                accessible={false}
                 name="checkmark-circle-outline"
                 size={24}
                 color={theme.badge.primary.text}
@@ -106,6 +117,9 @@ export default function WelcomeScreen() {
             </View>
 
             <View
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel="CBN-compliant"
               style={{
                 alignItems: "center",
                 justifyContent: "center",
@@ -173,7 +187,12 @@ export default function WelcomeScreen() {
             />
           </View>
         </View>
-        <AppText variant="caption" color="secondary" align="center">
+        <AppText
+          accessibilityRole="text"
+          variant="caption"
+          color="secondary"
+          align="center"
+        >
           Xpress Payments Solutions Limited - Licensed by the Central Bank of
           Nigeria
         </AppText>

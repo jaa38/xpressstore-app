@@ -19,8 +19,7 @@ type InputState =
   | "error"
   | "disabled";
 
-interface InputProps
-  extends TextInputProps {
+interface InputProps extends TextInputProps {
   label?: string;
 
   error?: string;
@@ -39,19 +38,24 @@ export function Input({
   onFocus,
   onBlur,
   style,
+  placeholder,
   ...props
 }: InputProps) {
-  const [focused, setFocused] =
-    useState(false);
+  const [focused, setFocused] = useState(false);
 
-  const state: InputState =
-    !editable
-      ? "disabled"
-      : error
-        ? "error"
-        : focused
-          ? "focus"
-          : "default";
+  const state: InputState = !editable
+    ? "disabled"
+    : error
+      ? "error"
+      : focused
+        ? "focus"
+        : "default";
+
+  const accessibilityHint =
+    error ??
+    helperText ??
+    placeholder ??
+    undefined;
 
   return (
     <View style={styles.container}>
@@ -74,6 +78,13 @@ export function Input({
         <TextInput
           {...props}
           editable={editable}
+          accessibilityLabel={label}
+          accessibilityHint={accessibilityHint}
+          accessibilityState={{
+            disabled: !editable,
+            invalid: !!error,
+          }}
+          placeholder={placeholder}
           placeholderTextColor={
             theme.input.placeholder
           }
@@ -109,6 +120,7 @@ export function Input({
           variant="caption"
           color="error"
           style={styles.feedback}
+          accessibilityRole="alert"
         >
           {error}
         </AppText>

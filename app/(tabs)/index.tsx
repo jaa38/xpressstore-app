@@ -1,5 +1,5 @@
 import { Pressable, View, ScrollView, FlatList } from "react-native";
-
+import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/ui/AppText";
@@ -18,6 +18,10 @@ import { Card } from "@/components/ui/Card";
 
 import { Ionicons } from "@expo/vector-icons";
 
+import { useProfile } from "@/features/home/hooks/use-profile";
+
+import { supabase } from "@/services/supabase/client";
+
 type PaymentChannel = "bank" | "card" | "qr" | "transfer" | "ussd";
 
 type Transaction = {
@@ -32,6 +36,28 @@ type Transaction = {
 
 export default function HomeScreen() {
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+
+  const { profile } = useProfile();
+
+  console.log("Profile Data:", profile);
+
+  useEffect(() => {
+    async function checkUser() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      console.log("Restored Session:", session);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      console.log("Home User:", user);
+    }
+
+    checkUser();
+  }, []);
 
   async function handleLogout() {
     try {
@@ -141,7 +167,7 @@ export default function HomeScreen() {
               Good morning,
             </AppText>
 
-            <AppText variant="h1">Jeremiah's Store</AppText>
+            <AppText variant="h1">{profile?.full_name ?? "Merchant"}</AppText>
           </View>
 
           <Pressable>

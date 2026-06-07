@@ -1,18 +1,20 @@
 import { supabase } from "@/services/supabase/client";
 
-export async function getBusiness() {
+export async function getProfile() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  console.log("Profile User:", user);
 
   if (!user) {
     throw new Error("User not found");
   }
 
   const { data, error } = await supabase
-    .from("businesses")
+    .from("user_profiles")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", user?.id)
     .single();
 
   if (error) {

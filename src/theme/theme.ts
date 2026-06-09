@@ -75,6 +75,28 @@ export const theme = {
   },
 
   /**
+   * 🔘 UI Card
+   */
+
+  uicard: {
+    default: {
+      borderColor: colors.gray[300],
+      text: colors.gray[800],
+      backgroundColor: colors.neutral.white,
+    },
+
+    active: {
+      backgroundColor: colors.primary[500],
+      text: colors.neutral.white,
+    },
+
+    status: {
+      backgroundColor: colors.primary[200],
+      text: colors.primary[50],
+    },
+  },
+
+  /**
    * 🔘 ACTIONS
    */
   action: {

@@ -1,4 +1,4 @@
-import { View, Pressable } from "react-native";
+import { View, Pressable, ScrollView } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -44,16 +44,12 @@ export default function ProductScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">Welcome Back</AppText>
+              <AppText variant="h1">Products</AppText>
 
               <AppText variant="body" color="secondary">
-                Sign in to manage your store.
+                Number of items in catalog
               </AppText>
             </View>
-
-            {/* Email Input */}
-
-            {/* Password Input */}
           </View>
 
           {/* BOTTOM */}

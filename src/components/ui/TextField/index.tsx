@@ -28,6 +28,8 @@ interface TextFieldProps
   helperText?: string;
 
   rightIcon?: React.ReactNode;
+
+  multiline?: boolean;
 }
 
 export function TextField({
@@ -36,6 +38,7 @@ export function TextField({
   helperText,
   rightIcon,
   editable = true,
+  multiline = true,
   onFocus,
   onBlur,
   style,
@@ -69,6 +72,9 @@ export function TextField({
         style={[
           styles.inputContainer,
 
+          !multiline &&
+            styles.singleLineContainer,
+
           getInputStateStyle(
             state
           ),
@@ -77,13 +83,20 @@ export function TextField({
         <TextInput
           {...props}
           editable={editable}
-          multiline
-          textAlignVertical="top"
+          multiline={multiline}
+          textAlignVertical={
+            multiline
+              ? "top"
+              : "center"
+          }
           placeholderTextColor={
             theme.input.placeholder
           }
           style={[
             styles.input,
+
+            !multiline &&
+              styles.singleLineInput,
 
             style,
           ]}
@@ -184,13 +197,6 @@ const styles =
       marginBottom: 8,
     },
 
-    /**
-     * Text Field Container
-     *
-     * Min Height: 120px
-     * Radius: 10px
-     * Padding: 16px
-     */
     inputContainer: {
       minHeight: 120,
 
@@ -200,6 +206,11 @@ const styles =
         radius.md,
 
       flexDirection: "row",
+    },
+
+    singleLineContainer: {
+      minHeight: 56,
+      height: 56,
     },
 
     input: {
@@ -214,6 +225,13 @@ const styles =
         theme.input.text,
 
       ...typography.body,
+    },
+
+    singleLineInput: {
+      minHeight: 56,
+      height: 56,
+
+      paddingVertical: 0,
     },
 
     iconContainer: {

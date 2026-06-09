@@ -44,16 +44,12 @@ export default function OrdersScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">Welcome Back</AppText>
+              <AppText variant="h1">Orders</AppText>
 
               <AppText variant="body" color="secondary">
-                Sign in to manage your store.
+                Number of orders this week
               </AppText>
             </View>
-
-            {/* Email Input */}
-
-            {/* Password Input */}
           </View>
 
           {/* BOTTOM */}

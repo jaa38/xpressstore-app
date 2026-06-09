@@ -14,6 +14,48 @@ import { spacing, theme, radius } from "@/theme";
 import { UICard } from "@/components/ui/UICard";
 
 import * as Clipboard from "expo-clipboard";
+import { Divider } from "@/components/ui/Divider";
+
+function SettingsRow({
+  title,
+  subtitle,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  onPress?: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingVertical: spacing.md,
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            gap: spacing.xs,
+          }}
+        >
+          <AppText variant="bodyBold">{title}</AppText>
+
+          <AppText variant="bodySmall" color="secondary">
+            {subtitle}
+          </AppText>
+        </View>
+
+        <Ionicons
+          name="chevron-forward"
+          size={20}
+          color={theme.icon.default.icon}
+        />
+      </View>
+    </Pressable>
+  );
+}
 
 export default function StoreScreen() {
   const storeUrl = "https://xpressstore.app/jeremiah-productions";
@@ -215,7 +257,7 @@ export default function StoreScreen() {
           </Card>
         </View>
 
-        {/* STORE PERFORMANCE */}
+        {/* CUSTOMISE */}
 
         <View
           style={{
@@ -224,34 +266,30 @@ export default function StoreScreen() {
         >
           <AppText variant="h3">Customise</AppText>
 
-          <View
+          <Card
             style={{
+              paddingVertical: 0,
               marginTop: spacing.md,
             }}
           >
-            <Card
-              style={{
-                flex: 1,
-              }}
-            >
-              <AppText variant="bodyBold">120</AppText>
+            <SettingsRow
+              title="Store Name & Info"
+              subtitle="Jeremiah's Store"
+            />
 
-              <AppText variant="bodySmall" color="secondary">
-                Visitors
-              </AppText>
-            </Card>
-          </View>
+            <Divider />
+
+            <SettingsRow title="Theme" subtitle="Forest Green" />
+
+            <Divider />
+
+            <SettingsRow title="Layout" subtitle="Grid view" />
+
+            <Divider />
+
+            <SettingsRow title="Products in store" subtitle="5 of 6 visible" />
+          </Card>
         </View>
-
-        {/* SHARE STORE */}
-
-        <Button
-          title="Share Storefront"
-          variant="primary"
-          style={{
-            marginTop: spacing.xl,
-          }}
-        />
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,11 +1,6 @@
 import { useState } from "react";
 
-import {
-  TextInput,
-  TextInputProps,
-  View,
-  StyleSheet,
-} from "react-native";
+import { TextInput, TextInputProps, View, StyleSheet } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
 
@@ -13,57 +8,47 @@ import { theme } from "@/theme";
 import { typography } from "@/theme/typography";
 import { radius } from "@/theme/radius";
 
-type InputState =
-  | "default"
-  | "focus"
-  | "error"
-  | "disabled";
+type InputState = "default" | "focus" | "error" | "disabled";
 
-interface TextFieldProps
-  extends TextInputProps {
+interface TextFieldProps extends TextInputProps {
   label?: string;
 
   error?: string;
 
   helperText?: string;
 
-  rightIcon?: React.ReactNode;
+  leftIcon?: React.ReactNode;
 
-  multiline?: boolean;
+  rightIcon?: React.ReactNode;
 }
 
 export function TextField({
   label,
   error,
   helperText,
+  leftIcon,
   rightIcon,
   editable = true,
-  multiline = true,
   onFocus,
   onBlur,
   style,
+  multiline = false,
   ...props
 }: TextFieldProps) {
-  const [focused, setFocused] =
-    useState(false);
+  const [focused, setFocused] = useState(false);
 
-  const state: InputState =
-    !editable
-      ? "disabled"
-      : error
+  const state: InputState = !editable
+    ? "disabled"
+    : error
       ? "error"
       : focused
-      ? "focus"
-      : "default";
+        ? "focus"
+        : "default";
 
   return (
     <View style={styles.container}>
       {label && (
-        <AppText
-          variant="caption"
-          color="secondary"
-          style={styles.label}
-        >
+        <AppText variant="caption" color="secondary" style={styles.label}>
           {label}
         </AppText>
       )}
@@ -71,33 +56,21 @@ export function TextField({
       <View
         style={[
           styles.inputContainer,
-
-          !multiline &&
-            styles.singleLineContainer,
-
-          getInputStateStyle(
-            state
-          ),
+          multiline && styles.multilineContainer,
+          getInputStateStyle(state),
         ]}
       >
+        {leftIcon && <View style={styles.leftIconContainer}>{leftIcon}</View>}
+
         <TextInput
           {...props}
           editable={editable}
           multiline={multiline}
-          textAlignVertical={
-            multiline
-              ? "top"
-              : "center"
-          }
-          placeholderTextColor={
-            theme.input.placeholder
-          }
+          textAlignVertical={multiline ? "top" : undefined}
+          placeholderTextColor={theme.input.placeholder}
           style={[
             styles.input,
-
-            !multiline &&
-              styles.singleLineInput,
-
+            multiline ? styles.multilineInput : styles.singleLineInput,
             style,
           ]}
           onFocus={(e) => {
@@ -113,30 +86,16 @@ export function TextField({
         />
 
         {rightIcon && (
-          <View
-            style={
-              styles.iconContainer
-            }
-          >
-            {rightIcon}
-          </View>
+          <View style={styles.rightIconContainer}>{rightIcon}</View>
         )}
       </View>
 
       {error ? (
-        <AppText
-          variant="caption"
-          color="error"
-          style={styles.feedback}
-        >
+        <AppText variant="caption" color="error" style={styles.feedback}>
           {error}
         </AppText>
       ) : helperText ? (
-        <AppText
-          variant="caption"
-          color="secondary"
-          style={styles.feedback}
-        >
+        <AppText variant="caption" color="secondary" style={styles.feedback}>
           {helperText}
         </AppText>
       ) : null}
@@ -144,102 +103,106 @@ export function TextField({
   );
 }
 
-function getInputStateStyle(
-  state: InputState
-) {
+function getInputStateStyle(state: InputState) {
   switch (state) {
     case "focus":
       return {
-        borderColor:
-          theme.input.focusBorder,
+        borderColor: theme.input.focusBorder,
 
-        backgroundColor:
-          theme.input.background,
+        backgroundColor: theme.input.background,
       };
 
     case "error":
       return {
-        borderColor:
-          theme.input.errorBorder,
+        borderColor: theme.input.errorBorder,
 
-        backgroundColor:
-          theme.input.background,
+        backgroundColor: theme.input.background,
       };
 
     case "disabled":
       return {
-        borderColor:
-          theme.input.border,
+        borderColor: theme.input.border,
 
-        backgroundColor:
-          theme.input
-            .disabledBackground,
+        backgroundColor: theme.input.disabledBackground,
       };
 
     default:
       return {
-        borderColor:
-          theme.input.border,
+        borderColor: theme.input.border,
 
-        backgroundColor:
-          theme.input.background,
+        backgroundColor: theme.input.background,
       };
   }
 }
 
-const styles =
-  StyleSheet.create({
-    container: {
-      width: "100%",
-    },
+const styles = StyleSheet.create({
+  container: {
+    width: "100%",
+  },
 
-    label: {
-      marginBottom: 8,
-    },
+  label: {
+    marginBottom: 8,
+  },
 
-    inputContainer: {
-      minHeight: 120,
+  inputContainer: {
+    height: 52,
 
-      borderWidth: 1,
+    borderWidth: 1,
 
-      borderRadius:
-        radius.md,
+    borderRadius: radius.md,
 
-      flexDirection: "row",
-    },
+    flexDirection: "row",
 
-    singleLineContainer: {
-      minHeight: 56,
-      height: 56,
-    },
+    alignItems: "center",
+  },
 
-    input: {
-      flex: 1,
+  multilineContainer: {
+    minHeight: 120,
 
-      minHeight: 120,
+    height: 120,
 
-      paddingHorizontal: 16,
-      paddingVertical: 16,
+    alignItems: "flex-start",
+  },
 
-      color:
-        theme.input.text,
+  input: {
+    flex: 1,
 
-      ...typography.body,
-    },
+    height: "100%",
 
-    singleLineInput: {
-      minHeight: 56,
-      height: 56,
+    paddingHorizontal: 12,
 
-      paddingVertical: 0,
-    },
+    color: theme.input.text,
 
-    iconContainer: {
-      paddingTop: 16,
-      paddingRight: 16,
-    },
+    ...typography.body,
+  },
 
-    feedback: {
-      marginTop: 4,
-    },
-  });
+  singleLineInput: {
+    paddingVertical: 0,
+  },
+
+  multilineInput: {
+    paddingVertical: 16,
+
+    textAlignVertical: "top",
+  },
+
+  leftIconContainer: {
+    paddingLeft: 16,
+
+    justifyContent: "center",
+
+    alignItems: "center",
+  },
+
+  rightIconContainer: {
+    paddingRight: 16,
+
+    justifyContent: "center",
+
+    alignItems: "center",
+  },
+
+  feedback: {
+    marginTop: 4,
+  },
+});

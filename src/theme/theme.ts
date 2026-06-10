@@ -308,6 +308,15 @@ export const theme = {
   },
 
   /**
+   * 🔔 Toggle Status States
+   */
+
+  toggleSwitch: {
+    active: colors.primary[500],
+    inactive: colors.secondary[500],
+  },
+
+  /**
    * 🔔 ALERTS / STATES
    */
   state: {

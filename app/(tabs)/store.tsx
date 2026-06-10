@@ -91,7 +91,6 @@ export default function StoreScreen() {
         }}
         contentContainerStyle={{
           paddingHorizontal: spacing.lg,
-          paddingTop: spacing.lg,
           paddingBottom: spacing.xl,
         }}
         showsVerticalScrollIndicator={false}
@@ -101,6 +100,7 @@ export default function StoreScreen() {
         <View
           style={{
             gap: spacing.xs,
+            marginTop: spacing.md,
           }}
         >
           <AppText variant="h1">Storefront</AppText>

@@ -8,12 +8,18 @@ import { theme } from "@/theme";
 import { typography } from "@/theme/typography";
 import { radius } from "@/theme/radius";
 
+type InputVariant = "default" | "textarea";
+
 type InputState = "default" | "focus" | "error" | "disabled";
 
 interface InputProps extends TextInputProps {
   label?: string;
 
   required?: boolean;
+
+  variant?: InputVariant;
+
+  maxLength?: number;
 
   error?: string;
 
@@ -25,6 +31,8 @@ interface InputProps extends TextInputProps {
 export function Input({
   label,
   required = false,
+  variant = "default",
+  maxLength,
   error,
   helperText,
   rightIcon,
@@ -33,6 +41,7 @@ export function Input({
   onBlur,
   style,
   placeholder,
+  value,
   ...props
 }: InputProps) {
   const [focused, setFocused] = useState(false);
@@ -49,30 +58,50 @@ export function Input({
     ? `Error. ${error}`
     : (helperText ?? placeholder ?? undefined);
 
+  const characterCount = value?.length ?? 0;
   return (
     <View style={styles.container}>
       {label && (
         <View style={styles.labelContainer}>
-          <AppText variant="caption" color="secondary">
-            {label}
-          </AppText>
-
-          {required && (
-            <AppText
-              variant="caption"
-              style={{
-                color: theme.text.error,
-              }}
-            >
-              {" *"}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <AppText variant="caption" color="secondary">
+              {label}
             </AppText>
-          )}
+
+            {required && (
+              <AppText
+                variant="caption"
+                style={{
+                  color: theme.text.error,
+                }}
+              >
+                {" *"}
+              </AppText>
+            )}
+          </View>
         </View>
       )}
 
-      <View style={[styles.inputContainer, getInputStateStyle(state)]}>
+      <View
+        style={[
+          styles.inputContainer,
+
+          variant === "textarea" && styles.textareaContainer,
+
+          getInputStateStyle(state),
+        ]}
+      >
         <TextInput
           {...props}
+          value={value}
+          maxLength={maxLength}
+          multiline={variant === "textarea"}
+          textAlignVertical={variant === "textarea" ? "top" : "center"}
           editable={editable}
           placeholder={placeholder}
           placeholderTextColor={theme.input.placeholder}
@@ -81,7 +110,13 @@ export function Input({
           accessibilityState={{
             disabled: !editable,
           }}
-          style={[styles.input, style]}
+          style={[
+            styles.input,
+
+            variant === "textarea" && styles.textareaInput,
+
+            style,
+          ]}
           onFocus={(e) => {
             setFocused(true);
 
@@ -97,20 +132,32 @@ export function Input({
         {rightIcon && <View style={styles.iconContainer}>{rightIcon}</View>}
       </View>
 
-      {error ? (
-        <AppText
-          variant="caption"
-          color="error"
-          style={styles.feedback}
-          accessibilityRole="alert"
-        >
-          {error}
-        </AppText>
-      ) : helperText ? (
-        <AppText variant="caption" color="secondary" style={styles.feedback}>
-          {helperText}
-        </AppText>
-      ) : null}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: 4,
+        }}
+      >
+        <View>
+          {error ? (
+            <AppText variant="caption" color="error" accessibilityRole="alert">
+              {error}
+            </AppText>
+          ) : helperText ? (
+            <AppText variant="caption" color="secondary">
+              {helperText}
+            </AppText>
+          ) : null}
+        </View>
+
+        {maxLength && (
+          <AppText variant="caption" color="secondary">
+            {characterCount}/{maxLength}
+          </AppText>
+        )}
+      </View>
     </View>
   );
 }
@@ -154,6 +201,9 @@ const styles = StyleSheet.create({
 
   labelContainer: {
     flexDirection: "row",
+
+    justifyContent: "space-between",
+
     alignItems: "center",
 
     marginBottom: 8,
@@ -171,6 +221,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  textareaContainer: {
+    minHeight: 120,
+
+    alignItems: "flex-start",
+  },
+
   input: {
     flex: 1,
 
@@ -181,6 +237,12 @@ const styles = StyleSheet.create({
     color: theme.input.text,
 
     ...typography.body,
+  },
+
+  textareaInput: {
+    minHeight: 120,
+
+    paddingTop: 16,
   },
 
   iconContainer: {

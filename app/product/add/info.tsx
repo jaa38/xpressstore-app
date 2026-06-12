@@ -20,6 +20,7 @@ import * as ImagePicker from "expo-image-picker";
 
 import { useState } from "react";
 import { Input } from "@/components/ui/Input";
+import { Dropdown } from "@/components/ui/Dropdown";
 
 export default function InfoScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -65,6 +66,8 @@ export default function InfoScreen() {
   const handleRemoveImage = () => {
     setImageUri(null);
   };
+
+  const [description, setDescription] = useState("");
 
   return (
     <SafeAreaView
@@ -202,6 +205,21 @@ export default function InfoScreen() {
                 />
               </View>
             </View>
+
+            <View style={{ marginTop: spacing.lg }}>
+              <Input
+                label="Description"
+                variant="textarea"
+                placeholder="Describe your product..."
+                value={description}
+                onChangeText={setDescription}
+                maxLength={250}
+              />
+            </View>
+          </View>
+
+          <View style={{ marginTop: spacing.lg }}>
+            <Dropdown />
           </View>
         </ScrollView>
         <Divider />

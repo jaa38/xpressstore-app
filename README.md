@@ -1,114 +1,65 @@
 # XpressStore Mobile App
 
-XpressStore is a React Native mobile application built with Expo, TypeScript, Supabase, TanStack Query, React Hook Form, and Expo Router.
+XpressStore is a mobile-first commerce platform built with React Native, Expo, TypeScript, Supabase, TanStack Query, React Hook Form, and Expo Router.
 
-The platform enables merchants to create storefronts, manage products, receive payments, and process orders from a mobile-first experience.
+The platform enables merchants to:
+
+* Create and manage storefronts
+* Add and organize products
+* Manage inventory
+* Receive orders
+* Accept payments
+* Grow their business from a mobile application
 
 ---
 
-## Current Status
+# Current Status
 
-### Completed
+## Foundation ✅
 
-#### Foundation
+### Project Setup
 
-* Expo SDK
+* Expo SDK 56
+* React Native
 * TypeScript
 * Expo Router
 * Path Aliases
-* Theme System
-* React Query Setup
+* ESLint & Prettier
+* Environment Configuration
+
+### Architecture
+
+* Feature-Based Folder Structure
+* Route Constants System
 * Supabase Integration
+* TanStack Query Setup
+* Zustand State Management
+* MMKV Storage
+* Reusable Design System
 
-#### Authentication & Onboarding
+---
 
-* Splash Screen
+# Authentication & Onboarding ✅
+
+### Authentication
+
 * Welcome Screen
-* Sign Up Flow
+* Sign Up Screen
+* Login Screen
+* Forgot Password
+* Password Reset Flow
+* Email Verification
+* OTP Verification
 * Password Validation
 * Show / Hide Password
-* Email Verification Screen
-* OTP Input Component
-* Multi-Step Onboarding Flow
-* Route Constants System
 
-#### Business Setup
+### Onboarding
 
-* Business Details Screen
-* Business Type Dropdown
-* Business Category Dropdown
-* Dynamic Categories from Supabase
-* Form Validation
-* Progress Indicators
+#### Step 1
 
-#### Design System
+Business Account Creation
 
-* AppText Component
-* Button Component
-* Input Component
-* NumberInput Component
-* OTPInput Component
-* ProgressBar Component
-* Dropdown Component
-* Theme Tokens
-* Typography System
-* Spacing System
-* Radius System
-
----
-
-## Project Structure
-
-```txt
-src
-├── components
-│   └── ui
-│       ├── AppText
-│       ├── Button
-│       ├── Input
-│       ├── NumberInput
-│       ├── OTPInput
-│       ├── ProgressBar
-│       └── Dropdown
-│
-├── features
-│   ├── auth
-│   │   ├── schemas
-│   │   ├── services
-│   │   └── store
-│   │
-│   └── business
-│       ├── api
-│       └── hooks
-│
-├── navigation
-│   └── routes.ts
-│
-├── providers
-│
-├── services
-│   └── supabase
-│
-├── storage
-│
-├── theme
-│
-└── lib
-```
-
----
-
-## Onboarding Flow
-
-### Step 1
-
-Create Account
-
-* Email Address
-* Password
-* Confirm Password
-
-### Step 2
+#### Step 2
 
 Business Details
 
@@ -117,23 +68,153 @@ Business Details
 * Business Type
 * Business Category
 
-### Step 3
+#### Step 3
 
 ID Verification
 
-* Coming Soon
+#### Step 4
 
-### Step 4
+Biometric Verification
 
-Store Creation
-
-* Coming Soon
+* Progress Indicators
+* Multi-Step Navigation
+* Validation
+* Supabase Integration
 
 ---
 
-## Supabase
+# Merchant Dashboard 🚧
 
-### Tables
+### Bottom Navigation
+
+* Home
+* Products
+* Orders
+* Store
+* More
+
+### Home
+
+* Dashboard Layout
+* Quick Actions
+* Merchant Overview
+
+---
+
+# Product Management 🚧
+
+### Product List
+
+* Product Grid
+* Product Cards
+* Product Visibility Toggle
+* Product Details Navigation
+* Product Search Foundation
+
+### Product Details
+
+* Dynamic Product Route
+* Product Information Screen
+
+### Product Creation Wizard
+
+#### Step 1 — Product Information
+
+* Product Image Upload
+* Camera Integration
+* Gallery Upload
+* Product Name
+* Product Description
+* Character Counter
+* Category Selection
+* Custom Category Creation
+
+#### Step 2 — Pricing & Inventory
+
+* Selling Price
+* Cost Price
+* Inventory Setup
+* SKU Generation
+
+#### Step 3 — Product Variants
+
+* Size Variants
+* Color Variants
+* Product Options
+
+#### Step 4 — Storefront Settings
+
+* Product Visibility
+* Featured Product Settings
+
+#### Step 5 — Review & Publish
+
+* Product Summary
+* Publish Product
+
+---
+
+# Design System ✅
+
+## Typography
+
+* Headings
+* Body Text
+* Labels
+* Captions
+* Buttons
+
+## Components
+
+### Core Components
+
+* AppText
+* Button
+* Input
+* Dropdown
+* NumberInput
+* OTPInput
+* ProgressBar
+* Divider
+* Card
+
+### Product Components
+
+* ImageActionCard
+* Product Cards
+* Product Visibility Controls
+
+### Feedback States
+
+* Default
+* Focus
+* Disabled
+* Error
+* Success
+
+### Theme Tokens
+
+* Colors
+* Typography
+* Radius
+* Spacing
+* Shadows
+* Semantic Theme System
+
+---
+
+# Supabase
+
+## Current Integration
+
+### Authentication
+
+* User Registration
+* Email Verification
+* Login
+* Password Recovery
+
+### Database
 
 #### business_categories
 
@@ -144,20 +225,7 @@ create table business_categories (
 );
 ```
 
-### Seed Data
-
-```sql
-insert into business_categories (name)
-values
-('Fashion'),
-('Food & Beverage'),
-('Electronics'),
-('Health & Beauty'),
-('Services'),
-('Education');
-```
-
-### RLS Policy
+### Row Level Security
 
 ```sql
 create policy "Allow public read"
@@ -169,88 +237,121 @@ using (true);
 
 ---
 
-## Routing Structure
+# Project Structure
 
 ```txt
 app
-├── index.tsx
-│
-├── (onboarding)
-│   ├── welcome.tsx
-│   ├── signup.tsx
-│   ├── email-verification.tsx
-│   ├── business-details.tsx
-│   └── id-verification.tsx
-│
 ├── (auth)
-│   ├── login.tsx
-│   ├── forgot-password.tsx
-│   └── reset-password.tsx
+├── (onboarding)
+├── (password-recovery)
+├── (tabs)
 │
-└── (tabs)
-    ├── home.tsx
-    ├── products.tsx
-    ├── orders.tsx
-    ├── store.tsx
-    └── more.tsx
+├── product
+│   ├── [id].tsx
+│   └── add
+│       ├── InfoScreen.tsx
+│       ├── PricingScreen.tsx
+│       ├── VariantsScreen.tsx
+│       ├── StorefrontScreen.tsx
+│       └── ReviewScreen.tsx
+│
+└── _layout.tsx
+
+src
+├── components
+│   ├── ui
+│   └── product
+│
+├── features
+│   ├── auth
+│   ├── business
+│   ├── products
+│   └── storefront
+│
+├── navigation
+├── providers
+├── services
+├── storage
+├── theme
+└── lib
 ```
 
 ---
 
-## Tech Stack
+# Tech Stack
+
+## Frontend
 
 * React Native
 * Expo
 * TypeScript
 * Expo Router
-* Supabase
+
+## State Management
+
+* Zustand
 * TanStack Query
+
+## Forms & Validation
+
 * React Hook Form
 * Zod
-* Zustand
+
+## Backend
+
+* Supabase
+
+## Storage
+
 * MMKV
 
 ---
 
-## Next Milestones
+# Roadmap
 
-### Authentication
+## Phase 1 — Foundation ✅
 
-* Login Screen
-* Forgot Password
-* Reset Password
-* Session Management
+* Authentication
+* Onboarding
+* Design System
+* Navigation
+* Supabase Integration
 
-### Onboarding
-
-* ID Verification
-* Store Setup
-* Completion Flow
-
-### Store Management
+## Phase 2 — Product Management 🚧
 
 * Product Creation
+* Product Editing
 * Product Categories
-* Product Inventory
+* Product Variants
+* Inventory Management
 
-### Commerce
+## Phase 3 — Storefront
+
+* Store Configuration
+* Public Storefront
+* Product Publishing
+
+## Phase 4 — Commerce
 
 * Orders
 * Checkout
 * Payments
+* Shipping
 
-### Merchant Dashboard
+## Phase 5 — Analytics
 
-* Analytics
-* Revenue
-* Customer Insights
+* Revenue Dashboard
+* Product Insights
+* Customer Analytics
+* Business Reporting
 
 ---
 
-## Author
+# Author
 
 Jeremiah Akinsowon
 
-Product Designer → Frontend Engineer Journey
+Product Designer → Frontend Engineer
 
-Building XpressStore publicly while transitioning into Frontend Engineering.
+Building XpressStore publicly while transitioning into Frontend Engineering and React Native development.
+

@@ -165,7 +165,16 @@ export default function InfoScreen() {
 
             <AppText variant="h3">Product Information</AppText>
 
-            <Ionicons name="close" size={24} color={theme.icon.default.icon} />
+            <Pressable
+              onPress={() => router.replace(ROUTES.PRODUCTS)}
+              hitSlop={12}
+            >
+              <Ionicons
+                name="close"
+                size={24}
+                color={theme.icon.default.icon}
+              />
+            </Pressable>
           </View>
 
           <View

@@ -89,28 +89,41 @@ export default function InfoScreen() {
     },
   ]);
 
-function createCategory() {
-  if (!newCategory.trim()) {
-    return;
+  const [sku, setSku] = useState("");
+
+  function generateSku() {
+    const randomSku = `SKU-${Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase()}`;
+
+    setSku(randomSku);
   }
 
-  const categoryOption = {
-    label: newCategory.trim(),
-    value: newCategory
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-"),
-  };
+  function createCategory() {
+    if (!newCategory.trim()) {
+      return;
+    }
 
-  setCategories((current) => [
-    ...current,
-    categoryOption,
-  ]);
+    const value = newCategory.trim().toLowerCase().replace(/\s+/g, "-");
 
-  setCategory(categoryOption.value);
+    const exists = categories.some((category) => category.value === value);
 
-  setNewCategory("");
-}
+    if (exists) {
+      return;
+    }
+
+    const categoryOption = {
+      label: newCategory.trim(),
+      value,
+    };
+
+    setCategories((current) => [...current, categoryOption]);
+
+    setCategory(categoryOption.value);
+
+    setNewCategory("");
+  }
 
   return (
     <SafeAreaView
@@ -216,7 +229,7 @@ function createCategory() {
               <View
                 style={{
                   flexDirection: "row",
-                  gap: spacing.sm,
+                  justifyContent: "space-between",
                 }}
               >
                 <ImageActionCard
@@ -240,7 +253,7 @@ function createCategory() {
                 />
               </View>
 
-              <View style={{ marginTop: spacing.lg }}>
+              <View style={{ marginTop: spacing.md }}>
                 <Input
                   label="Product Name"
                   required
@@ -249,20 +262,20 @@ function createCategory() {
               </View>
             </View>
 
-            <View style={{ marginTop: spacing.lg }}>
+            <View style={{ marginTop: spacing.md }}>
               <Input
                 label="Description"
                 variant="textarea"
-                placeholder="Describe your product..."
+                optional
+                maxLength={250}
                 value={description}
                 onChangeText={setDescription}
-                maxLength={250}
               />
             </View>
 
             <View
               style={{
-                marginTop: spacing.lg,
+                marginTop: spacing.md,
               }}
             >
               <Dropdown
@@ -274,25 +287,77 @@ function createCategory() {
                 onSelect={setCategory}
               />
 
-              <Pressable
-                onPress={() => {
-                  const newCategory = {
-                    label: "Travel Bags",
-                    value: "travel-bags",
-                  };
-
-                  setCategories((current) => [...current, newCategory]);
-
-                  setCategory(newCategory.value);
-                }}
+              <View
                 style={{
+                  marginTop: spacing.md,
+                  gap: spacing.sm,
+                }}
+              >
+                <Input
+                  label="Create Category"
+                  placeholder="e.g Travel Bags"
+                  value={newCategory}
+                  onChangeText={setNewCategory}
+                />
+
+                <Button
+                  title="Add Category"
+                  variant="tertiary"
+                  onPress={createCategory}
+                />
+              </View>
+            </View>
+
+            <View style={{ marginTop: spacing.md }}>
+              <Input
+                label="Brand"
+                optional
+                placeholder="e.g. PayXpress Originals"
+              />
+            </View>
+
+            <View
+              style={{
+                marginTop: spacing.md,
+              }}
+            >
+              <AppText variant="caption" color="secondary">
+                SKU
+              </AppText>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  gap: spacing.sm,
                   marginTop: spacing.sm,
                 }}
               >
-                <AppText variant="bodySmallBold" color="primary">
-                  + Create Category
-                </AppText>
-              </Pressable>
+                <View
+                  style={{
+                    flex: 1,
+                  }}
+                >
+                  <Input
+                    placeholder="Enter manually"
+                    value={sku}
+                    onChangeText={setSku}
+                  />
+                </View>
+
+                <Button
+                  title="Auto"
+                  variant="tertiary"
+                  leftIcon={
+                    <Ionicons
+                      name="refresh"
+                      size={18}
+                      color={theme.action.tertiary.text}
+                    />
+                  }
+                  onPress={generateSku}
+                />
+              </View>
             </View>
           </View>
         </ScrollView>

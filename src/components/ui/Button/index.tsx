@@ -30,6 +30,10 @@ interface ButtonProps {
   onPress?: () => void;
 
   style?: ViewStyle;
+
+  leftIcon?: React.ReactNode;
+
+  rightIcon?: React.ReactNode;
 }
 
 const BUTTON_SIZES = {
@@ -148,6 +152,9 @@ export function Button({
   onPress,
 
   style,
+
+  leftIcon,
+  rightIcon,
 }: ButtonProps) {
   const sizeStyles = BUTTON_SIZES[size];
 
@@ -194,19 +201,25 @@ export function Button({
           color={getTextColor(variant, disabled)}
         />
       ) : (
-        <Text
-          style={[
-            sizeStyles.textStyle,
+        <>
+          {leftIcon}
 
-            {
-              color: getTextColor(variant, disabled),
+          <Text
+            style={[
+              sizeStyles.textStyle,
+              {
+                color: getTextColor(variant, disabled),
+                fontFamily: typography.fontFamily,
 
-              fontFamily: typography.fontFamily,
-            } as TextStyle,
-          ]}
-        >
-          {title}
-        </Text>
+                marginHorizontal: 6,
+              } as TextStyle,
+            ]}
+          >
+            {title}
+          </Text>
+
+          {rightIcon}
+        </>
       )}
     </Pressable>
   );

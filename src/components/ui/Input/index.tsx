@@ -17,6 +17,8 @@ interface InputProps extends TextInputProps {
 
   required?: boolean;
 
+  optional?: boolean;
+
   variant?: InputVariant;
 
   maxLength?: number;
@@ -32,6 +34,7 @@ export function Input({
   label,
   required = false,
   variant = "default",
+  optional = false,
   maxLength,
   error,
   helperText,
@@ -83,7 +86,25 @@ export function Input({
                 {" *"}
               </AppText>
             )}
+
+            {optional && (
+              <AppText
+                variant="caption"
+                color="secondary"
+                style={{
+                  marginLeft: 4,
+                }}
+              >
+                (Optional)
+              </AppText>
+            )}
           </View>
+
+          {maxLength && (
+            <AppText variant="caption" color="secondary">
+              {characterCount}/{maxLength}
+            </AppText>
+          )}
         </View>
       )}
 
@@ -134,9 +155,6 @@ export function Input({
 
       <View
         style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
           marginTop: 4,
         }}
       >
@@ -151,12 +169,6 @@ export function Input({
             </AppText>
           ) : null}
         </View>
-
-        {maxLength && (
-          <AppText variant="caption" color="secondary">
-            {characterCount}/{maxLength}
-          </AppText>
-        )}
       </View>
     </View>
   );
@@ -222,8 +234,7 @@ const styles = StyleSheet.create({
   },
 
   textareaContainer: {
-    minHeight: 120,
-
+    height: 120,
     alignItems: "flex-start",
   },
 
@@ -240,9 +251,9 @@ const styles = StyleSheet.create({
   },
 
   textareaInput: {
-    minHeight: 120,
-
+    flex: 1,
     paddingTop: 16,
+    paddingBottom: 16,
   },
 
   iconContainer: {

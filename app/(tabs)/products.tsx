@@ -11,6 +11,10 @@ import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { useState, useMemo } from "react";
+import { router } from "expo-router";
+import { ROUTES } from "@/navigation/routes";
+import { Input } from "@/components/ui/Input";
+
 type Product = {
   id: string;
   name: string;
@@ -194,7 +198,11 @@ export default function ProductScreen() {
                 Number of items in catalog
               </AppText>
             </View>
-            <Button title="Add Product" variant="primary" />
+            <Button
+              title="Add Product"
+              variant="primary"
+              onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
+            />
           </View>
           <Card
             style={{
@@ -248,6 +256,10 @@ export default function ProductScreen() {
                 />
               )}
             />
+          </View>
+
+          <View>
+            <Input></Input>
           </View>
           {/* BOTTOM */}
           <View

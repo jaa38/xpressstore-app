@@ -1,11 +1,6 @@
 import { useState } from "react";
 
-import {
-  TextInput,
-  TextInputProps,
-  View,
-  StyleSheet,
-} from "react-native";
+import { TextInput, TextInputProps, View, StyleSheet } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
 
@@ -13,11 +8,7 @@ import { theme } from "@/theme";
 import { typography } from "@/theme/typography";
 import { radius } from "@/theme/radius";
 
-type InputState =
-  | "default"
-  | "focus"
-  | "error"
-  | "disabled";
+type InputState = "default" | "focus" | "error" | "disabled";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -51,47 +42,30 @@ export function Input({
         ? "focus"
         : "default";
 
-  const accessibilityHint =
-    error ??
-    helperText ??
-    placeholder ??
-    undefined;
+  const accessibilityHint = error
+    ? `Error. ${error}`
+    : (helperText ?? placeholder ?? undefined);
 
   return (
     <View style={styles.container}>
       {label && (
-        <AppText
-          variant="caption"
-          color="secondary"
-          style={styles.label}
-        >
+        <AppText variant="caption" color="secondary" style={styles.label}>
           {label}
         </AppText>
       )}
 
-      <View
-        style={[
-          styles.inputContainer,
-          getInputStateStyle(state),
-        ]}
-      >
+      <View style={[styles.inputContainer, getInputStateStyle(state)]}>
         <TextInput
           {...props}
           editable={editable}
+          placeholder={placeholder}
+          placeholderTextColor={theme.input.placeholder}
           accessibilityLabel={label}
           accessibilityHint={accessibilityHint}
           accessibilityState={{
             disabled: !editable,
-            invalid: !!error,
           }}
-          placeholder={placeholder}
-          placeholderTextColor={
-            theme.input.placeholder
-          }
-          style={[
-            styles.input,
-            style,
-          ]}
+          style={[styles.input, style]}
           onFocus={(e) => {
             setFocused(true);
 
@@ -104,15 +78,7 @@ export function Input({
           }}
         />
 
-        {rightIcon && (
-          <View
-            style={
-              styles.iconContainer
-            }
-          >
-            {rightIcon}
-          </View>
-        )}
+        {rightIcon && <View style={styles.iconContainer}>{rightIcon}</View>}
       </View>
 
       {error ? (
@@ -125,11 +91,7 @@ export function Input({
           {error}
         </AppText>
       ) : helperText ? (
-        <AppText
-          variant="caption"
-          color="secondary"
-          style={styles.feedback}
-        >
+        <AppText variant="caption" color="secondary" style={styles.feedback}>
           {helperText}
         </AppText>
       ) : null}
@@ -137,90 +99,76 @@ export function Input({
   );
 }
 
-function getInputStateStyle(
-  state: InputState
-) {
+function getInputStateStyle(state: InputState) {
   switch (state) {
     case "focus":
       return {
-        borderColor:
-          theme.input.focusBorder,
+        borderColor: theme.input.focusBorder,
 
-        backgroundColor:
-          theme.input.background,
+        backgroundColor: theme.input.background,
       };
 
     case "error":
       return {
-        borderColor:
-          theme.input.errorBorder,
+        borderColor: theme.input.errorBorder,
 
-        backgroundColor:
-          theme.input.background,
+        backgroundColor: theme.input.background,
       };
 
     case "disabled":
       return {
-        borderColor:
-          theme.input.border,
+        borderColor: theme.input.border,
 
-        backgroundColor:
-          theme.input
-            .disabledBackground,
+        backgroundColor: theme.input.disabledBackground,
       };
 
     default:
       return {
-        borderColor:
-          theme.input.border,
+        borderColor: theme.input.border,
 
-        backgroundColor:
-          theme.input.background,
+        backgroundColor: theme.input.background,
       };
   }
 }
 
-const styles =
-  StyleSheet.create({
-    container: {
-      width: "100%",
-    },
+const styles = StyleSheet.create({
+  container: {
+    width: "100%",
+  },
 
-    label: {
-      marginBottom: 8,
-    },
+  label: {
+    marginBottom: 8,
+  },
 
-    inputContainer: {
-      height: 48,
+  inputContainer: {
+    height: 48,
 
-      borderWidth: 1,
+    borderWidth: 1,
 
-      borderRadius:
-        radius.md,
+    borderRadius: radius.md,
 
-      flexDirection: "row",
+    flexDirection: "row",
 
-      alignItems: "center",
-    },
+    alignItems: "center",
+  },
 
-    input: {
-      flex: 1,
+  input: {
+    flex: 1,
 
-      height: "100%",
+    height: "100%",
 
-      paddingHorizontal: 16,
+    paddingHorizontal: 16,
 
-      color:
-        theme.input.text,
+    color: theme.input.text,
 
-      ...typography.body,
-    },
+    ...typography.body,
+  },
 
-    iconContainer: {
-      paddingRight: 16,
-    },
+  iconContainer: {
+    paddingRight: 16,
+  },
 
-    feedback: {
-      marginTop: 4,
-    },
-  });
+  feedback: {
+    marginTop: 4,
+  },
+});

@@ -12,7 +12,7 @@ export function ProgressBar({
   return (
     <View
       style={{
-        flex: 1,
+        width: "100%",
 
         height: 8,
 
@@ -33,8 +33,6 @@ export function ProgressBar({
           backgroundColor:
             theme.action.primary
               .background,
-
-          borderRadius: 999,
         }}
       />
     </View>

@@ -57,6 +57,27 @@ export const ROUTES = {
 
   PRODUCTS: "/(tabs)/products",
 
+    /**
+   * PRODUCTS
+   */
+
+  PRODUCT_DETAILS: "/product/[id]",
+
+  // STEP 1
+  ADD_PRODUCT_INFO: "/product/add/info",
+
+  // STEP 2
+  ADD_PRODUCT_PRICING: "/product/add/pricing",
+
+  // STEP 3
+  ADD_PRODUCT_VARIANTS: "/product/add/variants",
+
+  // STEP 4
+  ADD_PRODUCT_STOREFRONT: "/product/add/storefront",
+
+  // STEP 5
+  ADD_PRODUCT_REVIEW: "/product/add/review",
+
   ORDERS: "/(tabs)/orders",
 
   STORE: "/(tabs)/store",

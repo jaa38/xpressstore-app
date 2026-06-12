@@ -259,7 +259,6 @@ export default function ProductScreen() {
           </View>
 
           <View>
-            <Input></Input>
           </View>
           {/* BOTTOM */}
           <View

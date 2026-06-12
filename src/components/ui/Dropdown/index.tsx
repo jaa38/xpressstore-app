@@ -1,11 +1,6 @@
 import { useState } from "react";
 
-import {
-  Pressable,
-  View,
-  StyleSheet,
-  ScrollView,
-} from "react-native";
+import { Pressable, View, StyleSheet, ScrollView } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -15,11 +10,7 @@ import { theme } from "@/theme";
 import { typography } from "@/theme/typography";
 import { radius } from "@/theme/radius";
 
-type DropdownState =
-  | "default"
-  | "focus"
-  | "error"
-  | "disabled";
+type DropdownState = "default" | "focus" | "error" | "disabled";
 
 export type DropdownOption = {
   label: string;
@@ -29,6 +20,8 @@ export type DropdownOption = {
 
 interface DropdownProps {
   label?: string;
+
+  required?: boolean;
 
   placeholder?: string;
 
@@ -40,13 +33,12 @@ interface DropdownProps {
 
   options: DropdownOption[];
 
-  onSelect: (
-    value: string
-  ) => void;
+  onSelect: (value: string) => void;
 }
 
 export function Dropdown({
   label,
+  required = false,
   placeholder = "Select option",
   value,
   error,
@@ -54,71 +46,63 @@ export function Dropdown({
   options,
   onSelect,
 }: DropdownProps) {
-  const [open, setOpen] =
-    useState(false);
+  const [open, setOpen] = useState(false);
 
-  const state: DropdownState =
-    disabled
-      ? "disabled"
-      : error
-        ? "error"
-        : open
-          ? "focus"
-          : "default";
+  const state: DropdownState = disabled
+    ? "disabled"
+    : error
+      ? "error"
+      : open
+        ? "focus"
+        : "default";
 
-  const selectedOption =
-    options.find(
-      (option) =>
-        option.value === value
-    );
+  const selectedOption = options.find((option) => option.value === value);
 
   return (
     <View style={styles.container}>
       {label && (
-        <AppText
-          variant="caption"
-          color="secondary"
+        <View
           style={{
+            flexDirection: "row",
+            alignItems: "center",
             marginBottom: 8,
           }}
         >
-          {label}
-        </AppText>
+          <AppText variant="caption" color="secondary">
+            {label}
+          </AppText>
+
+          {required && (
+            <AppText
+              variant="caption"
+              style={{
+                color: theme.text.error,
+              }}
+            >
+              {" *"}
+            </AppText>
+          )}
+        </View>
       )}
 
       <Pressable
         disabled={disabled}
-        onPress={() =>
-          setOpen(!open)
-        }
-        style={[
-          styles.dropdown,
-          getDropdownStateStyle(
-            state
-          ),
-        ]}
+        onPress={() => setOpen(!open)}
+        style={[styles.dropdown, getDropdownStateStyle(state)]}
       >
         <AppText
           variant="body"
           style={{
             flex: 1,
 
-            color: value
-              ? theme.input.text
-              : theme.input
-                  .placeholder,
+            color: value ? theme.input.text : theme.input.placeholder,
           }}
         >
-          {selectedOption?.label ||
-            placeholder}
+          {selectedOption?.label || placeholder}
         </AppText>
 
         <Ionicons
-          name={
-            open
-              ? "chevron-up"
-              : "chevron-down"
-          }
+          name={open ? "chevron-up" : "chevron-down"}
           size={20}
           color={theme.input.icon}
         />
@@ -126,48 +110,30 @@ export function Dropdown({
 
       {open && (
         <ScrollView
-          style={
-            styles.optionsContainer
-          }
+          style={styles.optionsContainer}
           nestedScrollEnabled
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator
         >
-          {options.map(
-            (option) => (
-              <Pressable
-                key={
-                  option.value
-                }
-                onPress={() => {
-                  onSelect(
-                    option.value
-                  );
+          {options.map((option) => (
+            <Pressable
+              key={option.value}
+              onPress={() => {
+                onSelect(option.value);
 
-                  setOpen(
-                    false
-                  );
-                }}
-                style={[
-                  styles.option,
+                setOpen(false);
+              }}
+              style={[
+                styles.option,
 
-                  value ===
-                    option.value && {
-                    backgroundColor:
-                      theme
-                        .background
-                        .brand,
-                  },
-                ]}
-              >
-                <AppText
-                  variant="body"
-                >
-                  {option.label}
-                </AppText>
-              </Pressable>
-            )
-          )}
+                value === option.value && {
+                  backgroundColor: theme.background.brand,
+                },
+              ]}
+            >
+              <AppText variant="body">{option.label}</AppText>
+            </Pressable>
+          ))}
         </ScrollView>
       )}
 
@@ -186,110 +152,86 @@ export function Dropdown({
   );
 }
 
-function getDropdownStateStyle(
-  state: DropdownState
-) {
+function getDropdownStateStyle(state: DropdownState) {
   switch (state) {
     case "focus":
       return {
-        borderColor:
-          theme.input
-            .focusBorder,
+        borderColor: theme.input.focusBorder,
 
-        backgroundColor:
-          theme.input
-            .background,
+        backgroundColor: theme.input.background,
       };
 
     case "error":
       return {
-        borderColor:
-          theme.input
-            .errorBorder,
+        borderColor: theme.input.errorBorder,
 
-        backgroundColor:
-          theme.input
-            .background,
+        backgroundColor: theme.input.background,
       };
 
     case "disabled":
       return {
-        borderColor:
-          theme.input.border,
+        borderColor: theme.input.border,
 
-        backgroundColor:
-          theme.input
-            .disabledBackground,
+        backgroundColor: theme.input.disabledBackground,
       };
 
     default:
       return {
-        borderColor:
-          theme.input.border,
+        borderColor: theme.input.border,
 
-        backgroundColor:
-          theme.input
-            .background,
+        backgroundColor: theme.input.background,
       };
   }
 }
 
-const styles =
-  StyleSheet.create({
-    container: {
-      width: "100%",
-    },
+const styles = StyleSheet.create({
+  container: {
+    width: "100%",
+  },
 
-    dropdown: {
-      height: 48,
+  dropdown: {
+    height: 48,
 
-      borderWidth: 1,
+    borderWidth: 1,
 
-      borderRadius:
-        radius.md,
+    borderRadius: radius.md,
 
-      flexDirection: "row",
+    flexDirection: "row",
 
-      alignItems: "center",
+    alignItems: "center",
 
-      justifyContent:
-        "space-between",
+    justifyContent: "space-between",
 
-      paddingHorizontal: 16,
+    paddingHorizontal: 16,
 
-      backgroundColor:
-        "#FFFFFF",
-    },
+    backgroundColor: "#FFFFFF",
+  },
 
-    optionsContainer: {
-      marginTop: 4,
+  optionsContainer: {
+    marginTop: 4,
 
-      maxHeight: 220,
+    maxHeight: 220,
 
-      borderWidth: 1,
+    borderWidth: 1,
 
-      borderColor:
-        theme.input.border,
+    borderColor: theme.input.border,
 
-      borderRadius:
-        radius.md,
+    borderRadius: radius.md,
 
-      backgroundColor:
-        "#FFFFFF",
-    },
+    backgroundColor: "#FFFFFF",
+  },
 
-    option: {
-      paddingHorizontal: 16,
+  option: {
+    paddingHorizontal: 16,
 
-      paddingVertical: 14,
+    paddingVertical: 14,
 
-      backgroundColor:
-        "#FFFFFF",
-    },
+    backgroundColor: "#FFFFFF",
+  },
 
-    value: {
-      flex: 1,
+  value: {
+    flex: 1,
 
-      ...typography.body,
-    },
-  });
+    ...typography.body,
+  },
+});

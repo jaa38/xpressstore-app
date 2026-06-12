@@ -20,6 +20,7 @@ import * as ImagePicker from "expo-image-picker";
 
 import { useState } from "react";
 import { Input } from "@/components/ui/Input";
+
 import { Dropdown } from "@/components/ui/Dropdown";
 
 export default function InfoScreen() {
@@ -68,6 +69,48 @@ export default function InfoScreen() {
   };
 
   const [description, setDescription] = useState("");
+
+  const [category, setCategory] = useState("");
+
+  const [newCategory, setNewCategory] = useState("");
+
+  const [categories, setCategories] = useState([
+    {
+      label: "Bags",
+      value: "bags",
+    },
+    {
+      label: "Accessories",
+      value: "accessories",
+    },
+    {
+      label: "Shoes",
+      value: "shoes",
+    },
+  ]);
+
+function createCategory() {
+  if (!newCategory.trim()) {
+    return;
+  }
+
+  const categoryOption = {
+    label: newCategory.trim(),
+    value: newCategory
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-"),
+  };
+
+  setCategories((current) => [
+    ...current,
+    categoryOption,
+  ]);
+
+  setCategory(categoryOption.value);
+
+  setNewCategory("");
+}
 
   return (
     <SafeAreaView
@@ -216,10 +259,41 @@ export default function InfoScreen() {
                 maxLength={250}
               />
             </View>
-          </View>
 
-          <View style={{ marginTop: spacing.lg }}>
-            <Dropdown />
+            <View
+              style={{
+                marginTop: spacing.lg,
+              }}
+            >
+              <Dropdown
+                label="Category"
+                required
+                value={category}
+                options={categories}
+                placeholder="Select category"
+                onSelect={setCategory}
+              />
+
+              <Pressable
+                onPress={() => {
+                  const newCategory = {
+                    label: "Travel Bags",
+                    value: "travel-bags",
+                  };
+
+                  setCategories((current) => [...current, newCategory]);
+
+                  setCategory(newCategory.value);
+                }}
+                style={{
+                  marginTop: spacing.sm,
+                }}
+              >
+                <AppText variant="bodySmallBold" color="primary">
+                  + Create Category
+                </AppText>
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
         <Divider />

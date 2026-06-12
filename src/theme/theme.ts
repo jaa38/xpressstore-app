@@ -240,6 +240,11 @@ export const theme = {
       background: colors.info[100],
       border: colors.info[500],
     },
+
+    disabled: {
+      background: colors.gray[100],
+      border: colors.gray[300],
+    },
   },
 
   /**

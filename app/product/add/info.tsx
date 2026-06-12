@@ -1,4 +1,4 @@
-import { View, ScrollView, Pressable } from "react-native";
+import { View, ScrollView, Pressable, Image } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -11,10 +11,60 @@ import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
+import { ImageActionCard } from "@/components/ui/ImageActionCard";
+
 import { spacing, theme } from "@/theme";
 import { ROUTES } from "@/navigation/routes";
 
+import * as ImagePicker from "expo-image-picker";
+
+import { useState } from "react";
+
 export default function InfoScreen() {
+  const [imageUri, setImageUri] = useState<string | null>(null);
+
+  const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
+    mediaTypes: ["images"],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.8,
+  };
+
+  const handleCamera = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permission.granted) {
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync(IMAGE_PICKER_OPTIONS);
+
+    if (!result.canceled) {
+      const asset = result.assets?.[0];
+
+      if (asset) {
+        setImageUri(asset.uri);
+      }
+    }
+  };
+
+  const handleGallery = async () => {
+    const result =
+      await ImagePicker.launchImageLibraryAsync(IMAGE_PICKER_OPTIONS);
+
+    if (!result.canceled) {
+      const asset = result.assets?.[0];
+
+      if (asset) {
+        setImageUri(asset.uri);
+      }
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageUri(null);
+  };
+
   return (
     <SafeAreaView
       style={{
@@ -103,7 +153,7 @@ export default function InfoScreen() {
             paddingTop: spacing.md,
             paddingBottom: spacing.xl,
           }}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
         >
           <AppText variant="body" color="secondary">
             Tell shoppers what they're buying. Add a great photo and clear name.
@@ -111,6 +161,55 @@ export default function InfoScreen() {
 
           <View style={{ marginTop: spacing.lg }}>
             <AppText variant="label">Product Image</AppText>
+            <View
+              style={{
+                marginTop: spacing.sm,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: spacing.sm,
+                }}
+              >
+                <ImageActionCard
+                  title="Take Photo"
+                  icon="camera-outline"
+                  onPress={handleCamera}
+                />
+
+                <ImageActionCard
+                  title="Gallery"
+                  icon="image-outline"
+                  onPress={handleGallery}
+                />
+
+                <ImageActionCard
+                  title="Remove"
+                  icon="trash-outline"
+                  disabled={!imageUri}
+                  onPress={handleRemoveImage}
+                />
+              </View>
+
+              {imageUri && (
+                <View
+                  style={{
+                    marginTop: spacing.md,
+                  }}
+                >
+                  <Image
+                    source={{ uri: imageUri }}
+                    resizeMode="cover"
+                    style={{
+                      width: "100%",
+                      height: 220,
+                      borderRadius: 12,
+                    }}
+                  />
+                </View>
+              )}
+            </View>
           </View>
         </ScrollView>
         <Divider />
@@ -121,8 +220,11 @@ export default function InfoScreen() {
             paddingBottom: spacing.xl,
             paddingTop: spacing.md,
             backgroundColor: theme.background.surface,
+            flexDirection: "row",
+            justifyContent: "space-between",
           }}
         >
+          <Button variant="tertiary" title="Save as Draft" />
           <Button
             title="Next"
             onPress={() => router.push(ROUTES.ADD_PRODUCT_PRICING)}

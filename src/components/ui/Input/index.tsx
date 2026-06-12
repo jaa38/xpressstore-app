@@ -13,6 +13,8 @@ type InputState = "default" | "focus" | "error" | "disabled";
 interface InputProps extends TextInputProps {
   label?: string;
 
+  required?: boolean;
+
   error?: string;
 
   helperText?: string;
@@ -22,6 +24,7 @@ interface InputProps extends TextInputProps {
 
 export function Input({
   label,
+  required = false,
   error,
   helperText,
   rightIcon,
@@ -49,9 +52,22 @@ export function Input({
   return (
     <View style={styles.container}>
       {label && (
-        <AppText variant="caption" color="secondary" style={styles.label}>
-          {label}
-        </AppText>
+        <View style={styles.labelContainer}>
+          <AppText variant="caption" color="secondary">
+            {label}
+          </AppText>
+
+          {required && (
+            <AppText
+              variant="caption"
+              style={{
+                color: theme.text.error,
+              }}
+            >
+              {" *"}
+            </AppText>
+          )}
+        </View>
       )}
 
       <View style={[styles.inputContainer, getInputStateStyle(state)]}>
@@ -136,7 +152,10 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 
-  label: {
+  labelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+
     marginBottom: 8,
   },
 

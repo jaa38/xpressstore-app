@@ -19,6 +19,7 @@ import { ROUTES } from "@/navigation/routes";
 import * as ImagePicker from "expo-image-picker";
 
 import { useState } from "react";
+import { Input } from "@/components/ui/Input";
 
 export default function InfoScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -160,7 +161,7 @@ export default function InfoScreen() {
           </AppText>
 
           <View style={{ marginTop: spacing.lg }}>
-            <AppText variant="label">Product Image</AppText>
+            <AppText variant="caption">Product Image</AppText>
             <View
               style={{
                 marginTop: spacing.sm,
@@ -175,6 +176,7 @@ export default function InfoScreen() {
                 <ImageActionCard
                   title="Take Photo"
                   icon="camera-outline"
+                  imageUri={imageUri ?? undefined}
                   onPress={handleCamera}
                 />
 
@@ -192,23 +194,13 @@ export default function InfoScreen() {
                 />
               </View>
 
-              {imageUri && (
-                <View
-                  style={{
-                    marginTop: spacing.md,
-                  }}
-                >
-                  <Image
-                    source={{ uri: imageUri }}
-                    resizeMode="cover"
-                    style={{
-                      width: "100%",
-                      height: 220,
-                      borderRadius: 12,
-                    }}
-                  />
-                </View>
-              )}
+              <View style={{ marginTop: spacing.lg }}>
+                <Input
+                  label="Product Name"
+                  required
+                  placeholder="e.g Ankara Tote Bag"
+                />
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -220,15 +212,30 @@ export default function InfoScreen() {
             paddingBottom: spacing.xl,
             paddingTop: spacing.md,
             backgroundColor: theme.background.surface,
+
             flexDirection: "row",
-            justifyContent: "space-between",
+
+            gap: spacing.md,
           }}
         >
-          <Button variant="tertiary" title="Save as Draft" />
-          <Button
-            title="Next"
-            onPress={() => router.push(ROUTES.ADD_PRODUCT_PRICING)}
-          />
+          <View
+            style={{
+              flex: 1,
+            }}
+          >
+            <Button title="Save as Draft" variant="tertiary" />
+          </View>
+
+          <View
+            style={{
+              flex: 1,
+            }}
+          >
+            <Button
+              title="Next"
+              onPress={() => router.push(ROUTES.ADD_PRODUCT_PRICING)}
+            />
+          </View>
         </View>
       </View>
     </SafeAreaView>

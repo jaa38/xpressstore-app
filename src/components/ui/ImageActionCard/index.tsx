@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, Image, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -15,16 +15,17 @@ type ImageActionCardSize = "sm" | "md" | "lg";
 
 interface ImageActionCardProps {
   title: string;
-
   icon: IoniconName;
 
+  imageUri?: string;
+
   size?: ImageActionCardSize;
+
+  onPress?: () => void;
 
   disabled?: boolean;
 
   selected?: boolean;
-
-  onPress?: () => void;
 }
 
 const SIZE_MAP = {
@@ -36,6 +37,7 @@ const SIZE_MAP = {
 export function ImageActionCard({
   title,
   icon,
+  imageUri,
   size = "md",
   disabled = false,
   selected = false,
@@ -75,21 +77,35 @@ export function ImageActionCard({
           },
         ]}
       >
-        <Ionicons
-          name={icon}
-          size={24}
-          color={
-            disabled ? theme.action.primary.disabled : theme.icon.branding.icon
-          }
-        />
+        {imageUri ? (
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: imageUri }}
+              resizeMode="cover"
+              style={styles.image}
+            />
+          </View>
+        ) : (
+          <>
+            <Ionicons
+              name={icon}
+              size={24}
+              color={
+                disabled
+                  ? theme.action.primary.disabled
+                  : theme.icon.branding.icon
+              }
+            />
 
-        <AppText
-          variant="caption"
-          color={disabled ? "muted" : "primary"}
-          style={styles.label}
-        >
-          {title}
-        </AppText>
+            <AppText
+              variant="caption"
+              color={disabled ? "muted" : "primary"}
+              style={styles.label}
+            >
+              {title}
+            </AppText>
+          </>
+        )}
       </Card>
     </Pressable>
   );
@@ -104,5 +120,24 @@ const styles = StyleSheet.create({
 
   label: {
     textAlign: "center",
+  },
+
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
+  },
+
+  imageContainer: {
+    position: "absolute",
+
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+
+    overflow: "hidden",
+
+    borderRadius: 12,
   },
 });

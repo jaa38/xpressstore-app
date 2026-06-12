@@ -207,6 +207,7 @@ export default function VariantsScreen() {
             </View>
           </View>
         </ScrollView>
+        <Divider />
 
         {/* FOOTER */}
 

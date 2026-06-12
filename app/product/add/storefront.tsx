@@ -257,6 +257,7 @@ export default function StorefrontScreen() {
             </View>
           </View>
         </ScrollView>
+        <Divider />
 
         {/* FOOTER */}
 

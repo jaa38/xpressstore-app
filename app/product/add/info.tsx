@@ -109,15 +109,18 @@ export default function InfoScreen() {
             Tell shoppers what they're buying. Add a great photo and clear name.
           </AppText>
 
-          {/* Form Fields */}
+          <View style={{ marginTop: spacing.lg }}>
+            <AppText variant="label">Product Image</AppText>
+          </View>
         </ScrollView>
+        <Divider />
 
         <View
           style={{
             paddingHorizontal: spacing.lg,
             paddingBottom: spacing.xl,
             paddingTop: spacing.md,
-            backgroundColor: theme.background.primary,
+            backgroundColor: theme.background.surface,
           }}
         >
           <Button

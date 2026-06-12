@@ -45,10 +45,7 @@ export default function PricingScreen() {
               justifyContent: "space-between",
             }}
           >
-            <Pressable
-              onPress={router.back}
-              hitSlop={12}
-            >
+            <Pressable onPress={router.back} hitSlop={12}>
               <Ionicons
                 name="chevron-back"
                 size={24}
@@ -56,15 +53,9 @@ export default function PricingScreen() {
               />
             </Pressable>
 
-            <AppText variant="h3">
-              Pricing & Inventory
-            </AppText>
+            <AppText variant="h3">Pricing & Inventory</AppText>
 
-            <Ionicons
-              name="close"
-              size={24}
-              color={theme.icon.default.icon}
-            />
+            <Ionicons name="close" size={24} color={theme.icon.default.icon} />
           </View>
 
           <View
@@ -74,17 +65,11 @@ export default function PricingScreen() {
               justifyContent: "space-between",
             }}
           >
-            <AppText
-              variant="bodySmall"
-              color="secondary"
-            >
+            <AppText variant="bodySmall" color="secondary">
               Step 2 of 5
             </AppText>
 
-            <AppText
-              variant="bodySmallBold"
-              color="success"
-            >
+            <AppText variant="bodySmallBold" color="success">
               Pricing
             </AppText>
           </View>
@@ -120,16 +105,13 @@ export default function PricingScreen() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <AppText
-            variant="body"
-            color="secondary"
-          >
-            Set your product price, inventory quantity, and
-            stock alerts.
+          <AppText variant="body" color="secondary">
+            Set your product price, inventory quantity, and stock alerts.
           </AppText>
 
           {/* Form Fields */}
         </ScrollView>
+        <Divider />
 
         {/* FOOTER */}
 
@@ -138,17 +120,12 @@ export default function PricingScreen() {
             paddingHorizontal: spacing.lg,
             paddingTop: spacing.md,
             paddingBottom: spacing.xl,
-            backgroundColor:
-              theme.background.primary,
+            backgroundColor: theme.background.primary,
           }}
         >
           <Button
             title="Next"
-            onPress={() =>
-              router.push(
-                ROUTES.ADD_PRODUCT_VARIANTS
-              )
-            }
+            onPress={() => router.push(ROUTES.ADD_PRODUCT_VARIANTS)}
           />
         </View>
       </View>

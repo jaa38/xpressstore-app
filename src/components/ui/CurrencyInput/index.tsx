@@ -9,6 +9,11 @@ import { AppText } from "@/components/ui/AppText";
 
 import { spacing } from "@/theme";
 
+import { StyleSheet } from "react-native";
+
+import { theme } from "@/theme";
+import { radius } from "@/theme/radius";
+
 const DEFAULT_CURRENCIES = [
   {
     label: "₦",
@@ -36,9 +41,7 @@ interface CurrencyInputProps {
   placeholder?: string;
   defaultCurrency?: string;
   onChangeText?: (value: string) => void;
-  onCurrencyChange?: (
-    currency: string
-  ) => void;
+  onCurrencyChange?: (currency: string) => void;
 }
 
 export function CurrencyInput({
@@ -51,30 +54,22 @@ export function CurrencyInput({
   onChangeText,
   onCurrencyChange,
 }: CurrencyInputProps) {
-  const [currency, setCurrency] =
-    useState(defaultCurrency);
+  const [currency, setCurrency] = useState(defaultCurrency);
 
-  const [showCurrencies, setShowCurrencies] =
-    useState(false);
+  const [showCurrencies, setShowCurrencies] = useState(false);
 
-  const selectedCurrency =
-    DEFAULT_CURRENCIES.find(
-      (item) =>
-        item.value === currency
-    );
+  const selectedCurrency = DEFAULT_CURRENCIES.find(
+    (item) => item.value === currency
+  );
 
   if (!selectedCurrency) {
     return null;
   }
 
-  function handleCurrencyChange(
-    currencyValue: string
-  ) {
+  function handleCurrencyChange(currencyValue: string) {
     setCurrency(currencyValue);
 
-    onCurrencyChange?.(
-      currencyValue
-    );
+    onCurrencyChange?.(currencyValue);
   }
 
   return (
@@ -89,11 +84,7 @@ export function CurrencyInput({
         onChangeText={onChangeText}
         leftElement={
           <Pressable
-            onPress={() =>
-              setShowCurrencies(
-                !showCurrencies
-              )
-            }
+            onPress={() => setShowCurrencies(!showCurrencies)}
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -102,16 +93,10 @@ export function CurrencyInput({
               gap: 4,
             }}
           >
-            <AppText variant="body">
-              {selectedCurrency.label}
-            </AppText>
+            <AppText variant="body">{selectedCurrency.label}</AppText>
 
             <Ionicons
-              name={
-                showCurrencies
-                  ? "chevron-up"
-                  : "chevron-down"
-              }
+              name={showCurrencies ? "chevron-up" : "chevron-down"}
               size={16}
             />
           </Pressable>
@@ -119,40 +104,56 @@ export function CurrencyInput({
       />
 
       {showCurrencies && (
-        <View
-          style={{
-            marginTop: spacing.xs,
-            borderWidth: 1,
-            borderRadius: 12,
-            overflow: "hidden",
-          }}
-        >
-          {DEFAULT_CURRENCIES.map(
-            (item) => (
-              <Pressable
-                key={item.value}
-                onPress={() => {
-                  handleCurrencyChange(
-                    item.value
-                  );
+        <View style={styles.optionsContainer}>
+          {DEFAULT_CURRENCIES.map((item) => (
+            <Pressable
+              key={item.value}
+              onPress={() => {
+                handleCurrencyChange(item.value);
 
-                  setShowCurrencies(
-                    false
-                  );
-                }}
-                style={{
-                  paddingHorizontal: 16,
-                  paddingVertical: 14,
-                }}
-              >
-                <AppText variant="body">
-                  {item.label} {item.value}
-                </AppText>
-              </Pressable>
-            )
-          )}
+                setShowCurrencies(false);
+              }}
+              style={[
+                styles.option,
+
+                currency === item.value && {
+                  backgroundColor: theme.background.brand,
+                },
+              ]}
+            >
+              <AppText variant="body">
+                {item.label} {item.value}
+              </AppText>
+            </Pressable>
+          ))}
         </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  optionsContainer: {
+    marginTop: spacing.xs,
+
+    maxHeight: 220,
+
+    borderWidth: 1,
+
+    borderColor: theme.input.border,
+
+    borderRadius: radius.md,
+
+    backgroundColor: "#FFFFFF",
+
+    overflow: "hidden",
+  },
+
+  option: {
+    paddingHorizontal: 16,
+
+    paddingVertical: 14,
+
+    backgroundColor: "#FFFFFF",
+  },
+});

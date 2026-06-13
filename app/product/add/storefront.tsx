@@ -15,6 +15,9 @@ import { Card } from "@/components/ui/Card";
 import { spacing, theme } from "@/theme";
 import { ROUTES } from "@/navigation/routes";
 
+import { AddProductHeader } from "@/components/product/AddProductHeader";
+import { AddProductFooter } from "@/components/product/AddProductFooter";
+
 export default function StorefrontScreen() {
   return (
     <SafeAreaView
@@ -26,75 +29,13 @@ export default function StorefrontScreen() {
     >
       {/* HEADER */}
 
-      <View
-        style={{
-          backgroundColor: theme.background.surface,
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.md,
-          paddingBottom: spacing.md,
-        }}
-      >
-        <View style={{ gap: spacing.xs }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Pressable
-              onPress={router.back}
-              hitSlop={12}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={24}
-                color={theme.icon.default.icon}
-              />
-            </Pressable>
-
-            <AppText variant="h3">
-              Storefront Settings
-            </AppText>
-
-            <Ionicons
-              name="close"
-              size={24}
-              color={theme.icon.default.icon}
-            />
-          </View>
-
-          <View
-            style={{
-              marginTop: spacing.rg,
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <AppText
-              variant="bodySmall"
-              color="secondary"
-            >
-              Step 4 of 5
-            </AppText>
-
-            <AppText
-              variant="bodySmallBold"
-              color="success"
-            >
-              Storefront
-            </AppText>
-          </View>
-
-          <View
-            style={{
-              marginTop: spacing.rg,
-            }}
-          >
-            <ProgressBar progress={80} />
-          </View>
-        </View>
-      </View>
+      <AddProductHeader
+        title="Storefront Settings"
+        step={4}
+        totalSteps={5}
+        progress={80}
+        label="Storefront"
+      />
 
       <Divider />
 
@@ -122,12 +63,8 @@ export default function StorefrontScreen() {
               gap: spacing.xl,
             }}
           >
-            <AppText
-              variant="body"
-              color="secondary"
-            >
-              Choose how this product appears in
-              your storefront.
+            <AppText variant="body" color="secondary">
+              Choose how this product appears in your storefront.
             </AppText>
 
             {/* VISIBILITY */}
@@ -137,9 +74,7 @@ export default function StorefrontScreen() {
                 gap: spacing.sm,
               }}
             >
-              <AppText variant="label">
-                Visibility
-              </AppText>
+              <AppText variant="label">Visibility</AppText>
 
               <Card>
                 <View
@@ -155,28 +90,18 @@ export default function StorefrontScreen() {
                       gap: spacing.xs,
                     }}
                   >
-                    <AppText variant="bodyBold">
-                      Show in Storefront
-                    </AppText>
+                    <AppText variant="bodyBold">Show in Storefront</AppText>
 
-                    <AppText
-                      variant="bodySmall"
-                      color="secondary"
-                    >
-                      Customers can view and
-                      purchase this product.
+                    <AppText variant="bodySmall" color="secondary">
+                      Customers can view and purchase this product.
                     </AppText>
                   </View>
 
                   <Switch
                     value={true}
                     trackColor={{
-                      false:
-                        theme.toggleSwitch
-                          .inactive,
-                      true:
-                        theme.toggleSwitch
-                          .active,
+                      false: theme.toggleSwitch.inactive,
+                      true: theme.toggleSwitch.active,
                     }}
                     thumbColor="#FFFFFF"
                   />
@@ -191,9 +116,7 @@ export default function StorefrontScreen() {
                 gap: spacing.sm,
               }}
             >
-              <AppText variant="label">
-                Promotion
-              </AppText>
+              <AppText variant="label">Promotion</AppText>
 
               <Card>
                 <View
@@ -209,28 +132,18 @@ export default function StorefrontScreen() {
                       gap: spacing.xs,
                     }}
                   >
-                    <AppText variant="bodyBold">
-                      Featured Product
-                    </AppText>
+                    <AppText variant="bodyBold">Featured Product</AppText>
 
-                    <AppText
-                      variant="bodySmall"
-                      color="secondary"
-                    >
-                      Highlight this product on
-                      your storefront homepage.
+                    <AppText variant="bodySmall" color="secondary">
+                      Highlight this product on your storefront homepage.
                     </AppText>
                   </View>
 
                   <Switch
                     value={false}
                     trackColor={{
-                      false:
-                        theme.toggleSwitch
-                          .inactive,
-                      true:
-                        theme.toggleSwitch
-                          .active,
+                      false: theme.toggleSwitch.inactive,
+                      true: theme.toggleSwitch.active,
                     }}
                     thumbColor="#FFFFFF"
                   />
@@ -245,14 +158,10 @@ export default function StorefrontScreen() {
                 gap: spacing.sm,
               }}
             >
-              <AppText variant="label">
-                Store Category
-              </AppText>
+              <AppText variant="label">Store Category</AppText>
 
               <Card>
-                <AppText color="secondary">
-                  Bags
-                </AppText>
+                <AppText color="secondary">Bags</AppText>
               </Card>
             </View>
           </View>
@@ -261,24 +170,9 @@ export default function StorefrontScreen() {
 
         {/* FOOTER */}
 
-        <View
-          style={{
-            paddingHorizontal: spacing.lg,
-            paddingTop: spacing.md,
-            paddingBottom: spacing.xl,
-            backgroundColor:
-              theme.background.primary,
-          }}
-        >
-          <Button
-            title="Next"
-            onPress={() =>
-              router.push(
-                ROUTES.ADD_PRODUCT_REVIEW
-              )
-            }
-          />
-        </View>
+        <AddProductFooter
+          onNext={() => router.push(ROUTES.ADD_PRODUCT_REVIEW)}
+        />
       </View>
     </SafeAreaView>
   );

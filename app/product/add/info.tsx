@@ -1,4 +1,4 @@
-import { View, ScrollView, Pressable, Image } from "react-native";
+import { View, ScrollView, Pressable } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -22,9 +22,31 @@ import { useState } from "react";
 import { Input } from "@/components/ui/Input";
 
 import { Dropdown } from "@/components/ui/Dropdown";
+import { DEFAULT_CATEGORIES } from "@/constants/productCategories";
+
+import { AddProductHeader } from "@/components/product/AddProductHeader";
+
+import { AddProductFooter } from "@/components/product/AddProductFooter";
 
 export default function InfoScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
+  /**
+   * PRODUCT FORM
+   */
+
+  const [description, setDescription] = useState("");
+
+  const [category, setCategory] = useState("");
+
+  const [newCategory, setNewCategory] = useState("");
+
+  const [sku, setSku] = useState("");
+
+  const [productName, setProductName] = useState("");
+
+  const [brand, setBrand] = useState("");
+
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
   const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
     mediaTypes: ["images"],
@@ -68,36 +90,12 @@ export default function InfoScreen() {
     setImageUri(null);
   };
 
-  const [description, setDescription] = useState("");
-
-  const [category, setCategory] = useState("");
-
-  const [newCategory, setNewCategory] = useState("");
-
-  const [categories, setCategories] = useState([
-    {
-      label: "Bags",
-      value: "bags",
-    },
-    {
-      label: "Accessories",
-      value: "accessories",
-    },
-    {
-      label: "Shoes",
-      value: "shoes",
-    },
-  ]);
-
-  const [sku, setSku] = useState("");
-
   function generateSku() {
-    const randomSku = `SKU-${Math.random()
-      .toString(36)
-      .substring(2, 8)
-      .toUpperCase()}`;
+    const timestamp = Date.now().toString().slice(-4);
 
-    setSku(randomSku);
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+    setSku(`SKU-${random}-${timestamp}`);
   }
 
   function createCategory() {
@@ -118,8 +116,11 @@ export default function InfoScreen() {
       value,
     };
 
-    setCategories((current) => [...current, categoryOption]);
-
+    setCategories((current) =>
+      [...current, categoryOption].sort((a, b) =>
+        a.label.localeCompare(b.label)
+      )
+    );
     setCategory(categoryOption.value);
 
     setNewCategory("");
@@ -135,73 +136,13 @@ export default function InfoScreen() {
     >
       {/* HEADER */}
 
-      <View
-        style={{
-          backgroundColor: theme.background.surface,
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.md,
-          paddingBottom: spacing.md,
-        }}
-      >
-        <View
-          style={{
-            gap: spacing.xs,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Pressable onPress={router.back} hitSlop={12}>
-              <Ionicons
-                name="chevron-back"
-                size={24}
-                color={theme.icon.default.icon}
-              />
-            </Pressable>
-
-            <AppText variant="h3">Product Information</AppText>
-
-            <Pressable
-              onPress={() => router.replace(ROUTES.PRODUCTS)}
-              hitSlop={12}
-            >
-              <Ionicons
-                name="close"
-                size={24}
-                color={theme.icon.default.icon}
-              />
-            </Pressable>
-          </View>
-
-          <View
-            style={{
-              marginTop: spacing.rg,
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <AppText variant="bodySmall" color="secondary">
-              Step 1 of 5
-            </AppText>
-
-            <AppText variant="bodySmallBold" color="success">
-              Info
-            </AppText>
-          </View>
-
-          <View
-            style={{
-              marginTop: spacing.rg,
-            }}
-          >
-            <ProgressBar progress={20} />
-          </View>
-        </View>
-      </View>
+      <AddProductHeader
+        title="Product Information"
+        step={1}
+        totalSteps={5}
+        progress={20}
+        label="Info"
+      />
 
       <Divider />
 
@@ -267,6 +208,8 @@ export default function InfoScreen() {
                   label="Product Name"
                   required
                   placeholder="e.g Ankara Tote Bag"
+                  value={productName}
+                  onChangeText={setProductName}
                 />
               </View>
             </View>
@@ -322,6 +265,8 @@ export default function InfoScreen() {
                 label="Brand"
                 optional
                 placeholder="e.g. PayXpress Originals"
+                value={brand}
+                onChangeText={setBrand}
               />
             </View>
 
@@ -372,37 +317,12 @@ export default function InfoScreen() {
         </ScrollView>
         <Divider />
 
-        <View
-          style={{
-            paddingHorizontal: spacing.lg,
-            paddingBottom: spacing.xl,
-            paddingTop: spacing.md,
-            backgroundColor: theme.background.surface,
-
-            flexDirection: "row",
-
-            gap: spacing.md,
+        <AddProductFooter
+          onSaveDraft={() => {
+            console.log("Save Draft");
           }}
-        >
-          <View
-            style={{
-              flex: 1,
-            }}
-          >
-            <Button title="Save as Draft" variant="tertiary" />
-          </View>
-
-          <View
-            style={{
-              flex: 1,
-            }}
-          >
-            <Button
-              title="Next"
-              onPress={() => router.push(ROUTES.ADD_PRODUCT_PRICING)}
-            />
-          </View>
-        </View>
+          onNext={() => router.push(ROUTES.ADD_PRODUCT_PRICING)}
+        />
       </View>
     </SafeAreaView>
   );

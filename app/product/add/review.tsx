@@ -12,6 +12,9 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 
 import { spacing, theme } from "@/theme";
 
+import { AddProductHeader } from "@/components/product/AddProductHeader";
+import { AddProductFooter } from "@/components/product/AddProductFooter";
+
 export default function ReviewScreen() {
   return (
     <SafeAreaView
@@ -23,79 +26,13 @@ export default function ReviewScreen() {
     >
       {/* HEADER */}
 
-      <View
-        style={{
-          backgroundColor: theme.background.surface,
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.md,
-          paddingBottom: spacing.md,
-        }}
-      >
-        <View
-          style={{
-            gap: spacing.xs,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Pressable
-              onPress={router.back}
-              hitSlop={12}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={24}
-                color={theme.icon.default.icon}
-              />
-            </Pressable>
-
-            <AppText variant="h3">
-              Review Product
-            </AppText>
-
-            <Ionicons
-              name="close"
-              size={24}
-              color={theme.icon.default.icon}
-            />
-          </View>
-
-          <View
-            style={{
-              marginTop: spacing.rg,
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <AppText
-              variant="bodySmall"
-              color="secondary"
-            >
-              Step 5 of 5
-            </AppText>
-
-            <AppText
-              variant="bodySmallBold"
-              color="success"
-            >
-              Review
-            </AppText>
-          </View>
-
-          <View
-            style={{
-              marginTop: spacing.rg,
-            }}
-          >
-            <ProgressBar progress={100} />
-          </View>
-        </View>
-      </View>
+      <AddProductHeader
+        title="Review Product"
+        step={5}
+        totalSteps={5}
+        progress={100}
+        label="Review"
+      />
 
       <Divider />
 
@@ -123,12 +60,8 @@ export default function ReviewScreen() {
               gap: spacing.xl,
             }}
           >
-            <AppText
-              variant="body"
-              color="secondary"
-            >
-              Review your product details before
-              publishing.
+            <AppText variant="body" color="secondary">
+              Review your product details before publishing.
             </AppText>
 
             {/* PRODUCT INFORMATION */}
@@ -138,9 +71,7 @@ export default function ReviewScreen() {
                 gap: spacing.sm,
               }}
             >
-              <AppText variant="h3">
-                Product Information
-              </AppText>
+              <AppText variant="h3">Product Information</AppText>
 
               <Divider />
             </View>
@@ -152,9 +83,7 @@ export default function ReviewScreen() {
                 gap: spacing.sm,
               }}
             >
-              <AppText variant="h3">
-                Pricing & Inventory
-              </AppText>
+              <AppText variant="h3">Pricing & Inventory</AppText>
 
               <Divider />
             </View>
@@ -166,9 +95,7 @@ export default function ReviewScreen() {
                 gap: spacing.sm,
               }}
             >
-              <AppText variant="h3">
-                Variants
-              </AppText>
+              <AppText variant="h3">Variants</AppText>
 
               <Divider />
             </View>
@@ -180,9 +107,7 @@ export default function ReviewScreen() {
                 gap: spacing.sm,
               }}
             >
-              <AppText variant="h3">
-                Storefront Settings
-              </AppText>
+              <AppText variant="h3">Storefront Settings</AppText>
 
               <Divider />
             </View>
@@ -191,20 +116,12 @@ export default function ReviewScreen() {
 
         {/* FOOTER */}
 
-        <View
-          style={{
-            paddingHorizontal: spacing.lg,
-            paddingTop: spacing.md,
-            paddingBottom: spacing.xl,
-            backgroundColor:
-              theme.background.primary,
+        <AddProductFooter
+          nextLabel="Publish Product"
+          onNext={() => {
+            console.log("Publish");
           }}
-        >
-          <Button
-            title="Publish Product"
-            variant="primary"
-          />
-        </View>
+        />
       </View>
     </SafeAreaView>
   );

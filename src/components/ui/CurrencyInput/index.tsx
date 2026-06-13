@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { View, Pressable } from "react-native";
+import { View, Pressable, KeyboardTypeOptions } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -40,6 +40,9 @@ interface CurrencyInputProps {
   value?: string;
   placeholder?: string;
   defaultCurrency?: string;
+
+  keyboardType?: KeyboardTypeOptions;
+
   onChangeText?: (value: string) => void;
   onCurrencyChange?: (currency: string) => void;
 }
@@ -51,6 +54,9 @@ export function CurrencyInput({
   value,
   placeholder = "0.00",
   defaultCurrency = "NGN",
+
+  keyboardType = "decimal-pad",
+
   onChangeText,
   onCurrencyChange,
 }: CurrencyInputProps) {
@@ -72,6 +78,18 @@ export function CurrencyInput({
     onCurrencyChange?.(currencyValue);
   }
 
+  function handleAmountChange(text: string) {
+    const sanitized = text.replace(/[^0-9.]/g, "");
+
+    const decimalCount = sanitized.split(".").length - 1;
+
+    if (decimalCount > 1) {
+      return;
+    }
+
+    onChangeText?.(sanitized);
+  }
+
   return (
     <View>
       <Input
@@ -79,7 +97,7 @@ export function CurrencyInput({
         required={required}
         optional={optional}
         placeholder={placeholder}
-        keyboardType="decimal-pad"
+        keyboardType={keyboardType}
         value={value}
         onChangeText={onChangeText}
         leftElement={

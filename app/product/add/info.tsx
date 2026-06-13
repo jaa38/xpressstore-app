@@ -18,7 +18,7 @@ import { ROUTES } from "@/navigation/routes";
 
 import * as ImagePicker from "expo-image-picker";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/Input";
 
 import { Dropdown } from "@/components/ui/Dropdown";
@@ -28,23 +28,45 @@ import { AddProductHeader } from "@/components/product/AddProductHeader";
 
 import { AddProductFooter } from "@/components/product/AddProductFooter";
 
+import { useForm, Controller } from "react-hook-form";
+
+type ProductInfoForm = {
+  productName: string;
+  description: string;
+  category: string;
+  brand: string;
+  sku: string;
+  image: string;
+};
+
 export default function InfoScreen() {
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  /**
-   * PRODUCT FORM
-   */
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    clearErrors,
+    watch,
+    trigger,
+    register,
+    formState: { errors },
+  } = useForm<ProductInfoForm>({
+    defaultValues: {
+      productName: "",
+      description: "",
+      category: "",
+      brand: "",
+      sku: "",
+      image: "",
+    },
+  });
 
-  const [description, setDescription] = useState("");
-
-  const [category, setCategory] = useState("");
+  useEffect(() => {
+    register("image", {
+      required: "Product image is required",
+    });
+  }, [register]);
 
   const [newCategory, setNewCategory] = useState("");
-
-  const [sku, setSku] = useState("");
-
-  const [productName, setProductName] = useState("");
-
-  const [brand, setBrand] = useState("");
 
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
@@ -68,7 +90,11 @@ export default function InfoScreen() {
       const asset = result.assets?.[0];
 
       if (asset) {
-        setImageUri(asset.uri);
+        setValue("image", asset.uri, {
+          shouldValidate: true,
+        });
+
+        clearErrors("image");
       }
     }
   };
@@ -81,13 +107,21 @@ export default function InfoScreen() {
       const asset = result.assets?.[0];
 
       if (asset) {
-        setImageUri(asset.uri);
+        setValue("image", asset.uri, {
+          shouldValidate: true,
+        });
+
+        clearErrors("image");
       }
     }
   };
 
+  const imageUri = watch("image");
+
   const handleRemoveImage = () => {
-    setImageUri(null);
+    setValue("image", "", {
+      shouldValidate: true,
+    });
   };
 
   function generateSku() {
@@ -95,7 +129,7 @@ export default function InfoScreen() {
 
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
 
-    setSku(`SKU-${random}-${timestamp}`);
+    setValue("sku", `SKU-${random}-${timestamp}`);
   }
 
   function createCategory() {
@@ -121,9 +155,15 @@ export default function InfoScreen() {
         a.label.localeCompare(b.label)
       )
     );
-    setCategory(categoryOption.value);
-
+    setValue("category", categoryOption.value, {
+      shouldValidate: true,
+    });
     setNewCategory("");
+  }
+  function handleNext(data: ProductInfoForm) {
+    console.log(data);
+
+    router.push(ROUTES.ADD_PRODUCT_PRICING);
   }
 
   return (
@@ -170,7 +210,9 @@ export default function InfoScreen() {
           </AppText>
 
           <View style={{ marginTop: spacing.lg }}>
+
             <AppText variant="caption">Product Image</AppText>
+
             <View
               style={{
                 marginTop: spacing.sm,
@@ -203,25 +245,56 @@ export default function InfoScreen() {
                 />
               </View>
 
+              {errors.image && (
+                <AppText
+                  variant="caption"
+                  color="error"
+                  style={{
+                    marginTop: spacing.xs,
+                  }}
+                >
+                  {errors.image.message}
+                </AppText>
+              )}
+
               <View style={{ marginTop: spacing.md }}>
-                <Input
-                  label="Product Name"
-                  required
-                  placeholder="e.g Ankara Tote Bag"
-                  value={productName}
-                  onChangeText={setProductName}
+                <Controller
+                  control={control}
+                  name="productName"
+                  rules={{
+                    required: "Product name is required",
+                  }}
+                  render={({
+                    field: { onChange, value },
+                    fieldState: { error },
+                  }) => (
+                    <Input
+                      label="Product Name"
+                      required
+                      placeholder="e.g Ankara Tote Bag"
+                      value={value}
+                      error={error?.message}
+                      onChangeText={onChange}
+                    />
+                  )}
                 />
               </View>
             </View>
 
             <View style={{ marginTop: spacing.md }}>
-              <Input
-                label="Description"
-                variant="textarea"
-                optional
-                maxLength={250}
-                value={description}
-                onChangeText={setDescription}
+              <Controller
+                control={control}
+                name="description"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label="Description"
+                    variant="textarea"
+                    optional
+                    maxLength={250}
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
               />
             </View>
 
@@ -230,13 +303,26 @@ export default function InfoScreen() {
                 marginTop: spacing.md,
               }}
             >
-              <Dropdown
-                label="Category"
-                required
-                value={category}
-                options={categories}
-                placeholder="Select category"
-                onSelect={setCategory}
+              <Controller
+                control={control}
+                name="category"
+                rules={{
+                  required: "Please select a category",
+                }}
+                render={({
+                  field: { onChange, value },
+                  fieldState: { error },
+                }) => (
+                  <Dropdown
+                    label="Category"
+                    required
+                    value={value}
+                    error={error?.message}
+                    options={categories}
+                    placeholder="Select category"
+                    onSelect={onChange}
+                  />
+                )}
               />
 
               <View
@@ -261,12 +347,18 @@ export default function InfoScreen() {
             </View>
 
             <View style={{ marginTop: spacing.md }}>
-              <Input
-                label="Brand"
-                optional
-                placeholder="e.g. PayXpress Originals"
-                value={brand}
-                onChangeText={setBrand}
+              <Controller
+                control={control}
+                name="brand"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label="Brand"
+                    optional
+                    placeholder="e.g. PayXpress Originals"
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
               />
             </View>
 
@@ -292,10 +384,16 @@ export default function InfoScreen() {
                     flex: 1,
                   }}
                 >
-                  <Input
-                    placeholder="Enter manually"
-                    value={sku}
-                    onChangeText={setSku}
+                  <Controller
+                    control={control}
+                    name="sku"
+                    render={({ field: { onChange, value } }) => (
+                      <Input
+                        placeholder="Enter manually"
+                        value={value}
+                        onChangeText={onChange}
+                      />
+                    )}
                   />
                 </View>
 
@@ -321,7 +419,7 @@ export default function InfoScreen() {
           onSaveDraft={() => {
             console.log("Save Draft");
           }}
-          onNext={() => router.push(ROUTES.ADD_PRODUCT_PRICING)}
+          onNext={handleSubmit(handleNext)}
         />
       </View>
     </SafeAreaView>

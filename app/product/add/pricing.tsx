@@ -2,7 +2,7 @@ import { View, ScrollView } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 import { AppText } from "@/components/ui/AppText";
 import { Divider } from "@/components/ui/Divider";
@@ -10,10 +10,11 @@ import { Divider } from "@/components/ui/Divider";
 import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
-import { router } from "expo-router";
 
 import { AddProductHeader } from "@/components/product/AddProductHeader";
 import { AddProductFooter } from "@/components/product/AddProductFooter";
+
+import { CurrencyInput } from "@/components/ui/CurrencyInput";
 
 export default function PricingScreen() {
   return (
@@ -24,8 +25,6 @@ export default function PricingScreen() {
       }}
       edges={["top"]}
     >
-      {/* HEADER */}
-
       <AddProductHeader
         title="Pricing & Inventory"
         step={2}
@@ -35,8 +34,6 @@ export default function PricingScreen() {
       />
 
       <Divider />
-
-      {/* CONTENT */}
 
       <View
         style={{
@@ -55,18 +52,65 @@ export default function PricingScreen() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <AppText variant="body" color="secondary">
-            Set your product price, inventory quantity, and stock alerts.
-          </AppText>
+          <View
+            style={{
+              gap: spacing.xs,
+            }}
+          >
+            <AppText variant="h3" color="primary">
+              Pricing
+            </AppText>
 
-          {/* Form Fields */}
+            <AppText variant="body" color="secondary">
+              Set your prices and inventory details.
+            </AppText>
+          </View>
+
+          {/* SELLING PRICE */}
+
+          <View
+            style={{
+              marginTop: spacing.lg,
+            }}
+          >
+            <CurrencyInput
+              label="Selling Price"
+              required
+            />
+          </View>
+
+          {/* COST PRICE */}
+
+          <View
+            style={{
+              marginTop: spacing.md,
+            }}
+          >
+            <CurrencyInput
+              label="Cost Price"
+              optional
+            />
+          </View>
+
+          {/* INVENTORY */}
+
+          <View
+            style={{
+              marginTop: spacing.md,
+            }}
+          >
+            {/* Stock Quantity Input goes here */}
+          </View>
         </ScrollView>
+
         <Divider />
 
-        {/* FOOTER */}
-
         <AddProductFooter
-          onNext={() => router.push(ROUTES.ADD_PRODUCT_VARIANTS)}
+          onNext={() =>
+            router.push(
+              ROUTES.ADD_PRODUCT_VARIANTS
+            )
+          }
         />
       </View>
     </SafeAreaView>

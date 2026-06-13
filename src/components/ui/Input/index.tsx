@@ -27,6 +27,10 @@ interface InputProps extends TextInputProps {
 
   helperText?: string;
 
+  leftElement?: React.ReactNode;
+
+  rightElement?: React.ReactNode;
+
   rightIcon?: React.ReactNode;
 }
 
@@ -38,6 +42,8 @@ export function Input({
   maxLength,
   error,
   helperText,
+  leftElement,
+  rightElement,
   rightIcon,
   editable = true,
   onFocus,
@@ -117,6 +123,8 @@ export function Input({
           getInputStateStyle(state),
         ]}
       >
+        {leftElement}
+        
         <TextInput
           {...props}
           value={value}
@@ -149,6 +157,7 @@ export function Input({
             onBlur?.(e);
           }}
         />
+        {rightElement}
 
         {rightIcon && <View style={styles.iconContainer}>{rightIcon}</View>}
       </View>
@@ -240,6 +249,8 @@ const styles = StyleSheet.create({
 
   input: {
     flex: 1,
+
+    minWidth: 0,
 
     height: "100%",
 

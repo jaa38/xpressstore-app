@@ -26,13 +26,9 @@ import { Input } from "@/components/ui/Input";
 
 import { SelectableCard } from "@/components/ui/SelectableCard";
 
-type PricingFormData = {
-  sellingPrice: string;
-  costPrice: string;
-  currentStock: string;
-  lowStockAlert: string;
-  reorderLevel: string;
-};
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import { pricingSchema, PricingFormData } from "@/schemas/pricingSchema";
 
 export default function PricingScreen() {
   const [taxApplicable, setTaxApplicable] = useState(false);
@@ -116,9 +112,6 @@ export default function PricingScreen() {
             <Controller
               control={control}
               name="sellingPrice"
-              rules={{
-                required: "Selling price is required",
-              }}
               render={({ field }) => (
                 <CurrencyInput
                   label="Selling Price"
@@ -239,11 +232,6 @@ export default function PricingScreen() {
                 <Controller
                   control={control}
                   name="currentStock"
-                  rules={{
-                    required: trackInventory
-                      ? "Current stock quantity is required"
-                      : false,
-                  }}
                   render={({ field }) => (
                     <Input
                       label="Current Stock Quantity"
@@ -265,10 +253,10 @@ export default function PricingScreen() {
                   <View style={{ flex: 1 }}>
                     <Controller
                       control={control}
-                      name="reorderLevel"
+                      name="lowStockAlert"
                       render={({ field }) => (
                         <Input
-                          label="Reorder Level"
+                          label="Low Stock Alert"
                           placeholder="0"
                           keyboardType="numeric"
                           value={field.value}
@@ -338,7 +326,9 @@ export default function PricingScreen() {
         <Divider />
 
         <AddProductFooter
-          onNext={handleSubmit(() => {
+          onNext={handleSubmit((data) => {
+            console.log("Pricing Form", data);
+
             router.push(ROUTES.ADD_PRODUCT_VARIANTS);
           })}
         />

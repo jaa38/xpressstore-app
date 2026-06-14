@@ -18,7 +18,7 @@ import { ROUTES } from "@/navigation/routes";
 
 import * as ImagePicker from "expo-image-picker";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/Input";
 
 import { Dropdown } from "@/components/ui/Dropdown";
@@ -30,14 +30,12 @@ import { AddProductFooter } from "@/components/product/AddProductFooter";
 
 import { useForm, Controller } from "react-hook-form";
 
-type ProductInfoForm = {
-  productName: string;
-  description: string;
-  category: string;
-  brand: string;
-  sku: string;
-  image: string;
-};
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import {
+  productInfoSchema,
+  ProductInfoForm,
+} from "@/schemas/productInfoSchema";
 
 export default function InfoScreen() {
   const {
@@ -46,10 +44,10 @@ export default function InfoScreen() {
     setValue,
     clearErrors,
     watch,
-    trigger,
-    register,
     formState: { errors },
   } = useForm<ProductInfoForm>({
+    resolver: zodResolver(productInfoSchema),
+
     defaultValues: {
       productName: "",
       description: "",
@@ -59,12 +57,6 @@ export default function InfoScreen() {
       image: "",
     },
   });
-
-  useEffect(() => {
-    register("image", {
-      required: "Product image is required",
-    });
-  }, [register]);
 
   const [newCategory, setNewCategory] = useState("");
 
@@ -210,7 +202,6 @@ export default function InfoScreen() {
           </AppText>
 
           <View style={{ marginTop: spacing.lg }}>
-
             <AppText variant="caption">Product Image</AppText>
 
             <View
@@ -261,9 +252,6 @@ export default function InfoScreen() {
                 <Controller
                   control={control}
                   name="productName"
-                  rules={{
-                    required: "Product name is required",
-                  }}
                   render={({
                     field: { onChange, value },
                     fieldState: { error },
@@ -306,9 +294,6 @@ export default function InfoScreen() {
               <Controller
                 control={control}
                 name="category"
-                rules={{
-                  required: "Please select a category",
-                }}
                 render={({
                   field: { onChange, value },
                   fieldState: { error },

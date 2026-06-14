@@ -40,6 +40,7 @@ interface CurrencyInputProps {
   value?: string;
   placeholder?: string;
   defaultCurrency?: string;
+  error?: string;
 
   keyboardType?: KeyboardTypeOptions;
 
@@ -56,6 +57,7 @@ export function CurrencyInput({
   defaultCurrency = "NGN",
 
   keyboardType = "decimal-pad",
+  error,
 
   onChangeText,
   onCurrencyChange,
@@ -100,6 +102,7 @@ export function CurrencyInput({
         keyboardType={keyboardType}
         value={value}
         onChangeText={onChangeText}
+        error={error}
         leftElement={
           <Pressable
             onPress={() => setShowCurrencies(!showCurrencies)}

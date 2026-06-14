@@ -19,9 +19,20 @@ import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { Card } from "@/components/ui/Card";
 
 import { useState } from "react";
+
+import { useForm, Controller } from "react-hook-form";
+
 import { Input } from "@/components/ui/Input";
 
 import { SelectableCard } from "@/components/ui/SelectableCard";
+
+type PricingFormData = {
+  sellingPrice: string;
+  costPrice: string;
+  currentStock: string;
+  lowStockAlert: string;
+  reorderLevel: string;
+};
 
 export default function PricingScreen() {
   const [taxApplicable, setTaxApplicable] = useState(false);
@@ -29,6 +40,20 @@ export default function PricingScreen() {
   const [productStatus, setProductStatus] = useState<"active" | "draft">(
     "active"
   );
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PricingFormData>({
+    defaultValues: {
+      sellingPrice: "",
+      costPrice: "",
+      currentStock: "",
+      lowStockAlert: "",
+      reorderLevel: "",
+    },
+  });
 
   return (
     <SafeAreaView
@@ -88,15 +113,36 @@ export default function PricingScreen() {
               gap: spacing.rg,
             }}
           >
-            <CurrencyInput
-              label="Selling Price"
-              required
-              keyboardType="decimal-pad"
+            <Controller
+              control={control}
+              name="sellingPrice"
+              rules={{
+                required: "Selling price is required",
+              }}
+              render={({ field }) => (
+                <CurrencyInput
+                  label="Selling Price"
+                  required
+                  keyboardType="decimal-pad"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  error={errors.sellingPrice?.message}
+                />
+              )}
             />
-            <CurrencyInput
-              label="Cost Price"
-              optional
-              keyboardType="decimal-pad"
+
+            <Controller
+              control={control}
+              name="costPrice"
+              render={({ field }) => (
+                <CurrencyInput
+                  label="Cost Price"
+                  optional
+                  keyboardType="decimal-pad"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                />
+              )}
             />
           </View>
 
@@ -190,10 +236,24 @@ export default function PricingScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Input
-                  label="Current Stock Quantity"
-                  placeholder="0"
-                  keyboardType="numeric"
+                <Controller
+                  control={control}
+                  name="currentStock"
+                  rules={{
+                    required: trackInventory
+                      ? "Current stock quantity is required"
+                      : false,
+                  }}
+                  render={({ field }) => (
+                    <Input
+                      label="Current Stock Quantity"
+                      placeholder="0"
+                      keyboardType="numeric"
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      error={errors.currentStock?.message}
+                    />
+                  )}
                 />
 
                 <View
@@ -203,18 +263,34 @@ export default function PricingScreen() {
                   }}
                 >
                   <View style={{ flex: 1 }}>
-                    <Input
-                      label="Low Stock Alert"
-                      placeholder="0"
-                      keyboardType="numeric"
+                    <Controller
+                      control={control}
+                      name="reorderLevel"
+                      render={({ field }) => (
+                        <Input
+                          label="Reorder Level"
+                          placeholder="0"
+                          keyboardType="numeric"
+                          value={field.value}
+                          onChangeText={field.onChange}
+                        />
+                      )}
                     />
                   </View>
 
                   <View style={{ flex: 1 }}>
-                    <Input
-                      label="Reorder Level"
-                      placeholder="0"
-                      keyboardType="numeric"
+                    <Controller
+                      control={control}
+                      name="reorderLevel"
+                      render={({ field }) => (
+                        <Input
+                          label="Reorder Level"
+                          placeholder="0"
+                          keyboardType="numeric"
+                          value={field.value}
+                          onChangeText={field.onChange}
+                        />
+                      )}
                     />
                   </View>
                 </View>
@@ -262,7 +338,9 @@ export default function PricingScreen() {
         <Divider />
 
         <AddProductFooter
-          onNext={() => router.push(ROUTES.ADD_PRODUCT_VARIANTS)}
+          onNext={handleSubmit(() => {
+            router.push(ROUTES.ADD_PRODUCT_VARIANTS);
+          })}
         />
       </View>
     </SafeAreaView>

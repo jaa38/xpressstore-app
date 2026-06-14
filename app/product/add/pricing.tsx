@@ -19,9 +19,16 @@ import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { Card } from "@/components/ui/Card";
 
 import { useState } from "react";
+import { Input } from "@/components/ui/Input";
+
+import { SelectableCard } from "@/components/ui/SelectableCard";
 
 export default function PricingScreen() {
   const [taxApplicable, setTaxApplicable] = useState(false);
+  const [trackInventory, setTrackInventory] = useState(true);
+  const [productStatus, setProductStatus] = useState<"active" | "draft">(
+    "active"
+  );
 
   return (
     <SafeAreaView
@@ -56,7 +63,7 @@ export default function PricingScreen() {
             paddingTop: spacing.md,
             paddingBottom: spacing.xl,
           }}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
         >
           <View
             style={{
@@ -93,36 +100,162 @@ export default function PricingScreen() {
             />
           </View>
 
-          {/* INVENTORY */}
-
           <View
             style={{
               marginTop: spacing.md,
             }}
           >
             <Card>
-              <View style={{ alignItems: "center" }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: spacing.md,
+                }}
+              >
+                <View
+                  style={{
+                    flex: 1,
+                  }}
+                >
+                  <AppText variant="bodyLargeBold" color="primary">
+                    Tax Applicable
+                  </AppText>
+
+                  <AppText variant="body" color="secondary">
+                    Add VAT or sales tax to this product
+                  </AppText>
+                </View>
+
+                <Switch
+                  value={taxApplicable}
+                  onValueChange={setTaxApplicable}
+                  style={{
+                    alignSelf: "center",
+                  }}
+                />
+              </View>
+            </Card>
+          </View>
+
+          {/* INVENTORY */}
+
+          <View
+            style={{
+              marginTop: spacing.lg,
+            }}
+          >
+            <AppText variant="h3" color="primary">
+              Inventory
+            </AppText>
+
+            <Card
+              style={{
+                marginTop: spacing.md,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: spacing.md,
+                }}
+              >
+                <View
+                  style={{
+                    flex: 1,
+                  }}
+                >
+                  <AppText variant="bodyLargeBold" color="primary">
+                    Track Inventory
+                  </AppText>
+
+                  <AppText variant="body" color="secondary">
+                    Automatically deduct stock with each sale
+                  </AppText>
+                </View>
+
+                <Switch
+                  value={trackInventory}
+                  onValueChange={setTrackInventory}
+                  style={{
+                    alignSelf: "center",
+                  }}
+                />
+              </View>
+            </Card>
+
+            {trackInventory && (
+              <View
+                style={{
+                  marginTop: spacing.md,
+                  gap: spacing.md,
+                }}
+              >
+                <Input
+                  label="Current Stock Quantity"
+                  placeholder="0"
+                  keyboardType="numeric"
+                />
+
                 <View
                   style={{
                     flexDirection: "row",
-                    justifyContent: "space-between",
+                    gap: spacing.md,
                   }}
                 >
-                  <View style={{ flexDirection: "column" }}>
-                    <AppText variant="bodyBold" color="primary">
-                      Text Applicable
-                    </AppText>
-                    <AppText variant="body" color="secondary">
-                      Add Vat or sales tax to this product
-                    </AppText>
+                  <View style={{ flex: 1 }}>
+                    <Input
+                      label="Low Stock Alert"
+                      placeholder="0"
+                      keyboardType="numeric"
+                    />
                   </View>
-                  <Switch
-                    value={taxApplicable}
-                    onValueChange={setTaxApplicable}
+
+                  <View style={{ flex: 1 }}>
+                    <Input
+                      label="Reorder Level"
+                      placeholder="0"
+                      keyboardType="numeric"
+                    />
+                  </View>
+                </View>
+              </View>
+            )}
+
+            <View
+              style={{
+                marginTop: spacing.lg,
+              }}
+            >
+              <AppText variant="h3" color="primary">
+                Product Status
+              </AppText>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: spacing.md,
+                  marginTop: spacing.md,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <SelectableCard
+                    title="Active"
+                    description="Live on storefront immediately"
+                    selected={productStatus === "active"}
+                    onPress={() => setProductStatus("active")}
+                  />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <SelectableCard
+                    title="Draft"
+                    description="Save without publishing"
+                    selected={productStatus === "draft"}
+                    onPress={() => setProductStatus("draft")}
                   />
                 </View>
               </View>
-            </Card>
+            </View>
           </View>
         </ScrollView>
 

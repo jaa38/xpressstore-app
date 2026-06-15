@@ -16,93 +16,80 @@ import { router } from "expo-router";
 import { AddProductHeader } from "@/components/product/AddProductHeader";
 import { AddProductFooter } from "@/components/product/AddProductFooter";
 import { useState } from "react";
+
+import { useForm, Controller, useFieldArray } from "react-hook-form";
+
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
-export default function VariantsScreen() {
-  const [variants, setVariants] = useState(false);
+type VariantFormData = {
+  variantsEnabled: boolean;
 
-  const [variantTypes, setVariantTypes] = useState<
-    {
-      id: string;
-      name: string;
-      optionInput: string;
-      options: string[];
-    }[]
-  >([]);
+  variantTypes: Array<{
+    name: string;
+    options: string[];
+  }>;
+};
+
+export default function VariantsScreen() {
+  const { control, watch, setValue } = useForm<VariantFormData>({
+    defaultValues: {
+      variantsEnabled: false,
+      variantTypes: [],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "variantTypes",
+  });
+
+  const variants = watch("variantsEnabled");
+
+  const [optionInputs, setOptionInputs] = useState<Record<string, string>>({});
 
   function addVariantType() {
-    setVariantTypes((current) => [
+    append({
+      name: "",
+      options: [],
+    });
+  }
+
+  function addOption(index: number) {
+    const variant = watch(`variantTypes.${index}`);
+
+    const field = fields[index];
+
+    if (!field || !variant) {
+      return;
+    }
+
+    const fieldId = field.id;
+
+    const value = optionInputs[fieldId]?.trim();
+
+    if (!value) {
+      return;
+    }
+
+    setValue(`variantTypes.${index}.options`, [...variant.options, value]);
+
+    setOptionInputs((current) => ({
       ...current,
-      {
-        id: Date.now().toString(),
-        name: "",
-        optionInput: "",
-        options: [],
-      },
-    ]);
+      [fieldId]: "",
+    }));
   }
 
-  function updateVariantName(variantId: string, value: string) {
-    setVariantTypes((current) =>
-      current.map((variant) =>
-        variant.id === variantId
-          ? {
-              ...variant,
-              name: value,
-            }
-          : variant
-      )
-    );
+  function deleteVariant(index: number) {
+    remove(index);
   }
 
-  function updateOptionInput(variantId: string, value: string) {
-    setVariantTypes((current) =>
-      current.map((variant) =>
-        variant.id === variantId
-          ? {
-              ...variant,
-              optionInput: value,
-            }
-          : variant
-      )
-    );
-  }
-
-  function addOption(variantId: string) {
-    setVariantTypes((current) =>
-      current.map((variant) => {
-        if (variant.id !== variantId) {
-          return variant;
-        }
-
-        const value = variant.optionInput.trim();
-
-        if (!value) {
-          return variant;
-        }
-
-        return {
-          ...variant,
-          options: [...variant.options, value],
-          optionInput: "",
-        };
-      })
-    );
-  }
-
-  function deleteVariant(variantId: string) {
-    setVariantTypes((current) =>
-      current.filter((variant) => variant.id !== variantId)
-    );
-  }
-
-  function RightActions(variantId: string) {
+  function RightActions(index: number) {
     return (
       <Pressable
-        onPress={() => deleteVariant(variantId)}
+        onPress={() => deleteVariant(index)}
         style={{
           width: 80,
           height: "100%",
@@ -112,6 +99,7 @@ export default function VariantsScreen() {
           backgroundColor: theme.state.error.background,
 
           borderTopRightRadius: radius.md,
+
           borderBottomRightRadius: radius.md,
         }}
       >
@@ -189,12 +177,18 @@ export default function VariantsScreen() {
                   </AppText>
                 </View>
 
-                <Switch
-                  value={variants}
-                  onValueChange={setVariants}
-                  style={{
-                    alignSelf: "center",
-                  }}
+                <Controller
+                  control={control}
+                  name="variantsEnabled"
+                  render={({ field }) => (
+                    <Switch
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      style={{
+                        alignSelf: "center",
+                      }}
+                    />
+                  )}
                 />
               </View>
             </Card>
@@ -256,10 +250,10 @@ export default function VariantsScreen() {
             {/* GENERATED VARIANT CARDS */}
 
             {variants &&
-              variantTypes.map((variant, index) => (
+              fields.map((field, index) => (
                 <Swipeable
-                  key={variant.id}
-                  renderRightActions={() => RightActions(variant.id)}
+                  key={field.id}
+                  renderRightActions={() => RightActions(index)}
                   containerStyle={{
                     borderRadius: radius.md,
                     overflow: "hidden",
@@ -270,12 +264,16 @@ export default function VariantsScreen() {
                       gap: spacing.md,
                     }}
                   >
-                    <TextField
-                      placeholder="Variant type (e.g. Size)"
-                      value={variant.name}
-                      onChangeText={(value) =>
-                        updateVariantName(variant.id, value)
-                      }
+                    <Controller
+                      control={control}
+                      name={`variantTypes.${index}.name`}
+                      render={({ field }) => (
+                        <TextField
+                          placeholder="Variant type (e.g. Size)"
+                          value={field.value}
+                          onChangeText={field.onChange}
+                        />
+                      )}
                     />
 
                     <View
@@ -292,9 +290,12 @@ export default function VariantsScreen() {
                       >
                         <TextField
                           placeholder="Add Value (e.g. Small)"
-                          value={variant.optionInput}
+                          value={optionInputs[field.id] ?? ""}
                           onChangeText={(value) =>
-                            updateOptionInput(variant.id, value)
+                            setOptionInputs((current) => ({
+                              ...current,
+                              [field.id]: value,
+                            }))
                           }
                         />
                       </View>
@@ -302,21 +303,24 @@ export default function VariantsScreen() {
                       <Button
                         title="Add"
                         variant="primary"
-                        onPress={() => addOption(variant.id)}
+                        onPress={() => addOption(index)}
                       />
                     </View>
 
-                    {variant.options.length > 0 && (
+                    {(watch(`variantTypes.${index}.options`) ?? []).length >
+                      0 && (
                       <View
                         style={{
                           gap: spacing.sm,
                         }}
                       >
-                        {variant.options.map((option, index) => (
-                          <Card key={`${variant.id}-${index}`} variant="active">
-                            <AppText>{option}</AppText>
-                          </Card>
-                        ))}
+                        {watch(`variantTypes.${index}.options`).map(
+                          (option, optionIndex) => (
+                            <Card key={optionIndex} variant="active">
+                              <AppText>{option}</AppText>
+                            </Card>
+                          )
+                        )}
                       </View>
                     )}
                   </Card>

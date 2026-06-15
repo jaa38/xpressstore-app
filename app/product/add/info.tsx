@@ -169,7 +169,7 @@ export default function InfoScreen() {
       {/* HEADER */}
 
       <AddProductHeader
-        title="Product Information"
+        title="Add New Product"
         step={1}
         totalSteps={5}
         progress={20}

@@ -60,7 +60,7 @@ export default function PricingScreen() {
       edges={["top"]}
     >
       <AddProductHeader
-        title="Pricing & Inventory"
+        title="Add New Product"
         step={2}
         totalSteps={5}
         progress={40}

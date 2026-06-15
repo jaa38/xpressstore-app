@@ -24,17 +24,20 @@ import { TextField } from "@/components/ui/TextField";
 
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
-type VariantFormData = {
-  variantsEnabled: boolean;
+import { variantSchema, type VariantFormData } from "@/schemas/variantSchema";
 
-  variantTypes: Array<{
-    name: string;
-    options: string[];
-  }>;
-};
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function VariantsScreen() {
-  const { control, watch, setValue } = useForm<VariantFormData>({
+  const {
+    control,
+    watch,
+    setValue,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<VariantFormData>({
+    resolver: zodResolver(variantSchema),
+
     defaultValues: {
       variantsEnabled: false,
       variantTypes: [],
@@ -84,6 +87,12 @@ export default function VariantsScreen() {
 
   function deleteVariant(index: number) {
     remove(index);
+  }
+
+  function handleNext(data: VariantFormData) {
+    console.log(data);
+
+    router.push(ROUTES.ADD_PRODUCT_STOREFRONT);
   }
 
   function RightActions(index: number) {
@@ -246,6 +255,11 @@ export default function VariantsScreen() {
                 onPress={addVariantType}
               />
             )}
+            {errors.variantTypes?.message && (
+              <AppText variant="caption" color="error">
+                {errors.variantTypes.message}
+              </AppText>
+            )}
 
             {/* GENERATED VARIANT CARDS */}
 
@@ -272,6 +286,7 @@ export default function VariantsScreen() {
                           placeholder="Variant type (e.g. Size)"
                           value={field.value}
                           onChangeText={field.onChange}
+                          error={errors.variantTypes?.[index]?.name?.message}
                         />
                       )}
                     />
@@ -332,9 +347,7 @@ export default function VariantsScreen() {
 
         {/* FOOTER */}
 
-        <AddProductFooter
-          onNext={() => router.push(ROUTES.ADD_PRODUCT_STOREFRONT)}
-        />
+        <AddProductFooter onNext={handleSubmit(handleNext)} />
       </View>
     </SafeAreaView>
   );

@@ -1,6 +1,12 @@
 import React from "react";
 
-import { Pressable, StyleSheet, StyleProp, ViewStyle } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  View,
+} from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
 
@@ -17,6 +23,8 @@ interface UICardProps {
   onPress?: () => void;
 
   style?: StyleProp<ViewStyle>;
+
+  rightElement?: React.ReactNode;
 }
 
 export function UICard({
@@ -24,6 +32,7 @@ export function UICard({
   variant = "default",
   onPress,
   style,
+  rightElement,
 }: UICardProps) {
   return (
     <Pressable
@@ -31,6 +40,16 @@ export function UICard({
       style={[styles.card, getVariantStyle(variant), style]}
     >
       <AppText style={[styles.text, getTextStyle(variant)]}>{title}</AppText>
+
+      {rightElement && (
+        <View
+          style={{
+            marginLeft: 8,
+          }}
+        >
+          {rightElement}
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -83,11 +102,13 @@ const styles = StyleSheet.create({
   card: {
     alignSelf: "flex-start",
 
-    height: 36,
+    minHeight: 36,
 
     paddingHorizontal: 12,
 
     borderRadius: radius.lg,
+
+    flexDirection: "row",
 
     alignItems: "center",
 

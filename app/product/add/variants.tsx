@@ -21,6 +21,7 @@ import { useForm, Controller, useFieldArray } from "react-hook-form";
 
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
+import { UICard } from "@/components/ui/UICard";
 
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
@@ -93,6 +94,22 @@ export default function VariantsScreen() {
     console.log(data);
 
     router.push(ROUTES.ADD_PRODUCT_STOREFRONT);
+  }
+
+  function deleteOption(variantIndex: number, optionIndex: number) {
+    const variant = watch(`variantTypes.${variantIndex}`);
+
+    if (!variant) {
+      return;
+    }
+
+    const updatedOptions = variant.options.filter(
+      (_, index) => index !== optionIndex
+    );
+
+    setValue(`variantTypes.${variantIndex}.options`, updatedOptions, {
+      shouldValidate: true,
+    });
   }
 
   function RightActions(index: number) {
@@ -326,14 +343,32 @@ export default function VariantsScreen() {
                       0 && (
                       <View
                         style={{
+                          flexDirection: "row",
+                          flexWrap: "wrap",
                           gap: spacing.sm,
                         }}
                       >
                         {watch(`variantTypes.${index}.options`).map(
                           (option, optionIndex) => (
-                            <Card key={optionIndex} variant="active">
-                              <AppText>{option}</AppText>
-                            </Card>
+                            <UICard
+                              key={optionIndex}
+                              title={option}
+                              variant="active"
+                              rightElement={
+                                <Pressable
+                                  hitSlop={12}
+                                  onPress={() =>
+                                    deleteOption(index, optionIndex)
+                                  }
+                                >
+                                  <Ionicons
+                                    name="close"
+                                    size={16}
+                                    color="white"
+                                  />
+                                </Pressable>
+                              }
+                            />
                           )
                         )}
                       </View>

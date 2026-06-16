@@ -58,13 +58,9 @@ export default function StorefrontScreen() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <View
-            style={{
-              gap: spacing.xl,
-            }}
-          >
-            <AppText variant="body" color="secondary">
-              Choose how this product appears in your storefront.
+          <View>
+            <AppText variant="h3" color="primary">
+              Storefront Visibility
             </AppText>
 
             {/* VISIBILITY */}
@@ -74,8 +70,6 @@ export default function StorefrontScreen() {
                 gap: spacing.sm,
               }}
             >
-              <AppText variant="label">Visibility</AppText>
-
               <Card>
                 <View
                   style={{

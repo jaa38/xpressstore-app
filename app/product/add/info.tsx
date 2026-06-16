@@ -231,6 +231,7 @@ export default function InfoScreen() {
                 <ImageActionCard
                   title="Remove"
                   icon="trash-outline"
+                  iconColor={theme.state.error.icon}
                   disabled={!imageUri}
                   onPress={handleRemoveImage}
                 />

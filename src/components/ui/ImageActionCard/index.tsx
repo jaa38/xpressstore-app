@@ -26,6 +26,8 @@ interface ImageActionCardProps {
   disabled?: boolean;
 
   selected?: boolean;
+
+  iconColor?: string;
 }
 
 const SIZE_MAP = {
@@ -41,6 +43,7 @@ export function ImageActionCard({
   size = "md",
   disabled = false,
   selected = false,
+  iconColor,
   onPress,
 }: ImageActionCardProps) {
   const cardSize = SIZE_MAP[size];
@@ -92,8 +95,8 @@ export function ImageActionCard({
               size={24}
               color={
                 disabled
-                  ? theme.action.primary.disabled
-                  : theme.icon.branding.icon
+                  ? theme.state.error.icon
+                  : (iconColor ?? theme.icon.branding.icon)
               }
             />
 

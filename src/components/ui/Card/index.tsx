@@ -115,7 +115,7 @@ const styles =
         spacing.md,
 
       paddingVertical:
-        spacing.rg,
+        spacing.md,
 
       borderWidth: 1,
 

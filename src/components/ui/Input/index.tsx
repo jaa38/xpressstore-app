@@ -4,7 +4,7 @@ import { TextInput, TextInputProps, View, StyleSheet } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
 
-import { theme } from "@/theme";
+import { spacing, theme } from "@/theme";
 import { typography } from "@/theme/typography";
 import { radius } from "@/theme/radius";
 
@@ -124,7 +124,7 @@ export function Input({
         ]}
       >
         {leftElement}
-        
+
         <TextInput
           {...props}
           value={value}
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
 
     alignItems: "center",
 
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
 
   inputContainer: {

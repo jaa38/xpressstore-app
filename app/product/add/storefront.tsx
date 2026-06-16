@@ -21,12 +21,53 @@ import { useState } from "react";
 import { ImageActionCard } from "@/components/ui/ImageActionCard";
 
 import * as ImagePicker from "expo-image-picker";
+import { Input } from "@/components/ui/Input";
+import { UICard } from "@/components/ui/UICard";
+
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import {
+  storefrontSchema,
+  type StorefrontFormData,
+  SHIPPING_CLASSES,
+} from "@/schemas/storefrontSchema";
+
+type ShippingClass = (typeof SHIPPING_CLASSES)[number];
 
 export default function StorefrontScreen() {
-  const [visible, setVisible] = useState(true);
-  const [video, setVideo] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
-  const imageUri = "image";
+  // const [video, setVideo] = useState(false);
+
+  const {
+    control,
+    watch,
+    setValue,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<StorefrontFormData>({
+    resolver: zodResolver(storefrontSchema),
+
+    defaultValues: {
+      visible: true,
+
+      images: [],
+
+      dimensions: {
+        weight: "",
+        length: "",
+        width: "",
+        height: "",
+      },
+
+      shippingClass: "Standard",
+
+      deliveryNotes: "",
+    },
+  });
+
+  const images = watch("images");
+  const shippingClass = watch("shippingClass");
+
   const MAX_IMAGES = 5;
 
   const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
@@ -50,15 +91,34 @@ export default function StorefrontScreen() {
 
     const selectedImages = result.assets.map((asset) => asset.uri);
 
-    setImages((current) => {
-      const remainingSlots = MAX_IMAGES - current.length;
+    const remainingSlots = MAX_IMAGES - images.length;
 
-      return [...current, ...selectedImages.slice(0, remainingSlots)];
-    });
+    setValue("images", [...images, ...selectedImages.slice(0, remainingSlots)]);
   }
 
   function removeImage(uri: string) {
-    setImages((current) => current.filter((image) => image !== uri));
+    setValue(
+      "images",
+      images.filter((image) => image !== uri)
+    );
+  }
+
+  function sanitizeDecimal(value: string) {
+    let sanitized = value.replace(/[^0-9.]/g, "");
+
+    const parts = sanitized.split(".");
+
+    if (parts.length > 2) {
+      sanitized = parts[0] + "." + parts.slice(1).join("");
+    }
+
+    return sanitized;
+  }
+
+  function handleNext(data: StorefrontFormData) {
+    console.log(data);
+
+    router.push(ROUTES.ADD_PRODUCT_REVIEW);
   }
 
   return (
@@ -127,12 +187,15 @@ export default function StorefrontScreen() {
                     </AppText>
                   </View>
 
-                  <Switch
-                    value={visible}
-                    onValueChange={setVisible}
-                    style={{
-                      alignSelf: "center",
-                    }}
+                  <Controller
+                    control={control}
+                    name="visible"
+                    render={({ field }) => (
+                      <Switch
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      />
+                    )}
                   />
                 </View>
               </Card>
@@ -238,9 +301,212 @@ export default function StorefrontScreen() {
             </View>
 
             <View style={{ marginTop: spacing.md, gap: spacing.md }}>
-              <AppText variant="h3" color="primary">
-                Product Dimensions
-              </AppText>
+              <View style={{ gap: spacing.xs }}>
+                <AppText variant="h3" color="primary">
+                  Product Dimensions
+                </AppText>
+                <AppText color="secondary">
+                  Helps calculate shipping costs
+                </AppText>
+              </View>
+              <View
+                style={{
+                  gap: spacing.md,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: spacing.md,
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Controller
+                      control={control}
+                      name="dimensions.weight"
+                      render={({ field }) => (
+                        <Input
+                          label="Weight"
+                          keyboardType="decimal-pad"
+                          placeholder="0.00"
+                          value={field.value}
+                          onChangeText={(value) =>
+                            field.onChange(sanitizeDecimal(value))
+                          }
+                          error={errors.dimensions?.weight?.message}
+                          rightElement={
+                            <AppText
+                              style={{
+                                paddingRight: spacing.md,
+                              }}
+                              color="secondary"
+                            >
+                              kg
+                            </AppText>
+                          }
+                        />
+                      )}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Controller
+                      control={control}
+                      name="dimensions.length"
+                      render={({ field }) => (
+                        <Input
+                          label="length"
+                          keyboardType="decimal-pad"
+                          placeholder="0.00"
+                          value={field.value}
+                          onChangeText={(value) =>
+                            field.onChange(sanitizeDecimal(value))
+                          }
+                          error={errors.dimensions?.length?.message}
+                          rightElement={
+                            <AppText
+                              style={{
+                                paddingRight: spacing.md,
+                              }}
+                              color="secondary"
+                            >
+                              cm
+                            </AppText>
+                          }
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: spacing.md,
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Controller
+                      control={control}
+                      name="dimensions.width"
+                      render={({ field }) => (
+                        <Input
+                          label="Width"
+                          keyboardType="decimal-pad"
+                          placeholder="0.00"
+                          value={field.value}
+                          onChangeText={(value) =>
+                            field.onChange(sanitizeDecimal(value))
+                          }
+                          error={errors.dimensions?.width?.message}
+                          rightElement={
+                            <AppText
+                              style={{
+                                paddingRight: spacing.md,
+                              }}
+                              color="secondary"
+                            >
+                              cm
+                            </AppText>
+                          }
+                        />
+                      )}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Controller
+                      control={control}
+                      name="dimensions.height"
+                      render={({ field }) => (
+                        <Input
+                          label="Height"
+                          keyboardType="decimal-pad"
+                          placeholder="0.00"
+                          value={field.value}
+                          onChangeText={(value) =>
+                            field.onChange(sanitizeDecimal(value))
+                          }
+                          error={errors.dimensions?.height?.message}
+                          rightElement={
+                            <AppText
+                              style={{
+                                paddingRight: spacing.md,
+                              }}
+                              color="secondary"
+                            >
+                              cm
+                            </AppText>
+                          }
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View
+              style={{
+                marginTop: spacing.md,
+                gap: spacing.md,
+              }}
+            >
+              <View
+                style={{
+                  gap: spacing.xs,
+                }}
+              >
+                <AppText variant="h3" color="primary">
+                  Shipping & Fulfilment
+                </AppText>
+
+                <AppText color="secondary">
+                  Configure shipping requirements and handling instructions.
+                </AppText>
+              </View>
+
+              <View>
+                <AppText variant="label" color="secondary">
+                  Shipping Class
+                </AppText>
+
+                <View
+                  style={{
+                    marginTop: spacing.sm,
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    gap: spacing.sm,
+                  }}
+                >
+                  {SHIPPING_CLASSES.map((shippingType) => (
+                    <UICard
+                      key={shippingType}
+                      title={shippingType}
+                      variant={
+                        shippingClass === shippingType ? "active" : "default"
+                      }
+                      onPress={() => setValue("shippingClass", shippingType)}
+                    />
+                  ))}
+                </View>
+              </View>
+              <Controller
+                control={control}
+                name="deliveryNotes"
+                render={({ field }) => (
+                  <Input
+                    label="Delivery Notes"
+                    optional
+                    placeholder="e.g. Handle with care, fragile"
+                    maxLength={300}
+                    variant="textarea"
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    error={errors.deliveryNotes?.message}
+                  />
+                )}
+              />
             </View>
           </View>
         </ScrollView>
@@ -248,9 +514,7 @@ export default function StorefrontScreen() {
 
         {/* FOOTER */}
 
-        <AddProductFooter
-          onNext={() => router.push(ROUTES.ADD_PRODUCT_REVIEW)}
-        />
+        <AddProductFooter onNext={handleSubmit(handleNext)} />
       </View>
     </SafeAreaView>
   );

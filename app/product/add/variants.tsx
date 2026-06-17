@@ -32,7 +32,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useProduct } from "@/store/product/useProduct";
 
 export default function VariantsScreen() {
-  const { updateProduct } = useProduct();
+  const { product, updateProduct } = useProduct();
 
   const {
     control,
@@ -44,8 +44,9 @@ export default function VariantsScreen() {
     resolver: zodResolver(variantSchema),
 
     defaultValues: {
-      variantsEnabled: false,
-      variantTypes: [],
+      variantsEnabled: product.variantsEnabled,
+
+      variantTypes: product.variants,
     },
   });
 

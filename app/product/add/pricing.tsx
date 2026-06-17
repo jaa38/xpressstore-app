@@ -33,11 +33,7 @@ import { pricingSchema, PricingFormData } from "@/schemas/pricingSchema";
 import { useProduct } from "@/store/product/useProduct";
 
 export default function PricingScreen() {
-  const [taxApplicable, setTaxApplicable] = useState(false);
-  const [trackInventory, setTrackInventory] = useState(true);
-  const [productStatus, setProductStatus] = useState<"active" | "draft">(
-    "active"
-  );
+  const { product, updateProduct } = useProduct();
 
   const {
     control,
@@ -45,15 +41,19 @@ export default function PricingScreen() {
     formState: { errors },
   } = useForm<PricingFormData>({
     defaultValues: {
-      sellingPrice: "",
-      costPrice: "",
-      currentStock: "",
-      lowStockAlert: "",
-      reorderLevel: "",
+      sellingPrice: product.price ? product.price.toString() : "",
+
+      costPrice: product.costPrice ? product.costPrice.toString() : "",
+
+      currentStock: product.stock ? product.stock.toString() : "",
+
+      lowStockAlert: product.lowStockAlert
+        ? product.lowStockAlert.toString()
+        : "",
+
+      reorderLevel: product.reorderLevel ? product.reorderLevel.toString() : "",
     },
   });
-
-  const { updateProduct } = useProduct();
 
   return (
     <SafeAreaView
@@ -170,11 +170,12 @@ export default function PricingScreen() {
                 </View>
 
                 <Switch
-                  value={taxApplicable}
-                  onValueChange={setTaxApplicable}
-                  style={{
-                    alignSelf: "center",
-                  }}
+                  value={product.taxApplicable}
+                  onValueChange={(value) =>
+                    updateProduct({
+                      taxApplicable: value,
+                    })
+                  }
                 />
               </View>
             </Card>
@@ -217,16 +218,17 @@ export default function PricingScreen() {
                 </View>
 
                 <Switch
-                  value={trackInventory}
-                  onValueChange={setTrackInventory}
-                  style={{
-                    alignSelf: "center",
-                  }}
+                  value={product.trackInventory}
+                  onValueChange={(value) =>
+                    updateProduct({
+                      trackInventory: value,
+                    })
+                  }
                 />
               </View>
             </Card>
 
-            {trackInventory && (
+            {product.trackInventory && (
               <View
                 style={{
                   marginTop: spacing.md,
@@ -309,8 +311,12 @@ export default function PricingScreen() {
                   <SelectableCard
                     title="Active"
                     description="Live on storefront immediately"
-                    selected={productStatus === "active"}
-                    onPress={() => setProductStatus("active")}
+                    selected={product.productStatus === "active"}
+                    onPress={() =>
+                      updateProduct({
+                        productStatus: "active",
+                      })
+                    }
                   />
                 </View>
 
@@ -318,8 +324,12 @@ export default function PricingScreen() {
                   <SelectableCard
                     title="Draft"
                     description="Save without publishing"
-                    selected={productStatus === "draft"}
-                    onPress={() => setProductStatus("draft")}
+                    selected={product.productStatus === "draft"}
+                    onPress={() =>
+                      updateProduct({
+                        productStatus: "draft",
+                      })
+                    }
                   />
                 </View>
               </View>

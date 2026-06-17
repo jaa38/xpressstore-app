@@ -58,7 +58,7 @@ export default function ReviewScreen() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <View>
+          <View style={{ gap: spacing.md }}>
             <Card>
               <View
                 style={{
@@ -109,7 +109,8 @@ export default function ReviewScreen() {
                 <View
                   style={{
                     flex: 1,
-                    gap: spacing.xs,
+                    // gap: spacing.xs,
+                    justifyContent: "space-evenly",
                   }}
                 >
                   <AppText variant="bodyLargeBold">
@@ -118,14 +119,247 @@ export default function ReviewScreen() {
 
                   <AppText color="secondary">{product.category}</AppText>
 
-                  <AppText variant="bodyLargeBold" color="primary">
+                  <AppText variant="bodyLargeBold" color="link">
                     ₦{product.price?.toLocaleString()}
                   </AppText>
                 </View>
               </View>
             </Card>
 
-            <View
+            <Card>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <AppText variant="bodyLargeBold">Product Information</AppText>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: spacing.xs,
+                  }}
+                >
+                  <Ionicons
+                    name="create-outline"
+                    color={theme.icon.branding.icon}
+                    size={20}
+                  />
+
+                  <AppText variant="bodyBold" color="success">
+                    Edit
+                  </AppText>
+                </View>
+              </View>
+
+              <View
+                style={{
+                  marginTop: spacing.rg,
+                  gap: spacing.sm,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Name
+                  </AppText>
+
+                  <AppText
+                    variant="bodyBold"
+                    color="primary"
+                    style={{
+                      flexShrink: 1,
+                      textAlign: "right",
+                    }}
+                  >
+                    {product.productName || "-"}
+                  </AppText>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Category
+                  </AppText>
+
+                  <AppText
+                    variant="bodyBold"
+                    color="primary"
+                    style={{
+                      flexShrink: 1,
+                      textAlign: "right",
+                    }}
+                  >
+                    {product.category || "-"}
+                  </AppText>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Description
+                  </AppText>
+
+                  <AppText
+                    variant="bodyBold"
+                    color="primary"
+                    style={{
+                      flexShrink: 1,
+                      textAlign: "right",
+                      maxWidth: "65%",
+                    }}
+                  >
+                    {product.description || "-"}
+                  </AppText>
+                </View>
+              </View>
+            </Card>
+
+            <Card>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <AppText variant="bodyLargeBold">Pricing</AppText>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: spacing.xs,
+                  }}
+                >
+                  <Ionicons
+                    name="create-outline"
+                    color={theme.icon.branding.icon}
+                    size={20}
+                  />
+
+                  <AppText variant="bodyBold" color="success">
+                    Edit
+                  </AppText>
+                </View>
+              </View>
+
+              <View
+                style={{
+                  marginTop: spacing.rg,
+                  gap: spacing.sm,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Cost Price
+                  </AppText>
+
+                  <AppText
+                    variant="bodyBold"
+                    color="primary"
+                    style={{
+                      flexShrink: 1,
+                      textAlign: "right",
+                    }}
+                  >
+                    ₦{product.costPrice?.toLocaleString() ?? "0"}
+                  </AppText>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Selling Price
+                  </AppText>
+
+                  <AppText
+                    variant="bodyBold"
+                    color="primary"
+                    style={{
+                      flexShrink: 1,
+                      textAlign: "right",
+                    }}
+                  >
+                    ₦{product.price?.toLocaleString() ?? "0"}
+                  </AppText>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Tax Applicable
+                  </AppText>
+
+                  <AppText
+                    variant="bodyBold"
+                    color={product.taxApplicable ? "success" : "secondary"}
+                  >
+                    {product.taxApplicable ? "Applicable" : "Not Applicable"}
+                  </AppText>
+                </View>
+              </View>
+            </Card>
+
+            <Card>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <AppText variant="bodyLargeBold">Pricing</AppText>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: spacing.xs,
+                  }}
+                >
+                  <Ionicons
+                    name="create-outline"
+                    color={theme.icon.branding.icon}
+                    size={20}
+                  />
+
+                  <AppText variant="bodyBold" color="success">
+                    Edit
+                  </AppText>
+                </View>
+              </View>
+            </Card>
+
+            {/* <View
               style={{
                 marginTop: spacing.md,
               }}
@@ -239,7 +473,7 @@ export default function ReviewScreen() {
                   </View>
                 </Card>
               </View>
-            )}
+            )} */}
           </View>
         </ScrollView>
 

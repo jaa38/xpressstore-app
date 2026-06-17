@@ -8,6 +8,8 @@ export const SHIPPING_CLASSES = [
   "Digital",
 ] as const;
 
+export type ShippingClass = (typeof SHIPPING_CLASSES)[number];
+
 export const storefrontSchema = z.object({
   visible: z.boolean(),
 

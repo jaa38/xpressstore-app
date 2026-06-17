@@ -40,7 +40,7 @@ type ShippingClass = (typeof SHIPPING_CLASSES)[number];
 export default function StorefrontScreen() {
   // const [video, setVideo] = useState(false);
 
-  const { updateProduct } = useProduct();
+  const { product, updateProduct } = useProduct();
 
   const {
     control,
@@ -52,20 +52,15 @@ export default function StorefrontScreen() {
     resolver: zodResolver(storefrontSchema),
 
     defaultValues: {
-      visible: true,
+      visible: product.visible,
 
-      images: [],
+      images: product.images,
 
-      dimensions: {
-        weight: "",
-        length: "",
-        width: "",
-        height: "",
-      },
+      dimensions: product.dimensions,
 
-      shippingClass: "Standard",
+      shippingClass: product.shippingClass,
 
-      deliveryNotes: "",
+      deliveryNotes: product.deliveryNotes,
     },
   });
 
@@ -97,14 +92,26 @@ export default function StorefrontScreen() {
 
     const remainingSlots = MAX_IMAGES - images.length;
 
-    setValue("images", [...images, ...selectedImages.slice(0, remainingSlots)]);
+    const updatedImages = [
+      ...images,
+      ...selectedImages.slice(0, remainingSlots),
+    ];
+
+    setValue("images", updatedImages);
+
+    updateProduct({
+      images: updatedImages,
+    });
   }
 
   function removeImage(uri: string) {
-    setValue(
-      "images",
-      images.filter((image) => image !== uri)
-    );
+    const updatedImages = images.filter((image) => image !== uri);
+
+    setValue("images", updatedImages);
+
+    updateProduct({
+      images: updatedImages,
+    });
   }
 
   function sanitizeDecimal(value: string) {

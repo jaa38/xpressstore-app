@@ -1,3 +1,5 @@
+import type { ShippingClass } from "@/schemas/storefrontSchema";
+
 export interface ProductVariant {
   name: string;
   options: string[];
@@ -14,6 +16,12 @@ export interface ProductDraft {
   price: number;
   costPrice: number;
 
+  taxApplicable: boolean;
+
+  trackInventory: boolean;
+
+  productStatus: "active" | "draft";
+
   stock: number;
   lowStockAlert: number;
   reorderLevel: number;
@@ -23,7 +31,7 @@ export interface ProductDraft {
 
   visible: boolean;
 
-  shippingClass: string;
+  shippingClass: ShippingClass;
 
   deliveryNotes: string;
 
@@ -40,3 +48,10 @@ export interface ProductDimensions {
   width: string;
   height: string;
 }
+
+// export type ShippingClass =
+//   | "Standard"
+//   | "Express"
+//   | "Fragile"
+//   | "Bulky"
+//   | "Digital";

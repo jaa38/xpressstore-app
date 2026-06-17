@@ -40,6 +40,8 @@ import {
 import { useProduct } from "@/store/product/useProduct";
 
 export default function InfoScreen() {
+  const { product, updateProduct } = useProduct();
+
   const {
     control,
     handleSubmit,
@@ -51,12 +53,12 @@ export default function InfoScreen() {
     resolver: zodResolver(productInfoSchema),
 
     defaultValues: {
-      productName: "",
-      description: "",
-      category: "",
-      brand: "",
-      sku: "",
-      image: "",
+      productName: product.productName,
+      description: product.description,
+      category: product.category,
+      brand: product.brand,
+      sku: product.sku,
+      image: product.image,
     },
   });
 
@@ -70,8 +72,6 @@ export default function InfoScreen() {
     aspect: [1, 1],
     quality: 0.8,
   };
-
-  const { updateProduct } = useProduct();
 
   const handleCamera = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -88,6 +88,10 @@ export default function InfoScreen() {
       if (asset) {
         setValue("image", asset.uri, {
           shouldValidate: true,
+        });
+
+        updateProduct({
+          image: asset.uri,
         });
 
         clearErrors("image");
@@ -107,6 +111,10 @@ export default function InfoScreen() {
           shouldValidate: true,
         });
 
+        updateProduct({
+          image: asset.uri,
+        });
+
         clearErrors("image");
       }
     }
@@ -117,6 +125,10 @@ export default function InfoScreen() {
   const handleRemoveImage = () => {
     setValue("image", "", {
       shouldValidate: true,
+    });
+
+    updateProduct({
+      image: "",
     });
   };
 

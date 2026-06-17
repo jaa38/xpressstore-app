@@ -15,6 +15,12 @@ const INITIAL_PRODUCT: ProductDraft = {
   price: 0,
   costPrice: 0,
 
+  taxApplicable: false,
+
+  trackInventory: true,
+
+  productStatus: "active",
+
   stock: 0,
   lowStockAlert: 0,
   reorderLevel: 0,
@@ -31,7 +37,7 @@ const INITIAL_PRODUCT: ProductDraft = {
     height: "",
   },
 
-  shippingClass: "",
+  shippingClass: "Standard",
 
   deliveryNotes: "",
 

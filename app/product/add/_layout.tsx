@@ -1,15 +1,22 @@
 import { Stack } from "expo-router";
 
+import {
+  ProductProvider,
+} from "@/store/product/ProductProvider";
+
 export default function AddProductLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
+    <ProductProvider>
+      <Stack
+        screenOptions={{
+          headerShown: false,
 
-        animation: "slide_from_right",
+          animation:
+            "slide_from_right",
 
-        gestureEnabled: true,
-      }}
-    />
+          gestureEnabled: true,
+        }}
+      />
+    </ProductProvider>
   );
 }

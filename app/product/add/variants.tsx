@@ -29,7 +29,11 @@ import { variantSchema, type VariantFormData } from "@/schemas/variantSchema";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { useProduct } from "@/store/product/useProduct";
+
 export default function VariantsScreen() {
+  const { updateProduct } = useProduct();
+
   const {
     control,
     watch,
@@ -91,7 +95,11 @@ export default function VariantsScreen() {
   }
 
   function handleNext(data: VariantFormData) {
-    console.log(data);
+    updateProduct({
+      variantsEnabled: data.variantsEnabled,
+
+      variants: data.variantTypes,
+    });
 
     router.push(ROUTES.ADD_PRODUCT_STOREFRONT);
   }

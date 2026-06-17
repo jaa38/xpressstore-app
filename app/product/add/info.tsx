@@ -37,6 +37,8 @@ import {
   ProductInfoForm,
 } from "@/schemas/productInfoSchema";
 
+import { useProduct } from "@/store/product/useProduct";
+
 export default function InfoScreen() {
   const {
     control,
@@ -68,6 +70,8 @@ export default function InfoScreen() {
     aspect: [1, 1],
     quality: 0.8,
   };
+
+  const { updateProduct } = useProduct();
 
   const handleCamera = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -153,7 +157,19 @@ export default function InfoScreen() {
     setNewCategory("");
   }
   function handleNext(data: ProductInfoForm) {
-    console.log(data);
+    updateProduct({
+      productName: data.productName,
+
+      description: data.description,
+
+      category: data.category,
+
+      brand: data.brand,
+
+      sku: data.sku,
+
+      image: data.image,
+    });
 
     router.push(ROUTES.ADD_PRODUCT_PRICING);
   }

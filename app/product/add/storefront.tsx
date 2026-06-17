@@ -33,10 +33,14 @@ import {
   SHIPPING_CLASSES,
 } from "@/schemas/storefrontSchema";
 
+import { useProduct } from "@/store/product/useProduct";
+
 type ShippingClass = (typeof SHIPPING_CLASSES)[number];
 
 export default function StorefrontScreen() {
   // const [video, setVideo] = useState(false);
+
+  const { updateProduct } = useProduct();
 
   const {
     control,
@@ -116,7 +120,17 @@ export default function StorefrontScreen() {
   }
 
   function handleNext(data: StorefrontFormData) {
-    console.log(data);
+    updateProduct({
+      visible: data.visible,
+
+      images: data.images,
+
+      dimensions: data.dimensions,
+
+      shippingClass: data.shippingClass,
+
+      deliveryNotes: data.deliveryNotes,
+    });
 
     router.push(ROUTES.ADD_PRODUCT_REVIEW);
   }

@@ -30,6 +30,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { pricingSchema, PricingFormData } from "@/schemas/pricingSchema";
 
+import { useProduct } from "@/store/product/useProduct";
+
 export default function PricingScreen() {
   const [taxApplicable, setTaxApplicable] = useState(false);
   const [trackInventory, setTrackInventory] = useState(true);
@@ -50,6 +52,8 @@ export default function PricingScreen() {
       reorderLevel: "",
     },
   });
+
+  const { updateProduct } = useProduct();
 
   return (
     <SafeAreaView
@@ -327,7 +331,17 @@ export default function PricingScreen() {
 
         <AddProductFooter
           onNext={handleSubmit((data) => {
-            console.log("Pricing Form", data);
+            updateProduct({
+              price: Number(data.sellingPrice),
+
+              costPrice: Number(data.costPrice),
+
+              stock: Number(data.currentStock),
+
+              lowStockAlert: Number(data.lowStockAlert),
+
+              reorderLevel: Number(data.reorderLevel),
+            });
 
             router.push(ROUTES.ADD_PRODUCT_VARIANTS);
           })}

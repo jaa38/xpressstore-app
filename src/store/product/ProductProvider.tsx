@@ -50,10 +50,27 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const [product, setProduct] = useState(INITIAL_PRODUCT);
 
   function updateProduct(data: Partial<ProductDraft>) {
-    setProduct((current) => ({
-      ...current,
-      ...data,
-    }));
+    setProduct((current) => {
+      const next = {
+        ...current,
+        ...data,
+      };
+
+      // Safely merge dimensions object if it exists in the update
+      if (data.dimensions) {
+        next.dimensions = {
+          ...current.dimensions,
+          ...data.dimensions,
+        };
+      }
+
+      // Safely clone variants array reference if it exists in the update
+      if (data.variants) {
+        next.variants = [...data.variants];
+      }
+
+      return next;
+    });
   }
 
   function resetProduct() {

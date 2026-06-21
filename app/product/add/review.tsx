@@ -58,6 +58,15 @@ export default function ReviewScreen() {
 
       resetProduct();
 
+      router.replace({
+        pathname: ROUTES.PRODUCTS,
+        params: {
+          refresh: Date.now().toString(),
+        },
+      });
+
+      resetProduct();
+
       router.replace(ROUTES.PRODUCTS);
     } catch (error) {
       console.error(error);

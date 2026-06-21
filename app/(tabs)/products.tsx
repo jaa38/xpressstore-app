@@ -1,4 +1,14 @@
-import { View, ScrollView, Image, Switch, FlatList } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import {
+  View,
+  ScrollView,
+  Image,
+  Switch,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
+} from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { StatusBar } from "expo-status-bar";
@@ -10,9 +20,9 @@ import { radius, spacing, theme } from "@/theme";
 import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { router } from "expo-router";
 import { ROUTES } from "@/navigation/routes";
-import { useEffect, useMemo, useState } from "react";
+
+import { useMemo, useState, useEffect } from "react";
 
 import {
   getProducts,
@@ -97,17 +107,47 @@ function ProductCard({
 export default function ProductScreen() {
   const [products, setProducts] = useState<Product[]>([]);
 
+  const [loading, setLoading] = useState(true);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const { refresh } = useLocalSearchParams();
+
+  const [error, setError] = useState("");
+
   useEffect(() => {
     loadProducts();
   }, []);
 
   async function loadProducts() {
     try {
+      setLoading(true);
+
+      setError("");
+
       const data = await getProducts();
+
       console.log("SUPABASE PRODUCTS", data);
 
+      setProducts(data ?? []);
     } catch (error) {
       console.log("LOAD PRODUCTS ERROR", error);
+
+      setError("Unable to load products.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function onRefresh() {
+    try {
+      setRefreshing(true);
+
+      await loadProducts();
+    } catch (error) {
+      console.log("REFRESH ERROR", error);
+    } finally {
+      setRefreshing(false);
     }
   }
 
@@ -154,6 +194,9 @@ export default function ProductScreen() {
         style={{
           flex: 1,
         }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         contentContainerStyle={{
           paddingHorizontal: spacing.lg,
           paddingTop: spacing.md,
@@ -185,7 +228,9 @@ export default function ProductScreen() {
               <AppText variant="h1">Products</AppText>
 
               <AppText variant="body" color="secondary">
-                {products.length} item(s) in catalog
+                {products.length === 1
+                  ? "1 item in catalog"
+                  : `${products.length} items in catalog`}
               </AppText>
             </View>
 
@@ -239,12 +284,44 @@ export default function ProductScreen() {
             </View>
           )}
 
+          {error ? (
+            <Card
+              style={{
+                marginTop: spacing.md,
+                borderColor: theme.border.error,
+                borderWidth: 1,
+              }}
+            >
+              <AppText color="error">{error}</AppText>
+            </Card>
+          ) : null}
+
           <View
             style={{
               marginTop: spacing.lg,
             }}
           >
-            {products.length === 0 ? (
+            {loading ? (
+              <Card
+                style={{
+                  alignItems: "center",
+                  paddingVertical: spacing.xl,
+                }}
+              >
+                <ActivityIndicator
+                  size="large"
+                  color={theme.icon.branding.icon}
+                />
+
+                <AppText
+                  style={{
+                    marginTop: spacing.md,
+                  }}
+                >
+                  Loading products...
+                </AppText>
+              </Card>
+            ) : products.length === 0 ? (
               <Card
                 style={{
                   alignItems: "center",

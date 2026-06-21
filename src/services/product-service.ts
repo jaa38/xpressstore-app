@@ -1,6 +1,6 @@
 import { supabase } from "@/services/supabase/client";
 
-import type { ProductDraft } from "@/types/product";
+import type { Product, ProductDraft } from "@/types/product";
 
 export async function createProduct(product: ProductDraft) {
   const { data, error } = await supabase
@@ -54,7 +54,7 @@ export async function createProduct(product: ProductDraft) {
   return data;
 }
 
-export async function getProducts() {
+export async function getProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
     .select("*")
@@ -66,7 +66,7 @@ export async function getProducts() {
     throw error;
   }
 
-  return (
+  const mappedProducts: Product[] =
     data?.map((item) => ({
       id: item.id,
 
@@ -94,7 +94,7 @@ export async function getProducts() {
 
       reorderLevel: item.reorder_level,
 
-      image: item.image,
+      image: item.image ?? "",
 
       images: item.images ?? [],
 
@@ -102,17 +102,23 @@ export async function getProducts() {
 
       shippingClass: item.shipping_class,
 
-      deliveryNotes: item.delivery_notes,
+      deliveryNotes: item.delivery_notes ?? "",
 
-      dimensions: item.dimensions,
+      dimensions: item.dimensions ?? {
+        weight: "",
+        length: "",
+        width: "",
+        height: "",
+      },
 
       variantsEnabled: item.variants_enabled,
 
       variants: item.variants ?? [],
 
       productStatus: "active",
-    })) ?? []
-  );
+    })) ?? [];
+
+  return mappedProducts;
 }
 
 export async function updateProductVisibility(

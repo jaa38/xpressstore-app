@@ -1,8 +1,12 @@
-import { useState, ReactNode } from "react";
+import { useState, ReactNode, useEffect } from "react";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ProductContext } from "./ProductContext";
 
 import type { Product, ProductDraft } from "@/types/product";
+
+const PRODUCTS_STORAGE_KEY = "products";
 
 const INITIAL_PRODUCT: ProductDraft = {
   productName: "",
@@ -51,16 +55,61 @@ export function ProductProvider({ children }: { children: ReactNode }) {
 
   const [products, setProducts] = useState<Product[]>([]);
 
+  // ─────────────────────────────
+  // LOAD SAVED PRODUCTS
+  // ─────────────────────────────
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  async function loadProducts() {
+    try {
+      const storedProducts = await AsyncStorage.getItem(PRODUCTS_STORAGE_KEY);
+
+      if (storedProducts) {
+        setProducts(JSON.parse(storedProducts));
+      }
+    } catch (error) {
+      console.error("Failed to load products", error);
+    }
+  }
+
+  // ─────────────────────────────
+  // SAVE PRODUCTS
+  // ─────────────────────────────
+
+  useEffect(() => {
+    saveProducts();
+  }, [products]);
+
+  async function saveProducts() {
+    try {
+      await AsyncStorage.setItem(
+        PRODUCTS_STORAGE_KEY,
+        JSON.stringify(products)
+      );
+    } catch (error) {
+      console.error("Failed to save products", error);
+    }
+  }
+
+  // ─────────────────────────────
+  // ADD PRODUCT
+  // ─────────────────────────────
+
   function addProduct(newProduct: ProductDraft) {
     const publishedProduct: Product = {
       ...newProduct,
       id: Date.now().toString(),
     };
 
-    console.log("ADDING", publishedProduct);
-
     setProducts((current) => [...current, publishedProduct]);
   }
+
+  // ─────────────────────────────
+  // UPDATE DRAFT PRODUCT
+  // ─────────────────────────────
 
   function updateProduct(data: Partial<ProductDraft>) {
     setProduct((current) => {
@@ -84,6 +133,10 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  // ─────────────────────────────
+  // UPDATE PUBLISHED PRODUCT
+  // ─────────────────────────────
+
   function updatePublishedProduct(productId: string, data: Partial<Product>) {
     setProducts((current) =>
       current.map((product) =>
@@ -96,6 +149,10 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       )
     );
   }
+
+  // ─────────────────────────────
+  // RESET DRAFT
+  // ─────────────────────────────
 
   function resetProduct() {
     setProduct(INITIAL_PRODUCT);

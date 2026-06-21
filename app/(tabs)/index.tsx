@@ -22,6 +22,8 @@ import { useProfile } from "@/features/home/hooks/use-profile";
 
 import { supabase } from "@/services/supabase/client";
 
+import { Alert } from "react-native";
+
 type PaymentChannel = "bank" | "card" | "qr" | "transfer" | "ussd";
 
 type Transaction = {
@@ -39,35 +41,13 @@ export default function HomeScreen() {
 
   const { profile } = useProfile();
 
-  console.log("Profile Data:", profile);
-
-  useEffect(() => {
-    async function checkUser() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      console.log("Restored Session:", session);
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      console.log("Home User:", user);
-    }
-
-    checkUser();
-  }, []);
-
   async function handleLogout() {
     try {
       await clearSession();
-
       setAuthenticated(false);
-
       router.replace("/(auth)/login");
     } catch (error) {
-      console.log("Logout Error:", error);
+      Alert.alert("Error", "Failed to log out. Please try again.");
     }
   }
 

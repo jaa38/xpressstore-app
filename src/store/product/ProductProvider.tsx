@@ -2,7 +2,7 @@ import { useState, ReactNode } from "react";
 
 import { ProductContext } from "./ProductContext";
 
-import { ProductDraft } from "@/types/product";
+import type { Product, ProductDraft } from "@/types/product";
 
 const INITIAL_PRODUCT: ProductDraft = {
   productName: "",
@@ -47,7 +47,20 @@ const INITIAL_PRODUCT: ProductDraft = {
 };
 
 export function ProductProvider({ children }: { children: ReactNode }) {
-  const [product, setProduct] = useState(INITIAL_PRODUCT);
+  const [product, setProduct] = useState<ProductDraft>(INITIAL_PRODUCT);
+
+  const [products, setProducts] = useState<Product[]>([]);
+
+  function addProduct(newProduct: ProductDraft) {
+    const publishedProduct: Product = {
+      ...newProduct,
+      id: Date.now().toString(),
+    };
+
+    console.log("ADDING", publishedProduct);
+
+    setProducts((current) => [...current, publishedProduct]);
+  }
 
   function updateProduct(data: Partial<ProductDraft>) {
     setProduct((current) => {
@@ -56,7 +69,6 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         ...data,
       };
 
-      // Safely merge dimensions object if it exists in the update
       if (data.dimensions) {
         next.dimensions = {
           ...current.dimensions,
@@ -64,13 +76,25 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         };
       }
 
-      // Safely clone variants array reference if it exists in the update
       if (data.variants) {
         next.variants = [...data.variants];
       }
 
       return next;
     });
+  }
+
+  function updatePublishedProduct(productId: string, data: Partial<Product>) {
+    setProducts((current) =>
+      current.map((product) =>
+        product.id === productId
+          ? {
+              ...product,
+              ...data,
+            }
+          : product
+      )
+    );
   }
 
   function resetProduct() {
@@ -81,7 +105,10 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     <ProductContext.Provider
       value={{
         product,
+        products,
         updateProduct,
+        addProduct,
+        updatePublishedProduct,
         resetProduct,
       }}
     >

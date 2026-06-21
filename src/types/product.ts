@@ -5,6 +5,13 @@ export interface ProductVariant {
   options: string[];
 }
 
+export interface ProductDimensions {
+  weight: string;
+  length: string;
+  width: string;
+  height: string;
+}
+
 export interface ProductDraft {
   productName: string;
   description: string;
@@ -42,16 +49,6 @@ export interface ProductDraft {
   variants: ProductVariant[];
 }
 
-export interface ProductDimensions {
-  weight: string;
-  length: string;
-  width: string;
-  height: string;
+export interface Product extends ProductDraft {
+  id: string;
 }
-
-// export type ShippingClass =
-//   | "Standard"
-//   | "Express"
-//   | "Fragile"
-//   | "Bulky"
-//   | "Digital";

@@ -1,11 +1,12 @@
-import * as SecureStore from "expo-secure-store";
+// services/auth/storage.ts
+
+import { StorageKeys, saveSecureItem, getSecureItem } from "@/services/storage/secure-storage";
 
 export async function completeOnboarding() {
-  await SecureStore.setItemAsync("onboarding_complete", "true");
+  await saveSecureItem(StorageKeys.ONBOARDING_COMPLETE, "true");
 }
 
 export async function isOnboardingComplete() {
-  const value = await SecureStore.getItemAsync("onboarding_complete");
-
+  const value = await getSecureItem(StorageKeys.ONBOARDING_COMPLETE);
   return value === "true";
 }

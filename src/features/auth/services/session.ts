@@ -1,49 +1,31 @@
-import {
-  getSecureItem,
-  removeSecureItem,
-  saveSecureItem,
-} from "@/storage/secure-store";
+// features/auth/services/session.ts
 
-const ACCESS_TOKEN_KEY = "access_token";
+import { supabase } from "@/services/supabase/client";
 
-const REFRESH_TOKEN_KEY = "refresh_token";
+// ─── NO MORE MANUAL TOKEN STORAGE ────────────────────────────────────────────
+// Previously this file manually copied access_token and refresh_token into
+// SecureStore on every login. That created a second, independent copy of the
+// session that Supabase's autoRefreshToken never knew about — so the two
+// copies could silently drift out of sync.
+//
+// Supabase already persists the session in AsyncStorage (configured in
+// client.ts with persistSession: true) and refreshes it automatically.
+// There is now exactly ONE source of truth for session state: Supabase itself.
 
-/**
- * Access Token
- */
-
-export async function saveAccessToken(token: string) {
-  await saveSecureItem(ACCESS_TOKEN_KEY, token);
+// Returns true if there is a currently valid session — used by the
+// biometric login flow instead of reading a separately-stored token.
+export async function hasValidSession(): Promise<boolean> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session !== null;
 }
 
-export async function getAccessToken() {
-  return getSecureItem(ACCESS_TOKEN_KEY);
+// Returns the current access token if a session exists, otherwise null.
+// Reads directly from Supabase's managed session — never stale.
+export async function getCurrentAccessToken(): Promise<string | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token ?? null;
 }
 
-export async function clearAccessToken() {
-  await removeSecureItem(ACCESS_TOKEN_KEY);
-}
-
-/**
- * Refresh Token
- */
-
-export async function saveRefreshToken(token: string) {
-  await saveSecureItem(REFRESH_TOKEN_KEY, token);
-}
-
-export async function getRefreshToken() {
-  return getSecureItem(REFRESH_TOKEN_KEY);
-}
-
-export async function clearRefreshToken() {
-  await removeSecureItem(REFRESH_TOKEN_KEY);
-}
-
-/**
- * Clear Everything
- */
-
-export async function clearSession() {
-  await Promise.all([clearAccessToken(), clearRefreshToken()]);
+export async function clearSession(): Promise<void> {
+  await supabase.auth.signOut();
 }

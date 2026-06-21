@@ -32,11 +32,7 @@ import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-import {
-  getAccessToken,
-  saveAccessToken,
-  saveRefreshToken,
-} from "@/features/auth/services/session";
+import { hasValidSession } from "@/features/auth/services/session";
 
 import { getBiometricEmail } from "@/services/biometrics/user";
 
@@ -71,6 +67,7 @@ export default function LoginScreen() {
     }
   }
 
+  // ─── UPDATED handleBiometricLogin ────────────────────────────────────────
   async function handleBiometricLogin() {
     try {
       setLoadingBiometric(true);
@@ -82,22 +79,22 @@ export default function LoginScreen() {
       }
 
       const email = await getBiometricEmail();
-
       console.log("Biometric User:", email);
 
-      const token = await getAccessToken();
+      // ✅ Ask Supabase directly — never a stale, separately-stored copy.
+      // If autoRefreshToken silently rotated the token in the background,
+      // this always reflects the current, valid state.
+      const sessionIsValid = await hasValidSession();
 
-      if (!token) {
+      if (!sessionIsValid) {
         Alert.alert(
           "Session Expired",
           "Please sign in with your email and password."
         );
-
         return;
       }
 
       setAuthenticated(true);
-
       router.replace(ROUTES.TABS);
     } catch (error) {
       console.log("Biometric login failed:", error);
@@ -122,27 +119,27 @@ export default function LoginScreen() {
     },
   });
 
+  // ─── UPDATED onSubmit — remove manual token saving ───────────────────────
   async function onSubmit(data: LoginSchema) {
     try {
       const response = await loginUser(data.email, data.password);
 
       if (response.error) {
         console.log(response.error.message);
-
         return;
       }
 
       if (response.data.user && response.data.session) {
-        await saveAccessToken(response.data.session.access_token);
+        // ❌ REMOVED — Supabase already persisted this session automatically
+        // await saveAccessToken(response.data.session.access_token);
+        // await saveRefreshToken(response.data.session.refresh_token);
 
-        await saveRefreshToken(response.data.session.refresh_token);
-
+        // ✅ Still needed — this is app-specific (which email to greet on
+        // the biometric prompt), not session data Supabase manages.
         await saveBiometricEmail(data.email);
 
         setAuthenticated(true);
-
         setUser(response.data.user);
-
         router.replace(ROUTES.TABS);
       }
     } catch (error) {

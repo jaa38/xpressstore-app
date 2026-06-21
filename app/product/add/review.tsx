@@ -17,8 +17,36 @@ import { Card } from "@/components/ui/Card";
 
 import { useProduct } from "@/store/product/useProduct";
 
+import { ROUTES } from "@/navigation/routes";
+import { EditButton } from "@/components/product/EditButton";
+
+function editInfo() {
+  router.replace(ROUTES.ADD_PRODUCT_INFO);
+}
+
+function editPricing() {
+  router.replace(ROUTES.ADD_PRODUCT_PRICING);
+}
+
+function editVariants() {
+  router.replace(ROUTES.ADD_PRODUCT_VARIANTS);
+}
+
+function editStorefront() {
+  router.replace(ROUTES.ADD_PRODUCT_STOREFRONT);
+}
+
 export default function ReviewScreen() {
-  const { product } = useProduct();
+  const { product, addProduct, resetProduct } = useProduct();
+
+  function publishProduct() {
+    addProduct(product);
+
+    resetProduct();
+
+    router.replace(ROUTES.PRODUCTS);
+  }
+
   return (
     <SafeAreaView
       style={{
@@ -136,23 +164,7 @@ export default function ReviewScreen() {
               >
                 <AppText variant="bodyLargeBold">Product Information</AppText>
 
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: spacing.xs,
-                  }}
-                >
-                  <Ionicons
-                    name="create-outline"
-                    color={theme.icon.branding.icon}
-                    size={20}
-                  />
-
-                  <AppText variant="bodyBold" color="success">
-                    Edit
-                  </AppText>
-                </View>
+                <EditButton onPress={editInfo} />
               </View>
 
               <View
@@ -227,6 +239,20 @@ export default function ReviewScreen() {
                     {product.description || "-"}
                   </AppText>
                 </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Shipping
+                  </AppText>
+
+                  <AppText variant="bodyBold" color="primary">
+                    {product.shippingClass}
+                  </AppText>
+                </View>
               </View>
             </Card>
 
@@ -240,23 +266,7 @@ export default function ReviewScreen() {
               >
                 <AppText variant="bodyLargeBold">Pricing</AppText>
 
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: spacing.xs,
-                  }}
-                >
-                  <Ionicons
-                    name="create-outline"
-                    color={theme.icon.branding.icon}
-                    size={20}
-                  />
-
-                  <AppText variant="bodyBold" color="success">
-                    Edit
-                  </AppText>
-                </View>
+                <EditButton onPress={editPricing} />
               </View>
 
               <View
@@ -337,154 +347,254 @@ export default function ReviewScreen() {
                   alignItems: "center",
                 }}
               >
-                <AppText variant="bodyLargeBold">Pricing</AppText>
+                <AppText variant="bodyLargeBold">Inventory</AppText>
+                <EditButton onPress={editPricing} />
+              </View>
+              <View
+                style={{
+                  marginTop: spacing.rg,
+                  gap: spacing.sm,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Tracking
+                  </AppText>
+
+                  <AppText
+                    variant="bodyBold"
+                    color={product.trackInventory ? "success" : "secondary"}
+                    style={{
+                      flexShrink: 1,
+                      textAlign: "right",
+                    }}
+                  >
+                    {product.trackInventory ? "Enabled" : "Disabled"}
+                  </AppText>
+                </View>
 
                 <View
                   style={{
                     flexDirection: "row",
-                    alignItems: "center",
-                    gap: spacing.xs,
+                    justifyContent: "space-between",
                   }}
                 >
-                  <Ionicons
-                    name="create-outline"
-                    color={theme.icon.branding.icon}
-                    size={20}
-                  />
+                  <AppText variant="body" color="secondary">
+                    Stock
+                  </AppText>
 
-                  <AppText variant="bodyBold" color="success">
-                    Edit
+                  <AppText
+                    variant="bodyBold"
+                    color="primary"
+                    style={{
+                      flexShrink: 1,
+                      textAlign: "right",
+                    }}
+                  >
+                    {product.stock}
+                  </AppText>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Reorder Level
+                  </AppText>
+
+                  <AppText variant="bodyBold" color="primary">
+                    {product.reorderLevel}
+                  </AppText>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Low Alert
+                  </AppText>
+
+                  <AppText variant="bodyBold" color="primary">
+                    {product.lowStockAlert}
                   </AppText>
                 </View>
               </View>
             </Card>
 
-            {/* <View
-              style={{
-                marginTop: spacing.md,
-              }}
-            >
-              <Card>
-                <View
-                  style={{
-                    gap: spacing.sm,
-                  }}
-                >
-                  <AppText variant="h3">Product Summary</AppText>
-
-                  <AppText>SKU: {product.sku || "-"}</AppText>
-
-                  <AppText>Brand: {product.brand || "-"}</AppText>
-
-                  <AppText>Stock: {product.stock}</AppText>
-
-                  <AppText>Shipping Class: {product.shippingClass}</AppText>
-                </View>
-              </Card>
-            </View>
-
-            <View
-              style={{
-                marginTop: spacing.md,
-              }}
-            >
-              <Card>
-                <View
-                  style={{
-                    gap: spacing.sm,
-                  }}
-                >
-                  <AppText variant="h3">Dimensions</AppText>
-
-                  <AppText>
-                    Weight: {product.dimensions?.weight || "-"} kg
-                  </AppText>
-
-                  <AppText>
-                    Length: {product.dimensions?.length || "-"} cm
-                  </AppText>
-
-                  <AppText>
-                    Width: {product.dimensions?.width || "-"} cm
-                  </AppText>
-
-                  <AppText>
-                    Height: {product.dimensions?.height || "-"} cm
-                  </AppText>
-                </View>
-              </Card>
-            </View>
-
-            {product.images?.length > 0 && (
+            <Card>
               <View
                 style={{
-                  marginTop: spacing.md,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                <Card>
-                  <AppText
-                    variant="h3"
-                    style={{
-                      marginBottom: spacing.md,
-                    }}
-                  >
-                    Additional Images
-                  </AppText>
+                <AppText variant="bodyLargeBold">Variants</AppText>
 
-                  <ScrollView horizontal>
+                <EditButton onPress={editVariants} />
+              </View>
+              <View
+                style={{
+                  marginTop: spacing.rg,
+                  gap: spacing.sm,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "column",
+                    gap: spacing.xs,
+                  }}
+                >
+                  {product.variants.map((variant) => (
                     <View
+                      key={variant.name}
                       style={{
                         flexDirection: "row",
-                        gap: spacing.sm,
+                        justifyContent: "space-between",
                       }}
                     >
-                      {product.images.map((image) => (
-                        <Image
-                          key={image}
-                          source={{ uri: image }}
-                          style={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: 12,
-                          }}
-                        />
-                      ))}
-                    </View>
-                  </ScrollView>
-                </Card>
-              </View>
-            )}
+                      <AppText variant="body" color="secondary">
+                        {variant.name}
+                      </AppText>
 
-            {product.deliveryNotes && (
+                      <AppText variant="bodyBold" color="primary">
+                        {variant.options.length} Option(s)
+                      </AppText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </Card>
+
+            <Card>
               <View
                 style={{
-                  marginTop: spacing.md,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                <Card>
-                  <View
+                <AppText variant="bodyLargeBold">Storefront</AppText>
+
+                <EditButton onPress={editStorefront} />
+              </View>
+              <View
+                style={{
+                  marginTop: spacing.rg,
+                  gap: spacing.sm,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Visibility
+                  </AppText>
+
+                  <AppText
+                    variant="bodyBold"
+                    color="primary"
                     style={{
-                      gap: spacing.sm,
+                      flexShrink: 1,
+                      textAlign: "right",
                     }}
                   >
-                    <AppText variant="h3">Delivery Notes</AppText>
+                    {product.visible ? "Visible" : "Hidden"}
+                  </AppText>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Shipping
+                  </AppText>
 
-                    <AppText color="secondary">{product.deliveryNotes}</AppText>
-                  </View>
-                </Card>
+                  <AppText variant="bodyBold" color="primary">
+                    {product.shippingClass}
+                  </AppText>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Gallery Images
+                  </AppText>
+
+                  <AppText variant="bodyBold" color="primary">
+                    {product.images.length}
+                  </AppText>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Dimensions
+                  </AppText>
+
+                  <AppText
+                    variant="bodyBold"
+                    color="primary"
+                    style={{
+                      flexShrink: 1,
+                      textAlign: "right",
+                    }}
+                  >
+                    {product.dimensions.length} ×{product.dimensions.width} ×
+                    {product.dimensions.height} cm
+                  </AppText>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Notes
+                  </AppText>
+
+                  <AppText
+                    variant="bodyBold"
+                    color="primary"
+                    style={{
+                      maxWidth: "60%",
+                      textAlign: "right",
+                    }}
+                  >
+                    {product.deliveryNotes || "None"}
+                  </AppText>
+                </View>
               </View>
-            )} */}
+            </Card>
           </View>
         </ScrollView>
 
         {/* FOOTER */}
 
-        <AddProductFooter
-          nextLabel="Publish Product"
-          onNext={() => {
-            console.log("Publish");
-          }}
-        />
+        <AddProductFooter nextLabel="Publish Product" onNext={publishProduct} />
       </View>
     </SafeAreaView>
   );

@@ -1,15 +1,15 @@
-import * as SecureStore from "expo-secure-store";
+// services/biometrics/user.ts
 
-const BIOMETRIC_EMAIL_KEY = "biometric_email";
+import { StorageKeys, saveSecureItem, getSecureItem, removeSecureItem } from "@/services/storage/secure-storage";
 
 export async function saveBiometricEmail(email: string) {
-  await SecureStore.setItemAsync(BIOMETRIC_EMAIL_KEY, email);
+  await saveSecureItem(StorageKeys.BIOMETRIC_EMAIL, email);
 }
 
 export async function getBiometricEmail() {
-  return SecureStore.getItemAsync(BIOMETRIC_EMAIL_KEY);
+  return getSecureItem(StorageKeys.BIOMETRIC_EMAIL);
 }
 
 export async function clearBiometricEmail() {
-  await SecureStore.deleteItemAsync(BIOMETRIC_EMAIL_KEY);
+  await removeSecureItem(StorageKeys.BIOMETRIC_EMAIL);
 }

@@ -1,88 +1,53 @@
 import { useEffect } from "react";
-
-import {
-  View,
-  Image,
-} from "react-native";
-
+import { View, Image } from "react-native";
 import { router } from "expo-router";
 
-import { getAccessToken } from "@/features/auth/services/session";
-
+import { hasValidSession } from "@/features/auth/services/session";
+import { isOnboardingComplete } from "@/services/auth/storage";
 import { useAuthStore } from "@/features/auth/store/auth-store";
 
-import { getOnboarded } from "@/storage/app-storage";
-
 import { theme } from "@/theme";
-
 import { ROUTES } from "@/navigation/routes";
 
 export default function IndexScreen() {
-  const setAuthenticated =
-    useAuthStore(
-      (state) => state.setAuthenticated
-    );
-
-  const setLoading =
-    useAuthStore(
-      (state) => state.setLoading
-    );
+  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+  const setLoading = useAuthStore((state) => state.setLoading);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
       bootstrap();
     }, 2000);
 
-    return () =>
-      clearTimeout(timeout);
+    return () => clearTimeout(timeout);
   }, []);
 
   async function bootstrap() {
-    const onboarded =
-      await getOnboarded();
-
-    const token =
-      await getAccessToken();
+    const onboarded = await isOnboardingComplete();
+    const sessionValid = await hasValidSession();
 
     /**
      * FIRST-TIME USER
      */
-
     if (!onboarded) {
-      router.replace(
-        ROUTES.WELCOME
-      );
-
+      router.replace(ROUTES.WELCOME);
+      setLoading(false);
       return;
     }
 
     /**
      * RETURNING LOGGED-IN USER
      */
-
-    if (token) {
+    if (sessionValid) {
       setAuthenticated(true);
-
-      router.replace(
-        ROUTES.TABS
-      );
-
+      router.replace(ROUTES.TABS);
+      setLoading(false);
       return;
     }
 
     /**
-     * RETURNING USER
-     * NOT LOGGED IN
-     *
-     * Currently routed to
-     * Sign Up while testing
-     * onboarding flow.
+     * RETURNING USER, NOT LOGGED IN
      */
-
-    router.replace(
-      ROUTES.WELCOME
-    );
-
+    router.replace(ROUTES.WELCOME);
     setLoading(false);
   }
 
@@ -90,26 +55,14 @@ export default function IndexScreen() {
     <View
       style={{
         flex: 1,
-
-        justifyContent:
-          "center",
-
-        alignItems:
-          "center",
-
-        backgroundColor:
-          theme.background.primary,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: theme.background.primary,
       }}
     >
       <Image
         source={require("../assets/logo/xpressStoreLogo.png")}
-        style={{
-          width: 270,
-          height: 270,
-
-          resizeMode:
-            "contain",
-        }}
+        style={{ width: 270, height: 270, resizeMode: "contain" }}
       />
     </View>
   );

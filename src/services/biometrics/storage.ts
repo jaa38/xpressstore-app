@@ -1,26 +1,16 @@
-import * as SecureStore from "expo-secure-store";
+// services/biometrics/storage.ts
 
-const BIOMETRIC_KEY =
-  "biometric_enabled";
+import { StorageKeys, saveSecureItem, getSecureItem, removeSecureItem } from "@/services/storage/secure-storage";
 
 export async function enableBiometrics() {
-  await SecureStore.setItemAsync(
-    BIOMETRIC_KEY,
-    "true"
-  );
+  await saveSecureItem(StorageKeys.BIOMETRICS_ENABLED, "true");
 }
 
 export async function disableBiometrics() {
-  await SecureStore.deleteItemAsync(
-    BIOMETRIC_KEY
-  );
+  await removeSecureItem(StorageKeys.BIOMETRICS_ENABLED);
 }
 
 export async function isBiometricsEnabled() {
-  const value =
-    await SecureStore.getItemAsync(
-      BIOMETRIC_KEY
-    );
-
+  const value = await getSecureItem(StorageKeys.BIOMETRICS_ENABLED);
   return value === "true";
 }

@@ -10,27 +10,20 @@ import { radius, spacing, theme } from "@/theme";
 import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { router } from "expo-router";
 import { ROUTES } from "@/navigation/routes";
-import { Input } from "@/components/ui/Input";
+import { useProduct } from "@/store/product/useProduct";
 
-type Product = {
-  id: string;
-  name: string;
-  category: string;
-  price: string;
-  stock: number;
-  visible: boolean;
-  image: any;
-};
+import type { Product } from "@/types/product";
 
 function ProductCard({
   product,
   onToggle,
 }: {
   product: Product;
-  onToggle: (id: string, value: boolean) => void;
+
+  onToggle: (productId: string, value: boolean) => void;
 }) {
   return (
     <Card
@@ -38,16 +31,23 @@ function ProductCard({
         flexDirection: "row",
         alignItems: "center",
         gap: spacing.md,
+
+        borderWidth: 1,
+        borderColor: theme.border.default,
       }}
     >
       <Image
-        source={product.image}
+        source={
+          product.image?.trim()
+            ? { uri: product.image }
+            : require("../../assets/images/ankara-tote-bag.png")
+        }
+        resizeMode="cover"
         style={{
           width: 64,
           height: 64,
           borderRadius: radius.xs,
         }}
-        resizeMode="cover"
       />
 
       <View
@@ -56,7 +56,7 @@ function ProductCard({
           gap: spacing.xs,
         }}
       >
-        <AppText variant="bodyLargeBold">{product.name}</AppText>
+        <AppText variant="bodyLargeBold">{product.productName}</AppText>
 
         <AppText variant="bodySmall" color="secondary">
           {product.category}
@@ -70,7 +70,7 @@ function ProductCard({
           }}
         >
           <AppText variant="bodyBold" color="warning">
-            {product.price}
+            ₦{product.price.toLocaleString()}
           </AppText>
 
           <AppText>•</AppText>
@@ -81,76 +81,34 @@ function ProductCard({
         </View>
       </View>
 
-      <View
-        style={{
-          width: 60,
-          alignItems: "center",
-          justifyContent: "center",
-          alignSelf: "stretch",
-        }}
-      >
-        <Switch
-          value={product.visible}
-          onValueChange={(value) => onToggle(product.id, value)}
-          trackColor={{
-            false: theme.toggleSwitch.inactive,
-            true: theme.toggleSwitch.active,
-          }}
-          thumbColor="#FFFFFF"
-        />
-      </View>
+      <Switch
+        value={product.visible}
+        onValueChange={(value) => onToggle(product.id, value)}
+        style={{ alignSelf: "center" }}
+      />
     </Card>
   );
 }
 
 export default function ProductScreen() {
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: "1",
-      name: "Ankara Tote Bag",
-      category: "Bags",
-      price: "₦6,250",
-      stock: 24,
-      visible: true,
-      image: require("../../assets/images/ankara-tote-bag.png"),
-    },
-    {
-      id: "2",
-      name: "Leather Handbag",
-      category: "Bags",
-      price: "₦12,500",
-      stock: 8,
-      visible: true,
-      image: require("../../assets/images/ankara-tote-bag.png"),
-    },
-    {
-      id: "3",
-      name: "Ankara Purse",
-      category: "Accessories",
-      price: "₦4,500",
-      stock: 12,
-      visible: false,
-      image: require("../../assets/images/ankara-tote-bag.png"),
-    },
-  ]);
+  const { products, updatePublishedProduct } = useProduct();
 
-  const sortedProducts = useMemo(() => {
-    return [...products].sort((a, b) => a.name.localeCompare(b.name));
-  }, [products]);
+  const sortedProducts = useMemo(
+    () =>
+      [...products].sort((a, b) => a.productName.localeCompare(b.productName)),
+    [products]
+  );
 
-  function toggleProduct(id: string, value: boolean) {
-    setProducts((current) =>
-      current.map((product) =>
-        product.id === id
-          ? {
-              ...product,
-              visible: value,
-            }
-          : product
-      )
-    );
+  const lowStockProducts = useMemo(
+    () => products.filter((product) => product.stock <= product.lowStockAlert),
+    [products]
+  );
+
+  function toggleProduct(productId: string, value: boolean) {
+    updatePublishedProduct(productId, {
+      visible: value,
+    });
   }
-
   return (
     <SafeAreaView
       style={{
@@ -195,7 +153,7 @@ export default function ProductScreen() {
               <AppText variant="h1">Products</AppText>
 
               <AppText variant="body" color="secondary">
-                Number of items in catalog
+                {products.length} item(s) in catalog
               </AppText>
             </View>
             <Button
@@ -204,68 +162,112 @@ export default function ProductScreen() {
               onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
             />
           </View>
-          <Card
-            style={{
-              marginTop: spacing.md,
-              borderColor: theme.border.warning,
-              backgroundColor: theme.background.warning,
-              flexDirection: "row",
-              gap: spacing.md,
-            }}
-          >
-            <Ionicons
-              name="information-circle-outline"
-              size={24}
-              color={theme.icon.warning.icon}
-            />
-            <View style={{ flexDirection: "row" }}>
-              <AppText variant="bodyBold" color="primary">
-                2 products
-              </AppText>
-              <AppText variant="body" color="primary">
-                {" "}
-                are running low on stock
-              </AppText>
+          {products.length > 0 && (
+            <Card
+              style={{
+                marginTop: spacing.md,
+                borderColor: theme.border.warning,
+                backgroundColor: theme.background.warning,
+                flexDirection: "row",
+                gap: spacing.md,
+              }}
+            >
+              <Ionicons
+                name="information-circle-outline"
+                size={24}
+                color={theme.icon.warning.icon}
+              />
+
+              <View style={{ flexDirection: "row" }}>
+                <AppText variant="bodyBold" color="primary">
+                  {lowStockProducts.length} product(s)
+                </AppText>
+
+                <AppText variant="body" color="primary">
+                  {" "}
+                  are running low on stock
+                </AppText>
+              </View>
+            </Card>
+          )}
+          {products.length > 0 && (
+            <View
+              style={{
+                marginTop: spacing.md,
+              }}
+            >
+              <SearchBar placeholder="Search products" />
             </View>
-          </Card>
-          <View
-            style={{
-              marginTop: spacing.md,
-            }}
-          >
-            <SearchBar placeholder="Search products" />
-          </View>
+          )}
 
           <View
             style={{
               marginTop: spacing.lg,
             }}
           >
-            <FlatList
-              data={sortedProducts}
-              scrollEnabled={false}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <ProductCard product={item} onToggle={toggleProduct} />
-              )}
-              ItemSeparatorComponent={() => (
-                <View
-                  style={{
-                    height: spacing.md,
-                  }}
+            {products.length === 0 ? (
+              <Card
+                style={{
+                  alignItems: "center",
+                  paddingVertical: spacing.xl,
+                }}
+              >
+                <Ionicons
+                  name="cube-outline"
+                  size={48}
+                  color={theme.icon.branding.icon}
                 />
-              )}
-            />
+
+                <AppText
+                  variant="bodyLargeBold"
+                  style={{
+                    marginTop: spacing.sm,
+                  }}
+                >
+                  No Products Yet
+                </AppText>
+
+                <AppText
+                  color="secondary"
+                  style={{
+                    textAlign: "center",
+                    marginTop: spacing.xs,
+                  }}
+                >
+                  Add your first product to start selling.
+                </AppText>
+
+                <Button
+                  title="Add Product"
+                  variant="primary"
+                  style={{
+                    marginTop: spacing.md,
+                  }}
+                  onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
+                />
+              </Card>
+            ) : (
+              <FlatList
+                data={sortedProducts}
+                scrollEnabled={false}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => {
+                  return (
+                    <ProductCard product={item} onToggle={toggleProduct} />
+                  );
+                }}
+                ItemSeparatorComponent={() => (
+                  <View
+                    style={{
+                      height: spacing.md,
+                    }}
+                  />
+                )}
+              />
+            )}
           </View>
 
-          <View>
-          </View>
           {/* BOTTOM */}
-          <View
-            style={{
-              paddingBottom: spacing.lg,
-            }}
-          ></View>
         </View>
       </ScrollView>
     </SafeAreaView>

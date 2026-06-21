@@ -106,7 +106,6 @@ export default function ProductScreen() {
       const data = await getProducts();
       console.log("SUPABASE PRODUCTS", data);
 
-      setProducts(data ?? []);
     } catch (error) {
       console.log("LOAD PRODUCTS ERROR", error);
     }

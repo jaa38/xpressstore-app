@@ -2,6 +2,7 @@
 
 import { supabase } from "@/services/supabase/client";
 
+// import { supabase } from "@/lib/supabase";
 // ─── NO MORE MANUAL TOKEN STORAGE ────────────────────────────────────────────
 // Previously this file manually copied access_token and refresh_token into
 // SecureStore on every login. That created a second, independent copy of the

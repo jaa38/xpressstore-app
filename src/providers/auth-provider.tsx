@@ -1,7 +1,6 @@
 import { PropsWithChildren, useEffect } from "react";
 
 import { supabase } from "@/services/supabase/client";
-
 import { useAuthStore } from "@/features/auth/store/auth-store";
 
 export function AuthProvider({ children }: PropsWithChildren) {
@@ -10,8 +9,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const setUser = useAuthStore((state) => state.setUser);
 
   const setLoading = useAuthStore((state) => state.setLoading);
-
-  
 
   useEffect(() => {
     async function restoreSession() {

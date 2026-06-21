@@ -20,6 +20,10 @@ import { useProduct } from "@/store/product/useProduct";
 import { ROUTES } from "@/navigation/routes";
 import { EditButton } from "@/components/product/EditButton";
 
+import { createProduct } from "@/services/product-service";
+
+import { uploadProductImage } from "@/services/storage-service";
+
 function editInfo() {
   router.replace(ROUTES.ADD_PRODUCT_INFO);
 }
@@ -39,12 +43,25 @@ function editStorefront() {
 export default function ReviewScreen() {
   const { product, addProduct, resetProduct } = useProduct();
 
-  function publishProduct() {
-    addProduct(product);
+  async function publishProduct() {
+    try {
+      let imageUrl = "";
 
-    resetProduct();
+      if (product.image) {
+        imageUrl = await uploadProductImage(product.image);
+      }
 
-    router.replace(ROUTES.PRODUCTS);
+      await createProduct({
+        ...product,
+        image: imageUrl,
+      });
+
+      resetProduct();
+
+      router.replace(ROUTES.PRODUCTS);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   return (

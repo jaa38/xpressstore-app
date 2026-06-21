@@ -10,10 +10,14 @@ import { radius, spacing, theme } from "@/theme";
 import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { useMemo } from "react";
 import { router } from "expo-router";
 import { ROUTES } from "@/navigation/routes";
-import { useProduct } from "@/store/product/useProduct";
+import { useEffect, useMemo, useState } from "react";
+
+import {
+  getProducts,
+  updateProductVisibility,
+} from "@/services/product-service";
 
 import type { Product } from "@/types/product";
 
@@ -91,7 +95,22 @@ function ProductCard({
 }
 
 export default function ProductScreen() {
-  const { products, updatePublishedProduct } = useProduct();
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  async function loadProducts() {
+    try {
+      const data = await getProducts();
+      console.log("SUPABASE PRODUCTS", data);
+
+      setProducts(data ?? []);
+    } catch (error) {
+      console.log("LOAD PRODUCTS ERROR", error);
+    }
+  }
 
   const sortedProducts = useMemo(
     () =>
@@ -104,11 +123,25 @@ export default function ProductScreen() {
     [products]
   );
 
-  function toggleProduct(productId: string, value: boolean) {
-    updatePublishedProduct(productId, {
-      visible: value,
-    });
+  async function toggleProduct(productId: string, value: boolean) {
+    try {
+      await updateProductVisibility(productId, value);
+
+      setProducts((current) =>
+        current.map((product) =>
+          product.id === productId
+            ? {
+                ...product,
+                visible: value,
+              }
+            : product
+        )
+      );
+    } catch (error) {
+      console.log("UPDATE VISIBILITY ERROR", error);
+    }
   }
+
   return (
     <SafeAreaView
       style={{
@@ -136,6 +169,7 @@ export default function ProductScreen() {
           }}
         >
           {/* TOP */}
+
           <View
             style={{
               gap: spacing.lg,
@@ -147,7 +181,6 @@ export default function ProductScreen() {
             <View
               style={{
                 gap: spacing.xs,
-                flexDirection: "column",
               }}
             >
               <AppText variant="h1">Products</AppText>
@@ -156,12 +189,14 @@ export default function ProductScreen() {
                 {products.length} item(s) in catalog
               </AppText>
             </View>
+
             <Button
               title="Add Product"
               variant="primary"
               onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
             />
           </View>
+
           {products.length > 0 && (
             <Card
               style={{
@@ -178,7 +213,11 @@ export default function ProductScreen() {
                 color={theme.icon.warning.icon}
               />
 
-              <View style={{ flexDirection: "row" }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                }}
+              >
                 <AppText variant="bodyBold" color="primary">
                   {lowStockProducts.length} product(s)
                 </AppText>
@@ -190,6 +229,7 @@ export default function ProductScreen() {
               </View>
             </Card>
           )}
+
           {products.length > 0 && (
             <View
               style={{
@@ -251,11 +291,9 @@ export default function ProductScreen() {
                 data={sortedProducts}
                 scrollEnabled={false}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => {
-                  return (
-                    <ProductCard product={item} onToggle={toggleProduct} />
-                  );
-                }}
+                renderItem={({ item }) => (
+                  <ProductCard product={item} onToggle={toggleProduct} />
+                )}
                 ItemSeparatorComponent={() => (
                   <View
                     style={{
@@ -266,8 +304,6 @@ export default function ProductScreen() {
               />
             )}
           </View>
-
-          {/* BOTTOM */}
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import {
   View,
   ScrollView,
@@ -7,6 +7,7 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  Pressable,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,87 +21,143 @@ import { radius, spacing, theme } from "@/theme";
 import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { ROUTES } from "@/navigation/routes";
-
+import { ROUTES, getProductDetailsRoute } from "@/navigation/routes";
 import { useMemo, useState, useEffect } from "react";
 
 import {
   getProducts,
   updateProductVisibility,
+  deleteProduct,
 } from "@/services/product-service";
 
 import type { Product } from "@/types/product";
 
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+
+import { Alert } from "react-native";
+
+function RightActions({ onDelete }: { onDelete: () => void }) {
+  return (
+    <Pressable
+      onPress={onDelete}
+      style={{
+        width: 90,
+        marginLeft: spacing.sm,
+
+        justifyContent: "center",
+        alignItems: "center",
+
+        backgroundColor: theme.background.error,
+
+        borderRadius: radius.md,
+      }}
+    >
+      <Ionicons name="trash-outline" size={24} color="white" />
+
+      <AppText color="inverse">Delete</AppText>
+    </Pressable>
+  );
+}
+
 function ProductCard({
   product,
   onToggle,
+  onDelete,
+  onEdit,
 }: {
   product: Product;
-
   onToggle: (productId: string, value: boolean) => void;
+  onDelete: (productId: string) => void;
+  onEdit: (productId: string) => void;
 }) {
   return (
-    <Card
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: spacing.md,
-
-        borderWidth: 1,
-        borderColor: theme.border.default,
-      }}
+    <Swipeable
+      renderRightActions={() => (
+        <RightActions onDelete={() => onDelete(product.id)} />
+      )}
     >
-      <Image
-        source={
-          product.image?.trim()
-            ? { uri: product.image }
-            : require("../../assets/images/ankara-tote-bag.png")
-        }
-        resizeMode="cover"
+      <Card
         style={{
-          width: 64,
-          height: 64,
-          borderRadius: radius.xs,
-        }}
-      />
+          flexDirection: "row",
+          alignItems: "center",
+          gap: spacing.md,
 
-      <View
-        style={{
-          flex: 1,
-          gap: spacing.xs,
+          borderWidth: 1,
+          borderColor: theme.border.default,
         }}
       >
-        <AppText variant="bodyLargeBold">{product.productName}</AppText>
-
-        <AppText variant="bodySmall" color="secondary">
-          {product.category}
-        </AppText>
+        <Image
+          source={
+            product.image?.trim()
+              ? { uri: product.image }
+              : require("../../assets/images/ankara-tote-bag.png")
+          }
+          resizeMode="cover"
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: radius.xs,
+          }}
+        />
 
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
+            flex: 1,
             gap: spacing.xs,
           }}
         >
-          <AppText variant="bodyBold" color="warning">
-            ₦{product.price.toLocaleString()}
-          </AppText>
+          <AppText variant="bodyLargeBold">{product.productName}</AppText>
 
-          <AppText>•</AppText>
+          {/* <AppText variant="bodySmall" color="secondary">
+            {product.category}
+          </AppText> */}
 
           <AppText variant="bodySmall" color="secondary">
             {product.stock} in stock
           </AppText>
-        </View>
-      </View>
 
-      <Switch
-        value={product.visible}
-        onValueChange={(value) => onToggle(product.id, value)}
-        style={{ alignSelf: "center" }}
-      />
-    </Card>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing.xs,
+            }}
+          >
+            <AppText variant="bodyBold" color="warning">
+              ₦{product.price.toLocaleString()}
+            </AppText>
+
+            {/* <AppText>•</AppText> */}
+
+            {/* <AppText variant="bodySmall" color="secondary">
+              {product.stock} in stock
+            </AppText> */}
+          </View>
+        </View>
+
+        <View
+          style={{
+            alignSelf: "stretch",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            paddingVertical: spacing.xs,
+          }}
+        >
+          <Pressable onPress={() => onEdit(product.id)} hitSlop={12}>
+            <Ionicons
+              name="create-outline"
+              size={24}
+              color={theme.icon.default.icon}
+            />
+          </Pressable>
+
+          <Switch
+            value={product.visible}
+            onValueChange={(value) => onToggle(product.id, value)}
+          />
+        </View>
+      </Card>
+    </Swipeable>
   );
 }
 
@@ -110,8 +167,6 @@ export default function ProductScreen() {
   const [loading, setLoading] = useState(true);
 
   const [refreshing, setRefreshing] = useState(false);
-
-  const { refresh } = useLocalSearchParams();
 
   const [error, setError] = useState("");
 
@@ -179,6 +234,39 @@ export default function ProductScreen() {
     } catch (error) {
       console.log("UPDATE VISIBILITY ERROR", error);
     }
+  }
+
+  async function handleDelete(productId: string) {
+    Alert.alert("Delete Product", "This product will be permanently removed.", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteProduct(productId);
+
+            setProducts((current) =>
+              current.filter((product) => product.id !== productId)
+            );
+          } catch (error) {
+            console.log("DELETE ERROR", error);
+          }
+        },
+      },
+    ]);
+  }
+
+  function handleEdit(productId: string) {
+    router.push({
+      pathname: "/product/[id]",
+      params: {
+        id: productId,
+      },
+    });
   }
 
   return (
@@ -368,7 +456,12 @@ export default function ProductScreen() {
                 scrollEnabled={false}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                  <ProductCard product={item} onToggle={toggleProduct} />
+                  <ProductCard
+                    product={item}
+                    onToggle={toggleProduct}
+                    onDelete={handleDelete}
+                    onEdit={handleEdit}
+                  />
                 )}
                 ItemSeparatorComponent={() => (
                   <View

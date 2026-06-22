@@ -140,3 +140,95 @@ export async function updateProductVisibility(
 
   return data;
 }
+
+export async function deleteProduct(productId: string) {
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", productId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function getProduct(productId: string): Promise<Product> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", productId)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return {
+    id: data.id,
+
+    productName: data.product_name,
+
+    description: data.description,
+
+    category: data.category,
+
+    brand: data.brand,
+
+    sku: data.sku,
+
+    price: data.price,
+
+    costPrice: data.cost_price,
+
+    taxApplicable: data.tax_applicable,
+
+    trackInventory: data.track_inventory,
+
+    stock: data.stock,
+
+    lowStockAlert: data.low_stock_alert,
+
+    reorderLevel: data.reorder_level,
+
+    image: data.image ?? "",
+
+    images: data.images ?? [],
+
+    visible: data.visible,
+
+    shippingClass: data.shipping_class,
+
+    deliveryNotes: data.delivery_notes ?? "",
+
+    dimensions: data.dimensions ?? {
+      weight: "",
+      length: "",
+      width: "",
+      height: "",
+    },
+
+    variantsEnabled: data.variants_enabled,
+
+    variants: data.variants ?? [],
+
+    productStatus: "active",
+  };
+}
+
+export async function updateProduct(
+  productId: string,
+  updates: Record<string, unknown>
+) {
+  const { data, error } = await supabase
+    .from("products")
+    .update(updates)
+    .eq("id", productId)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}

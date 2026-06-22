@@ -84,3 +84,7 @@ export const ROUTES = {
 
   MORE: "/(tabs)/more",
 } as const;
+
+
+export const getProductDetailsRoute = (id: string) =>
+  `/product/${id}` as const;

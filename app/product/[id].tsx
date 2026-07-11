@@ -22,20 +22,19 @@ import { getCategories, createCategory } from "@/services/category-service";
 
 import { useToast } from "@/hooks/useToast";
 
+import { useForm, Controller } from "react-hook-form";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import {
+  editProductSchema,
+  EditProductForm,
+} from "@/schemas/editProductSchema";
+
 export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams<{
     id: string;
   }>();
-
-  const [productName, setProductName] = useState("");
-
-  const [category, setCategory] = useState("");
-
-  const [description, setDescription] = useState("");
-
-  const [price, setPrice] = useState("");
-
-  const [stock, setStock] = useState("");
 
   const [visible, setVisible] = useState(false);
 
@@ -53,6 +52,18 @@ export default function ProductDetailsScreen() {
   const [saving, setSaving] = useState(false);
 
   const { showToast } = useToast();
+
+  const { control, handleSubmit, reset, setValue } = useForm<EditProductForm>({
+    resolver: zodResolver(editProductSchema),
+
+    defaultValues: {
+      productName: "",
+      category: "",
+      description: "",
+      price: "",
+      stock: "",
+    },
+  });
 
   useEffect(() => {
     initializeScreen();
@@ -82,15 +93,17 @@ export default function ProductDetailsScreen() {
     try {
       const data = await getProduct(id);
 
-      setProductName(data.productName);
+      reset({
+        productName: data.productName,
 
-      setCategory(data.category);
+        category: data.category,
 
-      setDescription(data.description);
+        description: data.description,
 
-      setPrice(String(data.price));
+        price: String(data.price),
 
-      setStock(String(data.stock));
+        stock: String(data.stock),
+      });
 
       setVisible(data.visible);
     } catch (error) {
@@ -112,7 +125,7 @@ export default function ProductDetailsScreen() {
         [...current, category].sort((a, b) => a.label.localeCompare(b.label))
       );
 
-      setCategory(category.value);
+      setValue("category", category.value);
 
       setNewCategory("");
 
@@ -132,20 +145,20 @@ export default function ProductDetailsScreen() {
     }
   }
 
-  async function handleUpdateProduct() {
+  async function handleUpdateProduct(data: EditProductForm) {
     try {
       setSaving(true);
 
       await updateProduct(id, {
-        product_name: productName.trim(),
+        product_name: data.productName.trim(),
 
-        category,
+        category: data.category,
 
-        description: description.trim(),
+        description: data.description.trim(),
 
-        price: Number(price),
+        price: Number(data.price),
 
-        stock: Number(stock),
+        stock: Number(data.stock),
 
         visible,
       });
@@ -220,18 +233,34 @@ export default function ProductDetailsScreen() {
             gap: spacing.md,
           }}
         >
-          <Input
-            label="Product Name"
-            value={productName}
-            onChangeText={setProductName}
+          <Controller
+            control={control}
+            name="productName"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <Input
+                label="Product Name"
+                required
+                value={value}
+                error={error?.message}
+                onChangeText={onChange}
+              />
+            )}
           />
 
-          <Dropdown
-            label="Category"
-            value={category}
-            options={categories}
-            placeholder="Select category"
-            onSelect={setCategory}
+          <Controller
+            control={control}
+            name="category"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <Dropdown
+                label="Category"
+                required
+                value={value}
+                error={error?.message}
+                options={categories}
+                placeholder="Select category"
+                onSelect={onChange}
+              />
+            )}
           />
 
           <View
@@ -253,25 +282,46 @@ export default function ProductDetailsScreen() {
             />
           </View>
 
-          <Input
-            label="Selling Price"
-            keyboardType="numeric"
-            value={price}
-            onChangeText={setPrice}
+          <Controller
+            control={control}
+            name="price"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <Input
+                label="Selling Price"
+                keyboardType="numeric"
+                value={value}
+                error={error?.message}
+                onChangeText={onChange}
+              />
+            )}
           />
 
-          <Input
-            label="Stock"
-            keyboardType="numeric"
-            value={stock}
-            onChangeText={setStock}
+          <Controller
+            control={control}
+            name="stock"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <Input
+                label="Stock"
+                keyboardType="numeric"
+                value={value}
+                error={error?.message}
+                onChangeText={onChange}
+              />
+            )}
           />
 
-          <Input
-            label="Description"
-            variant="textarea"
-            value={description}
-            onChangeText={setDescription}
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <Input
+                label="Description"
+                variant="textarea"
+                value={value}
+                error={error?.message}
+                onChangeText={onChange}
+              />
+            )}
           />
         </View>
 
@@ -280,7 +330,7 @@ export default function ProductDetailsScreen() {
           variant="primary"
           loading={saving}
           disabled={saving}
-          onPress={handleUpdateProduct}
+          onPress={handleSubmit(handleUpdateProduct)}
           style={{
             marginTop: spacing.lg,
           }}

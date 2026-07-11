@@ -18,11 +18,11 @@ import { ROUTES } from "@/navigation/routes";
 
 import * as ImagePicker from "expo-image-picker";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/Input";
 
 import { Dropdown } from "@/components/ui/Dropdown";
-import { DEFAULT_CATEGORIES } from "@/constants/productCategories";
+import { getCategories, createCategory } from "@/services/category-service";
 
 import { AddProductHeader } from "@/components/product/AddProductHeader";
 
@@ -64,7 +64,16 @@ export default function InfoScreen() {
 
   const [newCategory, setNewCategory] = useState("");
 
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [categories, setCategories] = useState<
+    {
+      label: string;
+      value: string;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
     mediaTypes: ["images"],
@@ -140,34 +149,38 @@ export default function InfoScreen() {
     setValue("sku", `SKU-${random}-${timestamp}`);
   }
 
-  function createCategory() {
+  async function loadCategories() {
+    try {
+      const data = await getCategories();
+
+      setCategories(data.sort((a, b) => a.label.localeCompare(b.label)));
+    } catch (error) {
+      console.log("LOAD CATEGORIES ERROR", error);
+    }
+  }
+
+  async function handleCreateCategory() {
     if (!newCategory.trim()) {
       return;
     }
 
-    const value = newCategory.trim().toLowerCase().replace(/\s+/g, "-");
+    try {
+      const category = await createCategory(newCategory);
 
-    const exists = categories.some((category) => category.value === value);
+      setCategories((current) =>
+        [...current, category].sort((a, b) => a.label.localeCompare(b.label))
+      );
 
-    if (exists) {
-      return;
+      setValue("category", category.value, {
+        shouldValidate: true,
+      });
+
+      setNewCategory("");
+    } catch (error) {
+      console.log("CREATE CATEGORY ERROR", error);
     }
-
-    const categoryOption = {
-      label: newCategory.trim(),
-      value,
-    };
-
-    setCategories((current) =>
-      [...current, categoryOption].sort((a, b) =>
-        a.label.localeCompare(b.label)
-      )
-    );
-    setValue("category", categoryOption.value, {
-      shouldValidate: true,
-    });
-    setNewCategory("");
   }
+
   function handleNext(data: ProductInfoForm) {
     updateProduct({
       productName: data.productName,
@@ -355,7 +368,7 @@ export default function InfoScreen() {
                 <Button
                   title="Add Category"
                   variant="tertiary"
-                  onPress={createCategory}
+                  onPress={handleCreateCategory}
                 />
               </View>
             </View>

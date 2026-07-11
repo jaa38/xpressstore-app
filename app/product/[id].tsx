@@ -1,14 +1,15 @@
-import { View, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, ScrollView, ActivityIndicator } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useEffect, useState } from "react";
 
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Divider } from "@/components/ui/Divider";
+import { Input } from "@/components/ui/Input";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { AppText } from "@/components/ui/AppText";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -17,20 +18,14 @@ import { spacing, theme } from "@/theme";
 
 import { getProduct, updateProduct } from "@/services/product-service";
 
-import { Input } from "@/components/ui/Input";
-
-import type { Product } from "@/types/product";
-
-import { Dropdown } from "@/components/ui/Dropdown";
-
 import { getCategories, createCategory } from "@/services/category-service";
+
+import { useToast } from "@/hooks/useToast";
 
 export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams<{
     id: string;
   }>();
-
-  const [product, setProduct] = useState<Product | null>(null);
 
   const [productName, setProductName] = useState("");
 
@@ -57,10 +52,21 @@ export default function ProductDetailsScreen() {
 
   const [saving, setSaving] = useState(false);
 
+  const { showToast } = useToast();
+
   useEffect(() => {
-    loadProduct();
-    loadCategories();
+    initializeScreen();
   }, []);
+
+  async function initializeScreen() {
+    try {
+      setLoading(true);
+
+      await Promise.all([loadProduct(), loadCategories()]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function loadCategories() {
     try {
@@ -75,8 +81,6 @@ export default function ProductDetailsScreen() {
   async function loadProduct() {
     try {
       const data = await getProduct(id);
-
-      setProduct(data);
 
       setProductName(data.productName);
 
@@ -111,8 +115,20 @@ export default function ProductDetailsScreen() {
       setCategory(category.value);
 
       setNewCategory("");
+
+      showToast({
+        type: "success",
+        title: "Category Created",
+        message: `${category.label} has been added.`,
+      });
     } catch (error) {
       console.log("CREATE CATEGORY ERROR", error);
+
+      showToast({
+        type: "error",
+        title: "Unable to Create Category",
+        message: "Please try again.",
+      });
     }
   }
 
@@ -121,29 +137,34 @@ export default function ProductDetailsScreen() {
       setSaving(true);
 
       await updateProduct(id, {
-        product_name: productName,
+        product_name: productName.trim(),
+
         category,
-        description,
+
+        description: description.trim(),
+
         price: Number(price),
+
         stock: Number(stock),
+
         visible,
       });
 
-      Alert.alert("Success", "Product updated successfully.", [
-        {
-          text: "OK",
-          onPress: () => {
-            router.back();
-          },
-        },
-      ]);
+      showToast({
+        type: "success",
+        title: "Product Updated",
+        message: "Changes saved successfully.",
+      });
+
+      await loadProduct();
     } catch (error) {
       console.log("UPDATE PRODUCT ERROR", error);
 
-      Alert.alert(
-        "Update Failed",
-        "Something went wrong while updating the product."
-      );
+      showToast({
+        type: "error",
+        title: "Update Failed",
+        message: "Please try again.",
+      });
     } finally {
       setSaving(false);
     }
@@ -179,13 +200,9 @@ export default function ProductDetailsScreen() {
         backgroundColor: theme.background.primary,
       }}
     >
-      {/* Header */}
-
       <ScreenHeader title="Edit Product" />
 
       <Divider />
-
-      {/* Content */}
 
       <ScrollView
         style={{
@@ -216,6 +233,7 @@ export default function ProductDetailsScreen() {
             placeholder="Select category"
             onSelect={setCategory}
           />
+
           <View
             style={{
               gap: spacing.sm,
@@ -258,9 +276,10 @@ export default function ProductDetailsScreen() {
         </View>
 
         <Button
-          title={saving ? "Saving..." : "Save Changes"}
+          title="Save Changes"
           variant="primary"
           loading={saving}
+          disabled={saving}
           onPress={handleUpdateProduct}
           style={{
             marginTop: spacing.lg,

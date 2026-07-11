@@ -1,10 +1,16 @@
-import { View, ScrollView, ActivityIndicator } from "react-native";
+import {
+  View,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+} from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
@@ -36,6 +42,8 @@ export default function ProductDetailsScreen() {
     id: string;
   }>();
 
+  const router = useRouter();
+
   const [visible, setVisible] = useState(false);
 
   const [newCategory, setNewCategory] = useState("");
@@ -51,9 +59,17 @@ export default function ProductDetailsScreen() {
 
   const [saving, setSaving] = useState(false);
 
+  const [hasSaved, setHasSaved] = useState(false);
+
   const { showToast } = useToast();
 
-  const { control, handleSubmit, reset, setValue } = useForm<EditProductForm>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { isDirty, isValid },
+  } = useForm<EditProductForm>({
     resolver: zodResolver(editProductSchema),
 
     defaultValues: {
@@ -68,6 +84,27 @@ export default function ProductDetailsScreen() {
   useEffect(() => {
     initializeScreen();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        () => {
+          if (!isDirty) {
+            return false;
+          }
+
+          confirmDiscardChanges(() => {
+            router.back();
+          });
+
+          return true;
+        }
+      );
+
+      return () => subscription.remove();
+    }, [isDirty])
+  );
 
   async function initializeScreen() {
     try {
@@ -169,6 +206,8 @@ export default function ProductDetailsScreen() {
         message: "Changes saved successfully.",
       });
 
+      setHasSaved(true);
+
       await loadProduct();
     } catch (error) {
       console.log("UPDATE PRODUCT ERROR", error);
@@ -181,6 +220,29 @@ export default function ProductDetailsScreen() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function confirmDiscardChanges(onDiscard: () => void) {
+    if (!isDirty || hasSaved) {
+      onDiscard();
+      return;
+    }
+
+    Alert.alert(
+      "Discard Changes?",
+      "You have unsaved changes. Are you sure you want to leave?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Discard",
+          style: "destructive",
+          onPress: onDiscard,
+        },
+      ]
+    );
   }
 
   if (loading) {
@@ -213,8 +275,14 @@ export default function ProductDetailsScreen() {
         backgroundColor: theme.background.primary,
       }}
     >
-      <ScreenHeader title="Edit Product" />
-
+      <ScreenHeader
+        title="Edit Product"
+        onBack={() =>
+          confirmDiscardChanges(() => {
+            router.back();
+          })
+        }
+      />
       <Divider />
 
       <ScrollView
@@ -329,7 +397,7 @@ export default function ProductDetailsScreen() {
           title="Save Changes"
           variant="primary"
           loading={saving}
-          disabled={saving}
+          disabled={saving || !isDirty || !isValid}
           onPress={handleSubmit(handleUpdateProduct)}
           style={{
             marginTop: spacing.lg,

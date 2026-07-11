@@ -1,14 +1,9 @@
 import { z } from "zod";
 
 export const editProductSchema = z.object({
-  productName: z
-    .string()
-    .trim()
-    .min(1, "Product name is required"),
+  productName: z.string().trim().min(1, "Product name is required"),
 
-  category: z
-    .string()
-    .min(1, "Category is required"),
+  category: z.string().min(1, "Category is required"),
 
   description: z.string(),
 
@@ -27,8 +22,10 @@ export const editProductSchema = z.object({
       (value) => Number.isInteger(Number(value)) && Number(value) >= 0,
       "Enter a valid stock quantity"
     ),
+
+  image: z.string(),
+
+  visible: z.boolean(),
 });
 
-export type EditProductForm = z.infer<
-  typeof editProductSchema
->;
+export type EditProductForm = z.infer<typeof editProductSchema>;

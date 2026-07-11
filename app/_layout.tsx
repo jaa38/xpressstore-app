@@ -6,6 +6,8 @@ import { AppProvider } from "@/providers/app-provider";
 import { ToastProvider } from "@/providers/toast-provider";
 import { ProductProvider } from "@/store/product/ProductProvider";
 
+import { QueryProvider } from "@/providers/query-provider";
+
 import { useToast } from "@/hooks/useToast";
 
 export default function RootLayout() {
@@ -16,15 +18,17 @@ export default function RootLayout() {
       }}
     >
       <AppProvider>
-        <ToastProvider>
-          <ProductProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-              }}
-            />
-          </ProductProvider>
-        </ToastProvider>
+        <QueryProvider>
+          <ToastProvider>
+            <ProductProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+              />
+            </ProductProvider>
+          </ToastProvider>
+        </QueryProvider>
       </AppProvider>
     </GestureHandlerRootView>
   );

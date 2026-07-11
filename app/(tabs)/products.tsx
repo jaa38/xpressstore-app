@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import {
   View,
   ScrollView,
@@ -22,7 +22,7 @@ import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ROUTES, getProductDetailsRoute } from "@/navigation/routes";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useCallback } from "react";
 
 import {
   getProducts,
@@ -170,9 +170,11 @@ export default function ProductScreen() {
 
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadProducts();
+    }, [])
+  );
 
   async function loadProducts() {
     try {

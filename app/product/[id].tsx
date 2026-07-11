@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   BackHandler,
+  Switch,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,6 +14,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 
 import { Button } from "@/components/ui/Button";
+
+import { ImageActionCard } from "@/components/ui/ImageActionCard";
+
 import { Divider } from "@/components/ui/Divider";
 import { Input } from "@/components/ui/Input";
 import { Dropdown } from "@/components/ui/Dropdown";
@@ -26,6 +30,8 @@ import { getProduct, updateProduct } from "@/services/product-service";
 
 import { getCategories, createCategory } from "@/services/category-service";
 
+import * as ImagePicker from "expo-image-picker";
+
 import { useToast } from "@/hooks/useToast";
 
 import { useForm, Controller } from "react-hook-form";
@@ -37,6 +43,8 @@ import {
   EditProductForm,
 } from "@/schemas/editProductSchema";
 
+import { uploadProductImage } from "@/services/storage-service";
+
 export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams<{
     id: string;
@@ -44,7 +52,7 @@ export default function ProductDetailsScreen() {
 
   const router = useRouter();
 
-  const [visible, setVisible] = useState(false);
+  // const [visible, setVisible] = useState(false);
 
   const [newCategory, setNewCategory] = useState("");
 
@@ -68,6 +76,7 @@ export default function ProductDetailsScreen() {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { isDirty, isValid },
   } = useForm<EditProductForm>({
     resolver: zodResolver(editProductSchema),
@@ -78,8 +87,17 @@ export default function ProductDetailsScreen() {
       description: "",
       price: "",
       stock: "",
+      image: "",
+      visible: false,
     },
   });
+
+  const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
+    mediaTypes: ["images"],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.8,
+  };
 
   useEffect(() => {
     initializeScreen();
@@ -132,22 +150,78 @@ export default function ProductDetailsScreen() {
 
       reset({
         productName: data.productName,
-
         category: data.category,
-
         description: data.description,
-
         price: String(data.price),
-
         stock: String(data.stock),
+        image: data.image,
+        visible: data.visible,
       });
-
-      setVisible(data.visible);
     } catch (error) {
       console.log("LOAD PRODUCT ERROR", error);
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleCamera() {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permission.granted) {
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync(IMAGE_PICKER_OPTIONS);
+
+    if (!result.canceled) {
+      const asset = result.assets?.[0];
+
+      if (asset) {
+        setValue("image", asset.uri, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+      }
+    }
+  }
+
+  async function handleGallery() {
+    const result =
+      await ImagePicker.launchImageLibraryAsync(IMAGE_PICKER_OPTIONS);
+
+    if (!result.canceled) {
+      const asset = result.assets?.[0];
+
+      if (asset) {
+        setValue("image", asset.uri, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+      }
+    }
+  }
+
+  function handleRemoveImage() {
+    Alert.alert(
+      "Remove Product Image?",
+      "This will remove the current product image. You can always add another one before saving.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => {
+            setValue("image", "", {
+              shouldDirty: true,
+              shouldValidate: true,
+            });
+          },
+        },
+      ]
+    );
   }
 
   async function handleCreateCategory() {
@@ -186,18 +260,16 @@ export default function ProductDetailsScreen() {
     try {
       setSaving(true);
 
+      const imageUrl = await uploadProductImage(data.image);
+
       await updateProduct(id, {
         product_name: data.productName.trim(),
-
         category: data.category,
-
         description: data.description.trim(),
-
+        image: imageUrl,
         price: Number(data.price),
-
         stock: Number(data.stock),
-
-        visible,
+        visible: data.visible,
       });
 
       showToast({
@@ -301,6 +373,36 @@ export default function ProductDetailsScreen() {
             gap: spacing.md,
           }}
         >
+          <AppText variant="caption">Product Image</AppText>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <ImageActionCard
+              title="Take Photo"
+              icon="camera-outline"
+              imageUri={watch("image") || undefined}
+              onPress={handleCamera}
+            />
+
+            <ImageActionCard
+              title="Gallery"
+              icon="image-outline"
+              onPress={handleGallery}
+            />
+
+            <ImageActionCard
+              title="Remove"
+              icon="trash-outline"
+              iconColor={theme.state.error.icon}
+              disabled={!watch("image")}
+              onPress={handleRemoveImage}
+            />
+          </View>
+
           <Controller
             control={control}
             name="productName"
@@ -377,6 +479,52 @@ export default function ProductDetailsScreen() {
               />
             )}
           />
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingVertical: spacing.sm,
+            }}
+          >
+            <View
+              style={{
+                flex: 1,
+                marginRight: spacing.md,
+              }}
+            >
+              <AppText variant="bodyLargeBold">Visible</AppText>
+
+              <AppText variant="bodySmall" color="secondary">
+                Make this product visible to customers.
+              </AppText>
+            </View>
+
+            <View
+              style={{
+                width: 56,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Controller
+                control={control}
+                name="visible"
+                render={({ field: { value, onChange } }) => (
+                  <Switch
+                    value={value}
+                    onValueChange={onChange}
+                    trackColor={{
+                      false: theme.input.border,
+                      true: theme.icon.branding.icon,
+                    }}
+                    thumbColor="#FFFFFF"
+                  />
+                )}
+              />
+            </View>
+          </View>
 
           <Controller
             control={control}

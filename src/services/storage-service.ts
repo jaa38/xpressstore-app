@@ -5,6 +5,16 @@ import { decode } from "base64-arraybuffer";
 import { supabase } from "@/services/supabase/client";
 
 export async function uploadProductImage(uri: string) {
+  // No image selected
+  if (!uri) {
+    return "";
+  }
+
+  // Already uploaded
+  if (uri.startsWith("http")) {
+    return uri;
+  }
+
   const base64 = await FileSystem.readAsStringAsync(uri, {
     encoding: FileSystem.EncodingType.Base64,
   });

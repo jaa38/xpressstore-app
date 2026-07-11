@@ -189,7 +189,7 @@ export function Button({
         getVariantStyles({
           variant,
           pressed,
-          disabled,
+          disabled: disabled || loading,
         }),
 
         style,
@@ -198,7 +198,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={getTextColor(variant, disabled)}
+          color={getTextColor(variant, disabled || loading)}
         />
       ) : (
         <>

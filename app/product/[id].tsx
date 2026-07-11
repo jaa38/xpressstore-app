@@ -1,10 +1,10 @@
-import { View, ScrollView, ActivityIndicator } from "react-native";
+import { View, ScrollView, ActivityIndicator, Alert } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useEffect, useState } from "react";
 
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -15,7 +15,7 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 
 import { spacing, theme } from "@/theme";
 
-import { getProduct } from "@/services/product-service";
+import { getProduct, updateProduct } from "@/services/product-service";
 
 import { Input } from "@/components/ui/Input";
 
@@ -23,7 +23,7 @@ import type { Product } from "@/types/product";
 
 import { Dropdown } from "@/components/ui/Dropdown";
 
-import { DEFAULT_CATEGORIES } from "@/constants/productCategories";
+import { getCategories, createCategory } from "@/services/category-service";
 
 export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams<{
@@ -46,13 +46,31 @@ export default function ProductDetailsScreen() {
 
   const [newCategory, setNewCategory] = useState("");
 
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [categories, setCategories] = useState<
+    {
+      label: string;
+      value: string;
+    }[]
+  >([]);
 
   const [loading, setLoading] = useState(true);
 
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     loadProduct();
+    loadCategories();
   }, []);
+
+  async function loadCategories() {
+    try {
+      const data = await getCategories();
+
+      setCategories(data.sort((a, b) => a.label.localeCompare(b.label)));
+    } catch (error) {
+      console.log("LOAD CATEGORIES ERROR", error);
+    }
+  }
 
   async function loadProduct() {
     try {
@@ -78,33 +96,57 @@ export default function ProductDetailsScreen() {
     }
   }
 
-  function createCategory() {
+  async function handleCreateCategory() {
     if (!newCategory.trim()) {
       return;
     }
 
-    const value = newCategory.trim().toLowerCase().replace(/\s+/g, "-");
+    try {
+      const category = await createCategory(newCategory);
 
-    const exists = categories.some((category) => category.value === value);
+      setCategories((current) =>
+        [...current, category].sort((a, b) => a.label.localeCompare(b.label))
+      );
 
-    if (exists) {
-      return;
+      setCategory(category.value);
+
+      setNewCategory("");
+    } catch (error) {
+      console.log("CREATE CATEGORY ERROR", error);
     }
+  }
 
-    const categoryOption = {
-      label: newCategory.trim(),
-      value,
-    };
+  async function handleUpdateProduct() {
+    try {
+      setSaving(true);
 
-    setCategories((current) =>
-      [...current, categoryOption].sort((a, b) =>
-        a.label.localeCompare(b.label)
-      )
-    );
+      await updateProduct(id, {
+        product_name: productName,
+        category,
+        description,
+        price: Number(price),
+        stock: Number(stock),
+        visible,
+      });
 
-    setCategory(categoryOption.value);
+      Alert.alert("Success", "Product updated successfully.", [
+        {
+          text: "OK",
+          onPress: () => {
+            router.back();
+          },
+        },
+      ]);
+    } catch (error) {
+      console.log("UPDATE PRODUCT ERROR", error);
 
-    setNewCategory("");
+      Alert.alert(
+        "Update Failed",
+        "Something went wrong while updating the product."
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) {
@@ -189,7 +231,7 @@ export default function ProductDetailsScreen() {
             <Button
               title="Add Category"
               variant="tertiary"
-              onPress={createCategory}
+              onPress={handleCreateCategory}
             />
           </View>
 
@@ -216,8 +258,10 @@ export default function ProductDetailsScreen() {
         </View>
 
         <Button
-          title="Edit Product"
+          title={saving ? "Saving..." : "Save Changes"}
           variant="primary"
+          loading={saving}
+          onPress={handleUpdateProduct}
           style={{
             marginTop: spacing.lg,
           }}

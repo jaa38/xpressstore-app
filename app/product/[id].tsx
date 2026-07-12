@@ -26,9 +26,11 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 
 import { spacing, theme } from "@/theme";
 
-import { getProduct, updateProduct } from "@/services/product-service";
+import { useProduct } from "@/hooks/useProduct";
 
-import { getCategories, createCategory } from "@/services/category-service";
+import { useCreateCategory } from "@/hooks/useCreateCategory";
+
+import { useCategories } from "@/hooks/useCategories";
 
 import * as ImagePicker from "expo-image-picker";
 
@@ -45,6 +47,8 @@ import {
 
 import { uploadProductImage } from "@/services/storage-service";
 
+import { useUpdateProduct } from "@/hooks/useUpdateProduct";
+
 export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams<{
     id: string;
@@ -52,24 +56,23 @@ export default function ProductDetailsScreen() {
 
   const router = useRouter();
 
+  const { data: product, isLoading: loading } = useProduct(id);
+
+  const { data: categories = [] } = useCategories();
+
   // const [visible, setVisible] = useState(false);
 
   const [newCategory, setNewCategory] = useState("");
 
-  const [categories, setCategories] = useState<
-    {
-      label: string;
-      value: string;
-    }[]
-  >([]);
-
-  const [loading, setLoading] = useState(true);
+  const createCategoryMutation = useCreateCategory();
 
   const [saving, setSaving] = useState(false);
 
   const [hasSaved, setHasSaved] = useState(false);
 
   const { showToast } = useToast();
+
+  const updateProductMutation = useUpdateProduct();
 
   const {
     control,
@@ -100,8 +103,20 @@ export default function ProductDetailsScreen() {
   };
 
   useEffect(() => {
-    initializeScreen();
-  }, []);
+    if (!product) {
+      return;
+    }
+
+    reset({
+      productName: product.productName,
+      category: product.category,
+      description: product.description,
+      price: String(product.price),
+      stock: String(product.stock),
+      image: product.image,
+      visible: product.visible,
+    });
+  }, [product, reset]);
 
   useFocusEffect(
     useCallback(() => {
@@ -123,46 +138,6 @@ export default function ProductDetailsScreen() {
       return () => subscription.remove();
     }, [isDirty])
   );
-
-  async function initializeScreen() {
-    try {
-      setLoading(true);
-
-      await Promise.all([loadProduct(), loadCategories()]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function loadCategories() {
-    try {
-      const data = await getCategories();
-
-      setCategories(data.sort((a, b) => a.label.localeCompare(b.label)));
-    } catch (error) {
-      console.log("LOAD CATEGORIES ERROR", error);
-    }
-  }
-
-  async function loadProduct() {
-    try {
-      const data = await getProduct(id);
-
-      reset({
-        productName: data.productName,
-        category: data.category,
-        description: data.description,
-        price: String(data.price),
-        stock: String(data.stock),
-        image: data.image,
-        visible: data.visible,
-      });
-    } catch (error) {
-      console.log("LOAD PRODUCT ERROR", error);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleCamera() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -230,11 +205,7 @@ export default function ProductDetailsScreen() {
     }
 
     try {
-      const category = await createCategory(newCategory);
-
-      setCategories((current) =>
-        [...current, category].sort((a, b) => a.label.localeCompare(b.label))
-      );
+      const category = await createCategoryMutation.mutateAsync(newCategory);
 
       setValue("category", category.value);
 
@@ -262,14 +233,17 @@ export default function ProductDetailsScreen() {
 
       const imageUrl = await uploadProductImage(data.image);
 
-      await updateProduct(id, {
-        product_name: data.productName.trim(),
-        category: data.category,
-        description: data.description.trim(),
-        image: imageUrl,
-        price: Number(data.price),
-        stock: Number(data.stock),
-        visible: data.visible,
+      await updateProductMutation.mutateAsync({
+        id,
+        values: {
+          product_name: data.productName.trim(),
+          category: data.category,
+          description: data.description.trim(),
+          image: imageUrl,
+          price: Number(data.price),
+          stock: Number(data.stock),
+          visible: data.visible,
+        },
       });
 
       showToast({
@@ -279,8 +253,6 @@ export default function ProductDetailsScreen() {
       });
 
       setHasSaved(true);
-
-      await loadProduct();
     } catch (error) {
       console.log("UPDATE PRODUCT ERROR", error);
 

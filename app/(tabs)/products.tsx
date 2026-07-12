@@ -22,13 +22,12 @@ import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ROUTES, getProductDetailsRoute } from "@/navigation/routes";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo } from "react";
+import { useProducts } from "@/hooks/useProducts";
 
-import {
-  getProducts,
-  updateProductVisibility,
-  deleteProduct,
-} from "@/services/product-service";
+import { useToggleProductVisibility } from "@/hooks/useToggleProductVisibility";
+
+import { useDeleteProduct } from "@/hooks/useDeleteProduct";
 
 import type { Product } from "@/types/product";
 
@@ -162,50 +161,20 @@ function ProductCard({
 }
 
 export default function ProductScreen() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const {
+    data: products = [],
+    isLoading: loading,
+    isRefetching: refreshing,
+    error,
+    refetch,
+  } = useProducts();
 
-  const [loading, setLoading] = useState(true);
+  const deleteProductMutation = useDeleteProduct();
 
-  const [refreshing, setRefreshing] = useState(false);
-
-  const [error, setError] = useState("");
-
-  useFocusEffect(
-    useCallback(() => {
-      loadProducts();
-    }, [])
-  );
-
-  async function loadProducts() {
-    try {
-      setLoading(true);
-
-      setError("");
-
-      const data = await getProducts();
-
-      console.log("SUPABASE PRODUCTS", data);
-
-      setProducts(data ?? []);
-    } catch (error) {
-      console.log("LOAD PRODUCTS ERROR", error);
-
-      setError("Unable to load products.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const toggleVisibilityMutation = useToggleProductVisibility();
 
   async function onRefresh() {
-    try {
-      setRefreshing(true);
-
-      await loadProducts();
-    } catch (error) {
-      console.log("REFRESH ERROR", error);
-    } finally {
-      setRefreshing(false);
-    }
+    await refetch();
   }
 
   const sortedProducts = useMemo(
@@ -221,18 +190,10 @@ export default function ProductScreen() {
 
   async function toggleProduct(productId: string, value: boolean) {
     try {
-      await updateProductVisibility(productId, value);
-
-      setProducts((current) =>
-        current.map((product) =>
-          product.id === productId
-            ? {
-                ...product,
-                visible: value,
-              }
-            : product
-        )
-      );
+      await toggleVisibilityMutation.mutateAsync({
+        productId,
+        value,
+      });
     } catch (error) {
       console.log("UPDATE VISIBILITY ERROR", error);
     }
@@ -249,11 +210,7 @@ export default function ProductScreen() {
         style: "destructive",
         onPress: async () => {
           try {
-            await deleteProduct(productId);
-
-            setProducts((current) =>
-              current.filter((product) => product.id !== productId)
-            );
+            await deleteProductMutation.mutateAsync(productId);
           } catch (error) {
             console.log("DELETE ERROR", error);
           }
@@ -374,7 +331,7 @@ export default function ProductScreen() {
             </View>
           )}
 
-          {error ? (
+          {error && (
             <Card
               style={{
                 marginTop: spacing.md,
@@ -382,9 +339,9 @@ export default function ProductScreen() {
                 borderWidth: 1,
               }}
             >
-              <AppText color="error">{error}</AppText>
+              <AppText color="error">Unable to load products.</AppText>
             </Card>
-          ) : null}
+          )}
 
           <View
             style={{

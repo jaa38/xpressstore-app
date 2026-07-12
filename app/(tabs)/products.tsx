@@ -1,7 +1,6 @@
 import { router, useFocusEffect } from "expo-router";
 import {
   View,
-  ScrollView,
   Image,
   Switch,
   FlatList,
@@ -268,20 +267,12 @@ export default function ProductScreen() {
       }}
     >
       <StatusBar style="auto" />
-
-      <ScrollView
+      <View
         style={{
           flex: 1,
-        }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={{
           paddingHorizontal: spacing.lg,
           paddingTop: spacing.md,
-          paddingBottom: spacing.xl,
         }}
-        showsVerticalScrollIndicator={false}
       >
         <View
           style={{
@@ -381,6 +372,7 @@ export default function ProductScreen() {
 
           <View
             style={{
+              flex: 1,
               marginTop: spacing.lg,
             }}
           >
@@ -479,8 +471,20 @@ export default function ProductScreen() {
               </Card>
             ) : (
               <FlatList
+                style={{
+                  flex: 1,
+                }}
+                contentContainerStyle={{
+                  paddingBottom: spacing.md,
+                }}
                 data={paginatedProducts}
-                scrollEnabled={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                  />
+                }
+                // scrollEnabled
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                   <ProductCard
@@ -525,7 +529,7 @@ export default function ProductScreen() {
             />
           </View>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

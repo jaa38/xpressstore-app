@@ -23,7 +23,7 @@ import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ROUTES, getProductDetailsRoute } from "@/navigation/routes";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useProducts } from "@/hooks/useProducts";
 
 import { useToggleProductVisibility } from "@/hooks/useToggleProductVisibility";
@@ -174,6 +174,10 @@ export default function ProductScreen() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const PRODUCTS_PER_PAGE = 10;
+
   async function onRefresh() {
     await refetch();
   }
@@ -199,10 +203,22 @@ export default function ProductScreen() {
     });
   }, [sortedProducts, searchQuery]);
 
+  const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+
+  const endIndex = startIndex + PRODUCTS_PER_PAGE;
+
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+
   const lowStockProducts = useMemo(
     () => products.filter((product) => product.stock <= product.lowStockAlert),
     [products]
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   async function toggleProduct(productId: string, value: boolean) {
     try {
@@ -463,7 +479,7 @@ export default function ProductScreen() {
               </Card>
             ) : (
               <FlatList
-                data={filteredProducts}
+                data={paginatedProducts}
                 scrollEnabled={false}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
@@ -483,6 +499,30 @@ export default function ProductScreen() {
                 )}
               />
             )}
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: spacing.lg,
+            }}
+          >
+            <Button
+              title="Previous"
+              variant="secondary"
+              disabled={currentPage === 1}
+              onPress={() => setCurrentPage((page) => page - 1)}
+            />
+            <AppText variant="bodyBold">
+              Page {currentPage} of {totalPages}
+            </AppText>
+            <Button
+              title="Next"
+              variant="secondary"
+              disabled={currentPage === totalPages}
+              onPress={() => setCurrentPage((page) => page + 1)}
+            />
           </View>
         </View>
       </ScrollView>

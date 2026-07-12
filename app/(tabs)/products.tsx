@@ -175,7 +175,7 @@ export default function ProductScreen() {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const PRODUCTS_PER_PAGE = 10;
+  const PRODUCTS_PER_PAGE = 1;
 
   async function onRefresh() {
     await refetch();
@@ -507,26 +507,42 @@ export default function ProductScreen() {
           <View
             style={{
               flexDirection: "row",
-              justifyContent: "space-between",
               alignItems: "center",
               marginTop: spacing.lg,
             }}
           >
-            <Button
-              title="Previous"
-              variant="secondary"
-              disabled={currentPage === 1}
-              onPress={() => setCurrentPage((page) => page - 1)}
-            />
-            <AppText variant="bodyBold">
+            <View
+              style={{
+                flex: 1,
+              }}
+            >
+              <Button
+                title="Previous"
+                variant="secondary"
+                disabled={currentPage === 1}
+                onPress={() => setCurrentPage((page) => page - 1)}
+              />
+            </View>
+            <AppText
+              variant="bodyBold"
+              style={{
+                marginHorizontal: spacing.md,
+              }}
+            >
               Page {currentPage} of {totalPages}
             </AppText>
-            <Button
-              title="Next"
-              variant="secondary"
-              disabled={currentPage === totalPages}
-              onPress={() => setCurrentPage((page) => page + 1)}
-            />
+            <View
+              style={{
+                flex: 1,
+              }}
+            >
+              <Button
+                title="Next"
+                variant="primary"
+                disabled={currentPage === totalPages}
+                onPress={() => setCurrentPage((page) => page + 1)}
+              />
+            </View>
           </View>
         </View>
       </View>

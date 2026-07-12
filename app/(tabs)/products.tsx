@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Pressable,
+  Alert,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,7 +23,7 @@ import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ROUTES, getProductDetailsRoute } from "@/navigation/routes";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useProducts } from "@/hooks/useProducts";
 
 import { useToggleProductVisibility } from "@/hooks/useToggleProductVisibility";
@@ -32,8 +33,6 @@ import { useDeleteProduct } from "@/hooks/useDeleteProduct";
 import type { Product } from "@/types/product";
 
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-
-import { Alert } from "react-native";
 
 function RightActions({ onDelete }: { onDelete: () => void }) {
   return (
@@ -173,6 +172,8 @@ export default function ProductScreen() {
 
   const toggleVisibilityMutation = useToggleProductVisibility();
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   async function onRefresh() {
     await refetch();
   }
@@ -182,6 +183,21 @@ export default function ProductScreen() {
       [...products].sort((a, b) => a.productName.localeCompare(b.productName)),
     [products]
   );
+
+  const filteredProducts = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) {
+      return sortedProducts;
+    }
+
+    return sortedProducts.filter((product) => {
+      return (
+        product.productName.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query)
+      );
+    });
+  }, [sortedProducts, searchQuery]);
 
   const lowStockProducts = useMemo(
     () => products.filter((product) => product.stock <= product.lowStockAlert),
@@ -327,7 +343,11 @@ export default function ProductScreen() {
                 marginTop: spacing.md,
               }}
             >
-              <SearchBar placeholder="Search products" />
+              <SearchBar
+                placeholder="Search products"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
             </View>
           )}
 
@@ -409,9 +429,41 @@ export default function ProductScreen() {
                   onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
                 />
               </Card>
+            ) : filteredProducts.length === 0 ? (
+              <Card
+                style={{
+                  alignItems: "center",
+                  paddingVertical: spacing.xl,
+                }}
+              >
+                <Ionicons
+                  name="search-outline"
+                  size={48}
+                  color={theme.icon.branding.icon}
+                />
+
+                <AppText
+                  variant="bodyLargeBold"
+                  style={{
+                    marginTop: spacing.sm,
+                  }}
+                >
+                  No Products Found
+                </AppText>
+
+                <AppText
+                  color="secondary"
+                  style={{
+                    textAlign: "center",
+                    marginTop: spacing.xs,
+                  }}
+                >
+                  Try searching with a different product name or category.
+                </AppText>
+              </Card>
             ) : (
               <FlatList
-                data={sortedProducts}
+                data={filteredProducts}
                 scrollEnabled={false}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (

@@ -107,6 +107,7 @@ export const theme = {
 
       text: colors.neutral.white,
       disabledText: colors.gray[500],
+      delete: colors.error[500],
     },
 
     secondary: {

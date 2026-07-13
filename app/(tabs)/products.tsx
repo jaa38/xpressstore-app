@@ -46,7 +46,7 @@ function RightActions({ onDelete }: { onDelete: () => void }) {
         justifyContent: "center",
         alignItems: "center",
 
-        backgroundColor: theme.background.error,
+        backgroundColor: theme.action.primary.delete,
 
         borderRadius: radius.md,
       }}

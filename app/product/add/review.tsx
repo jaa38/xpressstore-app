@@ -24,6 +24,8 @@ import { createProduct } from "@/services/product-service";
 
 import { uploadProductImage } from "@/services/storage-service";
 
+import { formatCurrency } from "@/utils/formatCurrency";
+
 function editInfo() {
   router.replace(ROUTES.ADD_PRODUCT_INFO);
 }
@@ -174,7 +176,7 @@ export default function ReviewScreen() {
                   <AppText color="secondary">{product.category}</AppText>
 
                   <AppText variant="bodyLargeBold" color="link">
-                    ₦{product.price?.toLocaleString()}
+                    {formatCurrency(product.price, product.currency)}
                   </AppText>
                 </View>
               </View>
@@ -319,7 +321,7 @@ export default function ReviewScreen() {
                       textAlign: "right",
                     }}
                   >
-                    ₦{product.costPrice?.toLocaleString() ?? "0"}
+                    {formatCurrency(product.costPrice, product.currency)}
                   </AppText>
                 </View>
 
@@ -341,7 +343,7 @@ export default function ReviewScreen() {
                       textAlign: "right",
                     }}
                   >
-                    ₦{product.price?.toLocaleString() ?? "0"}
+                   {formatCurrency(product.price, product.currency)}
                   </AppText>
                 </View>
 

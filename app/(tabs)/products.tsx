@@ -33,6 +33,8 @@ import type { Product } from "@/types/product";
 
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
+import { formatCurrency } from "@/utils/formatCurrency";
+
 function RightActions({ onDelete }: { onDelete: () => void }) {
   return (
     <Pressable
@@ -121,7 +123,7 @@ function ProductCard({
             }}
           >
             <AppText variant="bodyBold" color="warning">
-              ₦{product.price.toLocaleString()}
+              {formatCurrency(product.price, product.currency)}
             </AppText>
 
             {/* <AppText>•</AppText> */}
@@ -208,11 +210,17 @@ export default function ProductScreen() {
 
   const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
 
-  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE)
+  );
 
   const lowStockProducts = useMemo(
-    () => products.filter((product) => product.stock <= product.lowStockAlert),
-    [products]
+    () =>
+      filteredProducts.filter(
+        (product) => product.stock <= product.lowStockAlert
+      ),
+    [filteredProducts]
   );
 
   useEffect(() => {

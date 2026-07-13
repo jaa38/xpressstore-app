@@ -20,6 +20,8 @@ export async function createProduct(product: ProductDraft) {
 
       cost_price: product.costPrice,
 
+      currency: product.currency,
+
       tax_applicable: product.taxApplicable,
 
       track_inventory: product.trackInventory,
@@ -83,6 +85,8 @@ export async function getProducts(): Promise<Product[]> {
       price: item.price,
 
       costPrice: item.cost_price,
+
+      currency: item.currency,
 
       taxApplicable: item.tax_applicable,
 
@@ -179,6 +183,8 @@ export async function getProduct(productId: string): Promise<Product> {
     price: data.price,
 
     costPrice: data.cost_price,
+
+    currency: data.currency,
 
     taxApplicable: data.tax_applicable,
 

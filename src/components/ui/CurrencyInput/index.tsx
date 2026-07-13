@@ -1,4 +1,6 @@
 import { useState } from "react";
+import type { Currency } from "@/types/product";
+import { CURRENCIES } from "@/constants/currencies";
 
 import { View, Pressable, KeyboardTypeOptions } from "react-native";
 
@@ -14,38 +16,28 @@ import { StyleSheet } from "react-native";
 import { theme } from "@/theme";
 import { radius } from "@/theme/radius";
 
-const DEFAULT_CURRENCIES = [
-  {
-    label: "₦",
-    value: "NGN",
-  },
-  {
-    label: "$",
-    value: "USD",
-  },
-  {
-    label: "£",
-    value: "GBP",
-  },
-  {
-    label: "€",
-    value: "EUR",
-  },
-];
-
 interface CurrencyInputProps {
   label?: string;
   required?: boolean;
   optional?: boolean;
+
   value?: string;
+
   placeholder?: string;
-  defaultCurrency?: string;
+
+  defaultCurrency?: Currency;
+
+  currency?: Currency;
+
+  disableCurrencySelection?: boolean;
+
   error?: string;
 
   keyboardType?: KeyboardTypeOptions;
 
   onChangeText?: (value: string) => void;
-  onCurrencyChange?: (currency: string) => void;
+
+  onCurrencyChange?: (currency: Currency) => void;
 }
 
 export function CurrencyInput({
@@ -56,26 +48,31 @@ export function CurrencyInput({
   placeholder = "0.00",
   defaultCurrency = "NGN",
 
+  currency,
+  disableCurrencySelection = false,
+
   keyboardType = "decimal-pad",
   error,
 
   onChangeText,
   onCurrencyChange,
 }: CurrencyInputProps) {
-  const [currency, setCurrency] = useState(defaultCurrency);
+  const [internalCurrency, setInternalCurrency] = useState(defaultCurrency);
+
+  const selectedCurrencyValue = currency ?? internalCurrency;
 
   const [showCurrencies, setShowCurrencies] = useState(false);
 
-  const selectedCurrency = DEFAULT_CURRENCIES.find(
-    (item) => item.value === currency
+  const selectedCurrency = CURRENCIES.find(
+    (item) => item.value === selectedCurrencyValue
   );
 
   if (!selectedCurrency) {
     return null;
   }
 
-  function handleCurrencyChange(currencyValue: string) {
-    setCurrency(currencyValue);
+  function handleCurrencyChange(currencyValue: Currency) {
+    setInternalCurrency(currencyValue);
 
     onCurrencyChange?.(currencyValue);
   }
@@ -101,11 +98,16 @@ export function CurrencyInput({
         placeholder={placeholder}
         keyboardType={keyboardType}
         value={value}
-        onChangeText={onChangeText}
+        onChangeText={handleAmountChange}
         error={error}
         leftElement={
           <Pressable
-            onPress={() => setShowCurrencies(!showCurrencies)}
+            disabled={disableCurrencySelection}
+            onPress={() => {
+              if (!disableCurrencySelection) {
+                setShowCurrencies(!showCurrencies);
+              }
+            }}
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -124,9 +126,9 @@ export function CurrencyInput({
         }
       />
 
-      {showCurrencies && (
+      {showCurrencies && !disableCurrencySelection && (
         <View style={styles.optionsContainer}>
-          {DEFAULT_CURRENCIES.map((item) => (
+          {CURRENCIES.map((item) => (
             <Pressable
               key={item.value}
               onPress={() => {
@@ -137,7 +139,7 @@ export function CurrencyInput({
               style={[
                 styles.option,
 
-                currency === item.value && {
+                selectedCurrencyValue === item.value && {
                   backgroundColor: theme.background.brand,
                 },
               ]}

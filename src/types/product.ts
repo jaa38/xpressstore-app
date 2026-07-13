@@ -1,5 +1,7 @@
 import type { ShippingClass } from "@/schemas/storefrontSchema";
 
+export type Currency = "NGN" | "USD" | "GBP" | "EUR";
+
 export interface ProductVariant {
   name: string;
   options: string[];
@@ -22,6 +24,8 @@ export interface ProductDraft {
 
   price: number;
   costPrice: number;
+
+  currency: Currency;
 
   taxApplicable: boolean;
 

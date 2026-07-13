@@ -122,7 +122,13 @@ export default function PricingScreen() {
                   required
                   keyboardType="decimal-pad"
                   value={field.value}
+                  currency={product.currency}
                   onChangeText={field.onChange}
+                  onCurrencyChange={(currency) =>
+                    updateProduct({
+                      currency,
+                    })
+                  }
                   error={errors.sellingPrice?.message}
                 />
               )}
@@ -137,6 +143,8 @@ export default function PricingScreen() {
                   optional
                   keyboardType="decimal-pad"
                   value={field.value}
+                  currency={product.currency}
+                  disableCurrencySelection
                   onChangeText={field.onChange}
                 />
               )}

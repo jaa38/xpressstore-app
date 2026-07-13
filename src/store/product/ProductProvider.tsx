@@ -19,6 +19,8 @@ const INITIAL_PRODUCT: ProductDraft = {
   price: 0,
   costPrice: 0,
 
+  currency: "NGN",
+
   taxApplicable: false,
 
   trackInventory: true,

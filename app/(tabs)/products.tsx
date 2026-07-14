@@ -177,7 +177,7 @@ export default function ProductScreen() {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const PRODUCTS_PER_PAGE = 1;
+  const PRODUCTS_PER_PAGE = 10;
 
   async function onRefresh() {
     await refetch();

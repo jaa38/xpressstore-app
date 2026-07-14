@@ -22,7 +22,9 @@ import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ROUTES, getProductDetailsRoute } from "@/navigation/routes";
-import { useEffect, useMemo, useState } from "react";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+
 import { useProducts } from "@/hooks/useProducts";
 
 import { useToggleProductVisibility } from "@/hooks/useToggleProductVisibility";
@@ -177,6 +179,8 @@ export default function ProductScreen() {
 
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [showLowStockBanner, setShowLowStockBanner] = useState(true);
+
   const PRODUCTS_PER_PAGE = 10;
 
   async function onRefresh() {
@@ -226,6 +230,14 @@ export default function ProductScreen() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (lowStockProducts.length > 0) {
+        setShowLowStockBanner(true);
+      }
+    }, [lowStockProducts.length])
+  );
 
   async function toggleProduct(productId: string, value: boolean) {
     try {
@@ -319,36 +331,52 @@ export default function ProductScreen() {
             />
           </View>
 
-          {products.length > 0 && (
+          {showLowStockBanner && lowStockProducts.length > 0 && (
             <Card
               style={{
                 marginTop: spacing.md,
+                flexDirection: "row",
+                alignItems: "center",
+
                 borderColor: theme.border.warning,
                 backgroundColor: theme.background.warning,
-                flexDirection: "row",
-                gap: spacing.md,
               }}
             >
               <Ionicons
-                name="information-circle-outline"
-                size={24}
+                name="warning-outline"
+                size={22}
                 color={theme.icon.warning.icon}
               />
 
               <View
                 style={{
-                  flexDirection: "row",
+                  flex: 1,
+                  marginHorizontal: spacing.md,
                 }}
               >
                 <AppText variant="bodyBold" color="primary">
-                  {lowStockProducts.length} product(s)
+                  {lowStockProducts.length}{" "}
+                  {lowStockProducts.length === 1
+                    ? "product is"
+                    : "products are"}{" "}
+                  running low
                 </AppText>
 
-                <AppText variant="body" color="primary">
-                  {" "}
-                  are running low on stock
+                <AppText variant="bodySmall" color="secondary">
+                  Restock soon to avoid missing sales.
                 </AppText>
               </View>
+
+              <Pressable
+                hitSlop={10}
+                onPress={() => setShowLowStockBanner(false)}
+              >
+                <Ionicons
+                  name="close"
+                  size={20}
+                  color={theme.icon.default.icon}
+                />
+              </Pressable>
             </Card>
           )}
 

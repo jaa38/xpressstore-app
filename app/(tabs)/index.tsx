@@ -26,6 +26,10 @@ import { Alert } from "react-native";
 
 import { DashboardStatsCard } from "@/components/dashboard/DashboardStatsCard";
 
+import { formatCurrency } from "@/utils/formatCurrency";
+
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+
 type PaymentChannel = "bank" | "card" | "qr" | "transfer" | "ussd";
 
 type Transaction = {
@@ -112,6 +116,8 @@ export default function HomeScreen() {
     },
   ];
 
+  const { data: stats, isLoading } = useDashboardStats();
+
   return (
     <SafeAreaView
       edges={["top"]}
@@ -189,25 +195,27 @@ export default function HomeScreen() {
         >
           {/* STATS CARD */}
 
-          <DashboardStatsCard
-            title="Today's Revenue"
-            amount="₦48,250"
-            trend="24%"
-            metrics={[
-              {
-                label: "This Week",
-                value: "₦312,400",
-              },
-              {
-                label: "Orders",
-                value: "38",
-              },
-              {
-                label: "New Clients",
-                value: "12",
-              },
-            ]}
-          />
+          {stats && (
+            <DashboardStatsCard
+              title="Today's Revenue"
+              amount={formatCurrency(stats.todayRevenue, stats.currency)}
+              trend={`${stats.growth}%`}
+              metrics={[
+                {
+                  label: "This Week",
+                  value: formatCurrency(stats.weekRevenue, stats.currency),
+                },
+                {
+                  label: "Orders",
+                  value: stats.orders.toString(),
+                },
+                {
+                  label: "New Clients",
+                  value: stats.newCustomers.toString(),
+                },
+              ]}
+            />
+          )}
 
           {/* QUICK ACTIONS */}
 

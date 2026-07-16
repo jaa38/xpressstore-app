@@ -24,6 +24,8 @@ import { supabase } from "@/services/supabase/client";
 
 import { Alert } from "react-native";
 
+import { DashboardStatsCard } from "@/components/dashboard/DashboardStatsCard";
+
 type PaymentChannel = "bank" | "card" | "qr" | "transfer" | "ussd";
 
 type Transaction = {
@@ -187,151 +189,25 @@ export default function HomeScreen() {
         >
           {/* STATS CARD */}
 
-          <View
-            style={{
-              marginTop: spacing.lg,
-
-              paddingHorizontal: spacing.md,
-
-              paddingVertical: spacing.lg,
-
-              backgroundColor: theme.card.dashboard.background,
-
-              borderRadius: radius.lg,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-
-                justifyContent: "space-between",
-
-                alignItems: "center",
-              }}
-            >
-              <View
-                style={{
-                  gap: spacing.sm,
-                }}
-              >
-                <AppText
-                  variant="bodyLargeBold"
-                  style={{
-                    color: theme.card.dashboard.headerText,
-                  }}
-                >
-                  Today's Revenue
-                </AppText>
-
-                <AppText
-                  variant="displayLarge"
-                  style={{
-                    color: theme.card.dashboard.text,
-                  }}
-                >
-                  ₦48,250
-                </AppText>
-              </View>
-
-              <View
-                style={{
-                  backgroundColor: theme.card.stats.background,
-
-                  paddingVertical: spacing.sm,
-
-                  paddingHorizontal: spacing.rg,
-
-                  borderRadius: radius.xl,
-
-                  flexDirection: "row",
-
-                  gap: spacing.xs,
-
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons
-                  name="trending-up"
-                  size={16}
-                  style={{
-                    color: theme.card.dashboard.text,
-                  }}
-                />
-
-                <AppText
-                  style={{
-                    color: theme.card.dashboard.text,
-                  }}
-                >
-                  24%
-                </AppText>
-              </View>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-
-                marginTop: spacing.md,
-
-                justifyContent: "space-between",
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-
-                  gap: spacing.lg,
-
-                  alignItems: "center",
-                }}
-              >
-                <View>
-                  <AppText variant="bodySmall" color="inverse">
-                    This Week
-                  </AppText>
-
-                  <AppText variant="bodyLargeBold" color="inverse">
-                    ₦312,400
-                  </AppText>
-                </View>
-
-                <Divider orientation="vertical" length={32} />
-              </View>
-
-              <View
-                style={{
-                  flexDirection: "row",
-
-                  gap: spacing.lg,
-
-                  alignItems: "center",
-                }}
-              >
-                <View>
-                  <AppText variant="bodySmall" color="inverse">
-                    Orders
-                  </AppText>
-
-                  <AppText variant="bodyLargeBold" color="inverse">
-                    38
-                  </AppText>
-                </View>
-
-                <Divider orientation="vertical" length={32} />
-              </View>
-
-              <View>
-                <AppText variant="bodySmall" color="inverse">
-                  New Clients
-                </AppText>
-
-                <AppText variant="bodyLargeBold" color="inverse">
-                  12
-                </AppText>
-              </View>
-            </View>
-          </View>
+          <DashboardStatsCard
+            title="Today's Revenue"
+            amount="₦48,250"
+            trend="24%"
+            metrics={[
+              {
+                label: "This Week",
+                value: "₦312,400",
+              },
+              {
+                label: "Orders",
+                value: "38",
+              },
+              {
+                label: "New Clients",
+                value: "12",
+              },
+            ]}
+          />
 
           {/* QUICK ACTIONS */}
 

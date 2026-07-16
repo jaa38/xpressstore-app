@@ -415,38 +415,27 @@ export const theme = {
  */
 orderStatus: {
   all: {
-    background: colors.gray[100],
+    background: colors.neutral.white,
     border: colors.gray[300],
-    text: colors.gray[700],
-    badge: colors.gray[500],
+    text: colors.primary[500],
   },
 
   delivered: {
     background: colors.success[100],
     border: colors.success[500],
     text: colors.success[600],
-    badge: colors.success[500],
-  },
-
-  paid: {
-    background: colors.info[100],
-    border: colors.info[500],
-    text: colors.info[600],
-    badge: colors.info[500],
   },
 
   failed: {
     background: colors.error[100],
     border: colors.error[500],
     text: colors.error[600],
-    badge: colors.error[500],
   },
 
   returned: {
     background: colors.warning[100],
     border: colors.warning[500],
     text: colors.warning[600],
-    badge: colors.warning[500],
   },
 },
 

@@ -1,4 +1,10 @@
-import { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
+import {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { Pressable, View } from "react-native";
 
@@ -12,6 +18,11 @@ import { spacing, theme } from "@/theme";
 
 import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
 
+import { AmountRangeFilter } from "@/components/ui/AmountRangeFilter";
+
+import type { AmountRange } from "@/types/filters";
+
+
 interface FilterBottomSheetProps {}
 
 export const FilterBottomSheet = forwardRef<
@@ -21,6 +32,12 @@ export const FilterBottomSheet = forwardRef<
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const snapPoints = useMemo(() => ["50%"], []);
+
+  const [amountRange, setAmountRange] =
+  useState<AmountRange>({
+    min: 0,
+    max: 250000,
+  });
 
   useImperativeHandle(ref, () => bottomSheetRef.current!, []);
 
@@ -82,7 +99,16 @@ export const FilterBottomSheet = forwardRef<
           }}
         >
           <BottomSheetSection title="Amount Range">
-            <View />
+            <AmountRangeFilter
+              min={amountRange.min}
+              max={amountRange.max}
+              onValueChange={(min, max) =>
+                setAmountRange({
+                  min,
+                  max,
+                })
+              }
+            />
           </BottomSheetSection>
 
           <BottomSheetSection title="Date">

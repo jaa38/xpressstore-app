@@ -1,6 +1,6 @@
 import { View, Pressable, Image, FlatList, RefreshControl } from "react-native";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import type { OrderFilter } from "@/types/order-filter";
 
@@ -9,7 +9,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
 import { AppText } from "@/components/ui/AppText";
-import { Button } from "@/components/ui/Button";
 
 import { SearchBar } from "@/components/ui/SearchBar";
 
@@ -21,8 +20,6 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { PAYMENT_CHANNELS } from "@/constants/paymentChannels";
 
-import type { Order } from "@/types/order";
-
 import { formatCurrency } from "@/utils/formatCurrency";
 
 import { ORDER_STATUS } from "@/constants/orderStatus";
@@ -32,12 +29,18 @@ import { formatOrderDate } from "@/utils/formatOrderDate";
 
 import { FilterButton } from "@/components/ui/FilterButton";
 
+import BottomSheet from "@gorhom/bottom-sheet";
+
+import { FilterBottomSheet } from "@/components/bottom-sheet/FilterBottomSheet";
+
 export default function OrdersScreen() {
   const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
 
   const [selectedFilter, setSelectedFilter] = useState<OrderFilter>("all");
 
   const [searchQuery, setSearchQuery] = useState("");
+
+  const bottomSheetRef = useRef<BottomSheet>(null);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -81,281 +84,278 @@ export default function OrdersScreen() {
   }
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: theme.background.primary,
-      }}
-    >
-      <StatusBar style="auto" />
-
-      <View
+    <>
+      <SafeAreaView
         style={{
           flex: 1,
-          paddingHorizontal: spacing.lg,
+          backgroundColor: theme.background.primary,
         }}
       >
-        {/* TOP */}
+        <StatusBar style="auto" />
 
         <View
           style={{
             flex: 1,
-            marginTop: spacing.lg,
+            paddingHorizontal: spacing.lg,
           }}
         >
-          <View style={{}}>
-            <AppText variant="h1">Orders</AppText>
-
-            <AppText variant="body" color="secondary">
-              Number of orders this week
-            </AppText>
-          </View>
+          {/* TOP */}
 
           <View
             style={{
-              marginTop: spacing.md,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: spacing.md,
+              flex: 1,
+              marginTop: spacing.lg,
             }}
           >
+            <View style={{}}>
+              <AppText variant="h1">Orders</AppText>
+
+              <AppText variant="body" color="secondary">
+                Number of orders this week
+              </AppText>
+            </View>
+
             <View
               style={{
-                flex: 1,
+                marginTop: spacing.md,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.md,
               }}
             >
-              <SearchBar
-                placeholder="Search orders"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
+              <View
+                style={{
+                  flex: 1,
+                }}
+              >
+                <SearchBar
+                  placeholder="Search orders"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
+
+              <FilterButton
+                onPress={() => {
+                  bottomSheetRef.current?.expand();
+                }}
               />
             </View>
 
-            <FilterButton
-              onPress={() => {
-                // TODO: Open Filters Bottom Sheet
+            <View
+              style={{
+                flexDirection: "row",
+                marginTop: spacing.md,
+                justifyContent: "space-between",
               }}
-            />
-          </View>
-
-          <View
-            style={{
-              flexDirection: "row",
-              marginTop: spacing.md,
-              justifyContent: "space-between",
-            }}
-          >
-            {/* <UICard /> */}
-            <UICard
-              title="All"
-              variant={selectedFilter === "all" ? "active" : "default"}
-              onPress={() => setSelectedFilter("all")}
-            />
-
-            <UICard
-              title="Paid"
-              variant={selectedFilter === "paid" ? "active" : "default"}
-              onPress={() => setSelectedFilter("paid")}
-            />
-
-            <UICard
-              title="Delivered"
-              variant={selectedFilter === "delivered" ? "active" : "default"}
-              onPress={() => setSelectedFilter("delivered")}
-            />
-
-            <UICard
-              title="Returned"
-              variant={selectedFilter === "returned" ? "active" : "default"}
-              onPress={() => setSelectedFilter("returned")}
-            />
-
-            <UICard
-              title="Failed"
-              variant={selectedFilter === "failed" ? "active" : "default"}
-              onPress={() => setSelectedFilter("failed")}
-            />
-          </View>
-
-          <FlatList
-            style={{
-              flex: 1,
-            }}
-            data={filteredOrders}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefetching}
-                onRefresh={refetch}
-                tintColor={theme.text.brand}
-                colors={[theme.text.brand]}
+            >
+              {/* <UICard /> */}
+              <UICard
+                title="All"
+                variant={selectedFilter === "all" ? "active" : "default"}
+                onPress={() => setSelectedFilter("all")}
               />
-            }
-            keyExtractor={(item) => item.id}
-            ListEmptyComponent={
-              <View
-                style={{
-                  paddingVertical: spacing.xl,
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons
-                  name="receipt-outline"
-                  size={48}
-                  color={theme.icon.default.icon}
+
+              <UICard
+                title="Paid"
+                variant={selectedFilter === "paid" ? "active" : "default"}
+                onPress={() => setSelectedFilter("paid")}
+              />
+
+              <UICard
+                title="Delivered"
+                variant={selectedFilter === "delivered" ? "active" : "default"}
+                onPress={() => setSelectedFilter("delivered")}
+              />
+
+              <UICard
+                title="Returned"
+                variant={selectedFilter === "returned" ? "active" : "default"}
+                onPress={() => setSelectedFilter("returned")}
+              />
+
+              <UICard
+                title="Failed"
+                variant={selectedFilter === "failed" ? "active" : "default"}
+                onPress={() => setSelectedFilter("failed")}
+              />
+            </View>
+
+            <FlatList
+              style={{
+                flex: 1,
+              }}
+              data={filteredOrders}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefetching}
+                  onRefresh={refetch}
+                  tintColor={theme.text.brand}
+                  colors={[theme.text.brand]}
                 />
-
-                <AppText
-                  variant="bodyLargeBold"
+              }
+              keyExtractor={(item) => item.id}
+              ListEmptyComponent={
+                <View
                   style={{
-                    marginTop: spacing.md,
+                    paddingVertical: spacing.xl,
+                    alignItems: "center",
                   }}
                 >
-                  No orders yet
-                </AppText>
+                  <Ionicons
+                    name="receipt-outline"
+                    size={48}
+                    color={theme.icon.default.icon}
+                  />
 
-                <AppText
-                  variant="body"
-                  color="secondary"
-                  style={{
-                    marginTop: spacing.xs,
-                    textAlign: "center",
-                  }}
-                >
-                  Orders will appear here when customers make purchases.
-                </AppText>
-              </View>
-            }
-            contentContainerStyle={{
-              marginTop: spacing.lg,
-              gap: spacing.md,
-              paddingBottom: spacing.lg,
-            }}
-            renderItem={({ item: order }) => {
-              const status =
-                order.status !== "paid" ? ORDER_STATUS[order.status] : null;
-
-              return (
-                <Card>
-                  <View
+                  <AppText
+                    variant="bodyLargeBold"
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: spacing.md,
+                      marginTop: spacing.md,
                     }}
                   >
-                    {/* IMAGE */}
+                    No orders yet
+                  </AppText>
 
-                    <Image
-                      source={
-                        order.image?.trim()
-                          ? { uri: order.image }
-                          : require("../../assets/images/ankara-tote-bag.png")
-                      }
-                      resizeMode="cover"
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: 12,
-                      }}
-                    />
+                  <AppText
+                    variant="body"
+                    color="secondary"
+                    style={{
+                      marginTop: spacing.xs,
+                      textAlign: "center",
+                    }}
+                  >
+                    Orders will appear here when customers make purchases.
+                  </AppText>
+                </View>
+              }
+              contentContainerStyle={{
+                marginTop: spacing.lg,
+                gap: spacing.md,
+                paddingBottom: spacing.lg,
+              }}
+              renderItem={({ item: order }) => {
+                const status =
+                  order.status !== "paid" ? ORDER_STATUS[order.status] : null;
 
-                    {/* ORDER INFO */}
-
+                return (
+                  <Card>
                     <View
                       style={{
-                        flex: 1,
-                        gap: spacing.xs,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: spacing.md,
                       }}
                     >
+                      {/* IMAGE */}
+
+                      <Image
+                        source={
+                          order.image?.trim()
+                            ? { uri: order.image }
+                            : require("../../assets/images/ankara-tote-bag.png")
+                        }
+                        resizeMode="cover"
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: 12,
+                        }}
+                      />
+
+                      {/* ORDER INFO */}
+
                       <View
                         style={{
-                          flexDirection: "row",
-                          alignItems: "center",
+                          flex: 1,
                           gap: spacing.xs,
                         }}
                       >
-                        <AppText variant="bodySmall" color="secondary">
-                          {order.reference}
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: spacing.xs,
+                          }}
+                        >
+                          <AppText variant="bodySmall" color="secondary">
+                            {order.reference}
+                          </AppText>
+
+                          <Ionicons
+                            name={
+                              order.status === "paid"
+                                ? PAYMENT_CHANNELS[order.paymentChannel].icon
+                                : status!.icon
+                            }
+                            size={16}
+                            color={
+                              order.status === "paid"
+                                ? theme.icon.success.icon
+                                : status!.iconColor
+                            }
+                          />
+                        </View>
+
+                        <AppText variant="bodyLargeBold">
+                          {order.customerName}
                         </AppText>
 
-                        <Ionicons
-                          name={
-                            order.status === "paid"
-                              ? PAYMENT_CHANNELS[order.paymentChannel].icon
-                              : status!.icon
-                          }
-                          size={16}
-                          color={
-                            order.status === "paid"
-                              ? theme.icon.success.icon
-                              : status!.iconColor
-                          }
-                        />
+                        <AppText
+                          variant="bodySmall"
+                          color="secondary"
+                          numberOfLines={1}
+                        >
+                          {order.itemCount} item
+                          {order.itemCount === 1 ? "" : "s"} •{" "}
+                          {order.productName}
+                        </AppText>
                       </View>
 
-                      <AppText variant="bodyLargeBold">
-                        {order.customerName}
-                      </AppText>
+                      {/* PRICE */}
 
-                      <AppText
-                        variant="bodySmall"
-                        color="secondary"
-                        numberOfLines={1}
+                      <View
+                        style={{
+                          alignItems: "flex-end",
+                          justifyContent: "space-between",
+                          alignSelf: "stretch",
+                        }}
                       >
-                        {order.itemCount} item
-                        {order.itemCount === 1 ? "" : "s"} • {order.productName}
-                      </AppText>
+                        <AppText variant="bodySmall" color="secondary">
+                          {formatOrderDate(order.createdAt)}
+                        </AppText>
+
+                        <AppText
+                          color={
+                            order.status === "paid"
+                              ? "success"
+                              : status!.amountColor
+                          }
+                          variant="bodyLargeBold"
+                        >
+                          {formatCurrency(order.total, order.currency)}
+                        </AppText>
+
+                        <Pressable hitSlop={10}>
+                          <Ionicons
+                            name="ellipsis-horizontal"
+                            size={20}
+                            color={theme.text.primary}
+                          />
+                        </Pressable>
+                      </View>
                     </View>
-
-                    {/* PRICE */}
-
-                    <View
-                      style={{
-                        alignItems: "flex-end",
-                        justifyContent: "space-between",
-                        alignSelf: "stretch",
-                      }}
-                    >
-                      <AppText variant="bodySmall" color="secondary">
-                        {formatOrderDate(order.createdAt)}
-                      </AppText>
-
-                      <AppText
-                        color={
-                          order.status === "paid"
-                            ? "success"
-                            : status!.amountColor
-                        }
-                        variant="bodyLargeBold"
-                      >
-                        {formatCurrency(order.total, order.currency)}
-                      </AppText>
-
-                      <Pressable hitSlop={10}>
-                        <Ionicons
-                          name="ellipsis-horizontal"
-                          size={20}
-                          color={theme.text.primary}
-                        />
-                      </Pressable>
-                    </View>
-                  </View>
-                </Card>
-              );
-            }}
-          />
+                  </Card>
+                );
+              }}
+            />
+          </View>
         </View>
+      </SafeAreaView>
 
-        {/* BOTTOM */}
-
-        {/* <View
-          style={{
-            paddingBottom: spacing.lg,
-          }}
-        ></View> */}
-      </View>
-    </SafeAreaView>
+      <FilterBottomSheet ref={bottomSheetRef} />
+    </>
   );
 }

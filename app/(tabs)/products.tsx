@@ -521,6 +521,7 @@ export default function ProductScreen() {
                   />
                 }
                 // scrollEnabled
+                showsVerticalScrollIndicator={false}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                   <ProductCard

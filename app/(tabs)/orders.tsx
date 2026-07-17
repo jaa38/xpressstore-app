@@ -1,6 +1,8 @@
 import { View, Pressable, Image, FlatList, RefreshControl } from "react-native";
 
-// import { useCallback, useState } from "react";
+import { useMemo, useState } from "react";
+
+import type { OrderFilter } from "@/types/order-filter";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -30,6 +32,16 @@ import { formatOrderDate } from "@/utils/formatOrderDate";
 
 export default function OrdersScreen() {
   const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
+
+  const [selectedFilter, setSelectedFilter] = useState<OrderFilter>("all");
+
+  const filteredOrders = useMemo(() => {
+    if (selectedFilter === "all") {
+      return orders;
+    }
+
+    return orders.filter((order) => order.status === selectedFilter);
+  }, [orders, selectedFilter]);
 
   if (isLoading) {
     return (
@@ -102,18 +114,42 @@ export default function OrdersScreen() {
             }}
           >
             {/* <UICard /> */}
-            <UICard title="All" variant="active" />
-            <UICard title="Paid" />
-            <UICard title="Delivered" />
-            <UICard title="Returned" />
-            <UICard title="Failed" />
+            <UICard
+              title="All"
+              variant={selectedFilter === "all" ? "active" : "default"}
+              onPress={() => setSelectedFilter("all")}
+            />
+
+            <UICard
+              title="Paid"
+              variant={selectedFilter === "paid" ? "active" : "default"}
+              onPress={() => setSelectedFilter("paid")}
+            />
+
+            <UICard
+              title="Delivered"
+              variant={selectedFilter === "delivered" ? "active" : "default"}
+              onPress={() => setSelectedFilter("delivered")}
+            />
+
+            <UICard
+              title="Returned"
+              variant={selectedFilter === "returned" ? "active" : "default"}
+              onPress={() => setSelectedFilter("returned")}
+            />
+
+            <UICard
+              title="Failed"
+              variant={selectedFilter === "failed" ? "active" : "default"}
+              onPress={() => setSelectedFilter("failed")}
+            />
           </View>
 
           <FlatList
             style={{
               flex: 1,
             }}
-            data={orders}
+            data={filteredOrders}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             refreshControl={

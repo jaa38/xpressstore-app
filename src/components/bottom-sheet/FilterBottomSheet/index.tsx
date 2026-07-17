@@ -10,6 +10,8 @@ import { AppText } from "@/components/ui/AppText";
 
 import { spacing, theme } from "@/theme";
 
+import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
+
 interface FilterBottomSheetProps {}
 
 export const FilterBottomSheet = forwardRef<
@@ -78,7 +80,19 @@ export const FilterBottomSheet = forwardRef<
           style={{
             flex: 1,
           }}
-        />
+        >
+          <BottomSheetSection title="Amount Range">
+            <View />
+          </BottomSheetSection>
+
+          <BottomSheetSection title="Date">
+            <View />
+          </BottomSheetSection>
+
+          <BottomSheetSection title="Sort By">
+            <View />
+          </BottomSheetSection>
+        </View>
 
         {/* Footer */}
 

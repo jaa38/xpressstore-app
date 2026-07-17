@@ -20,8 +20,7 @@ import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
 
 import { AmountRangeFilter } from "@/components/ui/AmountRangeFilter";
 
-import type { AmountRange } from "@/types/filters";
-
+import type { AmountRange, OrderFilters } from "@/types/orderFilters";
 
 interface FilterBottomSheetProps {}
 
@@ -33,8 +32,7 @@ export const FilterBottomSheet = forwardRef<
 
   const snapPoints = useMemo(() => ["50%"], []);
 
-  const [amountRange, setAmountRange] =
-  useState<AmountRange>({
+  const [amountRange, setAmountRange] = useState<AmountRange>({
     min: 0,
     max: 250000,
   });

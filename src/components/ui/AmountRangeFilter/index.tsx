@@ -1,10 +1,14 @@
-import MultiSlider from "@ptomasroos/react-native-multi-slider";
+import { useState } from "react";
 
 import { View } from "react-native";
+
+import MultiSlider from "@ptomasroos/react-native-multi-slider";
 
 import { AppText } from "@/components/ui/AppText";
 
 import { spacing, theme } from "@/theme";
+
+import { formatCurrency } from "@/utils/formatCurrency";
 
 interface AmountRangeFilterProps {
   min: number;
@@ -21,42 +25,130 @@ export function AmountRangeFilter({
   maximumValue = 500000,
   onValueChange,
 }: AmountRangeFilterProps) {
+  const [sliderWidth, setSliderWidth] = useState(0);
+
   return (
     <View>
+      {/* Selected */}
+
       <AppText
-        variant="bodyLargeBold"
+        variant="caption"
+        color="secondary"
         style={{
-          marginBottom: spacing.sm,
+          marginBottom: spacing.xs,
         }}
       >
-        ₦{min.toLocaleString()} - ₦{max.toLocaleString()}
+        Selected
       </AppText>
 
-      <MultiSlider
-        values={[min, max]}
-        min={minimumValue}
-        max={maximumValue}
-        step={1000}
-        sliderLength={300}
-        selectedStyle={{
-          backgroundColor: theme.button.primary.background,
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: spacing.md,
         }}
-        unselectedStyle={{
-          backgroundColor: theme.border.default,
-        }}
-        markerStyle={{
-          backgroundColor: theme.button.primary.background,
-        }}
-        onValuesChange={(values: (number | undefined)[]) => {
-          const [minValue, maxValue] = values;
+      >
+        <AppText variant="bodyLargeBold">
+          {formatCurrency(min)}
+        </AppText>
 
-          if (minValue === undefined || maxValue === undefined) {
-            return;
-          }
+        <AppText variant="bodyLargeBold">
+          {formatCurrency(max)}
+        </AppText>
+      </View>
 
-          onValueChange(minValue, maxValue);
+      {/* Slider */}
+
+      <View
+        onLayout={(event) => {
+          setSliderWidth(event.nativeEvent.layout.width);
         }}
-      />
+      >
+        {sliderWidth > 0 && (
+          <MultiSlider
+            values={[min, max]}
+            min={minimumValue}
+            max={maximumValue}
+            step={1000}
+            sliderLength={sliderWidth}
+            selectedStyle={{
+              backgroundColor:
+                theme.button.primary.background,
+            }}
+            unselectedStyle={{
+              backgroundColor:
+                theme.border.default,
+              height: 4,
+            }}
+            trackStyle={{
+              height: 4,
+              borderRadius: 2,
+            }}
+            markerStyle={{
+              backgroundColor:
+                theme.button.primary.background,
+              height: 22,
+              width: 22,
+              borderRadius: 11,
+              borderWidth: 2,
+              borderColor: theme.background.primary,
+            }}
+            pressedMarkerStyle={{
+              height: 26,
+              width: 26,
+              borderRadius: 13,
+            }}
+            onValuesChange={(values) => {
+              const [minValue, maxValue] = values;
+
+              if (
+                minValue === undefined ||
+                maxValue === undefined
+              ) {
+                return;
+              }
+
+              onValueChange(minValue, maxValue);
+            }}
+          />
+        )}
+      </View>
+
+      {/* Available */}
+
+      <AppText
+        variant="caption"
+        color="secondary"
+        style={{
+          marginTop: spacing.md,
+          marginBottom: spacing.xs,
+        }}
+      >
+        Available
+      </AppText>
+
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <AppText
+          variant="bodySmall"
+          color="secondary"
+        >
+          {formatCurrency(minimumValue)}
+        </AppText>
+
+        <AppText
+          variant="bodySmall"
+          color="secondary"
+        >
+          {formatCurrency(maximumValue)}
+        </AppText>
+      </View>
     </View>
   );
 }

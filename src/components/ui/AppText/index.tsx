@@ -23,7 +23,7 @@ type Variant =
   | "overline"
   | "uiCardTitle";
 
-type Color =
+export type Color =
   | "primary"
   | "heading"
   | "strong"

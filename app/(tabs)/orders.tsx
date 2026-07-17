@@ -21,6 +21,8 @@ import type { Order } from "@/types/order";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
+import { ORDER_STATUS } from "@/constants/orderStatus";
+
 const orders: Order[] = [
   {
     id: "1",
@@ -138,133 +140,125 @@ export default function OrdersScreen() {
 
             <View
               style={{
-                marginTop: spacing.md,
+                marginTop: spacing.lg,
                 flexDirection: "column",
                 gap: spacing.md,
               }}
             >
-              {orders.map((order) => (
-                <Card key={order.id}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: spacing.md,
-                    }}
-                  >
-                    {/* IMAGE */}
+              {orders.map((order) => {
+                const status =
+                  order.status !== "paid" ? ORDER_STATUS[order.status] : null;
 
-                    <Image
-                      source={
-                        order.image?.trim()
-                          ? { uri: order.image }
-                          : require("../../assets/images/ankara-tote-bag.png")
-                      }
-                      resizeMode="cover"
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: 12,
-                      }}
-                    />
-
-                    {/* ORDER INFO */}
-
+                return (
+                  <Card key={order.id}>
                     <View
                       style={{
-                        flex: 1,
-                        gap: spacing.xs,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: spacing.md,
                       }}
                     >
+                      {/* IMAGE */}
+
+                      <Image
+                        source={
+                          order.image?.trim()
+                            ? { uri: order.image }
+                            : require("../../assets/images/ankara-tote-bag.png")
+                        }
+                        resizeMode="cover"
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: 12,
+                        }}
+                      />
+
+                      {/* ORDER INFO */}
+
                       <View
                         style={{
-                          flexDirection: "row",
-                          alignItems: "center",
+                          flex: 1,
                           gap: spacing.xs,
                         }}
                       >
-                        <AppText variant="bodySmall" color="secondary">
-                          {order.reference}
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: spacing.xs,
+                          }}
+                        >
+                          <AppText variant="bodySmall" color="secondary">
+                            {order.reference}
+                          </AppText>
+
+                          <Ionicons
+                            name={
+                              order.status === "paid"
+                                ? PAYMENT_CHANNELS[order.paymentChannel].icon
+                                : status!.icon
+                            }
+                            size={16}
+                            color={
+                              order.status === "paid"
+                                ? theme.icon.success.icon
+                                : status!.iconColor
+                            }
+                          />
+                        </View>
+
+                        <AppText variant="bodyLargeBold">
+                          {order.customerName}
                         </AppText>
 
-                        {order.status === "paid" ? (
-                          <Ionicons
-                            name={PAYMENT_CHANNELS[order.paymentChannel].icon}
-                            size={16}
-                            color={theme.icon.success.icon}
-                          />
-                        ) : order.status === "delivered" ? (
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={16}
-                            color={theme.icon.success.icon}
-                          />
-                        ) : order.status === "returned" ? (
-                          <Ionicons
-                            name="return-down-back"
-                            size={16}
-                            color={theme.orderStatus.returned.text}
-                          />
-                        ) : (
-                          <Ionicons
-                            name="close-circle-outline"
-                            size={16}
-                            color={theme.orderStatus.failed.text}
-                          />
-                        )}
+                        <AppText
+                          variant="bodySmall"
+                          color="secondary"
+                          numberOfLines={1}
+                        >
+                          {order.itemCount} item
+                          {order.itemCount === 1 ? "" : "s"} •{" "}
+                          {order.productName}
+                        </AppText>
                       </View>
 
-                      <AppText variant="bodyLargeBold">
-                        {order.customerName}
-                      </AppText>
+                      {/* PRICE */}
 
-                      <AppText
-                        variant="bodySmall"
-                        color="secondary"
-                        numberOfLines={1}
+                      <View
+                        style={{
+                          alignItems: "flex-end",
+                          justifyContent: "space-between",
+                          alignSelf: "stretch",
+                        }}
                       >
-                        {order.itemCount} item
-                        {order.itemCount === 1 ? "" : "s"} • {order.productName}
-                      </AppText>
+                        <AppText variant="bodySmall" color="secondary">
+                          {order.createdAt}
+                        </AppText>
+
+                        <AppText
+                          color={
+                            order.status === "paid"
+                              ? "success"
+                              : status!.amountColor
+                          }
+                          variant="bodyLargeBold"
+                        >
+                          {formatCurrency(order.total, order.currency)}
+                        </AppText>
+
+                        <Pressable hitSlop={10}>
+                          <Ionicons
+                            name="ellipsis-horizontal"
+                            size={20}
+                            color={theme.text.primary}
+                          />
+                        </Pressable>
+                      </View>
                     </View>
-
-                    {/* PRICE */}
-
-                    <View
-                      style={{
-                        alignItems: "flex-end",
-                        justifyContent: "space-between",
-                        alignSelf: "stretch",
-                      }}
-                    >
-                      <AppText variant="bodySmall" color="secondary">
-                        {order.createdAt}
-                      </AppText>
-
-                      <AppText
-                        color={
-                          order.status === "failed"
-                            ? "error"
-                            : order.status === "returned"
-                              ? "returned"
-                              : "success"
-                        }
-                        variant="bodyLargeBold"
-                      >
-                        {formatCurrency(order.total, order.currency)}
-                      </AppText>
-
-                      <Pressable hitSlop={10}>
-                        <Ionicons
-                          name="ellipsis-horizontal"
-                          size={20}
-                          color={theme.text.primary}
-                        />
-                      </Pressable>
-                    </View>
-                  </View>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </View>
           </View>
 

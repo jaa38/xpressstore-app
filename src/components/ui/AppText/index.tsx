@@ -34,7 +34,8 @@ type Color =
   | "success"
   | "error"
   | "warning"
-  | "info";
+  | "info"
+  | "returned";
 
 interface AppTextProps extends TextProps {
   variant?: Variant;

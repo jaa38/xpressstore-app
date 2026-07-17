@@ -31,6 +31,8 @@ export const theme = {
     warning: colors.warning[600],
     info: colors.info[600],
 
+    returned: colors.warning[500],
+
     link: colors.secondary[500],
   },
 
@@ -407,37 +409,48 @@ export const theme = {
     delete: {
       background: colors.error[100],
       icon: colors.error[600],
-    }
+    },
   },
 
-/**
- * 📦 ORDER STATUS
- */
-orderStatus: {
-  all: {
-    background: colors.neutral.white,
-    border: colors.gray[300],
-    text: colors.primary[500],
-  },
+  /**
+   * 📦 ORDER STATUS
+   */
+  orderStatus: {
+    all: {
+      background: colors.neutral.white,
+      border: colors.gray[300],
+      text: colors.primary[500],
+      icon: colors.primary[500],
+    },
 
-  delivered: {
-    background: colors.success[100],
-    border: colors.success[500],
-    text: colors.success[600],
-  },
+    delivered: {
+      background: colors.success[100],
+      border: colors.success[500],
+      text: colors.success[500],
+      icon: colors.success[500],
+    },
 
-  failed: {
-    background: colors.error[100],
-    border: colors.error[500],
-    text: colors.error[600],
-  },
+    paid: {
+      background: colors.primary[100],
+      border: colors.primary[500],
+      text: colors.primary[500],
+      icon: colors.primary[500],
+    },
 
-  returned: {
-    background: colors.warning[100],
-    border: colors.warning[500],
-    text: colors.warning[600],
+    failed: {
+      background: colors.error[100],
+      border: colors.error[500],
+      text: colors.error[500],
+      icon: colors.error[500],
+    },
+
+    returned: {
+      background: colors.warning[100],
+      border: colors.warning[500],
+      text: colors.warning[500],
+      icon: colors.warning[500],
+    },
   },
-},
 
   /**
    * 🧭 NAVIGATION

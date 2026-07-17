@@ -1,4 +1,4 @@
-import type { Currency } from "@/types/product";
+import type { Currency } from "@/types/currency";
 
 const CURRENCY_SYMBOLS: Record<Currency, string> = {
   NGN: "₦",

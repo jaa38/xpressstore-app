@@ -1,5 +1,7 @@
 import type { PaymentChannel } from "./payment";
 
+import type { Currency } from "./currency";
+
 export type OrderStatus = "delivered" | "returned" | "failed" | "paid";
 
 export interface Order {
@@ -13,7 +15,7 @@ export interface Order {
 
   total: number;
 
-  currency: "NGN" | "USD" | "GBP" | "EUR";
+  currency: Currency;
 
   itemCount: number;
 

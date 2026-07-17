@@ -1,6 +1,6 @@
 import type { ShippingClass } from "@/schemas/storefrontSchema";
 
-export type Currency = "NGN" | "USD" | "GBP" | "EUR";
+import type { Currency } from "./currency";
 
 export interface ProductVariant {
   name: string;

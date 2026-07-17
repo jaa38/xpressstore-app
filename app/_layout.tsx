@@ -1,14 +1,12 @@
-import { Stack } from "expo-router";
+import "react-native-reanimated";
 
+import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AppProvider } from "@/providers/app-provider";
 import { ToastProvider } from "@/providers/toast-provider";
 import { ProductProvider } from "@/store/product/ProductProvider";
-
 import { QueryProvider } from "@/providers/query-provider";
-
-import { useToast } from "@/hooks/useToast";
 
 export default function RootLayout() {
   return (

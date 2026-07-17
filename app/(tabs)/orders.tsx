@@ -35,13 +35,24 @@ export default function OrdersScreen() {
 
   const [selectedFilter, setSelectedFilter] = useState<OrderFilter>("all");
 
-  const filteredOrders = useMemo(() => {
-    if (selectedFilter === "all") {
-      return orders;
-    }
+  const [searchQuery, setSearchQuery] = useState("");
 
-    return orders.filter((order) => order.status === selectedFilter);
-  }, [orders, selectedFilter]);
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const matchesStatus =
+        selectedFilter === "all" || order.status === selectedFilter;
+
+      const query = searchQuery.trim().toLowerCase();
+
+      const matchesSearch =
+        query === "" ||
+        order.reference.toLowerCase().includes(query) ||
+        order.customerName.toLowerCase().includes(query) ||
+        order.productName.toLowerCase().includes(query);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [orders, selectedFilter, searchQuery]);
 
   if (isLoading) {
     return (
@@ -103,7 +114,11 @@ export default function OrdersScreen() {
               marginTop: spacing.md,
             }}
           >
-            <SearchBar placeholder="Search orders" />
+            <SearchBar
+              placeholder="Search orders"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
           </View>
 
           <View

@@ -30,6 +30,8 @@ import { useOrders } from "@/hooks/useOrders";
 
 import { formatOrderDate } from "@/utils/formatOrderDate";
 
+import { FilterButton } from "@/components/ui/FilterButton";
+
 export default function OrdersScreen() {
   const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
 
@@ -112,12 +114,27 @@ export default function OrdersScreen() {
           <View
             style={{
               marginTop: spacing.md,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing.md,
             }}
           >
-            <SearchBar
-              placeholder="Search orders"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
+            <View
+              style={{
+                flex: 1,
+              }}
+            >
+              <SearchBar
+                placeholder="Search orders"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+
+            <FilterButton
+              onPress={() => {
+                // TODO: Open Filters Bottom Sheet
+              }}
             />
           </View>
 

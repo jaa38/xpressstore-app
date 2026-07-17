@@ -1,4 +1,6 @@
-import { View, Pressable, Image } from "react-native";
+import { View, Pressable, Image, FlatList, RefreshControl } from "react-native";
+
+// import { useCallback, useState } from "react";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -22,63 +24,90 @@ import type { Order } from "@/types/order";
 import { formatCurrency } from "@/utils/formatCurrency";
 
 import { ORDER_STATUS } from "@/constants/orderStatus";
+import { useOrders } from "@/hooks/useOrders";
 
-const orders: Order[] = [
-  {
-    id: "1",
-    reference: "XP-12345",
-    customerName: "Nancy Drew",
-    image: "",
-    total: 20,
-    currency: "USD",
-    itemCount: 2,
-    productName: "Ankara Tote Bag",
-    paymentChannel: "card",
-    status: "paid",
-    createdAt: "Today, 10:24",
-  },
-  {
-    id: "2",
-    reference: "XP-12346",
-    customerName: "John Smith",
-    image: "",
-    total: 45,
-    currency: "USD",
-    itemCount: 1,
-    productName: "Sneakers",
-    paymentChannel: "bankTransfer",
-    status: "returned",
-    createdAt: "Today, 09:40",
-  },
-  {
-    id: "3",
-    reference: "XP-12347",
-    customerName: "Sarah Johnson",
-    image: "",
-    total: 18,
-    currency: "USD",
-    itemCount: 3,
-    productName: "Backpack",
-    paymentChannel: "bank",
-    status: "failed",
-    createdAt: "Yesterday, 17:05",
-  },
-  {
-    id: "4",
-    reference: "XP-12348",
-    customerName: "Michael Brown",
-    image: "",
-    total: 60,
-    currency: "USD",
-    itemCount: 5,
-    productName: "Office Chair",
-    paymentChannel: "nqr",
-    status: "delivered",
-    createdAt: "Yesterday, 14:30",
-  },
-];
+// const orders: Order[] = [
+//   {
+//     id: "1",
+//     reference: "XP-12345",
+//     customerName: "Nancy Drew",
+//     image: "",
+//     total: 20,
+//     currency: "USD",
+//     itemCount: 2,
+//     productName: "Ankara Tote Bag",
+//     paymentChannel: "card",
+//     status: "paid",
+//     createdAt: "Today, 10:24",
+//   },
+//   {
+//     id: "2",
+//     reference: "XP-12346",
+//     customerName: "John Smith",
+//     image: "",
+//     total: 45,
+//     currency: "USD",
+//     itemCount: 1,
+//     productName: "Sneakers",
+//     paymentChannel: "bankTransfer",
+//     status: "returned",
+//     createdAt: "Today, 09:40",
+//   },
+//   {
+//     id: "3",
+//     reference: "XP-12347",
+//     customerName: "Sarah Johnson",
+//     image: "",
+//     total: 18,
+//     currency: "USD",
+//     itemCount: 3,
+//     productName: "Backpack",
+//     paymentChannel: "bank",
+//     status: "failed",
+//     createdAt: "Yesterday, 17:05",
+//   },
+//   {
+//     id: "4",
+//     reference: "XP-12348",
+//     customerName: "Michael Brown",
+//     image: "",
+//     total: 60,
+//     currency: "USD",
+//     itemCount: 5,
+//     productName: "Office Chair",
+//     paymentChannel: "nqr",
+//     status: "delivered",
+//     createdAt: "Yesterday, 14:30",
+//   },
+// ];
 
 export default function OrdersScreen() {
+  const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
+
+  if (isLoading) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: theme.background.primary,
+        }}
+      >
+        <StatusBar style="auto" />
+
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingHorizontal: spacing.lg,
+          }}
+        >
+          <AppText variant="body">Loading orders...</AppText>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView
       style={{
@@ -94,182 +123,223 @@ export default function OrdersScreen() {
           paddingHorizontal: spacing.lg,
         }}
       >
+        {/* TOP */}
+
         <View
           style={{
             flex: 1,
-            justifyContent: "space-between",
+            marginTop: spacing.lg,
           }}
         >
-          {/* TOP */}
+          <View style={{}}>
+            <AppText variant="h1">Orders</AppText>
+
+            <AppText variant="body" color="secondary">
+              Number of orders this week
+            </AppText>
+          </View>
 
           <View
             style={{
-              marginTop: spacing.lg,
+              marginTop: spacing.md,
             }}
           >
-            <View style={{}}>
-              <AppText variant="h1">Orders</AppText>
+            <SearchBar placeholder="Search orders" />
+          </View>
 
-              <AppText variant="body" color="secondary">
-                Number of orders this week
-              </AppText>
-            </View>
+          <View
+            style={{
+              flexDirection: "row",
+              marginTop: spacing.md,
+              justifyContent: "space-between",
+            }}
+          >
+            {/* <UICard /> */}
+            <UICard title="All" variant="active" />
+            <UICard title="Paid" />
+            <UICard title="Delivered" />
+            <UICard title="Returned" />
+            <UICard title="Failed" />
+          </View>
 
-            <View
-              style={{
-                marginTop: spacing.md,
-              }}
-            >
-              <SearchBar placeholder="Search orders" />
-            </View>
+          <FlatList
+            style={{
+              flex: 1,
+            }}
+            data={orders}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefetching}
+                onRefresh={refetch}
+                tintColor={theme.text.brand}
+                colors={[theme.text.brand]}
+              />
+            }
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={
+              <View
+                style={{
+                  paddingVertical: spacing.xl,
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons
+                  name="receipt-outline"
+                  size={48}
+                  color={theme.icon.default.icon}
+                />
 
-            <View
-              style={{
-                flexDirection: "row",
-                marginTop: spacing.md,
-                justifyContent: "space-between",
-              }}
-            >
-              {/* <UICard /> */}
-              <UICard title="All" variant="active" />
-              <UICard title="Paid" />
-              <UICard title="Delivered" />
-              <UICard title="Returned" />
-              <UICard title="Failed" />
-            </View>
+                <AppText
+                  variant="bodyLargeBold"
+                  style={{
+                    marginTop: spacing.md,
+                  }}
+                >
+                  No orders yet
+                </AppText>
 
-            <View
-              style={{
-                marginTop: spacing.lg,
-                flexDirection: "column",
-                gap: spacing.md,
-              }}
-            >
-              {orders.map((order) => {
-                const status =
-                  order.status !== "paid" ? ORDER_STATUS[order.status] : null;
+                <AppText
+                  variant="body"
+                  color="secondary"
+                  style={{
+                    marginTop: spacing.xs,
+                    textAlign: "center",
+                  }}
+                >
+                  Orders will appear here when customers make purchases.
+                </AppText>
+              </View>
+            }
+            contentContainerStyle={{
+              marginTop: spacing.lg,
+              gap: spacing.md,
+              paddingBottom: spacing.lg,
+            }}
+            renderItem={({ item: order }) => {
+              const status =
+                order.status !== "paid" ? ORDER_STATUS[order.status] : null;
 
-                return (
-                  <Card key={order.id}>
+              return (
+                <Card>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: spacing.md,
+                    }}
+                  >
+                    {/* IMAGE */}
+
+                    <Image
+                      source={
+                        order.image?.trim()
+                          ? { uri: order.image }
+                          : require("../../assets/images/ankara-tote-bag.png")
+                      }
+                      resizeMode="cover"
+                      style={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: 12,
+                      }}
+                    />
+
+                    {/* ORDER INFO */}
+
                     <View
                       style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: spacing.md,
+                        flex: 1,
+                        gap: spacing.xs,
                       }}
                     >
-                      {/* IMAGE */}
-
-                      <Image
-                        source={
-                          order.image?.trim()
-                            ? { uri: order.image }
-                            : require("../../assets/images/ankara-tote-bag.png")
-                        }
-                        resizeMode="cover"
-                        style={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: 12,
-                        }}
-                      />
-
-                      {/* ORDER INFO */}
-
                       <View
                         style={{
-                          flex: 1,
+                          flexDirection: "row",
+                          alignItems: "center",
                           gap: spacing.xs,
                         }}
                       >
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: spacing.xs,
-                          }}
-                        >
-                          <AppText variant="bodySmall" color="secondary">
-                            {order.reference}
-                          </AppText>
-
-                          <Ionicons
-                            name={
-                              order.status === "paid"
-                                ? PAYMENT_CHANNELS[order.paymentChannel].icon
-                                : status!.icon
-                            }
-                            size={16}
-                            color={
-                              order.status === "paid"
-                                ? theme.icon.success.icon
-                                : status!.iconColor
-                            }
-                          />
-                        </View>
-
-                        <AppText variant="bodyLargeBold">
-                          {order.customerName}
-                        </AppText>
-
-                        <AppText
-                          variant="bodySmall"
-                          color="secondary"
-                          numberOfLines={1}
-                        >
-                          {order.itemCount} item
-                          {order.itemCount === 1 ? "" : "s"} •{" "}
-                          {order.productName}
-                        </AppText>
-                      </View>
-
-                      {/* PRICE */}
-
-                      <View
-                        style={{
-                          alignItems: "flex-end",
-                          justifyContent: "space-between",
-                          alignSelf: "stretch",
-                        }}
-                      >
                         <AppText variant="bodySmall" color="secondary">
-                          {order.createdAt}
+                          {order.reference}
                         </AppText>
 
-                        <AppText
+                        <Ionicons
+                          name={
+                            order.status === "paid"
+                              ? PAYMENT_CHANNELS[order.paymentChannel].icon
+                              : status!.icon
+                          }
+                          size={16}
                           color={
                             order.status === "paid"
-                              ? "success"
-                              : status!.amountColor
+                              ? theme.icon.success.icon
+                              : status!.iconColor
                           }
-                          variant="bodyLargeBold"
-                        >
-                          {formatCurrency(order.total, order.currency)}
-                        </AppText>
-
-                        <Pressable hitSlop={10}>
-                          <Ionicons
-                            name="ellipsis-horizontal"
-                            size={20}
-                            color={theme.text.primary}
-                          />
-                        </Pressable>
+                        />
                       </View>
+
+                      <AppText variant="bodyLargeBold">
+                        {order.customerName}
+                      </AppText>
+
+                      <AppText
+                        variant="bodySmall"
+                        color="secondary"
+                        numberOfLines={1}
+                      >
+                        {order.itemCount} item
+                        {order.itemCount === 1 ? "" : "s"} • {order.productName}
+                      </AppText>
                     </View>
-                  </Card>
-                );
-              })}
-            </View>
-          </View>
 
-          {/* BOTTOM */}
+                    {/* PRICE */}
 
-          <View
-            style={{
-              paddingBottom: spacing.lg,
+                    <View
+                      style={{
+                        alignItems: "flex-end",
+                        justifyContent: "space-between",
+                        alignSelf: "stretch",
+                      }}
+                    >
+                      <AppText variant="bodySmall" color="secondary">
+                        {order.createdAt}
+                      </AppText>
+
+                      <AppText
+                        color={
+                          order.status === "paid"
+                            ? "success"
+                            : status!.amountColor
+                        }
+                        variant="bodyLargeBold"
+                      >
+                        {formatCurrency(order.total, order.currency)}
+                      </AppText>
+
+                      <Pressable hitSlop={10}>
+                        <Ionicons
+                          name="ellipsis-horizontal"
+                          size={20}
+                          color={theme.text.primary}
+                        />
+                      </Pressable>
+                    </View>
+                  </View>
+                </Card>
+              );
             }}
-          ></View>
+          />
         </View>
+
+        {/* BOTTOM */}
+
+        {/* <View
+          style={{
+            paddingBottom: spacing.lg,
+          }}
+        ></View> */}
       </View>
     </SafeAreaView>
   );

@@ -20,7 +20,8 @@ import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
 
 import { AmountRangeFilter } from "@/components/ui/AmountRangeFilter";
 
-import type { AmountRange, OrderFilters } from "@/types/orderFilters";
+import type { AmountRange, DateRange } from "@/types/orderFilters";
+import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 
 interface FilterBottomSheetProps {}
 
@@ -36,6 +37,8 @@ export const FilterBottomSheet = forwardRef<
     min: 0,
     max: 250000,
   });
+
+  const [dateRange, setDateRange] = useState<DateRange>({});
 
   useImperativeHandle(ref, () => bottomSheetRef.current!, []);
 
@@ -110,7 +113,7 @@ export const FilterBottomSheet = forwardRef<
           </BottomSheetSection>
 
           <BottomSheetSection title="Date">
-            <View />
+            <DateRangeFilter value={dateRange} onChange={setDateRange} />
           </BottomSheetSection>
 
           <BottomSheetSection title="Sort By">

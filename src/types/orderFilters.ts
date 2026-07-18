@@ -3,6 +3,11 @@ export interface AmountRange {
   max: number;
 }
 
+export interface DateRange {
+  start?: Date;
+  end?: Date;
+}
+
 export type OrderSort =
   | "newest"
   | "oldest"
@@ -11,9 +16,6 @@ export type OrderSort =
 
 export interface OrderFilters {
   amount: AmountRange;
-  date?: {
-    start?: Date;
-    end?: Date;
-  };
+  date: DateRange;
   sort: OrderSort;
 }

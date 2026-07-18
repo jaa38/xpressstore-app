@@ -8,14 +8,12 @@ export interface DateRange {
   end?: Date;
 }
 
-export type OrderSort =
-  | "newest"
-  | "oldest"
-  | "highestAmount"
-  | "lowestAmount";
+export type OrderSort = "mostRecent" | "amountHighToLow" | "amountLowToHigh";
 
 export interface OrderFilters {
   amount: AmountRange;
+
   date: DateRange;
+
   sort: OrderSort;
 }

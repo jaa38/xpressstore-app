@@ -1,24 +1,23 @@
-import { Dropdown, DropdownOption } from "@/components/ui/Dropdown";
+import { RadioGroup, RadioOption } from "@/components/ui/RadioGroup";
 
 import type { OrderSort } from "@/types/orderFilters";
 
 interface SortByFilterProps {
   value: OrderSort;
-
   onChange: (value: OrderSort) => void;
 }
 
-const SORT_OPTIONS: DropdownOption[] = [
+const SORT_OPTIONS: RadioOption[] = [
   {
     label: "Most recent",
     value: "mostRecent",
   },
   {
-    label: "Amount: high to low",
+    label: "Amount: High to Low",
     value: "amountHighToLow",
   },
   {
-    label: "Amount: low to high",
+    label: "Amount: Low to High",
     value: "amountLowToHigh",
   },
 ];
@@ -28,13 +27,10 @@ export function SortByFilter({
   onChange,
 }: SortByFilterProps) {
   return (
-    <Dropdown
-      placeholder="Select sorting"
+    <RadioGroup
       value={value}
       options={SORT_OPTIONS}
-      onSelect={(value) =>
-        onChange(value as OrderSort)
-      }
+      onChange={(value) => onChange(value as OrderSort)}
     />
   );
 }

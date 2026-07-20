@@ -8,25 +8,28 @@ import {
 
 import { Pressable, View } from "react-native";
 
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetView,
+  BottomSheetScrollView,
+} from "@gorhom/bottom-sheet";
 
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
-
-import { spacing, theme } from "@/theme";
-
 import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
-
 import { AmountRangeFilter } from "@/components/ui/AmountRangeFilter";
+import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
+import { SortByFilter } from "@/components/ui/SortByFilter";
+
+import { ScrollView } from "react-native";
+
+import { radius, spacing, theme } from "@/theme";
 
 import type {
   AmountRange,
   DateRange,
   OrderFilters,
 } from "@/types/orderFilters";
-import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
-import { SortByFilter } from "@/components/ui/SortByFilter";
 
 interface FilterBottomSheetProps {}
 
@@ -36,7 +39,9 @@ export const FilterBottomSheet = forwardRef<
 >(({}, ref) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
-  const snapPoints = useMemo(() => ["50%"], []);
+  const snapPoints = useMemo(() => ["50%", "85%"], []);
+
+  useImperativeHandle(ref, () => bottomSheetRef.current!, []);
 
   const [amountRange, setAmountRange] = useState<AmountRange>({
     min: 0,
@@ -44,8 +49,6 @@ export const FilterBottomSheet = forwardRef<
   });
 
   const [dateRange, setDateRange] = useState<DateRange>({});
-
-  useImperativeHandle(ref, () => bottomSheetRef.current!, []);
 
   const [filters, setFilters] = useState<OrderFilters>({
     amount: {
@@ -63,20 +66,22 @@ export const FilterBottomSheet = forwardRef<
       snapPoints={snapPoints}
       enablePanDownToClose
       backgroundStyle={{
-        backgroundColor: theme.background.primary,
+        backgroundColor: theme.background.surface,
+        borderTopLeftRadius: radius["2xl"],
+        borderTopRightRadius: radius["2xl"],
       }}
       handleIndicatorStyle={{
         backgroundColor: theme.border.default,
       }}
     >
-      <BottomSheetView
+      {/* Header */}
+
+      <View
         style={{
-          flex: 1,
-          padding: spacing.lg,
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing.lg,
         }}
       >
-        {/* Header */}
-
         <View
           style={{
             flexDirection: "row",
@@ -88,100 +93,102 @@ export const FilterBottomSheet = forwardRef<
 
           <Pressable
             hitSlop={10}
-            onPress={() => {
-              bottomSheetRef.current?.close();
-            }}
+            onPress={() => bottomSheetRef.current?.close()}
           >
             <Ionicons name="close" size={22} color={theme.text.primary} />
           </Pressable>
         </View>
 
-        {/* Divider */}
-
         <View
           style={{
             height: 1,
             backgroundColor: theme.border.default,
-            marginVertical: spacing.lg,
+            marginTop: spacing.lg,
           }}
         />
+      </View>
 
-        {/* Content */}
+      {/* Scrollable Content */}
 
-        <View
+      <BottomSheetScrollView
+        nestedScrollEnabled
+        contentContainerStyle={{
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.lg,
+          paddingBottom: spacing.xl,
+        }}
+      >
+        <BottomSheetSection title="Amount Range">
+          <AmountRangeFilter
+            min={amountRange.min}
+            max={amountRange.max}
+            onValueChange={(min, max) =>
+              setAmountRange({
+                min,
+                max,
+              })
+            }
+          />
+        </BottomSheetSection>
+
+        <BottomSheetSection title="Date">
+          <DateRangeFilter value={dateRange} onChange={setDateRange} />
+        </BottomSheetSection>
+
+        <BottomSheetSection title="Sort By">
+          <SortByFilter
+            value={filters.sort}
+            onChange={(sort) =>
+              setFilters((previous) => ({
+                ...previous,
+                sort,
+              }))
+            }
+          />
+        </BottomSheetSection>
+      </BottomSheetScrollView>
+
+      <View
+        style={{
+          padding: spacing.lg,
+          borderTopWidth: 1,
+          borderTopColor: theme.border.default,
+          flexDirection: "row",
+          gap: spacing.md,
+          backgroundColor: theme.background.surface,
+        }}
+      >
+        <Pressable
           style={{
             flex: 1,
+            height: 48,
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.border.default,
           }}
         >
-          <BottomSheetSection title="Amount Range">
-            <AmountRangeFilter
-              min={amountRange.min}
-              max={amountRange.max}
-              onValueChange={(min, max) =>
-                setAmountRange({
-                  min,
-                  max,
-                })
-              }
-            />
-          </BottomSheetSection>
+          <AppText variant="button">Reset</AppText>
+        </Pressable>
 
-          <BottomSheetSection title="Date">
-            <DateRangeFilter value={dateRange} onChange={setDateRange} />
-          </BottomSheetSection>
-
-          <BottomSheetSection title="Sort By">
-            <SortByFilter
-              value={filters.sort}
-              onChange={(sort) =>
-                setFilters((previous) => ({
-                  ...previous,
-                  sort,
-                }))
-              }
-            />
-          </BottomSheetSection>
-        </View>
-
-        {/* Footer */}
-
-        <View
+        <Pressable
           style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            gap: spacing.md,
+            flex: 1,
+            height: 48,
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 12,
+            backgroundColor: theme.button.primary.background,
           }}
         >
-          <Pressable
-            style={{
-              flex: 1,
-              height: 48,
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: theme.border.default,
-            }}
-          >
-            <AppText variant="button">Reset</AppText>
-          </Pressable>
+          <AppText variant="button" color="inverse">
+            Apply
+          </AppText>
+        </Pressable>
+      </View>
 
-          <Pressable
-            style={{
-              flex: 1,
-              height: 48,
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: 12,
-              backgroundColor: theme.button.primary.background,
-            }}
-          >
-            <AppText variant="button" color="inverse">
-              Apply
-            </AppText>
-          </Pressable>
-        </View>
-      </BottomSheetView>
+      {/* Footer */}
     </BottomSheet>
   );
 });

@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
 
-import { spacing, theme } from "@/theme";
+import { spacing, theme, radius } from "@/theme";
 
 import { formatDate } from "@/utils/formatDate";
 
@@ -12,16 +12,25 @@ interface DateFieldProps {
   label: string;
   value?: Date;
   onPress: () => void;
+  isActive?: boolean;
 }
 
-export function DateField({ label, value, onPress }: DateFieldProps) {
+export function DateField({
+  label,
+  value,
+  onPress,
+  isActive = false,
+}: DateFieldProps) {
   return (
     <Pressable
       onPress={onPress}
       style={{
         borderWidth: 1,
-        borderColor: theme.border.default,
-        borderRadius: 12,
+        borderColor: isActive ? theme.input.focusBorder : theme.border.default,
+        backgroundColor: isActive
+          ? theme.background.brand
+          : theme.background.surface,
+        borderRadius: radius.md,
         padding: spacing.md,
       }}
     >
@@ -44,7 +53,9 @@ export function DateField({ label, value, onPress }: DateFieldProps) {
         <Ionicons
           name="calendar-outline"
           size={20}
-          color={theme.text.secondary}
+          color={
+            isActive ? theme.action.primary.background : theme.text.secondary
+          }
         />
       </View>
     </Pressable>

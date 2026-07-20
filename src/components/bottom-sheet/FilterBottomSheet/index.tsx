@@ -8,10 +8,7 @@ import {
 
 import { Pressable, View } from "react-native";
 
-import BottomSheet, {
-  BottomSheetView,
-  BottomSheetScrollView,
-} from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -21,43 +18,27 @@ import { AmountRangeFilter } from "@/components/ui/AmountRangeFilter";
 import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 import { SortByFilter } from "@/components/ui/SortByFilter";
 
-import { ScrollView } from "react-native";
+import { defaultOrderFilters } from "@/constants/defaultOrderFilters";
 
 import { radius, spacing, theme } from "@/theme";
 
-import type {
-  AmountRange,
-  DateRange,
-  OrderFilters,
-} from "@/types/orderFilters";
+import type { OrderFilters } from "@/types/orderFilters";
 
-interface FilterBottomSheetProps {}
+interface FilterBottomSheetProps {
+  draftFilters: OrderFilters;
+  setDraftFilters: React.Dispatch<React.SetStateAction<OrderFilters>>;
+  onApply: (filters: OrderFilters) => void;
+}
 
 export const FilterBottomSheet = forwardRef<
   BottomSheet,
   FilterBottomSheetProps
->(({}, ref) => {
+>(({ draftFilters, setDraftFilters, onApply }, ref) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const snapPoints = useMemo(() => ["50%", "85%"], []);
 
   useImperativeHandle(ref, () => bottomSheetRef.current!, []);
-
-  const [amountRange, setAmountRange] = useState<AmountRange>({
-    min: 0,
-    max: 250000,
-  });
-
-  const [dateRange, setDateRange] = useState<DateRange>({});
-
-  const [filters, setFilters] = useState<OrderFilters>({
-    amount: {
-      min: 0,
-      max: 250000,
-    },
-    date: {},
-    sort: "mostRecent",
-  });
 
   return (
     <BottomSheet
@@ -120,26 +101,37 @@ export const FilterBottomSheet = forwardRef<
       >
         <BottomSheetSection title="Amount Range">
           <AmountRangeFilter
-            min={amountRange.min}
-            max={amountRange.max}
+            min={draftFilters.amount.min ?? 0}
+            max={draftFilters.amount.max ?? 250000}
             onValueChange={(min, max) =>
-              setAmountRange({
-                min,
-                max,
-              })
+              setDraftFilters((previous) => ({
+                ...previous,
+                amount: {
+                  min,
+                  max,
+                },
+              }))
             }
           />
         </BottomSheetSection>
 
         <BottomSheetSection title="Date">
-          <DateRangeFilter value={dateRange} onChange={setDateRange} />
+          <DateRangeFilter
+            value={draftFilters.date}
+            onChange={(date) =>
+              setDraftFilters((previous) => ({
+                ...previous,
+                date,
+              }))
+            }
+          />
         </BottomSheetSection>
 
         <BottomSheetSection title="Sort By">
           <SortByFilter
-            value={filters.sort}
+            value={draftFilters.sort}
             onChange={(sort) =>
-              setFilters((previous) => ({
+              setDraftFilters((previous) => ({
                 ...previous,
                 sort,
               }))
@@ -159,6 +151,9 @@ export const FilterBottomSheet = forwardRef<
         }}
       >
         <Pressable
+          onPress={() => {
+            setDraftFilters(defaultOrderFilters);
+          }}
           style={{
             flex: 1,
             height: 48,
@@ -173,6 +168,10 @@ export const FilterBottomSheet = forwardRef<
         </Pressable>
 
         <Pressable
+          onPress={() => {
+            onApply(draftFilters);
+            bottomSheetRef.current?.close();
+          }}
           style={{
             flex: 1,
             height: 48,

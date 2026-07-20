@@ -33,6 +33,10 @@ import BottomSheet from "@gorhom/bottom-sheet";
 
 import { FilterBottomSheet } from "@/components/bottom-sheet/FilterBottomSheet";
 
+import type { OrderFilters } from "@/types/orderFilters";
+
+import { defaultOrderFilters } from "@/constants/defaultOrderFilters";
+
 export default function OrdersScreen() {
   const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
 
@@ -40,10 +44,16 @@ export default function OrdersScreen() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [draftFilters, setDraftFilters] =
+    useState<OrderFilters>(defaultOrderFilters);
+
+  const [appliedFilters, setAppliedFilters] =
+    useState<OrderFilters>(defaultOrderFilters);
+
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
+    const filtered = orders.filter((order) => {
       const matchesStatus =
         selectedFilter === "all" || order.status === selectedFilter;
 
@@ -55,9 +65,37 @@ export default function OrdersScreen() {
         order.customerName.toLowerCase().includes(query) ||
         order.productName.toLowerCase().includes(query);
 
-      return matchesStatus && matchesSearch;
+      const matchesAmount =
+        (appliedFilters.amount.min === undefined ||
+          order.total >= appliedFilters.amount.min) &&
+        (appliedFilters.amount.max === undefined ||
+          order.total <= appliedFilters.amount.max);
+
+      const orderDate = new Date(order.createdAt);
+
+      const matchesDate =
+        (!appliedFilters.date.start ||
+          orderDate >= appliedFilters.date.start) &&
+        (!appliedFilters.date.end || orderDate <= appliedFilters.date.end);
+
+      return matchesStatus && matchesSearch && matchesAmount && matchesDate;
     });
-  }, [orders, selectedFilter, searchQuery]);
+
+    switch (appliedFilters.sort) {
+      case "amountHighToLow":
+        return [...filtered].sort((a, b) => b.total - a.total);
+
+      case "amountLowToHigh":
+        return [...filtered].sort((a, b) => a.total - b.total);
+
+      case "mostRecent":
+      default:
+        return [...filtered].sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+    }
+  }, [orders, selectedFilter, searchQuery, appliedFilters]);
 
   if (isLoading) {
     return (
@@ -137,6 +175,7 @@ export default function OrdersScreen() {
 
               <FilterButton
                 onPress={() => {
+                  setDraftFilters(appliedFilters);
                   bottomSheetRef.current?.expand();
                 }}
               />
@@ -354,8 +393,14 @@ export default function OrdersScreen() {
           </View>
         </View>
       </SafeAreaView>
-
-      <FilterBottomSheet ref={bottomSheetRef} />
+      <FilterBottomSheet
+        ref={bottomSheetRef}
+        draftFilters={draftFilters}
+        setDraftFilters={setDraftFilters}
+        onApply={(filters) => {
+          setAppliedFilters(filters);
+        }}
+      />
     </>
   );
 }

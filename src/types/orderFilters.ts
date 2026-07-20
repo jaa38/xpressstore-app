@@ -1,6 +1,6 @@
 export interface AmountRange {
-  min: number;
-  max: number;
+  min?: number;
+  max?: number;
 }
 
 export interface DateRange {

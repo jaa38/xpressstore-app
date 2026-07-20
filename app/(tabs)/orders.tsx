@@ -52,6 +52,20 @@ export default function OrdersScreen() {
 
   const bottomSheetRef = useRef<BottomSheet>(null);
 
+  const hasActiveFilters = useMemo(() => {
+    const hasAmountFilter =
+      appliedFilters.amount.min !== undefined ||
+      appliedFilters.amount.max !== undefined;
+
+    const hasDateFilter =
+      appliedFilters.date.start !== undefined ||
+      appliedFilters.date.end !== undefined;
+
+    const hasSortFilter = appliedFilters.sort !== "mostRecent";
+
+    return hasAmountFilter || hasDateFilter || hasSortFilter;
+  }, [appliedFilters]);
+
   const filteredOrders = useMemo(() => {
     const filtered = orders.filter((order) => {
       const matchesStatus =
@@ -73,10 +87,19 @@ export default function OrdersScreen() {
 
       const orderDate = new Date(order.createdAt);
 
+      const startDate = appliedFilters.date.start;
+
+      const endDate = appliedFilters.date.end
+        ? new Date(appliedFilters.date.end)
+        : undefined;
+
+      if (endDate) {
+        endDate.setHours(23, 59, 59, 999);
+      }
+
       const matchesDate =
-        (!appliedFilters.date.start ||
-          orderDate >= appliedFilters.date.start) &&
-        (!appliedFilters.date.end || orderDate <= appliedFilters.date.end);
+        (!startDate || orderDate >= startDate) &&
+        (!endDate || orderDate <= endDate);
 
       return matchesStatus && matchesSearch && matchesAmount && matchesDate;
     });
@@ -174,6 +197,7 @@ export default function OrdersScreen() {
               </View>
 
               <FilterButton
+                active={hasActiveFilters}
                 onPress={() => {
                   setDraftFilters(appliedFilters);
                   bottomSheetRef.current?.expand();

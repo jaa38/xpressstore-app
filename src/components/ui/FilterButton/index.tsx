@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { theme } from "@/theme";
 
 interface FilterButtonProps {
+  active?: boolean;
   onPress: () => void;
 }
 

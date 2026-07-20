@@ -29,7 +29,7 @@ import { formatOrderDate } from "@/utils/formatOrderDate";
 
 import { FilterButton } from "@/components/ui/FilterButton";
 
-import BottomSheet from "@gorhom/bottom-sheet";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { FilterBottomSheet } from "@/components/bottom-sheet/FilterBottomSheet";
 
@@ -50,7 +50,7 @@ export default function OrdersScreen() {
   const [appliedFilters, setAppliedFilters] =
     useState<OrderFilters>(defaultOrderFilters);
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
 
   const hasActiveFilters = useMemo(() => {
     const hasAmountFilter =
@@ -200,7 +200,7 @@ export default function OrdersScreen() {
                 active={hasActiveFilters}
                 onPress={() => {
                   setDraftFilters(appliedFilters);
-                  bottomSheetRef.current?.expand();
+                  bottomSheetRef.current?.present();
                 }}
               />
             </View>
@@ -398,7 +398,9 @@ export default function OrdersScreen() {
                           }
                           variant="bodyLargeBold"
                         >
-                          {formatCurrency(order.total, order.currency)}
+                          {formatCurrency(order.total, {
+                            currency: order.currency,
+                          })}
                         </AppText>
 
                         <Pressable hitSlop={10}>

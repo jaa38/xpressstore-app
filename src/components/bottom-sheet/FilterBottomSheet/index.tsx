@@ -1,14 +1,19 @@
 import {
   forwardRef,
+  useCallback,
   useImperativeHandle,
   useMemo,
   useRef,
-  useState,
 } from "react";
 
 import { Pressable, View } from "react-native";
 
-import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import {
+  BottomSheetBackdrop,
+  BottomSheetBackdropProps,
+  BottomSheetModal,
+  BottomSheetScrollView,
+} from "@gorhom/bottom-sheet";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -31,21 +36,40 @@ interface FilterBottomSheetProps {
 }
 
 export const FilterBottomSheet = forwardRef<
-  BottomSheet,
+  BottomSheetModal,
   FilterBottomSheetProps
 >(({ draftFilters, setDraftFilters, onApply }, ref) => {
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
 
-  const snapPoints = useMemo(() => ["50%", "85%"], []);
+  const snapPoints = useMemo(() => ["85%"], []);
+
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior="close"
+        opacity={0.4}
+        enableTouchThrough={false}
+        accessibilityRole="button"
+        accessibilityLabel="Dismiss filter panel"
+      />
+    ),
+    []
+  );
 
   useImperativeHandle(ref, () => bottomSheetRef.current!, []);
 
   return (
-    <BottomSheet
+    <BottomSheetModal
       ref={bottomSheetRef}
-      index={-1}
       snapPoints={snapPoints}
       enablePanDownToClose
+      enableDismissOnClose
+      backdropComponent={renderBackdrop}
+      keyboardBehavior="interactive"
+      keyboardBlurBehavior="restore"
       backgroundStyle={{
         backgroundColor: theme.background.surface,
         borderTopLeftRadius: radius["2xl"],
@@ -74,7 +98,7 @@ export const FilterBottomSheet = forwardRef<
 
           <Pressable
             hitSlop={10}
-            onPress={() => bottomSheetRef.current?.close()}
+            onPress={() => bottomSheetRef.current?.dismiss()}
           >
             <Ionicons name="close" size={22} color={theme.text.primary} />
           </Pressable>
@@ -170,7 +194,7 @@ export const FilterBottomSheet = forwardRef<
         <Pressable
           onPress={() => {
             onApply(draftFilters);
-            bottomSheetRef.current?.close();
+            bottomSheetRef.current?.dismiss();
           }}
           style={{
             flex: 1,
@@ -188,7 +212,7 @@ export const FilterBottomSheet = forwardRef<
       </View>
 
       {/* Footer */}
-    </BottomSheet>
+    </BottomSheetModal>
   );
 });
 

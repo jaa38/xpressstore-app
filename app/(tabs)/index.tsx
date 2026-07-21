@@ -235,38 +235,74 @@ export default function HomeScreen() {
                 marginTop: spacing.md,
               }}
             >
-              <Card
-                variant="default"
-                style={{
-                  flex: 1,
-
-                  flexDirection: "row",
-
-                  alignItems: "center",
-
-                  justifyContent: "center",
-
-                  gap: spacing.sm,
+              <Pressable
+                onPress={() => {
+                  // Handle Payment Link
                 }}
+                style={({ pressed }) => [
+                  {
+                    flex: 1,
+
+                    flexDirection: "row",
+
+                    alignItems: "center",
+
+                    justifyContent: "center",
+
+                    gap: spacing.sm,
+
+                    paddingHorizontal: spacing.md,
+
+                    paddingVertical: spacing.md,
+
+                    borderWidth: 1,
+
+                    borderRadius: radius.md,
+
+                    backgroundColor: theme.card.default.background,
+
+                    borderColor: theme.card.default.border,
+
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
               >
                 <Ionicons name="link" size={24} color={theme.text.primary} />
 
                 <AppText variant="button">Payment Link</AppText>
-              </Card>
+              </Pressable>
 
-              <Card
-                variant="default"
-                style={{
-                  flex: 1,
-
-                  flexDirection: "row",
-
-                  alignItems: "center",
-
-                  justifyContent: "center",
-
-                  gap: spacing.sm,
+              <Pressable
+                onPress={() => {
+                  // Handle Storefront
                 }}
+                style={({ pressed }) => [
+                  {
+                    flex: 1,
+
+                    flexDirection: "row",
+
+                    alignItems: "center",
+
+                    justifyContent: "center",
+
+                    gap: spacing.sm,
+
+                    paddingHorizontal: spacing.md,
+
+                    paddingVertical: spacing.md,
+
+                    borderWidth: 1,
+
+                    borderRadius: radius.md,
+
+                    backgroundColor: theme.card.default.background,
+
+                    borderColor: theme.card.default.border,
+
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
               >
                 <Ionicons
                   name="storefront-outline"
@@ -275,7 +311,7 @@ export default function HomeScreen() {
                 />
 
                 <AppText variant="button">Storefront</AppText>
-              </Card>
+              </Pressable>
             </View>
           </View>
 

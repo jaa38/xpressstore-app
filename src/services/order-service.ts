@@ -1,20 +1,21 @@
 import type { Order } from "@/types/order";
 import { supabase } from "./supabase/client";
 
-// For supabase
+// For Supabase
 
 // export async function getOrders(): Promise<Order[]> {
 //   const { data, error } = await supabase
 //     .from("orders")
 //     .select("*");
-// .order("created_at", { ascending: false });
+//     // .order("created_at", { ascending: false });
 
 //   if (error) throw error;
 
 //   return data;
 // }
 
-// For testing purposes, we can return a static list of orders. In a real application, you would fetch this data from your backend or database.
+// For testing purposes, we can return a static list of orders.
+// In a real application, you would fetch this data from your backend or database.
 
 export async function getOrders(): Promise<Order[]> {
   const orders: Order[] = [
@@ -24,8 +25,6 @@ export async function getOrders(): Promise<Order[]> {
       customerName: "Nancy Drew",
 
       image: "",
-      productName: "Ankara Tote Bag",
-      itemCount: 2,
 
       items: [
         {
@@ -52,8 +51,6 @@ export async function getOrders(): Promise<Order[]> {
       customerName: "John Smith",
 
       image: "",
-      productName: "Sneakers",
-      itemCount: 1,
 
       items: [
         {
@@ -80,8 +77,6 @@ export async function getOrders(): Promise<Order[]> {
       customerName: "Sarah Johnson",
 
       image: "",
-      productName: "Backpack",
-      itemCount: 3,
 
       items: [
         {
@@ -108,8 +103,6 @@ export async function getOrders(): Promise<Order[]> {
       customerName: "Michael Brown",
 
       image: "",
-      productName: "Office Chair",
-      itemCount: 5,
 
       items: [
         {

@@ -39,7 +39,6 @@ import { defaultOrderFilters } from "@/constants/defaultOrderFilters";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 
-
 export default function OrdersScreen() {
   const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
 
@@ -80,7 +79,9 @@ export default function OrdersScreen() {
         query === "" ||
         order.reference.toLowerCase().includes(query) ||
         order.customerName.toLowerCase().includes(query) ||
-        order.productName.toLowerCase().includes(query);
+        order.items.some((item) =>
+          item.productName.toLowerCase().includes(query)
+        );
 
       const matchesAmount =
         (appliedFilters.amount.min === undefined ||
@@ -306,6 +307,15 @@ export default function OrdersScreen() {
                 const status =
                   order.status !== "paid" ? ORDER_STATUS[order.status] : null;
 
+                const firstItem = order.items.at(0);
+
+                const productName = firstItem?.productName ?? "Unknown Product";
+
+                const totalItems = order.items.reduce(
+                  (total, item) => total + item.quantity,
+                  0
+                );
+
                 return (
                   <Card>
                     <View
@@ -362,9 +372,8 @@ export default function OrdersScreen() {
                           color="secondary"
                           numberOfLines={1}
                         >
-                          {order.itemCount} item
-                          {order.itemCount === 1 ? "" : "s"} •{" "}
-                          {order.productName}
+                          {totalItems} item
+                          {totalItems === 1 ? "" : "s"} • {productName}
                         </AppText>
                       </View>
 

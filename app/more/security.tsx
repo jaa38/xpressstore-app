@@ -1,10 +1,8 @@
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
-import { Card } from "@/components/ui/Card";
 
 import { spacing, theme } from "@/theme";
 
@@ -21,38 +19,22 @@ export default function SecurityScreen() {
       <View
         style={{
           flex: 1,
-          padding: spacing.lg,
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing.md,
         }}
       >
-        <Card
-          style={{
-            alignItems: "center",
-            paddingVertical: spacing.xl,
-          }}
+        <AppText variant="h1">
+          Security
+        </AppText>
+
+        <AppText
+          variant="body"
+          color="secondary"
         >
-          <Ionicons
-            name="shield-checkmark-outline"
-            size={48}
-            color={theme.icon.branding.icon}
-          />
+          Manage your password, PIN and account security settings.
+        </AppText>
 
-          <AppText
-            variant="h3"
-            style={{ marginTop: spacing.md }}
-          >
-            Security
-          </AppText>
-
-          <AppText
-            color="secondary"
-            style={{
-              textAlign: "center",
-              marginTop: spacing.sm,
-            }}
-          >
-            Update your password, PIN and security preferences.
-          </AppText>
-        </Card>
+        {/* Screen content */}
       </View>
     </SafeAreaView>
   );

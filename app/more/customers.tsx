@@ -1,10 +1,8 @@
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
-import { Card } from "@/components/ui/Card";
 
 import { spacing, theme } from "@/theme";
 
@@ -21,38 +19,22 @@ export default function CustomersScreen() {
       <View
         style={{
           flex: 1,
-          padding: spacing.lg,
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing.md,
         }}
       >
-        <Card
-          style={{
-            alignItems: "center",
-            paddingVertical: spacing.xl,
-          }}
+        <AppText variant="h1">
+          Customers
+        </AppText>
+
+        <AppText
+          variant="body"
+          color="secondary"
         >
-          <Ionicons
-            name="people-outline"
-            size={48}
-            color={theme.icon.branding.icon}
-          />
+          View and manage your customer records.
+        </AppText>
 
-          <AppText
-            variant="h3"
-            style={{ marginTop: spacing.md }}
-          >
-            Customers
-          </AppText>
-
-          <AppText
-            color="secondary"
-            style={{
-              textAlign: "center",
-              marginTop: spacing.sm,
-            }}
-          >
-            Manage customer profiles and view purchase history.
-          </AppText>
-        </Card>
+        {/* Screen content */}
       </View>
     </SafeAreaView>
   );

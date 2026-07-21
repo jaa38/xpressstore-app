@@ -5,20 +5,7 @@ export default function MoreLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: true,
-        headerShadowVisible: false,
-        headerBackButtonDisplayMode: "minimal",
-
-        headerStyle: {
-          backgroundColor: theme.background.primary,
-        },
-
-        headerTintColor: theme.text.primary,
-
-        headerTitleStyle: {
-          ...typography.navigationTitle,
-          color: theme.text.primary,
-        },
+        headerShown: false,
 
         contentStyle: {
           backgroundColor: theme.background.primary,

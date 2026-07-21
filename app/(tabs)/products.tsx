@@ -114,7 +114,9 @@ function ProductCard({
             }}
           >
             <AppText variant="bodyBold" color="warning">
-              {formatCurrency(product.price, product.currency)}
+              {formatCurrency(product.price, {
+                currency: product.currency,
+              })}
             </AppText>
 
             {/* <AppText>•</AppText> */}

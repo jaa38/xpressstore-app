@@ -20,7 +20,7 @@ export function ProductImage({
       source={
         image?.trim()
           ? { uri: image }
-          : require("../../assets/images/ankara-tote-bag.png")
+          : require("../../../../assets/images/ankara-tote-bag.png")
       }
       resizeMode="cover"
       style={[

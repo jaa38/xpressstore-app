@@ -1,49 +1,47 @@
 import { Stack } from "expo-router";
-import { theme, typography } from "@/theme";
 
 export default function MoreLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
+    <Stack>
+      <Stack.Screen
+        name="index"
+        options={{
+          headerShown: false,
+        }}
+      />
 
-        contentStyle: {
-          backgroundColor: theme.background.primary,
-        },
-      }}
-    >
       <Stack.Screen
         name="payment-link"
         options={{
-          title: "Payment Links",
+          headerShown: false,
         }}
       />
 
       <Stack.Screen
         name="business"
         options={{
-          title: "Business",
+          headerShown: false,
         }}
       />
 
       <Stack.Screen
         name="settlements"
         options={{
-          title: "Settlements",
+          headerShown: false,
         }}
       />
 
       <Stack.Screen
         name="customers"
         options={{
-          title: "Customers",
+          headerShown: false,
         }}
       />
 
       <Stack.Screen
         name="security"
         options={{
-          title: "Security",
+          headerShown: false,
         }}
       />
     </Stack>

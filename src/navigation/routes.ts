@@ -1,90 +1,97 @@
 export const ROUTES = {
   /**
-   * APP
+   * SPLASH
    */
-
   SPLASH: "/",
 
   /**
    * ONBOARDING
    */
-
   WELCOME: "/(onboarding)/welcome",
 
-  // STEP 1
+  // Step 1
   SIGNUP: "/(onboarding)/signup",
-
   EMAIL_VERIFICATION: "/(onboarding)/email-verification",
 
-  // STEP 2
+  // Step 2
   BUSINESS_DETAILS: "/(onboarding)/business-details",
 
-  // STEP 3
+  // Step 3
   ID_VERIFICATION: "/(onboarding)/id-verification",
 
-  // STEP 4
+  // Step 4
   BIOMETRIC_VERIFICATION: "/(onboarding)/biometric-verification",
 
   /**
    * AUTH
    */
-
   LOGIN: "/(auth)/login",
 
   /**
    * PASSWORD RECOVERY
    */
 
-  // STEP 1
+  // Step 1
   FORGOT_PASSWORD: "/(password-recovery)/forgot-password",
 
-  // STEP 2
+  // Step 2
   RESET_PASSWORD: "/(password-recovery)/reset-password",
 
-  // STEP 3
+  // Step 3
   VERIFY_OTP: "/(password-recovery)/verify-otp",
 
-  // STEP 4
+  // Step 4
   NEW_PASSWORD: "/(password-recovery)/new-password",
 
   /**
-   * APP
+   * MAIN APP
    */
-
   TABS: "/(tabs)",
 
-  HOME: "/(tabs)/home",
+  HOME: "/(tabs)",
+
+  STORE: "/(tabs)/store",
+
+  ORDERS: "/(tabs)/orders",
 
   PRODUCTS: "/(tabs)/products",
 
-    /**
+  MORE: "/(tabs)/more",
+
+  /**
+   * MORE
+   */
+  PAYMENT_LINKS: "/(tabs)/more/payment-link",
+
+  BUSINESS: "/(tabs)/more/business",
+
+  SETTLEMENTS: "/(tabs)/more/settlements",
+
+  CUSTOMERS: "/(tabs)/more/customers",
+
+  SECURITY: "/(tabs)/more/security",
+
+  /**
    * PRODUCTS
    */
 
   PRODUCT_DETAILS: "/product/[id]",
 
-  // STEP 1
+  // Step 1
   ADD_PRODUCT_INFO: "/product/add/info",
 
-  // STEP 2
+  // Step 2
   ADD_PRODUCT_PRICING: "/product/add/pricing",
 
-  // STEP 3
+  // Step 3
   ADD_PRODUCT_VARIANTS: "/product/add/variants",
 
-  // STEP 4
+  // Step 4
   ADD_PRODUCT_STOREFRONT: "/product/add/storefront",
 
-  // STEP 5
+  // Step 5
   ADD_PRODUCT_REVIEW: "/product/add/review",
-
-  ORDERS: "/(tabs)/orders",
-
-  STORE: "/(tabs)/store",
-
-  MORE: "/(tabs)/more",
 } as const;
-
 
 export const getProductDetailsRoute = (id: string) =>
   `/product/${id}` as const;

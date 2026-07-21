@@ -326,10 +326,22 @@ export default function OrdersScreen() {
                   ? productsById[firstItem.productId]
                   : undefined;
 
-                const productName =
-                  product?.productName ??
-                  firstItem?.productName ??
-                  "Unknown Product";
+                const productSummary = (() => {
+                  if (!firstItem) {
+                    return "Unknown Product";
+                  }
+
+                  const firstProductName =
+                    product?.productName ?? firstItem.productName;
+
+                  const additionalProducts = order.items.length - 1;
+
+                  if (additionalProducts <= 0) {
+                    return firstProductName;
+                  }
+
+                  return `${firstProductName} +${additionalProducts} more`;
+                })();
 
                 return (
                   <Card>
@@ -387,7 +399,7 @@ export default function OrdersScreen() {
                           numberOfLines={1}
                         >
                           {totalItems} item
-                          {totalItems === 1 ? "" : "s"} • {productName}
+                          {totalItems === 1 ? "" : "s"} • {productSummary}
                         </AppText>
                       </View>
 

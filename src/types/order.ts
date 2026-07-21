@@ -15,8 +15,6 @@ export interface Order {
 
   customerName: string;
 
-  image: string;
-
   total: number;
 
   currency: Currency;

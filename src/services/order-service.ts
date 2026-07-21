@@ -24,8 +24,6 @@ export async function getOrders(): Promise<Order[]> {
       reference: "XP-12345",
       customerName: "Nancy Drew",
 
-      image: "",
-
       items: [
         {
           productId: "product-1",
@@ -49,8 +47,6 @@ export async function getOrders(): Promise<Order[]> {
       id: "2",
       reference: "XP-12346",
       customerName: "John Smith",
-
-      image: "",
 
       items: [
         {
@@ -76,8 +72,6 @@ export async function getOrders(): Promise<Order[]> {
       reference: "XP-12347",
       customerName: "Sarah Johnson",
 
-      image: "",
-
       items: [
         {
           productId: "product-3",
@@ -101,8 +95,6 @@ export async function getOrders(): Promise<Order[]> {
       id: "4",
       reference: "XP-12348",
       customerName: "Michael Brown",
-
-      image: "",
 
       items: [
         {

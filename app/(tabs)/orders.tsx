@@ -1,4 +1,4 @@
-import { View, Pressable, Image, FlatList, RefreshControl } from "react-native";
+import { View, Pressable, FlatList, RefreshControl } from "react-native";
 
 import { useMemo, useRef, useState } from "react";
 
@@ -39,8 +39,12 @@ import { defaultOrderFilters } from "@/constants/defaultOrderFilters";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 
+import { useProducts } from "@/hooks/useProducts";
+
 export default function OrdersScreen() {
   const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
+
+  const { data: products = [] } = useProducts();
 
   const [selectedFilter, setSelectedFilter] = useState<OrderFilter>("all");
 
@@ -123,6 +127,10 @@ export default function OrdersScreen() {
         );
     }
   }, [orders, selectedFilter, searchQuery, appliedFilters]);
+
+  const productsById = useMemo(() => {
+    return Object.fromEntries(products.map((product) => [product.id, product]));
+  }, [products]);
 
   if (isLoading) {
     return (
@@ -307,14 +315,21 @@ export default function OrdersScreen() {
                 const status =
                   order.status !== "paid" ? ORDER_STATUS[order.status] : null;
 
-                const firstItem = order.items.at(0);
-
-                const productName = firstItem?.productName ?? "Unknown Product";
+                const firstItem = order.items[0];
 
                 const totalItems = order.items.reduce(
                   (total, item) => total + item.quantity,
                   0
                 );
+
+                const product = firstItem
+                  ? productsById[firstItem.productId]
+                  : undefined;
+
+                const productName =
+                  product?.productName ??
+                  firstItem?.productName ??
+                  "Unknown Product";
 
                 return (
                   <Card>
@@ -327,8 +342,7 @@ export default function OrdersScreen() {
                     >
                       {/* IMAGE */}
 
-                      <ProductImage image={order.image} />
-
+                      <ProductImage image={product?.image ?? ""} />
                       {/* ORDER INFO */}
 
                       <View

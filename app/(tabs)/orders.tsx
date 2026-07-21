@@ -37,6 +37,9 @@ import type { OrderFilters } from "@/types/orderFilters";
 
 import { defaultOrderFilters } from "@/constants/defaultOrderFilters";
 
+import { ProductImage } from "@/components/ui/ProductImage";
+
+
 export default function OrdersScreen() {
   const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
 
@@ -314,19 +317,7 @@ export default function OrdersScreen() {
                     >
                       {/* IMAGE */}
 
-                      <Image
-                        source={
-                          order.image?.trim()
-                            ? { uri: order.image }
-                            : require("../../assets/images/ankara-tote-bag.png")
-                        }
-                        resizeMode="cover"
-                        style={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: 12,
-                        }}
-                      />
+                      <ProductImage image={order.image} />
 
                       {/* ORDER INFO */}
 

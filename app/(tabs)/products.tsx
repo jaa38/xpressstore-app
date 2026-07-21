@@ -36,6 +36,8 @@ import type { Product } from "@/types/product";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
 import { formatCurrency } from "@/utils/formatCurrency";
+import { ProductImage } from "@/components/ui/ProductImage";
+import OrdersScreen from "./orders";
 
 function RightActions({ onDelete }: { onDelete: () => void }) {
   return (
@@ -87,20 +89,7 @@ function ProductCard({
           borderColor: theme.border.default,
         }}
       >
-        <Image
-          source={
-            product.image?.trim()
-              ? { uri: product.image }
-              : require("../../assets/images/ankara-tote-bag.png")
-          }
-          resizeMode="cover"
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: radius.xs,
-          }}
-        />
-
+        <ProductImage image={product.image} />
         <View
           style={{
             flex: 1,

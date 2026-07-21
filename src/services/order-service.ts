@@ -22,50 +22,109 @@ export async function getOrders(): Promise<Order[]> {
       id: "1",
       reference: "XP-12345",
       customerName: "Nancy Drew",
+
       image: "",
+      productName: "Ankara Tote Bag",
+      itemCount: 2,
+
+      items: [
+        {
+          productId: "product-1",
+          productName: "Ankara Tote Bag",
+          quantity: 2,
+          unitPrice: 10,
+          subtotal: 20,
+          currency: "USD",
+        },
+      ],
+
       total: 20,
       currency: "USD",
-      itemCount: 2,
-      productName: "Ankara Tote Bag",
+
       paymentChannel: "card",
       status: "paid",
       createdAt: "2026-07-17T10:24:00Z",
     },
+
     {
       id: "2",
       reference: "XP-12346",
       customerName: "John Smith",
+
       image: "",
+      productName: "Sneakers",
+      itemCount: 1,
+
+      items: [
+        {
+          productId: "product-2",
+          productName: "Sneakers",
+          quantity: 1,
+          unitPrice: 45,
+          subtotal: 45,
+          currency: "USD",
+        },
+      ],
+
       total: 45,
       currency: "USD",
-      itemCount: 1,
-      productName: "Sneakers",
+
       paymentChannel: "bankTransfer",
       status: "returned",
       createdAt: "2026-07-17T09:40:00Z",
     },
+
     {
       id: "3",
       reference: "XP-12347",
       customerName: "Sarah Johnson",
+
       image: "",
+      productName: "Backpack",
+      itemCount: 3,
+
+      items: [
+        {
+          productId: "product-3",
+          productName: "Backpack",
+          quantity: 3,
+          unitPrice: 6,
+          subtotal: 18,
+          currency: "USD",
+        },
+      ],
+
       total: 18,
       currency: "USD",
-      itemCount: 3,
-      productName: "Backpack",
+
       paymentChannel: "bank",
       status: "failed",
       createdAt: "2026-07-16T17:05:00Z",
     },
+
     {
       id: "4",
       reference: "XP-12348",
       customerName: "Michael Brown",
+
       image: "",
+      productName: "Office Chair",
+      itemCount: 5,
+
+      items: [
+        {
+          productId: "product-4",
+          productName: "Office Chair",
+          quantity: 5,
+          unitPrice: 12,
+          subtotal: 60,
+          currency: "USD",
+        },
+      ],
+
       total: 60,
       currency: "USD",
-      itemCount: 5,
-      productName: "Office Chair",
+
       paymentChannel: "nqr",
       status: "delivered",
       createdAt: "2026-07-16T14:30:00Z",

@@ -273,31 +273,22 @@ export default function HomeScreen() {
               </Pressable>
 
               <Pressable
-                onPress={() => {
-                  // Handle Storefront
-                }}
+                onPress={() => router.push("/store")}
                 style={({ pressed }) => [
                   {
                     flex: 1,
-
                     flexDirection: "row",
-
                     alignItems: "center",
-
                     justifyContent: "center",
-
                     gap: spacing.sm,
 
                     paddingHorizontal: spacing.md,
-
                     paddingVertical: spacing.md,
 
                     borderWidth: 1,
-
                     borderRadius: radius.md,
 
                     backgroundColor: theme.card.default.background,
-
                     borderColor: theme.card.default.border,
 
                     opacity: pressed ? 0.8 : 1,

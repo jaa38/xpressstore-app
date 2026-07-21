@@ -40,6 +40,7 @@ import { defaultOrderFilters } from "@/constants/defaultOrderFilters";
 import { ProductImage } from "@/components/ui/ProductImage";
 
 import { useProducts } from "@/hooks/useProducts";
+import { Order } from "@/types/order";
 
 export default function OrdersScreen() {
   const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
@@ -131,6 +132,12 @@ export default function OrdersScreen() {
   const productsById = useMemo(() => {
     return Object.fromEntries(products.map((product) => [product.id, product]));
   }, [products]);
+
+  const [selectedOrder, setSelectedOrder] =
+  useState<Order | null>(null);
+
+  const orderSummaryBottomSheetRef =
+  useRef<BottomSheetModal>(null);
 
   if (isLoading) {
     return (
@@ -429,7 +436,13 @@ export default function OrdersScreen() {
                           })}
                         </AppText>
 
-                        <Pressable hitSlop={10}>
+                        <Pressable
+                          hitSlop={10}
+                          onPress={() => {
+                            setSelectedOrder(order);
+                            orderSummaryBottomSheetRef.current?.present();
+                          }}
+                        >
                           <Ionicons
                             name="ellipsis-horizontal"
                             size={20}

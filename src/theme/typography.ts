@@ -45,6 +45,16 @@ export const typography = {
   } as TextStyle,
 
   /**
+   * 🧭 NAVIGATION
+   */
+  navigationTitle: {
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "600",
+    letterSpacing: -0.2,
+  } as TextStyle,
+
+  /**
    * 📄 BODY TEXT
    */
   bodyLarge: {

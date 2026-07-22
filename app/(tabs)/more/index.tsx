@@ -83,6 +83,7 @@ export default function MoreScreen() {
           </View>
         </Card>
 
+        {/* Business */}
         <View style={{ marginTop: spacing.lg, gap: spacing.md }}>
           <View style={{ flexDirection: "column", gap: spacing.sm }}>
             <AppText variant="bodyBold" color="muted">
@@ -90,7 +91,7 @@ export default function MoreScreen() {
             </AppText>
 
             <Card style={{ flexDirection: "column", gap: spacing.rg }}>
-              {/* Business */}
+              {/* Business Screen */}
               <View style={{ flexDirection: "row", gap: spacing.md }}>
                 <Ionicons name="business-outline" size={24} />
 
@@ -132,25 +133,51 @@ export default function MoreScreen() {
             </Card>
           </View>
 
+          {/* Account */}
           <View style={{ flexDirection: "column", gap: spacing.sm }}>
             <AppText variant="bodyBold" color="muted">
               Account
             </AppText>
 
-            <Card style={{ flexDirection: "column" }}>
+            <Card style={{ flexDirection: "column", gap: spacing.rg }}>
               {/* Security */}
-              <View>
+              <View style={{ flexDirection: "row", gap: spacing.md }}>
                 <Ionicons name="shield-checkmark-outline" size={24} />
+
+                <View>
+                  <AppText variant="bodyBold">Security</AppText>
+                  <AppText variant="bodySmall" color="muted">
+                    Change your password
+                  </AppText>
+                </View>
               </View>
+
+              <Divider />
 
               {/* Notifications */}
-              <View>
-                <Ionicons name="notifications-circle" size={24} />
+              <View style={{ flexDirection: "row", gap: spacing.md }}>
+                <Ionicons name="notifications-outline" size={24} />
+
+                <View>
+                  <AppText variant="bodyBold">Notifications</AppText>
+                  <AppText variant="bodySmall" color="muted">
+                    Change your notifications
+                  </AppText>
+                </View>
               </View>
 
+              <Divider />
+
               {/* Setting */}
-              <View>
+              <View style={{ flexDirection: "row", gap: spacing.md }}>
                 <Ionicons name="settings-outline" size={24} />
+
+                <View>
+                  <AppText variant="bodyBold">Settings</AppText>
+                  <AppText variant="bodySmall" color="muted">
+                    Change your settings
+                  </AppText>
+                </View>
               </View>
             </Card>
           </View>
@@ -160,15 +187,31 @@ export default function MoreScreen() {
               Support
             </AppText>
 
-            <Card>
+            <Card style={{ flexDirection: "column", gap: spacing.rg }}>
               {/* Support */}
-              <View>
-                <Ionicons name="help-circle-outline" />
+              <View style={{ flexDirection: "row", gap: spacing.sm }}>
+                <Ionicons name="help-circle-outline" size={24} />
+
+                <View>
+                  <AppText variant="bodyBold">Settings</AppText>
+                  <AppText variant="bodySmall" color="muted">
+                    Change your settings
+                  </AppText>
+                </View>
               </View>
 
+              <Divider />
+
               {/* About */}
-              <View>
+              <View style={{ flexDirection: "row", gap: spacing.sm }}>
                 <Ionicons name="information-circle-outline" size={24} />
+
+                <View>
+                  <AppText variant="bodyBold">About</AppText>
+                  <AppText variant="bodySmall" color="muted">
+                    About You
+                  </AppText>
+                </View>
               </View>
             </Card>
           </View>

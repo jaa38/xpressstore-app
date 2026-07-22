@@ -28,14 +28,18 @@ export type Color =
   | "heading"
   | "strong"
   | "secondary"
+  | "label"
   | "muted"
+  | "placeholder"
   | "inverse"
-  | "link"
+  | "brand"
+  | "accent"
   | "success"
   | "error"
   | "warning"
   | "info"
-  | "returned";
+  | "returned"
+  | "link";
 
 interface AppTextProps extends TextProps {
   variant?: Variant;
@@ -55,13 +59,11 @@ export function AppText({
     <Text
       style={[
         typography[variant],
-
         {
           color: theme.text[color],
           textAlign: align,
           fontFamily: fonts.primary,
         },
-
         style,
       ]}
       {...props}

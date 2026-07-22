@@ -71,6 +71,14 @@ export const ROUTES = {
 
   SECURITY: "/(tabs)/more/security",
 
+  NOTIFICATIONS: "/(tabs)/more/notifications",
+
+  SETTINGS: "/(tabs)/more/settings",
+
+  SUPPORT: "/(tabs)/more/support",
+
+  ABOUT: "/(tabs)/more/about",
+
   /**
    * PRODUCTS
    */
@@ -93,5 +101,4 @@ export const ROUTES = {
   ADD_PRODUCT_REVIEW: "/product/add/review",
 } as const;
 
-export const getProductDetailsRoute = (id: string) =>
-  `/product/${id}` as const;
+export const getProductDetailsRoute = (id: string) => `/product/${id}` as const;

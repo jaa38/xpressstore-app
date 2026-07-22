@@ -423,15 +423,7 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
 
-        <View
-          style={{
-            paddingBottom: spacing.lg,
 
-            paddingTop: spacing.md,
-          }}
-        >
-          <Button title="Logout" variant="primary" onPress={handleLogout} />
-        </View>
       </View>
     </SafeAreaView>
   );

@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Pressable,
   Text,
@@ -6,13 +7,15 @@ import {
   TextStyle,
 } from "react-native";
 
-import { colors } from "@/theme/colors";
-
+import { theme } from "@/theme";
 import { typography } from "@/theme/typography";
-
 import { radius } from "@/theme/radius";
 
-type ButtonVariant = "primary" | "secondary" | "tertiary";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "tertiary"
+  | "tertiaryDestructive";
 
 type ButtonSize = "large" | "medium" | "small";
 
@@ -39,31 +42,22 @@ interface ButtonProps {
 const BUTTON_SIZES = {
   large: {
     height: 56,
-
     paddingVertical: 16,
-
     paddingHorizontal: 20,
-
     textStyle: typography.buttonLarge,
   },
 
   medium: {
     height: 48,
-
     paddingVertical: 12,
-
     paddingHorizontal: 16,
-
     textStyle: typography.button,
   },
 
   small: {
     height: 40,
-
     paddingVertical: 8,
-
     paddingHorizontal: 12,
-
     textStyle: typography.buttonSmall,
   },
 };
@@ -74,85 +68,93 @@ function getVariantStyles({
   disabled,
 }: {
   variant: ButtonVariant;
-
   pressed: boolean;
-
   disabled: boolean;
 }): ViewStyle {
   /**
-   * DISABLED
+   * Disabled
    */
-
   if (disabled) {
     return {
-      backgroundColor: colors.gray[300],
+      backgroundColor: theme.action.primary.disabled,
 
-      borderWidth: variant === "tertiary" ? 1 : 0,
+      borderWidth:
+        variant === "tertiary" || variant === "tertiaryDestructive" ? 1 : 0,
 
-      borderColor: variant === "tertiary" ? colors.gray[300] : "transparent",
+      borderColor:
+        variant === "tertiary"
+          ? theme.action.tertiary.border
+          : variant === "tertiaryDestructive"
+            ? theme.action.tertiaryDestructive.border
+            : "transparent",
     };
   }
 
-  /**
-   * PRIMARY
-   */
+  switch (variant) {
+    case "primary":
+      return {
+        backgroundColor: pressed
+          ? theme.action.primary.pressed
+          : theme.action.primary.background,
+      };
 
-  if (variant === "primary") {
-    return {
-      backgroundColor: pressed ? colors.primary[700] : colors.primary[500],
-    };
+    case "secondary":
+      return {
+        backgroundColor: pressed
+          ? theme.action.secondary.pressed
+          : theme.action.secondary.background,
+      };
+
+    case "tertiary":
+      return {
+        backgroundColor: pressed
+          ? theme.action.tertiary.pressed
+          : theme.action.tertiary.background,
+
+        borderWidth: 1,
+        borderColor: theme.action.tertiary.border,
+      };
+
+    case "tertiaryDestructive":
+      return {
+        backgroundColor: pressed
+          ? theme.action.tertiaryDestructive.pressed
+          : theme.action.tertiaryDestructive.background,
+
+        borderWidth: 1,
+        borderColor: theme.action.tertiaryDestructive.border,
+      };
   }
-
-  /**
-   * SECONDARY
-   */
-
-  if (variant === "secondary") {
-    return {
-      backgroundColor: pressed ? colors.secondary[700] : colors.secondary[500],
-    };
-  }
-
-  /**
-   * TERTIARY
-   */
-
-  return {
-    backgroundColor: colors.neutral.white,
-
-    borderWidth: 1,
-
-    borderColor: colors.gray[300],
-  };
 }
 
 function getTextColor(variant: ButtonVariant, disabled: boolean): string {
   if (disabled) {
-    return colors.neutral.white;
+    return theme.action.primary.disabledText;
   }
 
-  if (variant === "tertiary") {
-    return colors.primary[500];
-  }
+  switch (variant) {
+    case "primary":
+      return theme.action.primary.text;
 
-  return colors.neutral.white;
+    case "secondary":
+      return theme.action.secondary.text;
+
+    case "tertiary":
+      return theme.action.tertiary.text;
+
+    case "tertiaryDestructive":
+      return theme.action.tertiaryDestructive.text;
+  }
 }
 
 export function Button({
   title,
-
   variant = "primary",
-
   size = "medium",
-
   disabled = false,
-
   loading = false,
-
   onPress,
-
   style,
-
   leftIcon,
   rightIcon,
 }: ButtonProps) {
@@ -174,16 +176,13 @@ export function Button({
           height: sizeStyles.height,
 
           paddingVertical: sizeStyles.paddingVertical,
-
           paddingHorizontal: sizeStyles.paddingHorizontal,
 
           borderRadius: radius.md,
 
-          alignItems: "center",
-
-          justifyContent: "center",
-
           flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
         },
 
         getVariantStyles({
@@ -210,8 +209,7 @@ export function Button({
               {
                 color: getTextColor(variant, disabled),
                 fontFamily: typography.fontFamily,
-
-                marginHorizontal: 6,
+                marginHorizontal: leftIcon || rightIcon ? 6 : 0,
               } as TextStyle,
             ]}
           >

@@ -1,4 +1,4 @@
-import { View, ScrollView } from "react-native";
+import { View, ScrollView, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 
 import { clearSession } from "@/features/auth/services/session";
 import { router } from "expo-router";
+import { ROUTES } from "@/navigation/routes";
 import { Alert } from "react-native";
 import { useAuthStore } from "@/features/auth/store/auth-store";
 import { Divider } from "@/components/ui/Divider";
@@ -49,16 +50,34 @@ export default function MoreScreen() {
         <AppText variant="h1">Profile</AppText>
 
         <AppText variant="body" color="secondary">
-          Your profile your choice
+          Manage your business and account
         </AppText>
 
         {/* Screen content */}
-        <Card style={{ marginTop: spacing.md, flexDirection: "row" }}>
-          <Ionicons name="man" size={48} />
-          <View style={{ flexDirection: "column", gap: spacing.xs }}>
+        <Card
+          style={{
+            marginTop: spacing.md,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: spacing.md,
+          }}
+        >
+          <Ionicons
+            name="person-circle"
+            size={56}
+            color={theme.icon.default.icon}
+          />
+
+          <View
+            style={{
+              flex: 1,
+              gap: spacing.xs,
+            }}
+          >
             <AppText variant="h3">Merchant Name</AppText>
+
             <AppText variant="bodySmall" color="muted">
-              Site URL
+              siteurl.xpressstore.com
             </AppText>
 
             <UICard title="Pro Merchant" variant="status" />
@@ -69,18 +88,23 @@ export default function MoreScreen() {
           style={{
             marginTop: spacing.md,
             flexDirection: "row",
+            alignItems: "center",
             justifyContent: "space-between",
           }}
         >
-          <View style={{ flexDirection: "column" }}>
+          <View
+            style={{
+              flex: 1,
+            }}
+          >
             <AppText variant="label" color="muted">
               Available to withdraw
             </AppText>
+
             <AppText variant="h1">₦248,750</AppText>
           </View>
-          <View>
-            <Button style={{ alignSelf: "center" }} title="Withdraw" />
-          </View>
+
+          <Button title="Withdraw" />
         </Card>
 
         {/* Business */}
@@ -90,46 +114,105 @@ export default function MoreScreen() {
               Business
             </AppText>
 
-            <Card style={{ flexDirection: "column", gap: spacing.rg }}>
-              {/* Business Screen */}
-              <View style={{ flexDirection: "row", gap: spacing.md }}>
-                <Ionicons name="business-outline" size={24} />
+            {/* Business Information */}
+            <Card
+              style={{
+                gap: spacing.rg,
+              }}
+            >
+              {/* Business */}
+              <Pressable
+                onPress={() => router.push(ROUTES.BUSINESS)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="business-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
 
-                <View>
+                <View style={{ flex: 1 }}>
                   <AppText variant="bodyBold">Business Information</AppText>
+
                   <AppText variant="bodySmall" color="muted">
-                    Your store
+                    Manage your business profile
                   </AppText>
                 </View>
-              </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
 
               <Divider />
 
               {/* Customers */}
-              <View style={{ flexDirection: "row", gap: spacing.md }}>
-                <Ionicons name="people-outline" size={24} />
+              <Pressable
+                onPress={() => router.push(ROUTES.CUSTOMERS)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="people-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
 
-                <View>
+                <View style={{ flex: 1 }}>
                   <AppText variant="bodyBold">Customers</AppText>
+
                   <AppText variant="bodySmall" color="muted">
-                    Customer information
+                    View and manage your customers
                   </AppText>
                 </View>
-              </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
 
               <Divider />
 
-              {/* Payments Links */}
-              <View style={{ flexDirection: "row", gap: spacing.md }}>
-                <Ionicons name="link-outline" size={24} />
+              {/* Payment Links */}
+              <Pressable
+                onPress={() => router.push(ROUTES.PAYMENT_LINKS)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="link-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
 
-                <View>
+                <View style={{ flex: 1 }}>
                   <AppText variant="bodyBold">Payment Links</AppText>
+
                   <AppText variant="bodySmall" color="muted">
-                    Generate your payment links
+                    Create and manage payment links
                   </AppText>
                 </View>
-              </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
             </Card>
           </View>
 
@@ -139,45 +222,101 @@ export default function MoreScreen() {
               Account
             </AppText>
 
-            <Card style={{ flexDirection: "column", gap: spacing.rg }}>
+            <Card
+              style={{
+                gap: spacing.rg,
+              }}
+            >
               {/* Security */}
-              <View style={{ flexDirection: "row", gap: spacing.md }}>
-                <Ionicons name="shield-checkmark-outline" size={24} />
+              <Pressable
+                onPress={() => router.push(ROUTES.SECURITY)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="shield-checkmark-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
 
-                <View>
+                <View style={{ flex: 1 }}>
                   <AppText variant="bodyBold">Security</AppText>
+
                   <AppText variant="bodySmall" color="muted">
-                    Change your password
+                    Manage your password and account security
                   </AppText>
                 </View>
-              </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
 
               <Divider />
 
               {/* Notifications */}
-              <View style={{ flexDirection: "row", gap: spacing.md }}>
-                <Ionicons name="notifications-outline" size={24} />
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="notifications-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
 
-                <View>
+                <View style={{ flex: 1 }}>
                   <AppText variant="bodyBold">Notifications</AppText>
+
                   <AppText variant="bodySmall" color="muted">
-                    Change your notifications
+                    Manage your notification preferences
                   </AppText>
                 </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
               </View>
 
               <Divider />
 
-              {/* Setting */}
-              <View style={{ flexDirection: "row", gap: spacing.md }}>
-                <Ionicons name="settings-outline" size={24} />
+              {/* Settings */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="settings-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
 
-                <View>
+                <View style={{ flex: 1 }}>
                   <AppText variant="bodyBold">Settings</AppText>
+
                   <AppText variant="bodySmall" color="muted">
-                    Change your settings
+                    Manage your app prefrences
                   </AppText>
                 </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
               </View>
             </Card>
           </View>
@@ -187,31 +326,69 @@ export default function MoreScreen() {
               Support
             </AppText>
 
-            <Card style={{ flexDirection: "column", gap: spacing.rg }}>
+            <Card
+              style={{
+                gap: spacing.rg,
+              }}
+            >
               {/* Support */}
-              <View style={{ flexDirection: "row", gap: spacing.sm }}>
-                <Ionicons name="help-circle-outline" size={24} />
+              <Pressable
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="help-circle-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
 
-                <View>
-                  <AppText variant="bodyBold">Settings</AppText>
+                <View style={{ flex: 1 }}>
+                  <AppText variant="bodyBold">Support</AppText>
+
                   <AppText variant="bodySmall" color="muted">
-                    Change your settings
+                    Get help and contact support
                   </AppText>
                 </View>
-              </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
 
               <Divider />
 
               {/* About */}
-              <View style={{ flexDirection: "row", gap: spacing.sm }}>
-                <Ionicons name="information-circle-outline" size={24} />
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="information-circle-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
 
-                <View>
+                <View style={{ flex: 1 }}>
                   <AppText variant="bodyBold">About</AppText>
+
                   <AppText variant="bodySmall" color="muted">
-                    About You
+                    App version and legal information
                   </AppText>
                 </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
               </View>
             </Card>
           </View>
@@ -224,7 +401,18 @@ export default function MoreScreen() {
             paddingTop: spacing.md,
           }}
         >
-          <Button title="Logout" variant="primary" onPress={handleLogout} />
+          <Button
+            title="Sign Out"
+            variant="tertiaryDestructive"
+            leftIcon={
+              <Ionicons
+                name="log-out-outline"
+                size={20}
+                color={theme.action.tertiaryDestructive.text}
+              />
+            }
+            onPress={handleLogout}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

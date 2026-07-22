@@ -129,6 +129,14 @@ export const theme = {
       pressed: colors.primary[50],
     },
 
+    tertiaryDestructive: {
+      background: colors.neutral.white,
+      border: colors.error[500],
+
+      text: colors.error[500],
+      pressed: colors.error[100],
+    },
+
     ghost: {
       background: colors.neutral.transparent,
       pressed: colors.primary[50],
@@ -512,6 +520,55 @@ export const theme = {
       border: colors.info[500],
       text: colors.info[600],
       badge: colors.info[500],
+    },
+  },
+
+  /**
+   * 📋 LIST ITEMS
+   */
+  listItem: {
+    default: {
+      background: colors.neutral.transparent,
+
+      title: colors.gray[900],
+      subtitle: colors.gray[500],
+
+      icon: colors.gray[600],
+      chevron: colors.gray[400],
+    },
+
+    pressed: {
+      background: colors.primary[50],
+    },
+
+    selected: {
+      background: colors.primary[100],
+
+      title: colors.primary[700],
+      subtitle: colors.primary[500],
+
+      icon: colors.primary[600],
+      chevron: colors.primary[600],
+    },
+
+    destructive: {
+      background: colors.neutral.transparent,
+
+      title: colors.error[600],
+      subtitle: colors.error[500],
+
+      icon: colors.error[600],
+      chevron: colors.error[600],
+    },
+
+    disabled: {
+      background: colors.gray[100],
+
+      title: colors.gray[400],
+      subtitle: colors.gray[400],
+
+      icon: colors.gray[400],
+      chevron: colors.gray[300],
     },
   },
 };

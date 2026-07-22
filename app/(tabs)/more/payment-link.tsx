@@ -59,15 +59,15 @@ export default function PaymentLinksScreen() {
                   gap: spacing.xs,
                 }}
               >
-                <AppText variant="h1">Payment Links</AppText>
+                <AppText variant="h1">Payment Link</AppText>
 
                 <AppText variant="body" color="secondary">
-                  Create and manage payment links.
+                  Create payment links.
                 </AppText>
               </View>
 
               <Button
-                title="Create"
+                title="Add Payment Link"
                 variant="primary"
                 onPress={() => {
                   // Navigate to create payment link

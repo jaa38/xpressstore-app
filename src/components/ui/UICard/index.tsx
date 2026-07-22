@@ -64,7 +64,7 @@ function getVariantStyle(variant: UICardVariant) {
 
     case "status":
       return {
-        backgroundColor: colors.primary[200],
+        backgroundColor: colors.secondary[100],
         borderWidth: 0,
       };
 
@@ -88,7 +88,7 @@ function getTextStyle(variant: UICardVariant) {
 
     case "status":
       return {
-        color: colors.primary[600],
+        color: colors.secondary[600],
       };
 
     default:

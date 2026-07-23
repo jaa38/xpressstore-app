@@ -75,7 +75,12 @@ export default function PaymentLinksScreen() {
               />
             </View>
 
-            <Card style={{ marginTop: spacing.md }}></Card>
+            <Card
+              style={{ marginTop: spacing.md, flexDirection: "row" }}
+            >
+
+              
+            </Card>
 
             {paymentLinks.length > 0 && (
               <View

@@ -107,8 +107,9 @@ export default function MoreScreen() {
           <Button title="Withdraw" />
         </Card>
 
-        {/* Business */}
+        {/* Categories */}
         <View style={{ marginTop: spacing.lg, gap: spacing.md }}>
+          {/* Business */}
           <View style={{ flexDirection: "column", gap: spacing.sm }}>
             <AppText variant="bodyBold" color="muted">
               Business
@@ -204,6 +205,81 @@ export default function MoreScreen() {
 
                   <AppText variant="bodySmall" color="muted">
                     Create and manage payment links
+                  </AppText>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
+            </Card>
+          </View>
+
+          {/* Payments */}
+          <View style={{ flexDirection: "column", gap: spacing.sm }}>
+            <AppText variant="bodyBold" color="muted">
+              Payments
+            </AppText>
+
+            <Card
+              style={{
+                gap: spacing.rg,
+              }}
+            >
+              {/* Payment Settings*/}
+              <Pressable
+                // onPress={() => router.push(ROUTES.BUSINESS)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="card-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
+
+                <View style={{ flex: 1 }}>
+                  <AppText variant="bodyBold">Payment Settings</AppText>
+
+                  <AppText variant="bodySmall" color="muted">
+                    Bank, Card, Transfer, USSD
+                  </AppText>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
+
+              <Divider />
+
+              {/* Settlements */}
+              <Pressable
+                onPress={() => router.push(ROUTES.SETTLEMENTS)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="cash-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
+
+                <View style={{ flex: 1 }}>
+                  <AppText variant="bodyBold">Settlement</AppText>
+
+                  <AppText variant="bodySmall" color="muted">
+                    Setup how you be paid
                   </AppText>
                 </View>
 

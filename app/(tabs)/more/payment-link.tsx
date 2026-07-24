@@ -11,8 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
-import { AppText } from "@/components/ui/AppText";
-import { Button } from "@/components/ui/Button";
+import { AppText, type Color } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
 import { SearchBar } from "@/components/ui/SearchBar";
 
@@ -22,18 +21,22 @@ import { UICard } from "@/components/ui/UICard";
 import { App } from "expo-router/build/rsc/entry";
 import { Divider } from "@/components/ui/Divider";
 
-import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
+import type { Currency } from "@/types/currency";
 
-type PaymentLinkStatus = "all" | "paid" | "pending" | "failed" | "inactive";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 interface PaymentLink {
   id: string;
   title: string;
   url: string;
   createdAt: string;
-  amount: string;
+
+  amount: number;
+  currency: Currency;
+
   status: Exclude<PaymentLinkStatus, "all">;
 }
+type PaymentLinkStatus = "all" | "paid" | "pending" | "failed" | "inactive";
 
 const paymentLinks: PaymentLink[] = [
   {
@@ -41,7 +44,8 @@ const paymentLinks: PaymentLink[] = [
     title: "Wedding Gele Bundle",
     url: "payx.press/p1",
     createdAt: "Created 2 hours ago",
-    amount: "₦45,000",
+    amount: 45000,
+    currency: "NGN",
     status: "paid",
   },
   {
@@ -49,7 +53,8 @@ const paymentLinks: PaymentLink[] = [
     title: "Football Boots",
     url: "payx.press/p2",
     createdAt: "Created 10 hours ago",
-    amount: "₦45,000",
+    amount: 65000,
+    currency: "NGN",
     status: "pending",
   },
   {
@@ -57,7 +62,8 @@ const paymentLinks: PaymentLink[] = [
     title: "GTA 6",
     url: "payx.press/p3",
     createdAt: "Yesterday",
-    amount: "₦45,000",
+    amount: 200000,
+    currency: "NGN",
     status: "failed",
   },
   {
@@ -65,7 +71,8 @@ const paymentLinks: PaymentLink[] = [
     title: "FIFA 26",
     url: "payx.press/p4",
     createdAt: "23rd July 2026",
-    amount: "₦45,000",
+    amount: 9000,
+    currency: "NGN",
     status: "inactive",
   },
 ];
@@ -103,46 +110,47 @@ export default function PaymentLinksScreen() {
   const showFailed = filteredLinks.some((link) => link.status === "failed");
   const showInactive = filteredLinks.some((link) => link.status === "inactive");
 
-  const totalLinks = filteredLinks.length;
+  const paidLinks = paymentLinks.filter((link) => link.status === "paid");
 
-  const summary = {
-    all: {
-      title: "Collected this week",
-      amount: "₦248,750",
-      status: "All",
-      statusColor: "strong" as const,
-    },
+  const summaryLinks = selectedStatus === "all" ? paidLinks : filteredLinks;
 
-    pending: {
-      title: "Pending collection",
-      amount: "₦205,000",
-      status: "Active",
-      statusColor: "warning" as const,
-    },
+  const totalAmount = summaryLinks.reduce(
+    (total, link) => total + link.amount,
+    0
+  );
 
-    paid: {
-      title: "Collected this week",
-      amount: "₦75,000",
-      status: "Paid",
-      statusColor: "success" as const,
-    },
+  const totalLinks = summaryLinks.length;
 
-    failed: {
-      title: "Failed payments",
-      amount: "₦45,000",
-      status: "Failed",
-      statusColor: "error" as const,
-    },
+  const summaryTitle = {
+    all: "Collected this week",
+    pending: "Pending collection",
+    paid: "Collected this week",
+    failed: "Failed payments",
+    inactive: "Inactive links",
+  }[selectedStatus];
 
-    inactive: {
-      title: "Inactive links",
-      amount: "₦9,900.89",
-      status: "Inactive",
-      statusColor: "secondary" as const,
-    },
+  const summaryStatus = {
+    all: "All",
+    pending: "Active",
+    paid: "Paid",
+    failed: "Failed",
+    inactive: "Inactive",
+  }[selectedStatus];
+
+  const summaryStatusColors: Record<PaymentLinkStatus, Color> = {
+    all: "strong",
+    pending: "warning",
+    paid: "success",
+    failed: "error",
+    inactive: "secondary",
   };
 
-  const currentSummary = summary[selectedStatus];
+  const summaryStatusColor = summaryStatusColors[selectedStatus];
+
+  const summaryAmount = formatCurrency(totalAmount, {
+    currency: "NGN",
+    showDecimals: totalAmount % 1 !== 0,
+  });
 
   return (
     <SafeAreaView
@@ -244,6 +252,8 @@ export default function PaymentLinksScreen() {
                     gap: spacing.md,
                   }}
                 >
+                  {/* Icon */}
+
                   <View
                     style={{
                       width: 56,
@@ -261,16 +271,18 @@ export default function PaymentLinksScreen() {
                     />
                   </View>
 
+                  {/* Content */}
+
                   <View
                     style={{
                       gap: spacing.xs,
                     }}
                   >
                     <AppText variant="bodySmallBold" color="muted">
-                      {currentSummary.title}
+                      {summaryTitle}
                     </AppText>
 
-                    <AppText variant="h1">{currentSummary.amount}</AppText>
+                    <AppText variant="h1">{summaryAmount}</AppText>
                   </View>
                 </View>
 
@@ -301,8 +313,8 @@ export default function PaymentLinksScreen() {
 
                   <AppText variant="h2">{totalLinks}</AppText>
 
-                  <AppText variant="caption" color={currentSummary.statusColor}>
-                    {currentSummary.status}
+                  <AppText variant="caption" color={summaryStatusColor}>
+                    {summaryStatus}
                   </AppText>
                 </View>
               </View>
@@ -447,8 +459,9 @@ export default function PaymentLinksScreen() {
                           minWidth: 88,
                         }}
                       >
-                        <AppText variant="bodyLargeBold">₦75,000</AppText>
-
+                        <AppText variant="bodyLargeBold">
+                          {formatCurrency(45000)}
+                        </AppText>
                         <View
                           style={{
                             paddingHorizontal: spacing.sm,
@@ -550,7 +563,9 @@ export default function PaymentLinksScreen() {
                           minWidth: 88,
                         }}
                       >
-                        <AppText variant="bodyLargeBold">₦205,000</AppText>
+                        <AppText variant="bodyLargeBold">
+                          {formatCurrency(65000)}
+                        </AppText>
 
                         <View
                           style={{
@@ -653,7 +668,9 @@ export default function PaymentLinksScreen() {
                           minWidth: 88,
                         }}
                       >
-                        <AppText variant="bodyLargeBold">₦45,000</AppText>
+                        <AppText variant="bodyLargeBold">
+                          {formatCurrency(200000)}
+                        </AppText>
 
                         <View
                           style={{
@@ -755,7 +772,9 @@ export default function PaymentLinksScreen() {
                         minWidth: 88,
                       }}
                     >
-                      <AppText variant="bodyLargeBold">₦9,900.89</AppText>
+                      <AppText variant="bodyLargeBold">
+                        {formatCurrency(9000)}
+                      </AppText>
 
                       <View
                         style={{

@@ -1,4 +1,4 @@
-import type { Currency } from "@/types/product";
+import { Currency } from "@/types/currency";
 
 export type CurrencyOption = {
   label: string;

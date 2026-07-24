@@ -131,8 +131,6 @@ export default function HomeScreen() {
           flex: 1,
 
           paddingHorizontal: spacing.lg,
-
-          paddingTop: spacing.md,
         }}
       >
         {/* HEADER */}
@@ -144,6 +142,8 @@ export default function HomeScreen() {
             justifyContent: "space-between",
 
             alignItems: "center",
+
+            // paddingTop: spacing.md,
           }}
         >
           <View
@@ -422,8 +422,6 @@ export default function HomeScreen() {
             </Card>
           </View>
         </ScrollView>
-
-
       </View>
     </SafeAreaView>
   );

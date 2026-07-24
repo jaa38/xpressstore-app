@@ -100,7 +100,7 @@ export default function StoreScreen() {
         <View
           style={{
             gap: spacing.xs,
-            marginTop: spacing.md,
+            // marginTop: spacing.md,
           }}
         >
           <AppText variant="h1">Storefront</AppText>

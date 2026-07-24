@@ -3,6 +3,7 @@ import {
   Pressable,
   Text,
   ActivityIndicator,
+  StyleProp,
   ViewStyle,
   TextStyle,
 } from "react-native";
@@ -32,11 +33,13 @@ interface ButtonProps {
 
   onPress?: () => void;
 
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 
   leftIcon?: React.ReactNode;
 
   rightIcon?: React.ReactNode;
+
+  iconOnly?: boolean;
 }
 
 const BUTTON_SIZES = {

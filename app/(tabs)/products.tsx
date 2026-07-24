@@ -172,7 +172,7 @@ export default function ProductScreen() {
 
   const [showLowStockBanner, setShowLowStockBanner] = useState(true);
 
-  const PRODUCTS_PER_PAGE = 10;
+  const PRODUCTS_PER_PAGE = 5;
 
   async function onRefresh() {
     await refetch();
@@ -282,7 +282,7 @@ export default function ProductScreen() {
         style={{
           flex: 1,
           paddingHorizontal: spacing.lg,
-          paddingTop: spacing.md,
+          // paddingTop: spacing.md,
         }}
       >
         <View
@@ -294,33 +294,52 @@ export default function ProductScreen() {
           {/* TOP */}
 
           <View
-            style={{
-              gap: spacing.lg,
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <View
-              style={{
-                gap: spacing.xs,
-              }}
-            >
-              <AppText variant="h1">Products</AppText>
+  style={{
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  }}
+>
+  <View
+    style={{
+      flex: 1,
+      gap: spacing.xs,
+    }}
+  >
+    <AppText variant="h1">Products</AppText>
 
-              <AppText variant="body" color="secondary">
-                {products.length === 1
-                  ? "1 item in catalog"
-                  : `${products.length} items in catalog`}
-              </AppText>
-            </View>
+    <AppText variant="body" color="secondary">
+      {products.length === 1
+        ? "1 item in catalog"
+        : `${products.length} items in catalog`}
+    </AppText>
+  </View>
 
-            <Button
-              title="Add Product"
-              variant="primary"
-              onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
-            />
-          </View>
+  <Pressable
+    accessibilityRole="button"
+    accessibilityLabel="Add Product"
+    onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
+    style={({ pressed }) => ({
+      width: 44,
+      height: 44,
+
+      borderRadius: radius.full,
+
+      justifyContent: "center",
+      alignItems: "center",
+
+      backgroundColor: pressed
+        ? theme.action.primary.pressed
+        : theme.action.primary.background,
+    })}
+  >
+    <Ionicons
+      name="add"
+      size={24}
+      color={theme.action.primary.text}
+    />
+  </Pressable>
+</View>
 
           {showLowStockBanner && lowStockProducts.length > 0 && (
             <Card

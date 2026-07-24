@@ -22,6 +22,54 @@ import { UICard } from "@/components/ui/UICard";
 import { App } from "expo-router/build/rsc/entry";
 import { Divider } from "@/components/ui/Divider";
 
+import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
+
+type PaymentLinkStatus = "all" | "paid" | "pending" | "failed" | "inactive";
+
+interface PaymentLink {
+  id: string;
+  title: string;
+  url: string;
+  createdAt: string;
+  amount: string;
+  status: Exclude<PaymentLinkStatus, "all">;
+}
+
+const paymentLinks: PaymentLink[] = [
+  {
+    id: "1",
+    title: "Wedding Gele Bundle",
+    url: "payx.press/p1",
+    createdAt: "Created 2 hours ago",
+    amount: "₦45,000",
+    status: "paid",
+  },
+  {
+    id: "2",
+    title: "Football Boots",
+    url: "payx.press/p2",
+    createdAt: "Created 10 hours ago",
+    amount: "₦45,000",
+    status: "pending",
+  },
+  {
+    id: "3",
+    title: "GTA 6",
+    url: "payx.press/p3",
+    createdAt: "Yesterday",
+    amount: "₦45,000",
+    status: "failed",
+  },
+  {
+    id: "4",
+    title: "FIFA 26",
+    url: "payx.press/p4",
+    createdAt: "23rd July 2026",
+    amount: "₦45,000",
+    status: "inactive",
+  },
+];
+
 export default function PaymentLinksScreen() {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -41,6 +89,14 @@ export default function PaymentLinksScreen() {
 
     setRefreshing(false);
   };
+
+  const [selectedStatus, setSelectedStatus] =
+    useState<PaymentLinkStatus>("all");
+
+  const filteredLinks =
+    selectedStatus === "all"
+      ? paymentLinks
+      : paymentLinks.filter((item) => item.status === selectedStatus);
 
   return (
     <SafeAreaView
@@ -77,6 +133,7 @@ export default function PaymentLinksScreen() {
               <View
                 style={{
                   gap: spacing.xs,
+                  flex: 1,
                 }}
               >
                 <AppText variant="h1">Payment Link</AppText>
@@ -86,13 +143,25 @@ export default function PaymentLinksScreen() {
                 </AppText>
               </View>
 
-              <Button
-                title="Add Payment Link"
-                variant="primary"
+              <Pressable
                 onPress={() => {
-                  // Navigate to create payment link
+                  // Navigate to Add Payment Link
                 }}
-              />
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: radius.full,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: theme.action.primary.background,
+                }}
+              >
+                <Ionicons
+                  name="add"
+                  size={24}
+                  color={theme.action.primary.text}
+                />
+              </Pressable>
             </View>
           </View>
 
@@ -210,11 +279,35 @@ export default function PaymentLinksScreen() {
                 justifyContent: "space-between",
               }}
             >
-              <UICard title="All" />
-              <UICard title="Paid" />
-              <UICard title="Pending" />
-              <UICard title="Failed" />
-              <UICard title="Inactive" />
+              <UICard
+                title="All"
+                variant={selectedStatus === "all" ? "active" : "default"}
+                onPress={() => setSelectedStatus("all")}
+              />
+
+              <UICard
+                title="Active"
+                variant={selectedStatus === "pending" ? "active" : "default"}
+                onPress={() => setSelectedStatus("pending")}
+              />
+
+              <UICard
+                title="Paid"
+                variant={selectedStatus === "paid" ? "active" : "default"}
+                onPress={() => setSelectedStatus("paid")}
+              />
+
+              <UICard
+                title="Failed"
+                variant={selectedStatus === "failed" ? "active" : "default"}
+                onPress={() => setSelectedStatus("failed")}
+              />
+
+              <UICard
+                title="Inactive"
+                variant={selectedStatus === "inactive" ? "active" : "default"}
+                onPress={() => setSelectedStatus("inactive")}
+              />
             </View>
 
             <ScrollView
@@ -315,7 +408,7 @@ export default function PaymentLinksScreen() {
                       minWidth: 88,
                     }}
                   >
-                    <AppText variant="bodyLargeBold">₦45,000</AppText>
+                    <AppText variant="bodyLargeBold">₦75,000</AppText>
 
                     <View
                       style={{
@@ -384,7 +477,7 @@ export default function PaymentLinksScreen() {
                       }}
                     >
                       <AppText variant="bodyBold" numberOfLines={1}>
-                        Wedding Gele Bundle
+                        Football Boots
                       </AppText>
 
                       <AppText
@@ -392,11 +485,11 @@ export default function PaymentLinksScreen() {
                         color="secondary"
                         numberOfLines={1}
                       >
-                        payx.press/p1
+                        payx.press/p2
                       </AppText>
 
                       <AppText variant="caption" color="muted">
-                        Created 2 hours ago
+                        Created 10 hours ago
                       </AppText>
                     </View>
                   </View>
@@ -413,7 +506,7 @@ export default function PaymentLinksScreen() {
                       minWidth: 88,
                     }}
                   >
-                    <AppText variant="bodyLargeBold">₦45,000</AppText>
+                    <AppText variant="bodyLargeBold">₦205,000</AppText>
 
                     <View
                       style={{
@@ -482,7 +575,7 @@ export default function PaymentLinksScreen() {
                       }}
                     >
                       <AppText variant="bodyBold" numberOfLines={1}>
-                        Wedding Gele Bundle
+                        GTA 6
                       </AppText>
 
                       <AppText
@@ -494,7 +587,7 @@ export default function PaymentLinksScreen() {
                       </AppText>
 
                       <AppText variant="caption" color="muted">
-                        Created 2 hours ago
+                        Yesterday
                       </AppText>
                     </View>
                   </View>
@@ -580,7 +673,7 @@ export default function PaymentLinksScreen() {
                       }}
                     >
                       <AppText variant="bodyBold" numberOfLines={1}>
-                        Wedding Gele Bundle
+                        FIFA 26
                       </AppText>
 
                       <AppText
@@ -588,11 +681,11 @@ export default function PaymentLinksScreen() {
                         color="secondary"
                         numberOfLines={1}
                       >
-                        payx.press/p1
+                        payx.press/p4
                       </AppText>
 
                       <AppText variant="caption" color="muted">
-                        Created 2 hours ago
+                        23rd July 2026
                       </AppText>
                     </View>
                   </View>
@@ -609,7 +702,7 @@ export default function PaymentLinksScreen() {
                       minWidth: 88,
                     }}
                   >
-                    <AppText variant="bodyLargeBold">₦45,000</AppText>
+                    <AppText variant="bodyLargeBold">₦9,900.89</AppText>
 
                     <View
                       style={{

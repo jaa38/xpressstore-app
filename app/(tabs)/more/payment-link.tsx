@@ -144,7 +144,11 @@ export default function PaymentLinksScreen() {
                 <AppText variant="h1">Payment Link</AppText>
 
                 <AppText variant="body" color="secondary">
-                  Create payment links.
+                  {filteredLinks.length === 0
+                    ? "No payment links"
+                    : filteredLinks.length === 1
+                      ? "1 payment link"
+                      : `${filteredLinks.length} payment links`}
                 </AppText>
               </View>
 

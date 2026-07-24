@@ -74,7 +74,7 @@ export default function PaymentLinksScreen() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Replace later with usePaymentLinks()
-  const paymentLinks: any[] = [];
+  // const paymentLinks: any[] = [];
 
   const loading = false;
   const error = false;
@@ -96,7 +96,12 @@ export default function PaymentLinksScreen() {
   const filteredLinks =
     selectedStatus === "all"
       ? paymentLinks
-      : paymentLinks.filter((item) => item.status === selectedStatus);
+      : paymentLinks.filter((link) => link.status === selectedStatus);
+
+  const showPaid = filteredLinks.some((link) => link.status === "paid");
+  const showPending = filteredLinks.some((link) => link.status === "pending");
+  const showFailed = filteredLinks.some((link) => link.status === "failed");
+  const showInactive = filteredLinks.some((link) => link.status === "inactive");
 
   return (
     <SafeAreaView
@@ -332,397 +337,415 @@ export default function PaymentLinksScreen() {
                 }}
               >
                 {/* Successful */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}
-                >
-                  {/* Left */}
 
-                  <View
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: spacing.md,
-                    }}
-                  >
-                    {/* Icon */}
-
+                {showPaid && (
+                  <>
                     <View
                       style={{
-                        width: 48,
-                        height: 48,
-
-                        borderRadius: radius.full,
-
-                        justifyContent: "center",
+                        flexDirection: "row",
                         alignItems: "center",
-
-                        backgroundColor: theme.icon.success.background,
                       }}
                     >
-                      <Ionicons
-                        name="checkmark-circle-outline"
-                        size={22}
-                        color={theme.icon.success.icon}
-                      />
-                    </View>
+                      {/* Left */}
 
-                    {/* Content */}
-
-                    <View
-                      style={{
-                        flex: 1,
-                        gap: spacing.xs,
-                      }}
-                    >
-                      <AppText variant="bodyBold" numberOfLines={1}>
-                        Wedding Gele Bundle
-                      </AppText>
-
-                      <AppText
-                        variant="bodySmall"
-                        color="secondary"
-                        numberOfLines={1}
+                      <View
+                        style={{
+                          flex: 1,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: spacing.md,
+                        }}
                       >
-                        payx.press/p1
-                      </AppText>
+                        {/* Icon */}
 
-                      <AppText variant="caption" color="muted">
-                        Created 2 hours ago
-                      </AppText>
+                        <View
+                          style={{
+                            width: 48,
+                            height: 48,
+
+                            borderRadius: radius.full,
+
+                            justifyContent: "center",
+                            alignItems: "center",
+
+                            backgroundColor: theme.icon.success.background,
+                          }}
+                        >
+                          <Ionicons
+                            name="checkmark-circle-outline"
+                            size={22}
+                            color={theme.icon.success.icon}
+                          />
+                        </View>
+
+                        {/* Content */}
+
+                        <View
+                          style={{
+                            flex: 1,
+                            gap: spacing.xs,
+                          }}
+                        >
+                          <AppText variant="bodyBold" numberOfLines={1}>
+                            Wedding Gele Bundle
+                          </AppText>
+
+                          <AppText
+                            variant="bodySmall"
+                            color="secondary"
+                            numberOfLines={1}
+                          >
+                            payx.press/p1
+                          </AppText>
+
+                          <AppText variant="caption" color="muted">
+                            Created 2 hours ago
+                          </AppText>
+                        </View>
+                      </View>
+
+                      {/* Right */}
+
+                      <View
+                        style={{
+                          alignItems: "flex-end",
+                          justifyContent: "center",
+
+                          gap: spacing.sm,
+
+                          minWidth: 88,
+                        }}
+                      >
+                        <AppText variant="bodyLargeBold">₦75,000</AppText>
+
+                        <View
+                          style={{
+                            paddingHorizontal: spacing.sm,
+                            paddingVertical: spacing.xs,
+
+                            borderRadius: radius.full,
+
+                            backgroundColor: theme.badge.success.background,
+                          }}
+                        >
+                          <AppText variant="caption" color="success">
+                            Paid
+                          </AppText>
+                        </View>
+                      </View>
                     </View>
-                  </View>
 
-                  {/* Right */}
-
-                  <View
-                    style={{
-                      alignItems: "flex-end",
-                      justifyContent: "center",
-
-                      gap: spacing.sm,
-
-                      minWidth: 88,
-                    }}
-                  >
-                    <AppText variant="bodyLargeBold">₦75,000</AppText>
-
-                    <View
-                      style={{
-                        paddingHorizontal: spacing.sm,
-                        paddingVertical: spacing.xs,
-
-                        borderRadius: radius.full,
-
-                        backgroundColor: theme.badge.success.background,
-                      }}
-                    >
-                      <AppText variant="caption" color="success">
-                        Paid
-                      </AppText>
-                    </View>
-                  </View>
-                </View>
-
-                <Divider />
+                    {(showPending || showFailed || showInactive) && <Divider />}
+                  </>
+                )}
 
                 {/* Pending */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}
-                >
-                  {/* Left */}
 
-                  <View
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: spacing.md,
-                    }}
-                  >
-                    {/* Icon */}
-
+                {showPending && (
+                  <>
                     <View
                       style={{
-                        width: 48,
-                        height: 48,
-
-                        borderRadius: radius.full,
-
-                        justifyContent: "center",
+                        flexDirection: "row",
                         alignItems: "center",
-
-                        backgroundColor: theme.icon.warning.background,
                       }}
                     >
-                      <Ionicons
-                        name="time-outline"
-                        size={22}
-                        color={theme.icon.warning.icon}
-                      />
-                    </View>
+                      {/* Left */}
 
-                    {/* Content */}
-
-                    <View
-                      style={{
-                        flex: 1,
-                        gap: spacing.xs,
-                      }}
-                    >
-                      <AppText variant="bodyBold" numberOfLines={1}>
-                        Football Boots
-                      </AppText>
-
-                      <AppText
-                        variant="bodySmall"
-                        color="secondary"
-                        numberOfLines={1}
+                      <View
+                        style={{
+                          flex: 1,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: spacing.md,
+                        }}
                       >
-                        payx.press/p2
-                      </AppText>
+                        {/* Icon */}
 
-                      <AppText variant="caption" color="muted">
-                        Created 10 hours ago
-                      </AppText>
+                        <View
+                          style={{
+                            width: 48,
+                            height: 48,
+
+                            borderRadius: radius.full,
+
+                            justifyContent: "center",
+                            alignItems: "center",
+
+                            backgroundColor: theme.icon.warning.background,
+                          }}
+                        >
+                          <Ionicons
+                            name="time-outline"
+                            size={22}
+                            color={theme.icon.warning.icon}
+                          />
+                        </View>
+
+                        {/* Content */}
+
+                        <View
+                          style={{
+                            flex: 1,
+                            gap: spacing.xs,
+                          }}
+                        >
+                          <AppText variant="bodyBold" numberOfLines={1}>
+                            Football Boots
+                          </AppText>
+
+                          <AppText
+                            variant="bodySmall"
+                            color="secondary"
+                            numberOfLines={1}
+                          >
+                            payx.press/p2
+                          </AppText>
+
+                          <AppText variant="caption" color="muted">
+                            Created 10 hours ago
+                          </AppText>
+                        </View>
+                      </View>
+
+                      {/* Right */}
+
+                      <View
+                        style={{
+                          alignItems: "flex-end",
+                          justifyContent: "center",
+
+                          gap: spacing.sm,
+
+                          minWidth: 88,
+                        }}
+                      >
+                        <AppText variant="bodyLargeBold">₦205,000</AppText>
+
+                        <View
+                          style={{
+                            paddingHorizontal: spacing.sm,
+                            paddingVertical: spacing.xs,
+
+                            borderRadius: radius.full,
+
+                            backgroundColor: theme.badge.warning.background,
+                          }}
+                        >
+                          <AppText variant="caption" color="warning">
+                            Pending
+                          </AppText>
+                        </View>
+                      </View>
                     </View>
-                  </View>
 
-                  {/* Right */}
-
-                  <View
-                    style={{
-                      alignItems: "flex-end",
-                      justifyContent: "center",
-
-                      gap: spacing.sm,
-
-                      minWidth: 88,
-                    }}
-                  >
-                    <AppText variant="bodyLargeBold">₦205,000</AppText>
-
-                    <View
-                      style={{
-                        paddingHorizontal: spacing.sm,
-                        paddingVertical: spacing.xs,
-
-                        borderRadius: radius.full,
-
-                        backgroundColor: theme.badge.warning.background,
-                      }}
-                    >
-                      <AppText variant="caption" color="warning">
-                        Pending
-                      </AppText>
-                    </View>
-                  </View>
-                </View>
-
-                <Divider />
+                    {(showFailed || showInactive) && <Divider />}
+                  </>
+                )}
 
                 {/* Failed */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}
-                >
-                  {/* Left */}
 
-                  <View
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: spacing.md,
-                    }}
-                  >
-                    {/* Icon */}
-
+                {showFailed && (
+                  <>
                     <View
                       style={{
-                        width: 48,
-                        height: 48,
-
-                        borderRadius: radius.full,
-
-                        justifyContent: "center",
+                        flexDirection: "row",
                         alignItems: "center",
-
-                        backgroundColor: theme.icon.error.background,
                       }}
                     >
-                      <Ionicons
-                        name="close-circle-outline"
-                        size={22}
-                        color={theme.icon.error.icon}
-                      />
-                    </View>
+                      {/* Left */}
 
-                    {/* Content */}
-
-                    <View
-                      style={{
-                        flex: 1,
-                        gap: spacing.xs,
-                      }}
-                    >
-                      <AppText variant="bodyBold" numberOfLines={1}>
-                        GTA 6
-                      </AppText>
-
-                      <AppText
-                        variant="bodySmall"
-                        color="secondary"
-                        numberOfLines={1}
+                      <View
+                        style={{
+                          flex: 1,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: spacing.md,
+                        }}
                       >
-                        payx.press/p1
-                      </AppText>
+                        {/* Icon */}
 
-                      <AppText variant="caption" color="muted">
-                        Yesterday
-                      </AppText>
+                        <View
+                          style={{
+                            width: 48,
+                            height: 48,
+
+                            borderRadius: radius.full,
+
+                            justifyContent: "center",
+                            alignItems: "center",
+
+                            backgroundColor: theme.icon.error.background,
+                          }}
+                        >
+                          <Ionicons
+                            name="close-circle-outline"
+                            size={22}
+                            color={theme.icon.error.icon}
+                          />
+                        </View>
+
+                        {/* Content */}
+
+                        <View
+                          style={{
+                            flex: 1,
+                            gap: spacing.xs,
+                          }}
+                        >
+                          <AppText variant="bodyBold" numberOfLines={1}>
+                            GTA 6
+                          </AppText>
+
+                          <AppText
+                            variant="bodySmall"
+                            color="secondary"
+                            numberOfLines={1}
+                          >
+                            payx.press/p3
+                          </AppText>
+
+                          <AppText variant="caption" color="muted">
+                            Yesterday
+                          </AppText>
+                        </View>
+                      </View>
+
+                      {/* Right */}
+
+                      <View
+                        style={{
+                          alignItems: "flex-end",
+                          justifyContent: "center",
+
+                          gap: spacing.sm,
+
+                          minWidth: 88,
+                        }}
+                      >
+                        <AppText variant="bodyLargeBold">₦45,000</AppText>
+
+                        <View
+                          style={{
+                            paddingHorizontal: spacing.sm,
+                            paddingVertical: spacing.xs,
+
+                            borderRadius: radius.full,
+
+                            backgroundColor: theme.badge.error.background,
+                          }}
+                        >
+                          <AppText variant="caption" color="error">
+                            Failed
+                          </AppText>
+                        </View>
+                      </View>
                     </View>
-                  </View>
 
-                  {/* Right */}
-
-                  <View
-                    style={{
-                      alignItems: "flex-end",
-                      justifyContent: "center",
-
-                      gap: spacing.sm,
-
-                      minWidth: 88,
-                    }}
-                  >
-                    <AppText variant="bodyLargeBold">₦45,000</AppText>
-
-                    <View
-                      style={{
-                        paddingHorizontal: spacing.sm,
-                        paddingVertical: spacing.xs,
-
-                        borderRadius: radius.full,
-
-                        backgroundColor: theme.badge.error.background,
-                      }}
-                    >
-                      <AppText variant="caption" color="error">
-                        Failed
-                      </AppText>
-                    </View>
-                  </View>
-                </View>
-
-                <Divider />
+                    {showInactive && <Divider />}
+                  </>
+                )}
 
                 {/* Inactive */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}
-                >
-                  {/* Left */}
 
+                {showInactive && (
                   <View
                     style={{
-                      flex: 1,
                       flexDirection: "row",
                       alignItems: "center",
-                      gap: spacing.md,
                     }}
                   >
-                    {/* Icon */}
-
-                    <View
-                      style={{
-                        width: 48,
-                        height: 48,
-
-                        borderRadius: radius.full,
-
-                        justifyContent: "center",
-                        alignItems: "center",
-
-                        backgroundColor: theme.icon.default.background,
-                      }}
-                    >
-                      <Ionicons
-                        name="link-outline"
-                        size={22}
-                        color={theme.icon.default.icon}
-                      />
-                    </View>
-
-                    {/* Content */}
+                    {/* Left */}
 
                     <View
                       style={{
                         flex: 1,
-                        gap: spacing.xs,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: spacing.md,
                       }}
                     >
-                      <AppText variant="bodyBold" numberOfLines={1}>
-                        FIFA 26
-                      </AppText>
+                      {/* Icon */}
 
-                      <AppText
-                        variant="bodySmall"
-                        color="secondary"
-                        numberOfLines={1}
+                      <View
+                        style={{
+                          width: 48,
+                          height: 48,
+
+                          borderRadius: radius.full,
+
+                          justifyContent: "center",
+                          alignItems: "center",
+
+                          backgroundColor: theme.icon.default.background,
+                        }}
                       >
-                        payx.press/p4
-                      </AppText>
+                        <Ionicons
+                          name="link-outline"
+                          size={22}
+                          color={theme.icon.default.icon}
+                        />
+                      </View>
 
-                      <AppText variant="caption" color="muted">
-                        23rd July 2026
-                      </AppText>
+                      {/* Content */}
+
+                      <View
+                        style={{
+                          flex: 1,
+                          gap: spacing.xs,
+                        }}
+                      >
+                        <AppText variant="bodyBold" numberOfLines={1}>
+                          FIFA 26
+                        </AppText>
+
+                        <AppText
+                          variant="bodySmall"
+                          color="secondary"
+                          numberOfLines={1}
+                        >
+                          payx.press/p4
+                        </AppText>
+
+                        <AppText variant="caption" color="muted">
+                          23rd July 2026
+                        </AppText>
+                      </View>
                     </View>
-                  </View>
 
-                  {/* Right */}
-
-                  <View
-                    style={{
-                      alignItems: "flex-end",
-                      justifyContent: "center",
-
-                      gap: spacing.sm,
-
-                      minWidth: 88,
-                    }}
-                  >
-                    <AppText variant="bodyLargeBold">₦9,900.89</AppText>
+                    {/* Right */}
 
                     <View
                       style={{
-                        paddingHorizontal: spacing.sm,
-                        paddingVertical: spacing.xs,
+                        alignItems: "flex-end",
+                        justifyContent: "center",
 
-                        borderRadius: radius.full,
+                        gap: spacing.sm,
 
-                        backgroundColor: theme.background.subtle,
-
-                        borderWidth: 1,
-                        borderColor: theme.border.default,
+                        minWidth: 88,
                       }}
                     >
-                      <AppText variant="caption" color="secondary">
-                        Inactive
-                      </AppText>
+                      <AppText variant="bodyLargeBold">₦9,900.89</AppText>
+
+                      <View
+                        style={{
+                          paddingHorizontal: spacing.sm,
+                          paddingVertical: spacing.xs,
+
+                          borderRadius: radius.full,
+
+                          backgroundColor: theme.background.subtle,
+
+                          borderWidth: 1,
+                          borderColor: theme.border.default,
+                        }}
+                      >
+                        <AppText variant="caption" color="secondary">
+                          Inactive
+                        </AppText>
+                      </View>
                     </View>
                   </View>
-                </View>
+                )}
               </Card>
             </ScrollView>
           </View>

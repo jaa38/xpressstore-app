@@ -103,6 +103,47 @@ export default function PaymentLinksScreen() {
   const showFailed = filteredLinks.some((link) => link.status === "failed");
   const showInactive = filteredLinks.some((link) => link.status === "inactive");
 
+  const totalLinks = filteredLinks.length;
+
+  const summary = {
+    all: {
+      title: "Collected this week",
+      amount: "₦248,750",
+      status: "All",
+      statusColor: "strong" as const,
+    },
+
+    pending: {
+      title: "Pending collection",
+      amount: "₦205,000",
+      status: "Active",
+      statusColor: "warning" as const,
+    },
+
+    paid: {
+      title: "Collected this week",
+      amount: "₦75,000",
+      status: "Paid",
+      statusColor: "success" as const,
+    },
+
+    failed: {
+      title: "Failed payments",
+      amount: "₦45,000",
+      status: "Failed",
+      statusColor: "error" as const,
+    },
+
+    inactive: {
+      title: "Inactive links",
+      amount: "₦9,900.89",
+      status: "Inactive",
+      statusColor: "secondary" as const,
+    },
+  };
+
+  const currentSummary = summary[selectedStatus];
+
   return (
     <SafeAreaView
       style={{
@@ -198,25 +239,18 @@ export default function PaymentLinksScreen() {
                 <View
                   style={{
                     flex: 1,
-
                     flexDirection: "row",
                     alignItems: "center",
-
                     gap: spacing.md,
                   }}
                 >
-                  {/* Icon */}
-
                   <View
                     style={{
                       width: 56,
                       height: 56,
-
                       borderRadius: radius.full,
-
                       justifyContent: "center",
                       alignItems: "center",
-
                       backgroundColor: theme.icon.branding.background,
                     }}
                   >
@@ -227,18 +261,16 @@ export default function PaymentLinksScreen() {
                     />
                   </View>
 
-                  {/* Amount */}
-
                   <View
                     style={{
                       gap: spacing.xs,
                     }}
                   >
                     <AppText variant="bodySmallBold" color="muted">
-                      Collected this week
+                      {currentSummary.title}
                     </AppText>
 
-                    <AppText variant="h1">₦248,750</AppText>
+                    <AppText variant="h1">{currentSummary.amount}</AppText>
                   </View>
                 </View>
 
@@ -248,9 +280,7 @@ export default function PaymentLinksScreen() {
                   style={{
                     width: 1,
                     alignSelf: "stretch",
-
                     marginHorizontal: spacing.md,
-
                     backgroundColor: theme.divider.strong,
                   }}
                 />
@@ -260,11 +290,8 @@ export default function PaymentLinksScreen() {
                 <View
                   style={{
                     alignItems: "center",
-
                     justifyContent: "center",
-
                     minWidth: 72,
-
                     gap: spacing.xs,
                   }}
                 >
@@ -272,10 +299,10 @@ export default function PaymentLinksScreen() {
                     Links
                   </AppText>
 
-                  <AppText variant="h2">3</AppText>
+                  <AppText variant="h2">{totalLinks}</AppText>
 
-                  <AppText variant="caption" color="success">
-                    Active
+                  <AppText variant="caption" color={currentSummary.statusColor}>
+                    {currentSummary.status}
                   </AppText>
                 </View>
               </View>

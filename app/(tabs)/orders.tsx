@@ -129,15 +129,30 @@ export default function OrdersScreen() {
     }
   }, [orders, selectedFilter, searchQuery, appliedFilters]);
 
+  const ordersThisWeek = useMemo(() => {
+    const now = new Date();
+
+    // Monday as the first day of the week
+    const startOfWeek = new Date(now);
+    const day = startOfWeek.getDay(); // Sunday = 0
+
+    const diff = day === 0 ? -6 : 1 - day;
+
+    startOfWeek.setDate(startOfWeek.getDate() + diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    return orders.filter((order) => {
+      return new Date(order.createdAt) >= startOfWeek;
+    });
+  }, [orders]);
+
   const productsById = useMemo(() => {
     return Object.fromEntries(products.map((product) => [product.id, product]));
   }, [products]);
 
-  const [selectedOrder, setSelectedOrder] =
-  useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const orderSummaryBottomSheetRef =
-  useRef<BottomSheetModal>(null);
+  const orderSummaryBottomSheetRef = useRef<BottomSheetModal>(null);
 
   if (isLoading) {
     return (
@@ -191,7 +206,11 @@ export default function OrdersScreen() {
               <AppText variant="h1">Orders</AppText>
 
               <AppText variant="body" color="secondary">
-                Number of orders this week
+                {ordersThisWeek.length === 0
+                  ? "No orders this week"
+                  : ordersThisWeek.length === 1
+                    ? "1 order this week"
+                    : `${ordersThisWeek.length} orders this week`}
               </AppText>
             </View>
 

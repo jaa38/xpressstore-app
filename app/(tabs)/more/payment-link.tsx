@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+
+import { PaymentLinkBottomSheet } from "@/components/payment-links/PaymentLinkBottomSheet";
 import {
   ActivityIndicator,
   Pressable,
@@ -90,6 +93,11 @@ export default function PaymentLinksScreen() {
 
   const [selectedStatus, setSelectedStatus] =
     useState<PaymentLinkStatus>("all");
+
+  const paymentLinkBottomSheetRef = useRef<BottomSheetModal>(null);
+
+  const [selectedPaymentLink, setSelectedPaymentLink] =
+    useState<PaymentLink | null>(null);
 
   const filteredLinks =
     selectedStatus === "all"
@@ -421,7 +429,7 @@ export default function PaymentLinksScreen() {
               {/* Payment link list */}
               <View
                 style={{
-                  gap: spacing.md,
+                  gap: spacing.lg,
                 }}
               >
                 {statusSections.map((section) => {
@@ -442,7 +450,8 @@ export default function PaymentLinksScreen() {
                       badgeText={section.badgeText}
                       badgeTextColor={section.badgeTextColor}
                       onMorePress={(link) => {
-                        console.log("Selected:", link);
+                        setSelectedPaymentLink(link);
+                        paymentLinkBottomSheetRef.current?.present();
                       }}
                     />
                   ));
@@ -452,6 +461,11 @@ export default function PaymentLinksScreen() {
           </View>
         </View>
       </View>
+
+      <PaymentLinkBottomSheet
+        ref={paymentLinkBottomSheetRef}
+        paymentLink={selectedPaymentLink}
+      />
     </SafeAreaView>
   );
 }

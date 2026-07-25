@@ -99,6 +99,16 @@ export const ROUTES = {
 
   // Step 5
   ADD_PRODUCT_REVIEW: "/product/add/review",
+
+  /**
+   * PAYMENT LINKS
+   */
+
+  // Create Payment Link
+  ADD_PAYMENT_LINK: "/payment-link/add",
+
+  // QR Code
+  PAYMENT_LINK_QR_CODE: "/payment-link/qr-code",
 } as const;
 
 export const getProductDetailsRoute = (id: string) => `/product/${id}` as const;

@@ -527,31 +527,6 @@ export default function PaymentLinksScreen() {
       <PaymentLinkBottomSheet
         ref={paymentLinkBottomSheetRef}
         paymentLink={selectedPaymentLink}
-        onDeleteLink={(paymentLink) => {
-          Alert.alert(
-            "Delete Payment Link",
-            `Are you sure you want to permanently delete "${paymentLink.title}"?`,
-            [
-              {
-                text: "Cancel",
-                style: "cancel",
-              },
-              {
-                text: "Delete",
-                style: "destructive",
-                onPress: async () => {
-                  // TODO:
-                  // await deletePaymentLink(paymentLink.id);
-
-                  Alert.alert(
-                    "Payment Link Deleted",
-                    `"${paymentLink.title}" has been deleted.`
-                  );
-                },
-              },
-            ]
-          );
-        }}
       />
     </SafeAreaView>
   );

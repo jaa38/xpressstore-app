@@ -16,6 +16,8 @@ export function BottomSheetFooter({
         borderTopWidth: 1,
         borderTopColor: theme.border.default,
         backgroundColor: theme.background.surface,
+        flexDirection: "row",
+        gap: spacing.md,
       }}
     >
       {children}

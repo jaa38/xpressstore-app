@@ -1,16 +1,29 @@
-import { forwardRef, useMemo } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
+
 import { Alert, Share, View } from "react-native";
 
 import * as Clipboard from "expo-clipboard";
 
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import {
+  BottomSheetBackdrop,
+  BottomSheetBackdropProps,
+  BottomSheetModal,
+  BottomSheetScrollView,
+} from "@gorhom/bottom-sheet";
+
+import { radius, spacing, theme } from "@/theme";
 
 import { AppText } from "@/components/ui/AppText";
-import { Button } from "@/components/ui/Button";
+import { BottomSheetHeader } from "@/components/ui/BottomSheetHeader";
+import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
 import { Divider } from "@/components/ui/Divider";
 import { ListActionItem } from "@/components/ui/ListActionItem";
-
-import { spacing } from "@/theme";
 
 import type { PaymentLink } from "@/types/paymentLink";
 
@@ -20,29 +33,44 @@ interface PaymentLinkBottomSheetProps {
   onViewQRCode?: (paymentLink: PaymentLink) => void;
 
   onDeactivateLink?: (paymentLink: PaymentLink) => void;
-
-  onDeleteLink?: (paymentLink: PaymentLink) => void;
 }
 
 export const PaymentLinkBottomSheet = forwardRef<
   BottomSheetModal,
   PaymentLinkBottomSheetProps
->(({ paymentLink, onViewQRCode, onDeactivateLink, onDeleteLink }, ref) => {
-  const snapPoints = useMemo(() => ["70%"], []);
+>(({ paymentLink, onViewQRCode, onDeactivateLink }, ref) => {
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+
+  const snapPoints = useMemo(() => ["65%"], []);
+
+  useImperativeHandle(ref, () => bottomSheetRef.current!, []);
+
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior="close"
+        opacity={0.4}
+      />
+    ),
+    []
+  );
 
   const dismissSheet = () => {
-    (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
+    bottomSheetRef.current?.dismiss();
   };
 
-  const handleCopyLink = async () => {
+  async function handleCopyLink() {
     if (!paymentLink) return;
 
     await Clipboard.setStringAsync(paymentLink.url);
 
     Alert.alert("Link Copied", "Payment link copied to clipboard.");
-  };
+  }
 
-  const handleShareLink = async () => {
+  async function handleShareLink() {
     if (!paymentLink) return;
 
     try {
@@ -57,57 +85,64 @@ export const PaymentLinkBottomSheet = forwardRef<
         "Something went wrong while trying to share the payment link."
       );
     }
-  };
+  }
 
-  const handleViewQRCode = () => {
+  function handleQRCode() {
     if (!paymentLink) return;
 
     dismissSheet();
 
     onViewQRCode?.(paymentLink);
-  };
+  }
 
-  const handleDeactivateLink = () => {
+  function handleDeactivate() {
     if (!paymentLink) return;
 
     dismissSheet();
 
     onDeactivateLink?.(paymentLink);
-  };
-
-  const handleDeleteLink = () => {
-    if (!paymentLink) return;
-
-    dismissSheet();
-
-    onDeleteLink?.(paymentLink);
-  };
+  }
 
   return (
-    <BottomSheetModal ref={ref} snapPoints={snapPoints}>
-      <BottomSheetView
-        style={{
-          flex: 1,
-          padding: spacing.lg,
-          justifyContent: "space-between",
+    <BottomSheetModal
+      ref={bottomSheetRef}
+      snapPoints={snapPoints}
+      enablePanDownToClose
+      enableDismissOnClose
+      backdropComponent={renderBackdrop}
+      keyboardBehavior="interactive"
+      keyboardBlurBehavior="restore"
+      backgroundStyle={{
+        backgroundColor: theme.background.surface,
+        borderTopLeftRadius: radius["2xl"],
+        borderTopRightRadius: radius["2xl"],
+      }}
+      handleIndicatorStyle={{
+        backgroundColor: theme.border.default,
+      }}
+    >
+      <BottomSheetHeader title="Payment Link" onClose={dismissSheet} />
+
+      <BottomSheetScrollView
+        contentContainerStyle={{
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.lg,
+          paddingBottom: spacing["2xl"],
         }}
       >
-        <View>
+        <BottomSheetSection title="Information">
           <View
             style={{
               gap: spacing.xs,
-              marginBottom: spacing.lg,
             }}
           >
-            <AppText variant="h2">Payment Link</AppText>
-
             <AppText variant="bodyBold">{paymentLink?.title}</AppText>
 
             <AppText color="secondary">{paymentLink?.url}</AppText>
           </View>
+        </BottomSheetSection>
 
-          <Divider />
-
+        <BottomSheetSection title="Actions">
           <ListActionItem
             icon="copy-outline"
             title="Copy Link"
@@ -127,7 +162,7 @@ export const PaymentLinkBottomSheet = forwardRef<
           <ListActionItem
             icon="qr-code-outline"
             title="View QR Code"
-            onPress={handleViewQRCode}
+            onPress={handleQRCode}
           />
 
           <Divider />
@@ -135,10 +170,10 @@ export const PaymentLinkBottomSheet = forwardRef<
           <ListActionItem
             icon="pause-circle-outline"
             title="Deactivate Link"
-            onPress={handleDeactivateLink}
+            onPress={handleDeactivate}
           />
-        </View>
-      </BottomSheetView>
+        </BottomSheetSection>
+      </BottomSheetScrollView>
     </BottomSheetModal>
   );
 });

@@ -1,31 +1,17 @@
 import { View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
 import { Divider } from "@/components/ui/Divider";
+import { ProductImage } from "@/components/ui/ProductImage";
 
-import { spacing, radius, theme } from "@/theme";
+import { spacing, radius } from "@/theme";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
-import type { Currency } from "@/types/currency";
-
-export interface PaymentLink {
-  id: string;
-  title: string;
-  url: string;
-  createdAt: string;
-  amount: number;
-  currency: Currency;
-}
+import type { PaymentLink } from "@/types/paymentLink";
 
 interface PaymentLinkRowProps {
   link: PaymentLink;
-
-  icon: keyof typeof Ionicons.glyphMap;
-
-  iconBackground: string;
-  iconColor: string;
 
   badgeBackground: string;
   badgeBorderColor?: string;
@@ -43,17 +29,10 @@ interface PaymentLinkRowProps {
 
 export function PaymentLinkRow({
   link,
-  icon,
-
-  iconBackground,
-  iconColor,
-
   badgeBackground,
   badgeBorderColor,
-
   badgeText,
   badgeTextColor,
-
   showDivider = false,
 }: PaymentLinkRowProps) {
   return (
@@ -74,25 +53,10 @@ export function PaymentLinkRow({
             gap: spacing.md,
           }}
         >
-          <View
-            style={{
-              width: 48,
-              height: 48,
-
-              borderRadius: radius.full,
-
-              justifyContent: "center",
-              alignItems: "center",
-
-              backgroundColor: iconBackground,
-            }}
-          >
-            <Ionicons
-              name={icon}
-              size={22}
-              color={iconColor}
-            />
-          </View>
+          <ProductImage
+            image={link.image}
+            size={64}
+          />
 
           <View
             style={{
@@ -100,7 +64,10 @@ export function PaymentLinkRow({
               gap: spacing.xs,
             }}
           >
-            <AppText variant="bodyBold" numberOfLines={1}>
+            <AppText
+              variant="bodyBold"
+              numberOfLines={1}
+            >
               {link.title}
             </AppText>
 
@@ -112,7 +79,10 @@ export function PaymentLinkRow({
               {link.url}
             </AppText>
 
-            <AppText variant="caption" color="muted">
+            <AppText
+              variant="caption"
+              color="muted"
+            >
               {link.createdAt}
             </AppText>
           </View>
@@ -124,9 +94,7 @@ export function PaymentLinkRow({
           style={{
             alignItems: "flex-end",
             justifyContent: "center",
-
             gap: spacing.sm,
-
             minWidth: 88,
           }}
         >

@@ -21,29 +21,22 @@ import { UICard } from "@/components/ui/UICard";
 import { App } from "expo-router/build/rsc/entry";
 import { Divider } from "@/components/ui/Divider";
 
-import type { Currency } from "@/types/currency";
-
 import { formatCurrency } from "@/utils/formatCurrency";
 
 import { PaymentLinkRow } from "@/components/payment-links/PaymentLinkRow";
 
-interface PaymentLink {
-  id: string;
-  title: string;
-  url: string;
-  createdAt: string;
+import { ProductImage } from "@/components/ui/ProductImage";
 
-  amount: number;
-  currency: Currency;
-
-  status: Exclude<PaymentLinkStatus, "all">;
-}
-type PaymentLinkStatus = "all" | "paid" | "pending" | "failed" | "inactive";
+import type {
+  PaymentLink,
+  PaymentLinkStatus,
+} from "@/types/paymentLink";
 
 const paymentLinks: PaymentLink[] = [
   {
     id: "1",
     title: "Wedding Gele Bundle",
+    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400",
     url: "payx.press/p1",
     createdAt: "Created 2 hours ago",
     amount: 45000,
@@ -53,6 +46,7 @@ const paymentLinks: PaymentLink[] = [
   {
     id: "2",
     title: "Football Boots",
+    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",
     url: "payx.press/p2",
     createdAt: "Created 10 hours ago",
     amount: 65000,
@@ -62,6 +56,7 @@ const paymentLinks: PaymentLink[] = [
   {
     id: "3",
     title: "GTA 6",
+    image: "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400",
     url: "payx.press/p3",
     createdAt: "Yesterday",
     amount: 200000,
@@ -71,6 +66,7 @@ const paymentLinks: PaymentLink[] = [
   {
     id: "4",
     title: "FIFA 26",
+    image: "https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=400",
     url: "payx.press/p4",
     createdAt: "23rd July 2026",
     amount: 9000,
@@ -155,11 +151,6 @@ export default function PaymentLinksScreen() {
       status: "paid" as const,
       badgeText: "Paid",
 
-      icon: "checkmark-circle-outline" as const,
-
-      iconBackground: theme.icon.success.background,
-      iconColor: theme.icon.success.icon,
-
       badgeBackground: theme.badge.success.background,
       badgeTextColor: "success" as const,
     },
@@ -167,11 +158,6 @@ export default function PaymentLinksScreen() {
     {
       status: "pending" as const,
       badgeText: "Pending",
-
-      icon: "time-outline" as const,
-
-      iconBackground: theme.icon.warning.background,
-      iconColor: theme.icon.warning.icon,
 
       badgeBackground: theme.badge.warning.background,
       badgeTextColor: "warning" as const,
@@ -181,11 +167,6 @@ export default function PaymentLinksScreen() {
       status: "failed" as const,
       badgeText: "Failed",
 
-      icon: "close-circle-outline" as const,
-
-      iconBackground: theme.icon.error.background,
-      iconColor: theme.icon.error.icon,
-
       badgeBackground: theme.badge.error.background,
       badgeTextColor: "error" as const,
     },
@@ -193,11 +174,6 @@ export default function PaymentLinksScreen() {
     {
       status: "inactive" as const,
       badgeText: "Inactive",
-
-      icon: "link-outline" as const,
-
-      iconBackground: theme.icon.default.background,
-      iconColor: theme.icon.default.icon,
 
       badgeBackground: theme.background.subtle,
       badgeBorderColor: theme.border.default,
@@ -476,9 +452,6 @@ export default function PaymentLinksScreen() {
                     <PaymentLinkRow
                       key={link.id}
                       link={link}
-                      icon={section.icon}
-                      iconBackground={section.iconBackground}
-                      iconColor={section.iconColor}
                       badgeBackground={section.badgeBackground}
                       badgeBorderColor={section.badgeBorderColor}
                       badgeText={section.badgeText}

@@ -1,7 +1,7 @@
 import { View } from "react-native";
 
+import { Card } from "@/components/ui/Card";
 import { AppText } from "@/components/ui/AppText";
-import { Divider } from "@/components/ui/Divider";
 import { ProductImage } from "@/components/ui/ProductImage";
 
 import { spacing, radius } from "@/theme";
@@ -10,7 +10,7 @@ import { formatCurrency } from "@/utils/formatCurrency";
 
 import type { PaymentLink } from "@/types/paymentLink";
 
-interface PaymentLinkRowProps {
+interface PaymentLinkCardProps {
   link: PaymentLink;
 
   badgeBackground: string;
@@ -23,20 +23,17 @@ interface PaymentLinkRowProps {
     | "warning"
     | "error"
     | "secondary";
-
-  showDivider?: boolean;
 }
 
-export function PaymentLinkRow({
+export function PaymentLinkCard({
   link,
   badgeBackground,
   badgeBorderColor,
   badgeText,
   badgeTextColor,
-  showDivider = false,
-}: PaymentLinkRowProps) {
+}: PaymentLinkCardProps) {
   return (
-    <>
+    <Card>
       <View
         style={{
           flexDirection: "row",
@@ -127,8 +124,6 @@ export function PaymentLinkRow({
           </View>
         </View>
       </View>
-
-      {showDivider && <Divider />}
-    </>
+    </Card>
   );
 }

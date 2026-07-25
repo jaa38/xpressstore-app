@@ -27,10 +27,7 @@ import { PaymentLinkRow } from "@/components/payment-links/PaymentLinkRow";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 
-import type {
-  PaymentLink,
-  PaymentLinkStatus,
-} from "@/types/paymentLink";
+import type { PaymentLink, PaymentLinkStatus } from "@/types/paymentLink";
 
 const paymentLinks: PaymentLink[] = [
   {
@@ -464,6 +461,7 @@ export default function PaymentLinksScreen() {
                   ));
                 })}
               </Card>
+
             </ScrollView>
           </View>
         </View>

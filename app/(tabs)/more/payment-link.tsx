@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
-import { PaymentLinkBottomSheet } from "@/components/payment-links/PaymentLinkBottomSheet";
+import { PaymentLinkBottomSheet } from "@/components/bottom-sheet/PaymentLinkBottomSheet";
 import {
+  Alert,
   ActivityIndicator,
   Pressable,
   RefreshControl,
@@ -27,6 +28,8 @@ import { formatCurrency } from "@/utils/formatCurrency";
 import { PaymentLinkCard } from "@/components/payment-links/PaymentLinkCard";
 
 import type { PaymentLink, PaymentLinkStatus } from "@/types/paymentLink";
+
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
 const paymentLinks: PaymentLink[] = [
   {
@@ -70,6 +73,33 @@ const paymentLinks: PaymentLink[] = [
     status: "inactive",
   },
 ];
+
+function RightActions({ onDelete }: { onDelete: () => void }) {
+  return (
+    <Pressable
+      onPress={onDelete}
+      style={{
+        width: 90,
+        marginLeft: spacing.sm,
+
+        justifyContent: "center",
+        alignItems: "center",
+
+        backgroundColor: theme.action.destructive.background,
+
+        borderRadius: radius.md,
+      }}
+    >
+      <Ionicons
+        name="trash-outline"
+        size={24}
+        color={theme.action.destructive.text}
+      />
+
+      <AppText color="inverse">Delete</AppText>
+    </Pressable>
+  );
+}
 
 export default function PaymentLinksScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -182,6 +212,32 @@ export default function PaymentLinksScreen() {
       badgeTextColor: "secondary" as const,
     },
   ];
+
+  function handleDelete(paymentLink: PaymentLink) {
+    Alert.alert(
+      "Delete Payment Link",
+      `Are you sure you want to permanently delete "${paymentLink.title}"?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            // TODO:
+            // await deletePaymentLink(paymentLink.id);
+
+            Alert.alert(
+              "Payment Link Deleted",
+              `"${paymentLink.title}" has been deleted.`
+            );
+          },
+        },
+      ]
+    );
+  }
 
   return (
     <SafeAreaView
@@ -429,7 +485,7 @@ export default function PaymentLinksScreen() {
               {/* Payment link list */}
               <View
                 style={{
-                  gap: spacing.lg,
+                  gap: spacing.md,
                 }}
               >
                 {statusSections.map((section) => {
@@ -442,18 +498,24 @@ export default function PaymentLinksScreen() {
                   }
 
                   return links.map((link) => (
-                    <PaymentLinkCard
+                    <Swipeable
                       key={link.id}
-                      link={link}
-                      badgeBackground={section.badgeBackground}
-                      badgeBorderColor={section.badgeBorderColor}
-                      badgeText={section.badgeText}
-                      badgeTextColor={section.badgeTextColor}
-                      onMorePress={(link) => {
-                        setSelectedPaymentLink(link);
-                        paymentLinkBottomSheetRef.current?.present();
-                      }}
-                    />
+                      renderRightActions={() => (
+                        <RightActions onDelete={() => handleDelete(link)} />
+                      )}
+                    >
+                      <PaymentLinkCard
+                        link={link}
+                        badgeBackground={section.badgeBackground}
+                        badgeBorderColor={section.badgeBorderColor}
+                        badgeText={section.badgeText}
+                        badgeTextColor={section.badgeTextColor}
+                        onMorePress={(link) => {
+                          setSelectedPaymentLink(link);
+                          paymentLinkBottomSheetRef.current?.present();
+                        }}
+                      />
+                    </Swipeable>
                   ));
                 })}
               </View>
@@ -465,6 +527,31 @@ export default function PaymentLinksScreen() {
       <PaymentLinkBottomSheet
         ref={paymentLinkBottomSheetRef}
         paymentLink={selectedPaymentLink}
+        onDeleteLink={(paymentLink) => {
+          Alert.alert(
+            "Delete Payment Link",
+            `Are you sure you want to permanently delete "${paymentLink.title}"?`,
+            [
+              {
+                text: "Cancel",
+                style: "cancel",
+              },
+              {
+                text: "Delete",
+                style: "destructive",
+                onPress: async () => {
+                  // TODO:
+                  // await deletePaymentLink(paymentLink.id);
+
+                  Alert.alert(
+                    "Payment Link Deleted",
+                    `"${paymentLink.title}" has been deleted.`
+                  );
+                },
+              },
+            ]
+          );
+        }}
       />
     </SafeAreaView>
   );

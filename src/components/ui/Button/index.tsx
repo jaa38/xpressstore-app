@@ -16,7 +16,8 @@ type ButtonVariant =
   | "primary"
   | "secondary"
   | "tertiary"
-  | "tertiaryDestructive";
+  | "tertiaryDestructive"
+  | "destructive";
 
 type ButtonSize = "large" | "medium" | "small";
 
@@ -127,6 +128,13 @@ function getVariantStyles({
         borderWidth: 1,
         borderColor: theme.action.tertiaryDestructive.border,
       };
+
+    case "destructive":
+      return {
+        backgroundColor: pressed
+          ? theme.action.destructive.pressed
+          : theme.action.destructive.background,
+      };
   }
 }
 
@@ -147,6 +155,9 @@ function getTextColor(variant: ButtonVariant, disabled: boolean): string {
 
     case "tertiaryDestructive":
       return theme.action.tertiaryDestructive.text;
+
+    case "destructive":
+      return theme.action.destructive.text;
   }
 }
 

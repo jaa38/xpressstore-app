@@ -18,14 +18,10 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { spacing, theme, radius } from "@/theme";
 import { router } from "expo-router";
 import { UICard } from "@/components/ui/UICard";
-import { App } from "expo-router/build/rsc/entry";
-import { Divider } from "@/components/ui/Divider";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
-import { PaymentLinkRow } from "@/components/payment-links/PaymentLinkRow";
-
-import { ProductImage } from "@/components/ui/ProductImage";
+import { PaymentLinkCard } from "@/components/payment-links/PaymentLinkCard";
 
 import type { PaymentLink, PaymentLinkStatus } from "@/types/paymentLink";
 
@@ -423,12 +419,12 @@ export default function PaymentLinksScreen() {
               }
             >
               {/* Payment link list */}
-              <Card
+              <View
                 style={{
                   gap: spacing.md,
                 }}
               >
-                {statusSections.map((section, sectionIndex) => {
+                {statusSections.map((section) => {
                   const links = filteredLinks.filter(
                     (link) => link.status === section.status
                   );
@@ -437,31 +433,18 @@ export default function PaymentLinksScreen() {
                     return null;
                   }
 
-                  const hasNextSection = statusSections
-                    .slice(sectionIndex + 1)
-                    .some((nextSection) =>
-                      filteredLinks.some(
-                        (link) => link.status === nextSection.status
-                      )
-                    );
-
-                  return links.map((link, index) => (
-                    <PaymentLinkRow
+                  return links.map((link) => (
+                    <PaymentLinkCard
                       key={link.id}
                       link={link}
                       badgeBackground={section.badgeBackground}
                       badgeBorderColor={section.badgeBorderColor}
                       badgeText={section.badgeText}
                       badgeTextColor={section.badgeTextColor}
-                      showDivider={
-                        index < links.length - 1 ||
-                        (index === links.length - 1 && hasNextSection)
-                      }
                     />
                   ));
                 })}
-              </Card>
-
+              </View>
             </ScrollView>
           </View>
         </View>

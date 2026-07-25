@@ -110,9 +110,10 @@ export default function PaymentLinksScreen() {
   const showFailed = filteredLinks.some((link) => link.status === "failed");
   const showInactive = filteredLinks.some((link) => link.status === "inactive");
 
-  const paidLinks = paymentLinks.filter((link) => link.status === "paid");
-
-  const summaryLinks = selectedStatus === "all" ? paidLinks : filteredLinks;
+  const summaryLinks =
+    selectedStatus === "all"
+      ? paymentLinks.filter((link) => link.status === "paid")
+      : paymentLinks.filter((link) => link.status === selectedStatus);
 
   const totalAmount = summaryLinks.reduce(
     (total, link) => total + link.amount,
@@ -230,6 +231,7 @@ export default function PaymentLinksScreen() {
               flex: 1,
             }}
           >
+            {/* Summary Card */}
             <Card
               variant="active"
               style={{
@@ -374,6 +376,7 @@ export default function PaymentLinksScreen() {
                 />
               }
             >
+              {/* Payment link list */}
               <Card
                 style={{
                   gap: spacing.md,

@@ -391,8 +391,8 @@ export default function PaymentLinksScreen() {
               >
                 {/* Successful */}
 
-                {paidLinks.length > 0 && (
-                  <>
+                {paidLinks.map((link, index) => (
+                  <View key={link.id}>
                     <View
                       style={{
                         flexDirection: "row",
@@ -409,18 +409,13 @@ export default function PaymentLinksScreen() {
                           gap: spacing.md,
                         }}
                       >
-                        {/* Icon */}
-
                         <View
                           style={{
                             width: 48,
                             height: 48,
-
                             borderRadius: radius.full,
-
                             justifyContent: "center",
                             alignItems: "center",
-
                             backgroundColor: theme.icon.success.background,
                           }}
                         >
@@ -431,8 +426,6 @@ export default function PaymentLinksScreen() {
                           />
                         </View>
 
-                        {/* Content */}
-
                         <View
                           style={{
                             flex: 1,
@@ -440,7 +433,7 @@ export default function PaymentLinksScreen() {
                           }}
                         >
                           <AppText variant="bodyBold" numberOfLines={1}>
-                            {paidLink?.title}
+                            {link.title}
                           </AppText>
 
                           <AppText
@@ -448,11 +441,11 @@ export default function PaymentLinksScreen() {
                             color="secondary"
                             numberOfLines={1}
                           >
-                            {paidLink?.url}
+                            {link.url}
                           </AppText>
 
                           <AppText variant="caption" color="muted">
-                            {paidLink?.createdAt}
+                            {link.createdAt}
                           </AppText>
                         </View>
                       </View>
@@ -463,26 +456,22 @@ export default function PaymentLinksScreen() {
                         style={{
                           alignItems: "flex-end",
                           justifyContent: "center",
-
                           gap: spacing.sm,
-
                           minWidth: 88,
                         }}
                       >
                         <AppText variant="bodyLargeBold">
-                          {paidLink &&
-                            formatCurrency(paidLink.amount, {
-                              currency: paidLink.currency,
-                              showDecimals: paidLink.amount % 1 !== 0,
-                            })}
+                          {formatCurrency(link.amount, {
+                            currency: link.currency,
+                            showDecimals: link.amount % 1 !== 0,
+                          })}
                         </AppText>
+
                         <View
                           style={{
                             paddingHorizontal: spacing.sm,
                             paddingVertical: spacing.xs,
-
                             borderRadius: radius.full,
-
                             backgroundColor: theme.badge.success.background,
                           }}
                         >
@@ -493,16 +482,19 @@ export default function PaymentLinksScreen() {
                       </View>
                     </View>
 
-                    {(pendingLinks.length > 0 ||
-                      failedLinks.length > 0 ||
-                      inactiveLinks.length > 0) && <Divider />}
-                  </>
-                )}
+                    {index < paidLinks.length - 1 && <Divider />}
+
+                    {index === paidLinks.length - 1 &&
+                      (pendingLinks.length > 0 ||
+                        failedLinks.length > 0 ||
+                        inactiveLinks.length > 0) && <Divider />}
+                  </View>
+                ))}
 
                 {/* Pending */}
 
-                {pendingLinks.length > 0 && (
-                  <>
+                {pendingLinks.map((link, index) => (
+                  <View key={link.id}>
                     <View
                       style={{
                         flexDirection: "row",
@@ -550,7 +542,7 @@ export default function PaymentLinksScreen() {
                           }}
                         >
                           <AppText variant="bodyBold" numberOfLines={1}>
-                            {pendingLink?.title}
+                            {link.title}
                           </AppText>
 
                           <AppText
@@ -558,11 +550,11 @@ export default function PaymentLinksScreen() {
                             color="secondary"
                             numberOfLines={1}
                           >
-                            {pendingLink?.url}
+                            {link.url}
                           </AppText>
 
                           <AppText variant="caption" color="muted">
-                            {pendingLink?.createdAt}
+                            {link.createdAt}
                           </AppText>
                         </View>
                       </View>
@@ -580,11 +572,10 @@ export default function PaymentLinksScreen() {
                         }}
                       >
                         <AppText variant="bodyLargeBold">
-                          {pendingLink &&
-                            formatCurrency(pendingLink.amount, {
-                              currency: pendingLink.currency,
-                              showDecimals: pendingLink.amount % 1 !== 0,
-                            })}
+                          {formatCurrency(link.amount, {
+                            currency: link.currency,
+                            showDecimals: link.amount % 1 !== 0,
+                          })}
                         </AppText>
 
                         <View
@@ -604,16 +595,23 @@ export default function PaymentLinksScreen() {
                       </View>
                     </View>
 
-                    {(failedLinks.length > 0 || inactiveLinks.length > 0) && (
-                      <Divider />
-                    )}
-                  </>
-                )}
+                    {/* Divider between pending links */}
+
+                    {index < pendingLinks.length - 1 && <Divider />}
+
+                    {/* Divider before the next status section */}
+
+                    {index === pendingLinks.length - 1 &&
+                      (failedLinks.length > 0 || inactiveLinks.length > 0) && (
+                        <Divider />
+                      )}
+                  </View>
+                ))}
 
                 {/* Failed */}
 
-                {failedLinks.length > 0 && (
-                  <>
+                {failedLinks.map((link, index) => (
+                  <View key={link.id}>
                     <View
                       style={{
                         flexDirection: "row",
@@ -661,7 +659,7 @@ export default function PaymentLinksScreen() {
                           }}
                         >
                           <AppText variant="bodyBold" numberOfLines={1}>
-                            {failedLink?.title}
+                            {link.title}
                           </AppText>
 
                           <AppText
@@ -669,11 +667,11 @@ export default function PaymentLinksScreen() {
                             color="secondary"
                             numberOfLines={1}
                           >
-                            {failedLink?.url}
+                            {link.url}
                           </AppText>
 
                           <AppText variant="caption" color="muted">
-                            {failedLink?.createdAt}
+                            {link.createdAt}
                           </AppText>
                         </View>
                       </View>
@@ -691,11 +689,10 @@ export default function PaymentLinksScreen() {
                         }}
                       >
                         <AppText variant="bodyLargeBold">
-                          {failedLink &&
-                            formatCurrency(failedLink.amount, {
-                              currency: failedLink.currency,
-                              showDecimals: failedLink.amount % 1 !== 0,
-                            })}
+                          {formatCurrency(link.amount, {
+                            currency: link.currency,
+                            showDecimals: link.amount % 1 !== 0,
+                          })}
                         </AppText>
 
                         <View
@@ -715,14 +712,22 @@ export default function PaymentLinksScreen() {
                       </View>
                     </View>
 
-                    {inactiveLinks.length > 0 && <Divider />}
-                  </>
-                )}
+                    {/* Divider between failed links */}
+
+                    {index < failedLinks.length - 1 && <Divider />}
+
+                    {/* Divider before the Inactive section */}
+
+                    {index === failedLinks.length - 1 &&
+                      inactiveLinks.length > 0 && <Divider />}
+                  </View>
+                ))}
 
                 {/* Inactive */}
 
-                {inactiveLinks.length > 0 && (
+                {inactiveLinks.map((link) => (
                   <View
+                    key={link.id}
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
@@ -769,7 +774,7 @@ export default function PaymentLinksScreen() {
                         }}
                       >
                         <AppText variant="bodyBold" numberOfLines={1}>
-                          {inactiveLink?.title}
+                          {link.title}
                         </AppText>
 
                         <AppText
@@ -777,11 +782,11 @@ export default function PaymentLinksScreen() {
                           color="secondary"
                           numberOfLines={1}
                         >
-                          {inactiveLink?.url}
+                          {link.url}
                         </AppText>
 
                         <AppText variant="caption" color="muted">
-                          {inactiveLink?.createdAt}
+                          {link.createdAt}
                         </AppText>
                       </View>
                     </View>
@@ -799,11 +804,10 @@ export default function PaymentLinksScreen() {
                       }}
                     >
                       <AppText variant="bodyLargeBold">
-                        {inactiveLink &&
-                          formatCurrency(inactiveLink.amount, {
-                            currency: inactiveLink.currency,
-                            showDecimals: inactiveLink.amount % 1 !== 0,
-                          })}
+                        {formatCurrency(link.amount, {
+                          currency: link.currency,
+                          showDecimals: link.amount % 1 !== 0,
+                        })}
                       </AppText>
 
                       <View
@@ -825,7 +829,7 @@ export default function PaymentLinksScreen() {
                       </View>
                     </View>
                   </View>
-                )}
+                ))}
               </Card>
             </ScrollView>
           </View>

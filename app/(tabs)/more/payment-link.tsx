@@ -31,6 +31,8 @@ import type { PaymentLink, PaymentLinkStatus } from "@/types/paymentLink";
 
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
+import { ROUTES } from "@/navigation/routes";
+
 const paymentLinks: PaymentLink[] = [
   {
     id: "1",
@@ -310,9 +312,7 @@ export default function PaymentLinksScreen() {
             {/* Add Button */}
 
             <Pressable
-              onPress={() => {
-                // Navigate to Add Payment Link
-              }}
+              onPress={() => router.push(ROUTES.ADD_PAYMENT_LINK)}
               style={{
                 width: 44,
                 height: 44,

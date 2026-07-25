@@ -441,6 +441,9 @@ export default function PaymentLinksScreen() {
                       badgeBorderColor={section.badgeBorderColor}
                       badgeText={section.badgeText}
                       badgeTextColor={section.badgeTextColor}
+                      onMorePress={(link) => {
+                        console.log("Selected:", link);
+                      }}
                     />
                   ));
                 })}

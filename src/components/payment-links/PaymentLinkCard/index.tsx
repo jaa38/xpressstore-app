@@ -1,10 +1,12 @@
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
+
+import { Ionicons } from "@expo/vector-icons";
 
 import { Card } from "@/components/ui/Card";
 import { AppText } from "@/components/ui/AppText";
 import { ProductImage } from "@/components/ui/ProductImage";
 
-import { spacing, radius } from "@/theme";
+import { spacing, radius, theme } from "@/theme";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
@@ -18,11 +20,9 @@ interface PaymentLinkCardProps {
 
   badgeText: string;
 
-  badgeTextColor:
-    | "success"
-    | "warning"
-    | "error"
-    | "secondary";
+  badgeTextColor: "success" | "warning" | "error" | "secondary";
+
+  onMorePress?: (link: PaymentLink) => void;
 }
 
 export function PaymentLinkCard({
@@ -31,6 +31,7 @@ export function PaymentLinkCard({
   badgeBorderColor,
   badgeText,
   badgeTextColor,
+  onMorePress,
 }: PaymentLinkCardProps) {
   return (
     <Card>
@@ -50,10 +51,7 @@ export function PaymentLinkCard({
             gap: spacing.md,
           }}
         >
-          <ProductImage
-            image={link.image}
-            size={64}
-          />
+          <ProductImage image={link.image} size={64} />
 
           <View
             style={{
@@ -61,25 +59,15 @@ export function PaymentLinkCard({
               gap: spacing.xs,
             }}
           >
-            <AppText
-              variant="bodyBold"
-              numberOfLines={1}
-            >
+            <AppText variant="bodyBold" numberOfLines={1}>
               {link.title}
             </AppText>
 
-            <AppText
-              variant="bodySmall"
-              color="secondary"
-              numberOfLines={1}
-            >
+            <AppText variant="bodySmall" color="secondary" numberOfLines={1}>
               {link.url}
             </AppText>
 
-            <AppText
-              variant="caption"
-              color="muted"
-            >
+            <AppText variant="caption" color="muted">
               {link.createdAt}
             </AppText>
           </View>
@@ -90,9 +78,10 @@ export function PaymentLinkCard({
         <View
           style={{
             alignItems: "flex-end",
-            justifyContent: "center",
-            gap: spacing.sm,
+            // justifyContent: "space-between",
+            alignSelf: "stretch",
             minWidth: 88,
+            gap: spacing.xs,
           }}
         >
           <AppText variant="bodyLargeBold">
@@ -115,13 +104,18 @@ export function PaymentLinkCard({
               borderColor: badgeBorderColor,
             }}
           >
-            <AppText
-              variant="caption"
-              color={badgeTextColor}
-            >
+            <AppText variant="caption" color={badgeTextColor}>
               {badgeText}
             </AppText>
           </View>
+
+          <Pressable hitSlop={10} onPress={() => onMorePress?.(link)}>
+            <Ionicons
+              name="ellipsis-horizontal"
+              size={20}
+              color={theme.text.primary}
+            />
+          </Pressable>
         </View>
       </View>
     </Card>

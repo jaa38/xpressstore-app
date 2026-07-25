@@ -6,7 +6,7 @@ import {
   useRef,
 } from "react";
 
-import { Pressable, View } from "react-native";
+import { Pressable } from "react-native";
 
 import {
   BottomSheetBackdrop,
@@ -15,9 +15,9 @@ import {
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 
-import { Ionicons } from "@expo/vector-icons";
-
 import { AppText } from "@/components/ui/AppText";
+import { BottomSheetFooter } from "@/components/ui/BottomSheetFooter";
+import { BottomSheetHeader } from "@/components/ui/BottomSheetHeader";
 import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
 import { AmountRangeFilter } from "@/components/ui/AmountRangeFilter";
 import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
@@ -79,41 +79,10 @@ export const FilterBottomSheet = forwardRef<
         backgroundColor: theme.border.default,
       }}
     >
-      {/* Header */}
-
-      <View
-        style={{
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.lg,
-        }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <AppText variant="h2">Filter & Sort</AppText>
-
-          <Pressable
-            hitSlop={10}
-            onPress={() => bottomSheetRef.current?.dismiss()}
-          >
-            <Ionicons name="close" size={22} color={theme.text.primary} />
-          </Pressable>
-        </View>
-
-        <View
-          style={{
-            height: 1,
-            backgroundColor: theme.border.default,
-            marginTop: spacing.lg,
-          }}
-        />
-      </View>
-
-      {/* Scrollable Content */}
+      <BottomSheetHeader
+        title="Filter & Sort"
+        onClose={() => bottomSheetRef.current?.dismiss()}
+      />
 
       <BottomSheetScrollView
         nestedScrollEnabled
@@ -164,16 +133,7 @@ export const FilterBottomSheet = forwardRef<
         </BottomSheetSection>
       </BottomSheetScrollView>
 
-      <View
-        style={{
-          padding: spacing.lg,
-          borderTopWidth: 1,
-          borderTopColor: theme.border.default,
-          flexDirection: "row",
-          gap: spacing.md,
-          backgroundColor: theme.background.surface,
-        }}
-      >
+      <BottomSheetFooter>
         <Pressable
           onPress={() => {
             setDraftFilters(defaultOrderFilters);
@@ -183,7 +143,7 @@ export const FilterBottomSheet = forwardRef<
             height: 48,
             justifyContent: "center",
             alignItems: "center",
-            borderRadius: 12,
+            borderRadius: radius.lg,
             borderWidth: 1,
             borderColor: theme.border.default,
           }}
@@ -201,7 +161,7 @@ export const FilterBottomSheet = forwardRef<
             height: 48,
             justifyContent: "center",
             alignItems: "center",
-            borderRadius: 12,
+            borderRadius: radius.lg,
             backgroundColor: theme.button.primary.background,
           }}
         >
@@ -209,9 +169,7 @@ export const FilterBottomSheet = forwardRef<
             Apply
           </AppText>
         </Pressable>
-      </View>
-
-      {/* Footer */}
+      </BottomSheetFooter>
     </BottomSheetModal>
   );
 });

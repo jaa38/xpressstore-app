@@ -230,51 +230,71 @@ export default function PaymentLinksScreen() {
         >
           {/* HEADER */}
 
-          <View>
-            <View
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing.md,
+            }}
+          >
+            {/* Back Button */}
+
+            <Pressable
+              onPress={() => router.back()}
               style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
+                width: 44,
+                height: 44,
+                justifyContent: "center",
                 alignItems: "center",
               }}
             >
-              <View
-                style={{
-                  gap: spacing.xs,
-                  flex: 1,
-                }}
-              >
-                <AppText variant="h1">Payment Link</AppText>
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={theme.text.primary}
+              />
+            </Pressable>
 
-                <AppText variant="body" color="secondary">
-                  {filteredLinks.length === 0
-                    ? "No payment links"
-                    : filteredLinks.length === 1
-                      ? "1 payment link"
-                      : `${filteredLinks.length} payment links`}
-                </AppText>
-              </View>
+            {/* Title */}
 
-              <Pressable
-                onPress={() => {
-                  // Navigate to Add Payment Link
-                }}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: radius.full,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: theme.action.primary.background,
-                }}
-              >
-                <Ionicons
-                  name="add"
-                  size={24}
-                  color={theme.action.primary.text}
-                />
-              </Pressable>
+            <View
+              style={{
+                flex: 1,
+                gap: spacing.xs,
+              }}
+            >
+              <AppText variant="h1">Payment Link</AppText>
+
+              <AppText variant="body" color="secondary">
+                {filteredLinks.length === 0
+                  ? "No payment links"
+                  : filteredLinks.length === 1
+                    ? "1 payment link"
+                    : `${filteredLinks.length} payment links`}
+              </AppText>
             </View>
+
+            {/* Add Button */}
+
+            <Pressable
+              onPress={() => {
+                // Navigate to Add Payment Link
+              }}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: radius.full,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: theme.action.primary.background,
+              }}
+            >
+              <Ionicons
+                name="add"
+                size={24}
+                color={theme.action.primary.text}
+              />
+            </Pressable>
           </View>
 
           {/* CONTENT */}

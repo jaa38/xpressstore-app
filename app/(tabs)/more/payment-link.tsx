@@ -150,17 +150,61 @@ export default function PaymentLinksScreen() {
     showDecimals: totalAmount % 1 !== 0,
   });
 
-  const paidLinks = filteredLinks.filter((link) => link.status === "paid");
+  const statusSections = [
+    {
+      status: "paid" as const,
+      badgeText: "Paid",
 
-  const pendingLinks = filteredLinks.filter(
-    (link) => link.status === "pending"
-  );
+      icon: "checkmark-circle-outline" as const,
 
-  const failedLinks = filteredLinks.filter((link) => link.status === "failed");
+      iconBackground: theme.icon.success.background,
+      iconColor: theme.icon.success.icon,
 
-  const inactiveLinks = filteredLinks.filter(
-    (link) => link.status === "inactive"
-  );
+      badgeBackground: theme.badge.success.background,
+      badgeTextColor: "success" as const,
+    },
+
+    {
+      status: "pending" as const,
+      badgeText: "Pending",
+
+      icon: "time-outline" as const,
+
+      iconBackground: theme.icon.warning.background,
+      iconColor: theme.icon.warning.icon,
+
+      badgeBackground: theme.badge.warning.background,
+      badgeTextColor: "warning" as const,
+    },
+
+    {
+      status: "failed" as const,
+      badgeText: "Failed",
+
+      icon: "close-circle-outline" as const,
+
+      iconBackground: theme.icon.error.background,
+      iconColor: theme.icon.error.icon,
+
+      badgeBackground: theme.badge.error.background,
+      badgeTextColor: "error" as const,
+    },
+
+    {
+      status: "inactive" as const,
+      badgeText: "Inactive",
+
+      icon: "link-outline" as const,
+
+      iconBackground: theme.icon.default.background,
+      iconColor: theme.icon.default.icon,
+
+      badgeBackground: theme.background.subtle,
+      badgeBorderColor: theme.border.default,
+
+      badgeTextColor: "secondary" as const,
+    },
+  ];
 
   return (
     <SafeAreaView
@@ -391,83 +435,41 @@ export default function PaymentLinksScreen() {
                   gap: spacing.md,
                 }}
               >
-                {/* Paid */}
+                {statusSections.map((section, sectionIndex) => {
+                  const links = filteredLinks.filter(
+                    (link) => link.status === section.status
+                  );
 
-                {paidLinks.map((link, index) => (
-                  <PaymentLinkRow
-                    key={link.id}
-                    link={link}
-                    icon="checkmark-circle-outline"
-                    iconBackground={theme.icon.success.background}
-                    iconColor={theme.icon.success.icon}
-                    badgeBackground={theme.badge.success.background}
-                    badgeText="Paid"
-                    badgeTextColor="success"
-                    showDivider={
-                      index < paidLinks.length - 1 ||
-                      (index === paidLinks.length - 1 &&
-                        (pendingLinks.length > 0 ||
-                          failedLinks.length > 0 ||
-                          inactiveLinks.length > 0))
-                    }
-                  />
-                ))}
+                  if (links.length === 0) {
+                    return null;
+                  }
 
-                {/* Pending */}
+                  const hasNextSection = statusSections
+                    .slice(sectionIndex + 1)
+                    .some((nextSection) =>
+                      filteredLinks.some(
+                        (link) => link.status === nextSection.status
+                      )
+                    );
 
-                {pendingLinks.map((link, index) => (
-                  <PaymentLinkRow
-                    key={link.id}
-                    link={link}
-                    icon="time-outline"
-                    iconBackground={theme.icon.warning.background}
-                    iconColor={theme.icon.warning.icon}
-                    badgeBackground={theme.badge.warning.background}
-                    badgeText="Pending"
-                    badgeTextColor="warning"
-                    showDivider={
-                      index < pendingLinks.length - 1 ||
-                      (index === pendingLinks.length - 1 &&
-                        (failedLinks.length > 0 || inactiveLinks.length > 0))
-                    }
-                  />
-                ))}
-
-                {/* Failed */}
-
-                {failedLinks.map((link, index) => (
-                  <PaymentLinkRow
-                    key={link.id}
-                    link={link}
-                    icon="close-circle-outline"
-                    iconBackground={theme.icon.error.background}
-                    iconColor={theme.icon.error.icon}
-                    badgeBackground={theme.badge.error.background}
-                    badgeText="Failed"
-                    badgeTextColor="error"
-                    showDivider={
-                      index < failedLinks.length - 1 ||
-                      (index === failedLinks.length - 1 &&
-                        inactiveLinks.length > 0)
-                    }
-                  />
-                ))}
-
-                {/* Inactive */}
-
-                {inactiveLinks.map((link) => (
-                  <PaymentLinkRow
-                    key={link.id}
-                    link={link}
-                    icon="link-outline"
-                    iconBackground={theme.icon.default.background}
-                    iconColor={theme.icon.default.icon}
-                    badgeBackground={theme.background.subtle}
-                    badgeBorderColor={theme.border.default}
-                    badgeText="Inactive"
-                    badgeTextColor="secondary"
-                  />
-                ))}
+                  return links.map((link, index) => (
+                    <PaymentLinkRow
+                      key={link.id}
+                      link={link}
+                      icon={section.icon}
+                      iconBackground={section.iconBackground}
+                      iconColor={section.iconColor}
+                      badgeBackground={section.badgeBackground}
+                      badgeBorderColor={section.badgeBorderColor}
+                      badgeText={section.badgeText}
+                      badgeTextColor={section.badgeTextColor}
+                      showDivider={
+                        index < links.length - 1 ||
+                        (index === links.length - 1 && hasNextSection)
+                      }
+                    />
+                  ));
+                })}
               </Card>
             </ScrollView>
           </View>

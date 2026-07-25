@@ -153,6 +153,14 @@ export default function PaymentLinksScreen() {
     showDecimals: totalAmount % 1 !== 0,
   });
 
+  const paidLink = paymentLinks.find((link) => link.status === "paid");
+
+  const pendingLink = paymentLinks.find((link) => link.status === "pending");
+
+  const failedLink = paymentLinks.find((link) => link.status === "failed");
+
+  const inactiveLink = paymentLinks.find((link) => link.status === "inactive");
+
   return (
     <SafeAreaView
       style={{
@@ -433,7 +441,7 @@ export default function PaymentLinksScreen() {
                           }}
                         >
                           <AppText variant="bodyBold" numberOfLines={1}>
-                            Wedding Gele Bundle
+                            {paidLink?.title}
                           </AppText>
 
                           <AppText
@@ -441,11 +449,11 @@ export default function PaymentLinksScreen() {
                             color="secondary"
                             numberOfLines={1}
                           >
-                            payx.press/p1
+                            {paidLink?.url}
                           </AppText>
 
                           <AppText variant="caption" color="muted">
-                            Created 2 hours ago
+                            {paidLink?.createdAt}
                           </AppText>
                         </View>
                       </View>
@@ -463,7 +471,11 @@ export default function PaymentLinksScreen() {
                         }}
                       >
                         <AppText variant="bodyLargeBold">
-                          {formatCurrency(45000)}
+                          {paidLink &&
+                            formatCurrency(paidLink.amount, {
+                              currency: paidLink.currency,
+                              showDecimals: paidLink.amount % 1 !== 0,
+                            })}
                         </AppText>
                         <View
                           style={{
@@ -537,7 +549,7 @@ export default function PaymentLinksScreen() {
                           }}
                         >
                           <AppText variant="bodyBold" numberOfLines={1}>
-                            Football Boots
+                            {pendingLink?.title}
                           </AppText>
 
                           <AppText
@@ -545,11 +557,11 @@ export default function PaymentLinksScreen() {
                             color="secondary"
                             numberOfLines={1}
                           >
-                            payx.press/p2
+                            {pendingLink?.url}
                           </AppText>
 
                           <AppText variant="caption" color="muted">
-                            Created 10 hours ago
+                            {pendingLink?.createdAt}
                           </AppText>
                         </View>
                       </View>
@@ -567,7 +579,11 @@ export default function PaymentLinksScreen() {
                         }}
                       >
                         <AppText variant="bodyLargeBold">
-                          {formatCurrency(65000)}
+                          {pendingLink &&
+                            formatCurrency(pendingLink.amount, {
+                              currency: pendingLink.currency,
+                              showDecimals: pendingLink.amount % 1 !== 0,
+                            })}
                         </AppText>
 
                         <View
@@ -642,7 +658,7 @@ export default function PaymentLinksScreen() {
                           }}
                         >
                           <AppText variant="bodyBold" numberOfLines={1}>
-                            GTA 6
+                            {failedLink?.title}
                           </AppText>
 
                           <AppText
@@ -650,11 +666,11 @@ export default function PaymentLinksScreen() {
                             color="secondary"
                             numberOfLines={1}
                           >
-                            payx.press/p3
+                            {failedLink?.url}
                           </AppText>
 
                           <AppText variant="caption" color="muted">
-                            Yesterday
+                            {failedLink?.createdAt}
                           </AppText>
                         </View>
                       </View>
@@ -672,7 +688,11 @@ export default function PaymentLinksScreen() {
                         }}
                       >
                         <AppText variant="bodyLargeBold">
-                          {formatCurrency(200000)}
+                          {failedLink &&
+                            formatCurrency(failedLink.amount, {
+                              currency: failedLink.currency,
+                              showDecimals: failedLink.amount % 1 !== 0,
+                            })}
                         </AppText>
 
                         <View
@@ -746,7 +766,7 @@ export default function PaymentLinksScreen() {
                         }}
                       >
                         <AppText variant="bodyBold" numberOfLines={1}>
-                          FIFA 26
+                          {inactiveLink?.title}
                         </AppText>
 
                         <AppText
@@ -754,11 +774,11 @@ export default function PaymentLinksScreen() {
                           color="secondary"
                           numberOfLines={1}
                         >
-                          payx.press/p4
+                          {inactiveLink?.url}
                         </AppText>
 
                         <AppText variant="caption" color="muted">
-                          23rd July 2026
+                          {inactiveLink?.createdAt}
                         </AppText>
                       </View>
                     </View>
@@ -776,7 +796,11 @@ export default function PaymentLinksScreen() {
                       }}
                     >
                       <AppText variant="bodyLargeBold">
-                        {formatCurrency(9000)}
+                        {inactiveLink &&
+                          formatCurrency(inactiveLink.amount, {
+                            currency: inactiveLink.currency,
+                            showDecimals: inactiveLink.amount % 1 !== 0,
+                          })}
                       </AppText>
 
                       <View

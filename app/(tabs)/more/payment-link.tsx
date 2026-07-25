@@ -105,11 +105,6 @@ export default function PaymentLinksScreen() {
       ? paymentLinks
       : paymentLinks.filter((link) => link.status === selectedStatus);
 
-  const showPaid = filteredLinks.some((link) => link.status === "paid");
-  const showPending = filteredLinks.some((link) => link.status === "pending");
-  const showFailed = filteredLinks.some((link) => link.status === "failed");
-  const showInactive = filteredLinks.some((link) => link.status === "inactive");
-
   const summaryLinks =
     selectedStatus === "all"
       ? paymentLinks.filter((link) => link.status === "paid")
@@ -153,13 +148,17 @@ export default function PaymentLinksScreen() {
     showDecimals: totalAmount % 1 !== 0,
   });
 
-  const paidLink = paymentLinks.find((link) => link.status === "paid");
+  const paidLinks = filteredLinks.filter((link) => link.status === "paid");
 
-  const pendingLink = paymentLinks.find((link) => link.status === "pending");
+  const pendingLinks = filteredLinks.filter(
+    (link) => link.status === "pending"
+  );
 
-  const failedLink = paymentLinks.find((link) => link.status === "failed");
+  const failedLinks = filteredLinks.filter((link) => link.status === "failed");
 
-  const inactiveLink = paymentLinks.find((link) => link.status === "inactive");
+  const inactiveLinks = filteredLinks.filter(
+    (link) => link.status === "inactive"
+  );
 
   return (
     <SafeAreaView
@@ -392,7 +391,7 @@ export default function PaymentLinksScreen() {
               >
                 {/* Successful */}
 
-                {showPaid && (
+                {paidLinks.length > 0 && (
                   <>
                     <View
                       style={{
@@ -494,13 +493,15 @@ export default function PaymentLinksScreen() {
                       </View>
                     </View>
 
-                    {(showPending || showFailed || showInactive) && <Divider />}
+                    {(pendingLinks.length > 0 ||
+                      failedLinks.length > 0 ||
+                      inactiveLinks.length > 0) && <Divider />}
                   </>
                 )}
 
                 {/* Pending */}
 
-                {showPending && (
+                {pendingLinks.length > 0 && (
                   <>
                     <View
                       style={{
@@ -603,13 +604,15 @@ export default function PaymentLinksScreen() {
                       </View>
                     </View>
 
-                    {(showFailed || showInactive) && <Divider />}
+                    {(failedLinks.length > 0 || inactiveLinks.length > 0) && (
+                      <Divider />
+                    )}
                   </>
                 )}
 
                 {/* Failed */}
 
-                {showFailed && (
+                {failedLinks.length > 0 && (
                   <>
                     <View
                       style={{
@@ -712,13 +715,13 @@ export default function PaymentLinksScreen() {
                       </View>
                     </View>
 
-                    {showInactive && <Divider />}
+                    {inactiveLinks.length > 0 && <Divider />}
                   </>
                 )}
 
                 {/* Inactive */}
 
-                {showInactive && (
+                {inactiveLinks.length > 0 && (
                   <View
                     style={{
                       flexDirection: "row",

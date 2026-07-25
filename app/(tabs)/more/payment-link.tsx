@@ -25,6 +25,8 @@ import type { Currency } from "@/types/currency";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
+import { PaymentLinkRow } from "@/components/payment-links/PaymentLinkRow";
+
 interface PaymentLink {
   id: string;
   title: string;
@@ -389,446 +391,82 @@ export default function PaymentLinksScreen() {
                   gap: spacing.md,
                 }}
               >
-                {/* Successful */}
+                {/* Paid */}
 
                 {paidLinks.map((link, index) => (
-                  <View key={link.id}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                      }}
-                    >
-                      {/* Left */}
-
-                      <View
-                        style={{
-                          flex: 1,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: spacing.md,
-                        }}
-                      >
-                        <View
-                          style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: radius.full,
-                            justifyContent: "center",
-                            alignItems: "center",
-                            backgroundColor: theme.icon.success.background,
-                          }}
-                        >
-                          <Ionicons
-                            name="checkmark-circle-outline"
-                            size={22}
-                            color={theme.icon.success.icon}
-                          />
-                        </View>
-
-                        <View
-                          style={{
-                            flex: 1,
-                            gap: spacing.xs,
-                          }}
-                        >
-                          <AppText variant="bodyBold" numberOfLines={1}>
-                            {link.title}
-                          </AppText>
-
-                          <AppText
-                            variant="bodySmall"
-                            color="secondary"
-                            numberOfLines={1}
-                          >
-                            {link.url}
-                          </AppText>
-
-                          <AppText variant="caption" color="muted">
-                            {link.createdAt}
-                          </AppText>
-                        </View>
-                      </View>
-
-                      {/* Right */}
-
-                      <View
-                        style={{
-                          alignItems: "flex-end",
-                          justifyContent: "center",
-                          gap: spacing.sm,
-                          minWidth: 88,
-                        }}
-                      >
-                        <AppText variant="bodyLargeBold">
-                          {formatCurrency(link.amount, {
-                            currency: link.currency,
-                            showDecimals: link.amount % 1 !== 0,
-                          })}
-                        </AppText>
-
-                        <View
-                          style={{
-                            paddingHorizontal: spacing.sm,
-                            paddingVertical: spacing.xs,
-                            borderRadius: radius.full,
-                            backgroundColor: theme.badge.success.background,
-                          }}
-                        >
-                          <AppText variant="caption" color="success">
-                            Paid
-                          </AppText>
-                        </View>
-                      </View>
-                    </View>
-
-                    {index < paidLinks.length - 1 && <Divider />}
-
-                    {index === paidLinks.length - 1 &&
-                      (pendingLinks.length > 0 ||
-                        failedLinks.length > 0 ||
-                        inactiveLinks.length > 0) && <Divider />}
-                  </View>
+                  <PaymentLinkRow
+                    key={link.id}
+                    link={link}
+                    icon="checkmark-circle-outline"
+                    iconBackground={theme.icon.success.background}
+                    iconColor={theme.icon.success.icon}
+                    badgeBackground={theme.badge.success.background}
+                    badgeText="Paid"
+                    badgeTextColor="success"
+                    showDivider={
+                      index < paidLinks.length - 1 ||
+                      (index === paidLinks.length - 1 &&
+                        (pendingLinks.length > 0 ||
+                          failedLinks.length > 0 ||
+                          inactiveLinks.length > 0))
+                    }
+                  />
                 ))}
 
                 {/* Pending */}
 
                 {pendingLinks.map((link, index) => (
-                  <View key={link.id}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                      }}
-                    >
-                      {/* Left */}
-
-                      <View
-                        style={{
-                          flex: 1,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: spacing.md,
-                        }}
-                      >
-                        {/* Icon */}
-
-                        <View
-                          style={{
-                            width: 48,
-                            height: 48,
-
-                            borderRadius: radius.full,
-
-                            justifyContent: "center",
-                            alignItems: "center",
-
-                            backgroundColor: theme.icon.warning.background,
-                          }}
-                        >
-                          <Ionicons
-                            name="time-outline"
-                            size={22}
-                            color={theme.icon.warning.icon}
-                          />
-                        </View>
-
-                        {/* Content */}
-
-                        <View
-                          style={{
-                            flex: 1,
-                            gap: spacing.xs,
-                          }}
-                        >
-                          <AppText variant="bodyBold" numberOfLines={1}>
-                            {link.title}
-                          </AppText>
-
-                          <AppText
-                            variant="bodySmall"
-                            color="secondary"
-                            numberOfLines={1}
-                          >
-                            {link.url}
-                          </AppText>
-
-                          <AppText variant="caption" color="muted">
-                            {link.createdAt}
-                          </AppText>
-                        </View>
-                      </View>
-
-                      {/* Right */}
-
-                      <View
-                        style={{
-                          alignItems: "flex-end",
-                          justifyContent: "center",
-
-                          gap: spacing.sm,
-
-                          minWidth: 88,
-                        }}
-                      >
-                        <AppText variant="bodyLargeBold">
-                          {formatCurrency(link.amount, {
-                            currency: link.currency,
-                            showDecimals: link.amount % 1 !== 0,
-                          })}
-                        </AppText>
-
-                        <View
-                          style={{
-                            paddingHorizontal: spacing.sm,
-                            paddingVertical: spacing.xs,
-
-                            borderRadius: radius.full,
-
-                            backgroundColor: theme.badge.warning.background,
-                          }}
-                        >
-                          <AppText variant="caption" color="warning">
-                            Pending
-                          </AppText>
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* Divider between pending links */}
-
-                    {index < pendingLinks.length - 1 && <Divider />}
-
-                    {/* Divider before the next status section */}
-
-                    {index === pendingLinks.length - 1 &&
-                      (failedLinks.length > 0 || inactiveLinks.length > 0) && (
-                        <Divider />
-                      )}
-                  </View>
+                  <PaymentLinkRow
+                    key={link.id}
+                    link={link}
+                    icon="time-outline"
+                    iconBackground={theme.icon.warning.background}
+                    iconColor={theme.icon.warning.icon}
+                    badgeBackground={theme.badge.warning.background}
+                    badgeText="Pending"
+                    badgeTextColor="warning"
+                    showDivider={
+                      index < pendingLinks.length - 1 ||
+                      (index === pendingLinks.length - 1 &&
+                        (failedLinks.length > 0 || inactiveLinks.length > 0))
+                    }
+                  />
                 ))}
 
                 {/* Failed */}
 
                 {failedLinks.map((link, index) => (
-                  <View key={link.id}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                      }}
-                    >
-                      {/* Left */}
-
-                      <View
-                        style={{
-                          flex: 1,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: spacing.md,
-                        }}
-                      >
-                        {/* Icon */}
-
-                        <View
-                          style={{
-                            width: 48,
-                            height: 48,
-
-                            borderRadius: radius.full,
-
-                            justifyContent: "center",
-                            alignItems: "center",
-
-                            backgroundColor: theme.icon.error.background,
-                          }}
-                        >
-                          <Ionicons
-                            name="close-circle-outline"
-                            size={22}
-                            color={theme.icon.error.icon}
-                          />
-                        </View>
-
-                        {/* Content */}
-
-                        <View
-                          style={{
-                            flex: 1,
-                            gap: spacing.xs,
-                          }}
-                        >
-                          <AppText variant="bodyBold" numberOfLines={1}>
-                            {link.title}
-                          </AppText>
-
-                          <AppText
-                            variant="bodySmall"
-                            color="secondary"
-                            numberOfLines={1}
-                          >
-                            {link.url}
-                          </AppText>
-
-                          <AppText variant="caption" color="muted">
-                            {link.createdAt}
-                          </AppText>
-                        </View>
-                      </View>
-
-                      {/* Right */}
-
-                      <View
-                        style={{
-                          alignItems: "flex-end",
-                          justifyContent: "center",
-
-                          gap: spacing.sm,
-
-                          minWidth: 88,
-                        }}
-                      >
-                        <AppText variant="bodyLargeBold">
-                          {formatCurrency(link.amount, {
-                            currency: link.currency,
-                            showDecimals: link.amount % 1 !== 0,
-                          })}
-                        </AppText>
-
-                        <View
-                          style={{
-                            paddingHorizontal: spacing.sm,
-                            paddingVertical: spacing.xs,
-
-                            borderRadius: radius.full,
-
-                            backgroundColor: theme.badge.error.background,
-                          }}
-                        >
-                          <AppText variant="caption" color="error">
-                            Failed
-                          </AppText>
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* Divider between failed links */}
-
-                    {index < failedLinks.length - 1 && <Divider />}
-
-                    {/* Divider before the Inactive section */}
-
-                    {index === failedLinks.length - 1 &&
-                      inactiveLinks.length > 0 && <Divider />}
-                  </View>
+                  <PaymentLinkRow
+                    key={link.id}
+                    link={link}
+                    icon="close-circle-outline"
+                    iconBackground={theme.icon.error.background}
+                    iconColor={theme.icon.error.icon}
+                    badgeBackground={theme.badge.error.background}
+                    badgeText="Failed"
+                    badgeTextColor="error"
+                    showDivider={
+                      index < failedLinks.length - 1 ||
+                      (index === failedLinks.length - 1 &&
+                        inactiveLinks.length > 0)
+                    }
+                  />
                 ))}
 
                 {/* Inactive */}
 
                 {inactiveLinks.map((link) => (
-                  <View
+                  <PaymentLinkRow
                     key={link.id}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                    }}
-                  >
-                    {/* Left */}
-
-                    <View
-                      style={{
-                        flex: 1,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: spacing.md,
-                      }}
-                    >
-                      {/* Icon */}
-
-                      <View
-                        style={{
-                          width: 48,
-                          height: 48,
-
-                          borderRadius: radius.full,
-
-                          justifyContent: "center",
-                          alignItems: "center",
-
-                          backgroundColor: theme.icon.default.background,
-                        }}
-                      >
-                        <Ionicons
-                          name="link-outline"
-                          size={22}
-                          color={theme.icon.default.icon}
-                        />
-                      </View>
-
-                      {/* Content */}
-
-                      <View
-                        style={{
-                          flex: 1,
-                          gap: spacing.xs,
-                        }}
-                      >
-                        <AppText variant="bodyBold" numberOfLines={1}>
-                          {link.title}
-                        </AppText>
-
-                        <AppText
-                          variant="bodySmall"
-                          color="secondary"
-                          numberOfLines={1}
-                        >
-                          {link.url}
-                        </AppText>
-
-                        <AppText variant="caption" color="muted">
-                          {link.createdAt}
-                        </AppText>
-                      </View>
-                    </View>
-
-                    {/* Right */}
-
-                    <View
-                      style={{
-                        alignItems: "flex-end",
-                        justifyContent: "center",
-
-                        gap: spacing.sm,
-
-                        minWidth: 88,
-                      }}
-                    >
-                      <AppText variant="bodyLargeBold">
-                        {formatCurrency(link.amount, {
-                          currency: link.currency,
-                          showDecimals: link.amount % 1 !== 0,
-                        })}
-                      </AppText>
-
-                      <View
-                        style={{
-                          paddingHorizontal: spacing.sm,
-                          paddingVertical: spacing.xs,
-
-                          borderRadius: radius.full,
-
-                          backgroundColor: theme.background.subtle,
-
-                          borderWidth: 1,
-                          borderColor: theme.border.default,
-                        }}
-                      >
-                        <AppText variant="caption" color="secondary">
-                          Inactive
-                        </AppText>
-                      </View>
-                    </View>
-                  </View>
+                    link={link}
+                    icon="link-outline"
+                    iconBackground={theme.icon.default.background}
+                    iconColor={theme.icon.default.icon}
+                    badgeBackground={theme.background.subtle}
+                    badgeBorderColor={theme.border.default}
+                    badgeText="Inactive"
+                    badgeTextColor="secondary"
+                  />
                 ))}
               </Card>
             </ScrollView>

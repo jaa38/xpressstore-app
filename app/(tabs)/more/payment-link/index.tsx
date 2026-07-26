@@ -312,7 +312,7 @@ export default function PaymentLinksScreen() {
             {/* Add Button */}
 
             <Pressable
-              onPress={() => router.push(ROUTES.ADD_PAYMENT_LINK)}
+              onPress={() => router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION)}
               style={{
                 width: 44,
                 height: 44,

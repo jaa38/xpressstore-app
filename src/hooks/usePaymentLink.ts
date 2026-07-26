@@ -5,6 +5,16 @@ export interface PaymentLinkDraft {
   amount: string;
   currency: string;
   description: string;
+
+  expiryDate: Date | null;
+
+  collectCustomerName: boolean;
+
+  collectCustomerEmail: boolean;
+
+  allowMultiplePayments: boolean;
+
+  redirectUrl: string;
 }
 
 interface PaymentLinkState {
@@ -22,6 +32,16 @@ const initialState: PaymentLinkDraft = {
   amount: "",
   currency: "NGN",
   description: "",
+
+  expiryDate: null,
+
+  collectCustomerName: false,
+
+  collectCustomerEmail: false,
+
+  allowMultiplePayments: false,
+
+  redirectUrl: "",
 };
 
 export const usePaymentLink = create<PaymentLinkState>((set) => ({

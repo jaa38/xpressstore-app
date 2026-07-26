@@ -3,11 +3,13 @@ import { create } from "zustand";
 export type PaymentType = "one-time" | "subscription";
 
 export interface PaymentLinkDraft {
+  // Step 1
   linkName: string;
   amount: string;
   currency: string;
   description: string;
 
+  // Step 2
   expiryDate: Date | null;
 
   paymentType: PaymentType;
@@ -30,11 +32,13 @@ interface PaymentLinkState {
 }
 
 const initialState: PaymentLinkDraft = {
+  // Step 1
   linkName: "",
   amount: "",
   currency: "NGN",
   description: "",
 
+  // Step 2
   expiryDate: null,
 
   paymentType: "one-time",

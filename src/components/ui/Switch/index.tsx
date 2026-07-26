@@ -11,6 +11,8 @@ interface SwitchProps {
 
   value: boolean;
 
+  disabled?: boolean;
+
   onValueChange: (value: boolean) => void;
 }
 
@@ -18,16 +20,19 @@ export function Switch({
   label,
   description,
   value,
+  disabled = false,
   onValueChange,
 }: SwitchProps) {
   return (
     <Pressable
+      disabled={disabled}
       onPress={() => onValueChange(!value)}
       style={{
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
         paddingVertical: spacing.md,
+        opacity: disabled ? 0.5 : 1,
       }}
     >
       <View
@@ -68,7 +73,7 @@ export function Switch({
             width: 22,
             height: 22,
             borderRadius: radius.full,
-            backgroundColor: "#FFFFFF",
+            backgroundColor: theme.background.primary,
             alignSelf: value ? "flex-end" : "flex-start",
           }}
         />

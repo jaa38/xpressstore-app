@@ -105,7 +105,7 @@ export const ROUTES = {
    */
 
   // Create Payment Link
-  ADD_PAYMENT_LINK: "/payment-link/add",
+  ADD_PAYMENT_LINK: "/(tabs)/more/payment-link/add",
 
   // QR Code
   PAYMENT_LINK_QR_CODE: "/payment-link/qr-code",

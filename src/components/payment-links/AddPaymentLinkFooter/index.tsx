@@ -1,24 +1,27 @@
 import { WizardFooter } from "@/components/wizard/WizardFooter";
 
 interface AddPaymentLinkFooterProps {
-  onSaveDraft?: () => void;
+  onPrimary: () => void;
 
-  onNext: () => void;
+  onSecondary?: () => void;
 
-  nextLabel?: string;
+  primaryLabel?: string;
+
+  secondaryLabel?: string;
 }
 
 export function AddPaymentLinkFooter({
-  onSaveDraft,
-  onNext,
-  nextLabel = "Next",
+  onPrimary,
+  onSecondary,
+  primaryLabel = "Next",
+  secondaryLabel = "Save as Draft",
 }: AddPaymentLinkFooterProps) {
   return (
     <WizardFooter
-      onPrimary={onNext}
-      onSecondary={onSaveDraft}
-      primaryLabel={nextLabel}
-      secondaryLabel="Save as Draft"
+      onPrimary={onPrimary}
+      onSecondary={onSecondary}
+      primaryLabel={primaryLabel}
+      secondaryLabel={secondaryLabel}
     />
   );
 }

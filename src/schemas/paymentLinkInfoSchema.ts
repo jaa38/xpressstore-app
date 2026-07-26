@@ -4,31 +4,24 @@ export const paymentLinkInfoSchema = z.object({
   linkName: z
     .string()
     .trim()
-    .min(1, "Link name is required")
-    .max(100, "Link name cannot exceed 100 characters"),
+    .min(3, "Link name must be at least 3 characters"),
 
   amount: z
     .string()
-    .trim()
-    .min(1, "Amount is required")
-    .refine(
-      (value) => {
-        const amount = Number(value);
-        return !isNaN(amount) && amount > 0;
-      },
-      {
-        message: "Enter a valid amount greater than 0",
-      }
-    ),
+    .min(1, "Amount is required"),
 
-  currency: z.string().trim().min(1, "Currency is required"),
+  currency: z.enum([
+    "NGN",
+    "USD",
+    "GBP",
+    "EUR",
+  ]),
 
   description: z
     .string()
-    .trim()
-    .max(250, "Description cannot exceed 250 characters")
-    .optional()
-    .or(z.literal("")),
+    .optional(),
 });
 
-export type PaymentLinkInfoForm = z.infer<typeof paymentLinkInfoSchema>;
+export type PaymentLinkInfoForm = z.infer<
+  typeof paymentLinkInfoSchema
+>;

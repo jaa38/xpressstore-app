@@ -1,7 +1,5 @@
 import { useState } from "react";
-
 import { Pressable, View, StyleSheet, ScrollView } from "react-native";
-
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
@@ -12,30 +10,35 @@ import { radius } from "@/theme/radius";
 
 type DropdownState = "default" | "focus" | "error" | "disabled";
 
-export type DropdownOption = {
+/**
+ * Generic dropdown option.
+ * TValue defaults to string but can be Currency,
+ * PaymentType, etc.
+ */
+export type DropdownOption<TValue extends string = string> = {
   label: string;
-  value: string;
+  value: TValue;
 };
 
-interface DropdownProps {
+interface DropdownProps<TValue extends string = string> {
   label?: string;
 
   required?: boolean;
 
   placeholder?: string;
 
-  value?: string;
+  value?: TValue;
 
   error?: string;
 
   disabled?: boolean;
 
-  options: DropdownOption[];
+  options: DropdownOption<TValue>[];
 
-  onSelect: (value: string) => void;
+  onSelect: (value: TValue) => void;
 }
 
-export function Dropdown({
+export function Dropdown<TValue extends string = string>({
   label,
   required = false,
   placeholder = "Select option",
@@ -44,9 +47,7 @@ export function Dropdown({
   disabled = false,
   options,
   onSelect,
-}: DropdownProps) {
-  console.log("Dropdown options:", options);
-
+}: DropdownProps<TValue>) {
   const [open, setOpen] = useState(false);
 
   const state: DropdownState = disabled
@@ -57,7 +58,7 @@ export function Dropdown({
         ? "focus"
         : "default";
 
-  const selectedOption = options.find((option) => option?.value === value);
+  const selectedOption = options.find((option) => option.value === value);
 
   return (
     <View style={styles.container}>
@@ -88,7 +89,7 @@ export function Dropdown({
 
       <Pressable
         disabled={disabled}
-        onPress={() => setOpen(!open)}
+        onPress={() => setOpen((prev) => !prev)}
         style={[styles.dropdown, getDropdownStateStyle(state)]}
       >
         <AppText
@@ -115,40 +116,23 @@ export function Dropdown({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator
         >
-          {options.map((option, index) => {
-            console.log("OPTION", index, option);
-
-            if (!option) {
-              console.warn(`Option at index ${index} is null or undefined`);
-              return null;
-            }
-
-            if (
-              typeof option.label !== "string" ||
-              typeof option.value !== "string"
-            ) {
-              console.warn(`Invalid option at index ${index}:`, option);
-              return null;
-            }
-
-            return (
-              <Pressable
-                key={option.value || index.toString()}
-                onPress={() => {
-                  onSelect(option.value);
-                  setOpen(false);
-                }}
-                style={[
-                  styles.option,
-                  value === option.value && {
-                    backgroundColor: theme.background.brand,
-                  },
-                ]}
-              >
-                <AppText variant="body">{option.label}</AppText>
-              </Pressable>
-            );
-          })}
+          {options.map((option) => (
+            <Pressable
+              key={option.value}
+              onPress={() => {
+                onSelect(option.value);
+                setOpen(false);
+              }}
+              style={[
+                styles.option,
+                value === option.value && {
+                  backgroundColor: theme.background.brand,
+                },
+              ]}
+            >
+              <AppText variant="body">{option.label}</AppText>
+            </Pressable>
+          ))}
         </ScrollView>
       )}
 
@@ -208,7 +192,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.surface,
   },
 
   optionsContainer: {
@@ -217,13 +201,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.input.border,
     borderRadius: radius.md,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.surface,
   },
 
   option: {
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.background.surface,
   },
 
   value: {

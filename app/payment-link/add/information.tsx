@@ -8,7 +8,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { AppText } from "@/components/ui/AppText";
 import { Divider } from "@/components/ui/Divider";
-import { Dropdown } from "@/components/ui/Dropdown";
+import {
+  Dropdown,
+  type DropdownOption,
+} from "@/components/ui/Dropdown";
 import { Input } from "@/components/ui/Input";
 
 import { AddPaymentLinkHeader } from "@/components/payment-links/AddPaymentLinkHeader";
@@ -25,7 +28,9 @@ import {
 
 import { usePaymentLink } from "@/hooks/usePaymentLink";
 
-const currencyOptions = [
+import type { Currency } from "@/types/currency";
+
+const currencyOptions: DropdownOption<Currency>[] = [
   {
     label: "Nigerian Naira (₦)",
     value: "NGN",
@@ -50,6 +55,7 @@ export default function PaymentLinkInformationScreen() {
   const {
     control,
     handleSubmit,
+    getValues,
   } = useForm<PaymentLinkInfoForm>({
     resolver: zodResolver(paymentLinkInfoSchema),
 
@@ -61,15 +67,16 @@ export default function PaymentLinkInformationScreen() {
     },
   });
 
-  function handleNext(data: PaymentLinkInfoForm) {
-    updatePaymentLink({
-      linkName: data.linkName,
-      amount: data.amount,
-      currency: data.currency,
-      description: data.description,
-    });
+  function onSubmit(data: PaymentLinkInfoForm) {
+    updatePaymentLink(data);
 
     router.push(ROUTES.ADD_PAYMENT_LINK_SETTINGS);
+  }
+
+  function handleSaveDraft() {
+    updatePaymentLink(getValues());
+
+    router.back();
   }
 
   return (
@@ -97,9 +104,7 @@ export default function PaymentLinkInformationScreen() {
         }}
       >
         <ScrollView
-          style={{
-            flex: 1,
-          }}
+          style={{ flex: 1 }}
           contentContainerStyle={{
             paddingHorizontal: spacing.lg,
             paddingTop: spacing.md,
@@ -107,10 +112,7 @@ export default function PaymentLinkInformationScreen() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <AppText
-            variant="body"
-            color="secondary"
-          >
+          <AppText variant="body" color="secondary">
             Generate a secure payment link customers can use to pay online.
           </AppText>
 
@@ -123,13 +125,8 @@ export default function PaymentLinkInformationScreen() {
               control={control}
               name="linkName"
               render={({
-                field: {
-                  onChange,
-                  value,
-                },
-                fieldState: {
-                  error,
-                },
+                field: { onChange, value },
+                fieldState: { error },
               }) => (
                 <Input
                   label="Link Name"
@@ -151,13 +148,8 @@ export default function PaymentLinkInformationScreen() {
                 control={control}
                 name="amount"
                 render={({
-                  field: {
-                    onChange,
-                    value,
-                  },
-                  fieldState: {
-                    error,
-                  },
+                  field: { onChange, value },
+                  fieldState: { error },
                 }) => (
                   <Input
                     label="Amount"
@@ -181,13 +173,8 @@ export default function PaymentLinkInformationScreen() {
                 control={control}
                 name="currency"
                 render={({
-                  field: {
-                    onChange,
-                    value,
-                  },
-                  fieldState: {
-                    error,
-                  },
+                  field: { onChange, value },
+                  fieldState: { error },
                 }) => (
                   <Dropdown
                     label="Currency"
@@ -210,12 +197,7 @@ export default function PaymentLinkInformationScreen() {
               <Controller
                 control={control}
                 name="description"
-                render={({
-                  field: {
-                    onChange,
-                    value,
-                  },
-                }) => (
+                render={({ field: { onChange, value } }) => (
                   <Input
                     label="Description"
                     optional
@@ -234,10 +216,10 @@ export default function PaymentLinkInformationScreen() {
         <Divider />
 
         <AddPaymentLinkFooter
-          onSaveDraft={() => {
-            console.log("Save Payment Link Draft");
-          }}
-          onNext={handleSubmit(handleNext)}
+          primaryLabel="Next"
+          secondaryLabel="Save as Draft"
+          onPrimary={handleSubmit(onSubmit)}
+          onSecondary={handleSaveDraft}
         />
       </View>
     </SafeAreaView>

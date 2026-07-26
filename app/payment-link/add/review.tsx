@@ -21,8 +21,18 @@ import { EditButton } from "@/components/product/EditButton";
 
 import { formatDate } from "@/utils/formatDate";
 
+import { nanoid } from "nanoid/non-secure";
+
+function generateSlug(title: string) {
+  return title
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
 export default function ReviewScreen() {
-  const { paymentLink } = usePaymentLink();
+  const { paymentLink, addPaymentLink, resetPaymentLink } = usePaymentLink();
 
   function editInformation() {
     router.replace(ROUTES.ADD_PAYMENT_LINK_INFORMATION);
@@ -32,9 +42,23 @@ export default function ReviewScreen() {
     router.replace(ROUTES.ADD_PAYMENT_LINK_SETTINGS);
   }
 
-  async function createPaymentLink() {
-    // TODO:
-    // await createPaymentLinkService(paymentLink);
+  function createPaymentLink() {
+    const slug = generateSlug(paymentLink.linkName) || Date.now().toString();
+
+    addPaymentLink({
+      id: nanoid(),
+      title: paymentLink.linkName,
+      image: undefined,
+      url: `payx.press/${slug}`,
+      createdAt: "Just now",
+      amount: Number(paymentLink.amount),
+      currency: paymentLink.currency,
+      status: "pending",
+    });
+
+    resetPaymentLink();
+
+    router.replace(ROUTES.PAYMENT_LINKS);
   }
 
   return (

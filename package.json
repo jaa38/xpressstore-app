@@ -39,6 +39,7 @@
     "expo-sqlite": "~56.0.5",
     "expo-status-bar": "~56.0.4",
     "libphonenumber-js": "^1.13.4",
+    "nanoid": "^6.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.76.1",

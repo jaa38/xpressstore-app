@@ -1,10 +1,9 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { PaymentLinkBottomSheet } from "@/components/bottom-sheet/PaymentLinkBottomSheet";
 import {
   Alert,
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -33,48 +32,7 @@ import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
 import { ROUTES } from "@/navigation/routes";
 
-const paymentLinks: PaymentLink[] = [
-  {
-    id: "1",
-    title: "Wedding Gele Bundle",
-    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400",
-    url: "payx.press/p1",
-    createdAt: "Created 2 hours ago",
-    amount: 45000,
-    currency: "NGN",
-    status: "paid",
-  },
-  {
-    id: "2",
-    title: "Football Boots",
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",
-    url: "payx.press/p2",
-    createdAt: "Created 10 hours ago",
-    amount: 65000,
-    currency: "NGN",
-    status: "pending",
-  },
-  {
-    id: "3",
-    title: "GTA 6",
-    image: "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400",
-    url: "payx.press/p3",
-    createdAt: "Yesterday",
-    amount: 200000,
-    currency: "NGN",
-    status: "failed",
-  },
-  {
-    id: "4",
-    title: "FIFA 26",
-    image: "https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=400",
-    url: "payx.press/p4",
-    createdAt: "23rd July 2026",
-    amount: 9000,
-    currency: "NGN",
-    status: "inactive",
-  },
-];
+import { usePaymentLink } from "@/hooks/usePaymentLink";
 
 function RightActions({ onDelete }: { onDelete: () => void }) {
   return (
@@ -106,8 +64,7 @@ function RightActions({ onDelete }: { onDelete: () => void }) {
 export default function PaymentLinksScreen() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Replace later with usePaymentLinks()
-  // const paymentLinks: any[] = [];
+  const { paymentLinks, removePaymentLink } = usePaymentLink();
 
   const loading = false;
   const error = false;
@@ -131,19 +88,28 @@ export default function PaymentLinksScreen() {
   const [selectedPaymentLink, setSelectedPaymentLink] =
     useState<PaymentLink | null>(null);
 
-  const filteredLinks =
-    selectedStatus === "all"
-      ? paymentLinks
-      : paymentLinks.filter((link) => link.status === selectedStatus);
+  const filteredLinks = useMemo(() => {
+    return paymentLinks.filter((link) => {
+      const matchesStatus =
+        selectedStatus === "all" || link.status === selectedStatus;
 
-  const summaryLinks =
-    selectedStatus === "all"
-      ? paymentLinks.filter((link) => link.status === "paid")
-      : paymentLinks.filter((link) => link.status === selectedStatus);
+      const matchesSearch =
+        link.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        link.url.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const totalAmount = summaryLinks.reduce(
-    (total, link) => total + link.amount,
-    0
+      return matchesStatus && matchesSearch;
+    });
+  }, [paymentLinks, selectedStatus, searchQuery]);
+
+  const summaryLinks = useMemo(() => {
+    return selectedStatus === "all"
+      ? filteredLinks.filter((link) => link.status === "paid")
+      : filteredLinks;
+  }, [filteredLinks, selectedStatus]);
+
+  const totalAmount = useMemo(
+    () => summaryLinks.reduce((total, link) => total + link.amount, 0),
+    [summaryLinks]
   );
 
   const totalLinks = summaryLinks.length;
@@ -174,8 +140,10 @@ export default function PaymentLinksScreen() {
 
   const summaryStatusColor = summaryStatusColors[selectedStatus];
 
+  const summaryCurrency = summaryLinks[0]?.currency ?? "NGN";
+
   const summaryAmount = formatCurrency(totalAmount, {
-    currency: "NGN",
+    currency: summaryCurrency,
     showDecimals: totalAmount % 1 !== 0,
   });
 
@@ -227,9 +195,8 @@ export default function PaymentLinksScreen() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: async () => {
-            // TODO:
-            // await deletePaymentLink(paymentLink.id);
+          onPress: () => {
+            removePaymentLink(paymentLink.id);
 
             Alert.alert(
               "Payment Link Deleted",
@@ -431,6 +398,18 @@ export default function PaymentLinksScreen() {
             <View
               style={{
                 marginTop: spacing.md,
+              }}
+            >
+              <SearchBar
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Search payment links"
+              />
+            </View>
+
+            <View
+              style={{
+                marginTop: spacing.md,
                 flexDirection: "row",
                 justifyContent: "space-between",
               }}
@@ -488,36 +467,79 @@ export default function PaymentLinksScreen() {
                   gap: spacing.md,
                 }}
               >
-                {statusSections.map((section) => {
-                  const links = filteredLinks.filter(
-                    (link) => link.status === section.status
-                  );
+                {filteredLinks.length === 0 ? (
+                  <Card
+                    style={{
+                      marginTop: spacing.lg,
+                      alignItems: "center",
+                      paddingVertical: spacing["2xl"],
+                    }}
+                  >
+                    <Ionicons
+                      name="link-outline"
+                      size={48}
+                      color={theme.text.muted}
+                    />
 
-                  if (links.length === 0) {
-                    return null;
-                  }
-
-                  return links.map((link) => (
-                    <Swipeable
-                      key={link.id}
-                      renderRightActions={() => (
-                        <RightActions onDelete={() => handleDelete(link)} />
-                      )}
+                    <AppText
+                      variant="bodyLargeBold"
+                      style={{
+                        marginTop: spacing.md,
+                      }}
                     >
-                      <PaymentLinkCard
-                        link={link}
-                        badgeBackground={section.badgeBackground}
-                        badgeBorderColor={section.badgeBorderColor}
-                        badgeText={section.badgeText}
-                        badgeTextColor={section.badgeTextColor}
-                        onMorePress={(link) => {
-                          setSelectedPaymentLink(link);
-                          paymentLinkBottomSheetRef.current?.present();
-                        }}
-                      />
-                    </Swipeable>
-                  ));
-                })}
+                      No payment links found
+                    </AppText>
+
+                    <AppText
+                      variant="body"
+                      color="secondary"
+                      style={{
+                        textAlign: "center",
+                        marginTop: spacing.sm,
+                      }}
+                    >
+                      Create your first payment link to start collecting
+                      payments.
+                    </AppText>
+                  </Card>
+                ) : (
+                  <View
+                    style={{
+                      gap: spacing.md,
+                    }}
+                  >
+                    {statusSections.map((section) => {
+                      const links = filteredLinks.filter(
+                        (link) => link.status === section.status
+                      );
+
+                      if (links.length === 0) {
+                        return null;
+                      }
+
+                      return links.map((link) => (
+                        <Swipeable
+                          key={link.id}
+                          renderRightActions={() => (
+                            <RightActions onDelete={() => handleDelete(link)} />
+                          )}
+                        >
+                          <PaymentLinkCard
+                            link={link}
+                            badgeBackground={section.badgeBackground}
+                            badgeBorderColor={section.badgeBorderColor}
+                            badgeText={section.badgeText}
+                            badgeTextColor={section.badgeTextColor}
+                            onMorePress={(link) => {
+                              setSelectedPaymentLink(link);
+                              paymentLinkBottomSheetRef.current?.present();
+                            }}
+                          />
+                        </Swipeable>
+                      ));
+                    })}
+                  </View>
+                )}
               </View>
             </ScrollView>
           </View>

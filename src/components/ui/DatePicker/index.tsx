@@ -23,6 +23,10 @@ interface DatePickerProps {
 
   error?: string;
 
+  minimumDate?: Date;
+
+  maximumDate?: Date;
+
   onChange: (date: Date) => void;
 }
 
@@ -31,6 +35,8 @@ export function DatePicker({
   value,
   placeholder = "Select date",
   error,
+  minimumDate,
+  maximumDate,
   onChange,
 }: DatePickerProps) {
   const [showPicker, setShowPicker] = useState(false);

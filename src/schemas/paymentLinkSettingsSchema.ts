@@ -3,11 +3,16 @@ import { z } from "zod";
 export const paymentLinkSettingsSchema = z.object({
   expiryDate: z.date().nullable(),
 
+  paymentType: z.enum([
+    "one-time",
+    "subscription",
+  ]),
+
+  allowMultiplePayments: z.boolean(),
+
   collectCustomerName: z.boolean(),
 
   collectCustomerEmail: z.boolean(),
-
-  allowMultiplePayments: z.boolean(),
 
   redirectUrl: z
     .string()

@@ -105,11 +105,11 @@ export const ROUTES = {
    */
 
   // Create Payment Link
-  ADD_PAYMENT_LINK_INFORMATION: "/(tabs)/more/payment-link/add/information",
+  ADD_PAYMENT_LINK_INFORMATION: "/payment-link/add/information",
 
-  ADD_PAYMENT_LINK_SETTINGS: "/(tabs)/more/payment-link/add/settings",
+  ADD_PAYMENT_LINK_SETTINGS: "/payment-link/add/settings",
 
-  ADD_PAYMENT_LINK_REVIEW: "/(tabs)/more/payment-link/add/review",
+  ADD_PAYMENT_LINK_REVIEW: "/payment-link/add/review",
 
   // QR Code
   PAYMENT_LINK_QR_CODE: "/payment-link/qr-code",

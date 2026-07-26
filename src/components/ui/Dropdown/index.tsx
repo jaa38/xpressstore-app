@@ -14,7 +14,6 @@ type DropdownState = "default" | "focus" | "error" | "disabled";
 
 export type DropdownOption = {
   label: string;
-
   value: string;
 };
 
@@ -46,6 +45,8 @@ export function Dropdown({
   options,
   onSelect,
 }: DropdownProps) {
+  console.log("Dropdown options:", options);
+
   const [open, setOpen] = useState(false);
 
   const state: DropdownState = disabled
@@ -56,7 +57,7 @@ export function Dropdown({
         ? "focus"
         : "default";
 
-  const selectedOption = options.find((option) => option.value === value);
+  const selectedOption = options.find((option) => option?.value === value);
 
   return (
     <View style={styles.container}>
@@ -94,7 +95,6 @@ export function Dropdown({
           variant="body"
           style={{
             flex: 1,
-
             color: value ? theme.input.text : theme.input.placeholder,
           }}
         >
@@ -115,25 +115,40 @@ export function Dropdown({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator
         >
-          {options.map((option) => (
-            <Pressable
-              key={option.value}
-              onPress={() => {
-                onSelect(option.value);
+          {options.map((option, index) => {
+            console.log("OPTION", index, option);
 
-                setOpen(false);
-              }}
-              style={[
-                styles.option,
+            if (!option) {
+              console.warn(`Option at index ${index} is null or undefined`);
+              return null;
+            }
 
-                value === option.value && {
-                  backgroundColor: theme.background.brand,
-                },
-              ]}
-            >
-              <AppText variant="body">{option.label}</AppText>
-            </Pressable>
-          ))}
+            if (
+              typeof option.label !== "string" ||
+              typeof option.value !== "string"
+            ) {
+              console.warn(`Invalid option at index ${index}:`, option);
+              return null;
+            }
+
+            return (
+              <Pressable
+                key={option.value || index.toString()}
+                onPress={() => {
+                  onSelect(option.value);
+                  setOpen(false);
+                }}
+                style={[
+                  styles.option,
+                  value === option.value && {
+                    backgroundColor: theme.background.brand,
+                  },
+                ]}
+              >
+                <AppText variant="body">{option.label}</AppText>
+              </Pressable>
+            );
+          })}
         </ScrollView>
       )}
 
@@ -157,28 +172,24 @@ function getDropdownStateStyle(state: DropdownState) {
     case "focus":
       return {
         borderColor: theme.input.focusBorder,
-
         backgroundColor: theme.input.background,
       };
 
     case "error":
       return {
         borderColor: theme.input.errorBorder,
-
         backgroundColor: theme.input.background,
       };
 
     case "disabled":
       return {
         borderColor: theme.input.border,
-
         backgroundColor: theme.input.disabledBackground,
       };
 
     default:
       return {
         borderColor: theme.input.border,
-
         backgroundColor: theme.input.background,
       };
   }
@@ -191,47 +202,32 @@ const styles = StyleSheet.create({
 
   dropdown: {
     height: 48,
-
     borderWidth: 1,
-
     borderRadius: radius.md,
-
     flexDirection: "row",
-
     alignItems: "center",
-
     justifyContent: "space-between",
-
     paddingHorizontal: 16,
-
     backgroundColor: "#FFFFFF",
   },
 
   optionsContainer: {
     marginTop: 4,
-
     maxHeight: 220,
-
     borderWidth: 1,
-
     borderColor: theme.input.border,
-
     borderRadius: radius.md,
-
     backgroundColor: "#FFFFFF",
   },
 
   option: {
     paddingHorizontal: 16,
-
     paddingVertical: 14,
-
     backgroundColor: "#FFFFFF",
   },
 
   value: {
     flex: 1,
-
     ...typography.body,
   },
 });

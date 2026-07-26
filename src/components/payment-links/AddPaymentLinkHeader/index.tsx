@@ -4,7 +4,7 @@ import { WizardHeader } from "@/components/wizard/WizardHeader";
 
 import { ROUTES } from "@/navigation/routes";
 
-interface AddProductHeaderProps {
+interface AddPaymentLinkHeaderProps {
   title: string;
 
   step: number;
@@ -16,13 +16,13 @@ interface AddProductHeaderProps {
   label: string;
 }
 
-export function AddProductHeader({
+export function AddPaymentLinkHeader({
   title,
   step,
   totalSteps,
   progress,
   label,
-}: AddProductHeaderProps) {
+}: AddPaymentLinkHeaderProps) {
   return (
     <WizardHeader
       title={title}
@@ -30,7 +30,7 @@ export function AddProductHeader({
       totalSteps={totalSteps}
       progress={progress}
       label={label}
-      onClose={() => router.replace(ROUTES.PRODUCTS)}
+      onClose={() => router.replace(ROUTES.PAYMENT_LINKS)}
     />
   );
 }

@@ -153,6 +153,8 @@ export default function InfoScreen() {
     try {
       const data = await getCategories();
 
+      console.log("MAPPED CATEGORIES:", data);
+
       setCategories(data.sort((a, b) => a.label.localeCompare(b.label)));
     } catch (error) {
       console.log("LOAD CATEGORIES ERROR", error);

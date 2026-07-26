@@ -14,6 +14,8 @@ export async function getCategories(): Promise<DropdownOption[]> {
     throw error;
   }
 
+  console.log("RAW CATEGORIES:", data);
+
   return (
     data?.map((category) => ({
       label: category.name,
@@ -22,13 +24,8 @@ export async function getCategories(): Promise<DropdownOption[]> {
   );
 }
 
-export async function createCategory(
-  name: string
-): Promise<DropdownOption> {
-  const slug = name
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-");
+export async function createCategory(name: string): Promise<DropdownOption> {
+  const slug = name.trim().toLowerCase().replace(/\s+/g, "-");
 
   const { data, error } = await supabase
     .from("categories")

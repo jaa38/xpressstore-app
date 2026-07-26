@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Platform, Pressable, View, StyleSheet } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -49,6 +49,14 @@ export function DatePicker({
     }
   }
 
+  const formattedDate = value
+    ? new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }).format(value)
+    : placeholder;
+
   return (
     <View style={styles.container}>
       {label && (
@@ -64,7 +72,7 @@ export function DatePicker({
             color: value ? theme.input.text : theme.input.placeholder,
           }}
         >
-          {value ? value.toLocaleDateString() : placeholder}
+          {formattedDate}
         </AppText>
 
         <Ionicons name="calendar-outline" size={20} color={theme.input.icon} />
@@ -75,7 +83,8 @@ export function DatePicker({
           value={value ?? new Date()}
           mode="date"
           display={Platform.OS === "ios" ? "spinner" : "default"}
-          maximumDate={new Date()}
+          minimumDate={minimumDate}
+          maximumDate={maximumDate}
           onChange={handleChange}
         />
       )}
@@ -102,7 +111,6 @@ const styles = StyleSheet.create({
     height: 48,
 
     borderWidth: 1,
-
     borderColor: theme.input.border,
 
     borderRadius: radius.md,
@@ -110,9 +118,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
 
     flexDirection: "row",
-
     alignItems: "center",
-
     justifyContent: "space-between",
 
     backgroundColor: theme.input.background,

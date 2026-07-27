@@ -9,24 +9,53 @@ export type PaymentLinkStatus =
 
 export interface PaymentLink {
   id: string;
+
   title: string;
-  image?: string;
+  description: string;
+
   url: string;
-  createdAt: string;
 
   amount: number;
   currency: Currency;
 
   status: Exclude<PaymentLinkStatus, "all">;
+
+  expiry_date: string | null;
+
+  payment_type: "one-time" | "subscription";
+
+  allow_multiple_payments: boolean;
+
+  collect_customer_name: boolean;
+
+  collect_customer_email: boolean;
+
+  redirect_url: string;
+
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreatePaymentLinkPayload {
   title: string;
-  image?: string;
+  description: string;
+
   url: string;
 
   amount: number;
   currency: Currency;
 
   status: Exclude<PaymentLinkStatus, "all">;
+
+  expiry_date: string | null;
+
+  payment_type: "one-time" | "subscription";
+
+  allow_multiple_payments: boolean;
+
+  collect_customer_name: boolean;
+
+  collect_customer_email: boolean;
+
+  redirect_url: string;
 }

@@ -5,7 +5,7 @@ import type {
   CreatePaymentLinkPayload,
 } from "@/types/paymentLink";
 
-export async function getPaymentLinks() {
+export async function getPaymentLinks(): Promise<PaymentLink[]> {
   const { data, error } = await supabase
     .from("payment_links")
     .select("*")
@@ -20,7 +20,9 @@ export async function getPaymentLinks() {
   return data as PaymentLink[];
 }
 
-export async function createPaymentLink(paymentLink: CreatePaymentLinkPayload) {
+export async function createPaymentLink(
+  paymentLink: CreatePaymentLinkPayload
+): Promise<PaymentLink> {
   const { data, error } = await supabase
     .from("payment_links")
     .insert(paymentLink)
@@ -34,8 +36,11 @@ export async function createPaymentLink(paymentLink: CreatePaymentLinkPayload) {
   return data as PaymentLink;
 }
 
-export async function deletePaymentLink(id: string) {
-  const { error } = await supabase.from("payment_links").delete().eq("id", id);
+export async function deletePaymentLink(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("payment_links")
+    .delete()
+    .eq("id", id);
 
   if (error) {
     throw error;

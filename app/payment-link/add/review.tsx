@@ -50,11 +50,29 @@ export default function ReviewScreen() {
     createPaymentLinkMutation.mutate(
       {
         title: paymentLink.linkName,
-        image: undefined,
+        description: paymentLink.description,
+
         url: `payx.press/${slug}`,
+
         amount: Number(paymentLink.amount),
+
         currency: paymentLink.currency,
+
         status: "pending",
+
+        expiry_date: paymentLink.expiryDate
+          ? paymentLink.expiryDate.toISOString()
+          : null,
+
+        payment_type: paymentLink.paymentType,
+
+        allow_multiple_payments: paymentLink.allowMultiplePayments,
+
+        collect_customer_name: paymentLink.collectCustomerName,
+
+        collect_customer_email: paymentLink.collectCustomerEmail,
+
+        redirect_url: paymentLink.redirectUrl,
       },
       {
         onSuccess: () => {

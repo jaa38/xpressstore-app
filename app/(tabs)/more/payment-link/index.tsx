@@ -223,47 +223,6 @@ export default function PaymentLinksScreen() {
     );
   }
 
-  // 👇 Loading state
-  if (loading) {
-    return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: theme.background.primary,
-        }}
-      >
-        <AppText>Loading payment links...</AppText>
-      </SafeAreaView>
-    );
-  }
-
-  // 👇 Error state
-  if (error) {
-    return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: theme.background.primary,
-        }}
-      >
-        <AppText color="error">Failed to load payment links.</AppText>
-
-        <Pressable
-          onPress={() => refetch()}
-          style={{
-            marginTop: spacing.lg,
-          }}
-        >
-          <AppText color="link">Try Again</AppText>
-        </Pressable>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView
       style={{

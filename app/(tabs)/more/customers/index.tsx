@@ -8,7 +8,7 @@ import { AppText } from "@/components/ui/AppText";
 
 import { spacing, theme, radius } from "@/theme";
 
-export default function SettlementsScreen() {
+export default function CustomersScreen() {
   return (
     <SafeAreaView
       style={{
@@ -66,12 +66,34 @@ export default function SettlementsScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">Settlements</AppText>
+              <AppText variant="h1">Customers</AppText>
 
               <AppText variant="body" color="secondary">
-                Review settlement history and payout information.
+                View and manage your customer records.
               </AppText>
             </View>
+
+            {/* Add Button */}
+
+            <Pressable
+              onPress={() => {
+                // router.push(ROUTES.ADD_CUSTOMER)
+              }}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: radius.full,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: theme.action.primary.background,
+              }}
+            >
+              <Ionicons
+                name="add"
+                size={24}
+                color={theme.action.primary.text}
+              />
+            </Pressable>
           </View>
 
           {/* CONTENT */}
@@ -82,13 +104,13 @@ export default function SettlementsScreen() {
               marginTop: spacing.md,
             }}
           >
-            {/* Settlement Summary */}
+            {/* Summary Card */}
 
             {/* Search */}
 
             {/* Filter Chips */}
 
-            {/* Settlement History */}
+            {/* Customer List */}
           </View>
         </View>
       </View>

@@ -8,7 +8,7 @@ import { AppText } from "@/components/ui/AppText";
 
 import { spacing, theme, radius } from "@/theme";
 
-export default function SettlementsScreen() {
+export default function PaymentSettingsScreen() {
   return (
     <SafeAreaView
       style={{
@@ -66,12 +66,35 @@ export default function SettlementsScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">Settlements</AppText>
+              <AppText variant="h1">Payment Settings</AppText>
 
               <AppText variant="body" color="secondary">
-                Review settlement history and payout information.
+                Configure payment methods, settlement preferences, and checkout
+                options.
               </AppText>
             </View>
+
+            {/* Edit Button */}
+
+            <Pressable
+              onPress={() => {
+                // router.push(ROUTES.EDIT_PAYMENT_SETTINGS)
+              }}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: radius.full,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: theme.action.primary.background,
+              }}
+            >
+              <Ionicons
+                name="create-outline"
+                size={22}
+                color={theme.action.primary.text}
+              />
+            </Pressable>
           </View>
 
           {/* CONTENT */}
@@ -82,13 +105,15 @@ export default function SettlementsScreen() {
               marginTop: spacing.md,
             }}
           >
-            {/* Settlement Summary */}
+            {/* Summary Card */}
 
-            {/* Search */}
+            {/* Payment Methods */}
 
-            {/* Filter Chips */}
+            {/* Settlement Settings */}
 
-            {/* Settlement History */}
+            {/* Checkout Preferences */}
+
+            {/* Security Settings */}
           </View>
         </View>
       </View>

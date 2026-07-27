@@ -21,7 +21,7 @@ import { EditButton } from "@/components/product/EditButton";
 
 import { formatDate } from "@/utils/formatDate";
 
-import { nanoid } from "nanoid/non-secure";
+import { useCreatePaymentLink } from "@/hooks/paymentLinks/useCreatePaymentLink";
 
 function generateSlug(title: string) {
   return title
@@ -32,7 +32,9 @@ function generateSlug(title: string) {
 }
 
 export default function ReviewScreen() {
-  const { paymentLink, addPaymentLink, resetPaymentLink } = usePaymentLink();
+  const { paymentLink, resetPaymentLink } = usePaymentLink();
+
+  const createPaymentLinkMutation = useCreatePaymentLink();
 
   function editInformation() {
     router.replace(ROUTES.ADD_PAYMENT_LINK_INFORMATION);
@@ -42,23 +44,32 @@ export default function ReviewScreen() {
     router.replace(ROUTES.ADD_PAYMENT_LINK_SETTINGS);
   }
 
-  function createPaymentLink() {
+  async function createPaymentLink() {
     const slug = generateSlug(paymentLink.linkName) || Date.now().toString();
 
-    addPaymentLink({
-      id: nanoid(),
-      title: paymentLink.linkName,
-      image: undefined,
-      url: `payx.press/${slug}`,
-      createdAt: "Just now",
-      amount: Number(paymentLink.amount),
-      currency: paymentLink.currency,
-      status: "pending",
-    });
+    createPaymentLinkMutation.mutate(
+      {
+        title: paymentLink.linkName,
+        image: undefined,
+        url: `payx.press/${slug}`,
+        amount: Number(paymentLink.amount),
+        currency: paymentLink.currency,
+        status: "pending",
+      },
+      {
+        onSuccess: () => {
+          resetPaymentLink();
 
-    resetPaymentLink();
+          router.replace(ROUTES.PAYMENT_LINKS);
+        },
 
-    router.replace(ROUTES.PAYMENT_LINKS);
+        onError: (error) => {
+          console.error(error);
+
+          alert("Unable to create payment link.");
+        },
+      }
+    );
   }
 
   return (
@@ -418,8 +429,19 @@ export default function ReviewScreen() {
 
         <Divider />
 
-        <AddPaymentLinkFooter
+        {/* <AddPaymentLinkFooter
           primaryLabel="Create Payment Link"
+          secondaryLabel="Back"
+          onPrimary={createPaymentLink}
+          onSecondary={() => router.back()}
+        /> */}
+
+        <AddPaymentLinkFooter
+          primaryLabel={
+            createPaymentLinkMutation.isPending
+              ? "Creating..."
+              : "Create Payment Link"
+          }
           secondaryLabel="Back"
           onPrimary={createPaymentLink}
           onSecondary={() => router.back()}

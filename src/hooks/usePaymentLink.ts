@@ -1,7 +1,6 @@
 import { create } from "zustand";
 
 import type { Currency } from "@/types/currency";
-import type { PaymentLink } from "@/types/paymentLink";
 
 export type PaymentType = "one-time" | "subscription";
 
@@ -28,27 +27,18 @@ export interface PaymentLinkDraft {
 
 interface PaymentLinkState {
   /**
-   * Draft used by the payment link creation wizard
+   * Draft used by the payment link creation wizard.
    */
   paymentLink: PaymentLinkDraft;
 
   /**
-   * Created payment links
+   * Update one or more draft fields.
    */
-  paymentLinks: PaymentLink[];
+  updatePaymentLink: (data: Partial<PaymentLinkDraft>) => void;
 
-  updatePaymentLink: (
-    data: Partial<PaymentLinkDraft>
-  ) => void;
-
-  addPaymentLink: (
-    paymentLink: PaymentLink
-  ) => void;
-
-  removePaymentLink: (
-    id: string
-  ) => void;
-
+  /**
+   * Reset the draft after a successful creation.
+   */
   resetPaymentLink: () => void;
 }
 
@@ -73,8 +63,6 @@ const initialState: PaymentLinkDraft = {
   redirectUrl: "",
 };
 
-const initialPaymentLinks: PaymentLink[] = [];
-
 export const usePaymentLink = create<PaymentLinkState>((set) => ({
   /**
    * Current draft
@@ -82,10 +70,8 @@ export const usePaymentLink = create<PaymentLinkState>((set) => ({
   paymentLink: initialState,
 
   /**
-   * Created payment links
+   * Update the draft
    */
-  paymentLinks: initialPaymentLinks,
-
   updatePaymentLink: (data) =>
     set((state) => ({
       paymentLink: {
@@ -94,21 +80,9 @@ export const usePaymentLink = create<PaymentLinkState>((set) => ({
       },
     })),
 
-  addPaymentLink: (paymentLink) =>
-    set((state) => ({
-      paymentLinks: [
-        paymentLink,
-        ...state.paymentLinks,
-      ],
-    })),
-
-  removePaymentLink: (id) =>
-    set((state) => ({
-      paymentLinks: state.paymentLinks.filter(
-        (link) => link.id !== id
-      ),
-    })),
-
+  /**
+   * Reset the draft
+   */
   resetPaymentLink: () =>
     set({
       paymentLink: initialState,

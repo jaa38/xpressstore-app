@@ -32,7 +32,8 @@ import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { usePaymentLink } from "@/hooks/usePaymentLink";
+import { usePaymentLinks } from "@/hooks/paymentLinks/usePaymentLinks";
+import { useDeletePaymentLink } from "@/hooks/paymentLinks/useDeletePaymentLink";
 
 function RightActions({ onDelete }: { onDelete: () => void }) {
   return (
@@ -64,20 +65,25 @@ function RightActions({ onDelete }: { onDelete: () => void }) {
 export default function PaymentLinksScreen() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { paymentLinks, removePaymentLink } = usePaymentLink();
+  const {
+    data: paymentLinks = [],
+    isLoading: loading,
+    error,
+    refetch,
+  } = usePaymentLinks();
 
-  const loading = false;
-  const error = false;
+  const deletePaymentLinkMutation = useDeletePaymentLink();
 
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
 
-    // TODO:
-    // await refetchPaymentLinks();
-
-    setRefreshing(false);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const [selectedStatus, setSelectedStatus] =
@@ -196,15 +202,65 @@ export default function PaymentLinksScreen() {
           text: "Delete",
           style: "destructive",
           onPress: () => {
-            removePaymentLink(paymentLink.id);
+            deletePaymentLinkMutation.mutate(paymentLink.id, {
+              onSuccess: () => {
+                Alert.alert(
+                  "Payment Link Deleted",
+                  `"${paymentLink.title}" has been deleted.`
+                );
+              },
 
-            Alert.alert(
-              "Payment Link Deleted",
-              `"${paymentLink.title}" has been deleted.`
-            );
+              onError: (error) => {
+                Alert.alert(
+                  "Delete Failed",
+                  error.message ?? "Unable to delete payment link."
+                );
+              },
+            });
           },
         },
       ]
+    );
+  }
+
+  // 👇 Loading state
+  if (loading) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.background.primary,
+        }}
+      >
+        <AppText>Loading payment links...</AppText>
+      </SafeAreaView>
+    );
+  }
+
+  // 👇 Error state
+  if (error) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.background.primary,
+        }}
+      >
+        <AppText color="error">Failed to load payment links.</AppText>
+
+        <Pressable
+          onPress={() => refetch()}
+          style={{
+            marginTop: spacing.lg,
+          }}
+        >
+          <AppText color="link">Try Again</AppText>
+        </Pressable>
+      </SafeAreaView>
     );
   }
 
@@ -472,7 +528,7 @@ export default function PaymentLinksScreen() {
                     style={{
                       marginTop: spacing.xs,
                       alignItems: "center",
-                      paddingVertical: spacing["2xl"],
+                      // paddingVertical: spacing["2xl"],
                     }}
                   >
                     <Ionicons
@@ -521,7 +577,13 @@ export default function PaymentLinksScreen() {
                         <Swipeable
                           key={link.id}
                           renderRightActions={() => (
-                            <RightActions onDelete={() => handleDelete(link)} />
+                            <RightActions
+                              onDelete={() => {
+                                if (!deletePaymentLinkMutation.isPending) {
+                                  handleDelete(link);
+                                }
+                              }}
+                            />
                           )}
                         >
                           <PaymentLinkCard

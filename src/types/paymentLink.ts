@@ -19,3 +19,14 @@ export interface PaymentLink {
 
   status: Exclude<PaymentLinkStatus, "all">;
 }
+
+export interface CreatePaymentLinkPayload {
+  title: string;
+  image?: string;
+  url: string;
+
+  amount: number;
+  currency: Currency;
+
+  status: Exclude<PaymentLinkStatus, "all">;
+}

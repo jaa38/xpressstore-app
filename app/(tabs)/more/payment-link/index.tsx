@@ -470,7 +470,7 @@ export default function PaymentLinksScreen() {
                 {filteredLinks.length === 0 ? (
                   <Card
                     style={{
-                      marginTop: spacing.lg,
+                      marginTop: spacing.xs,
                       alignItems: "center",
                       paddingVertical: spacing["2xl"],
                     }}

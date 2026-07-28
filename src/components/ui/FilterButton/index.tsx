@@ -1,5 +1,4 @@
 import { Pressable } from "react-native";
-
 import { Ionicons } from "@expo/vector-icons";
 
 import { theme } from "@/theme";
@@ -7,14 +6,19 @@ import { theme } from "@/theme";
 interface FilterButtonProps {
   active?: boolean;
   onPress: () => void;
+  icon?: keyof typeof Ionicons.glyphMap;
 }
 
-export function FilterButton({ onPress }: FilterButtonProps) {
+export function FilterButton({
+  active = false,
+  onPress,
+  icon = "options-outline",
+}: FilterButtonProps) {
   return (
     <Pressable
       hitSlop={10}
       onPress={onPress}
-      style={{
+      style={({ pressed }) => ({
         width: 48,
         height: 48,
         borderRadius: 12,
@@ -22,16 +26,22 @@ export function FilterButton({ onPress }: FilterButtonProps) {
         alignItems: "center",
         justifyContent: "center",
 
-        backgroundColor: theme.background.surface,
+        backgroundColor: active
+          ? theme.action.primary.background
+          : theme.background.surface,
 
         borderWidth: 1,
-        borderColor: theme.border.default,
-      }}
+        borderColor: active
+          ? theme.action.primary.background
+          : theme.border.default,
+
+        opacity: pressed ? 0.75 : 1,
+      })}
     >
       <Ionicons
-        name="options-outline"
+        name={icon}
         size={22}
-        color={theme.icon.default.icon}
+        color={active ? theme.action.primary.text : theme.icon.default.icon}
       />
     </Pressable>
   );

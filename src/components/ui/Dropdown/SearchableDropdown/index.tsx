@@ -1,13 +1,9 @@
-import { useMemo, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
-import { BottomSheetFlatList, BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
 
 import { radius, spacing, theme } from "@/theme";
-
-import { Input } from "@/components/ui/Input";
 
 export type DropdownOption<TValue extends string = string> = {
   label: string;
@@ -16,16 +12,23 @@ export type DropdownOption<TValue extends string = string> = {
 
 interface SearchableDropdownProps<TValue extends string = string> {
   label?: string;
+
   required?: boolean;
+
   placeholder?: string;
 
   value?: TValue;
+
+  disabled?: boolean;
 
   error?: string;
 
   options: DropdownOption<TValue>[];
 
-  onSelect: (value: TValue) => void;
+  /**
+   * Called when the dropdown is pressed.
+   */
+  onPress: () => void;
 }
 
 export function SearchableDropdown<TValue extends string = string>({
@@ -33,29 +36,12 @@ export function SearchableDropdown<TValue extends string = string>({
   required = false,
   placeholder = "Select option",
   value,
+  disabled = false,
   error,
   options,
-  onSelect,
+  onPress,
 }: SearchableDropdownProps<TValue>) {
-  const bottomSheetRef = useRef<BottomSheetModal>(null);
-
-  const [search, setSearch] = useState("");
-
-  const snapPoints = useMemo(() => ["75%"], []);
-
   const selected = options.find((item) => item.value === value);
-
-  const filteredOptions = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    if (!query) {
-      return options;
-    }
-
-    return options.filter((option) =>
-      option.label.toLowerCase().includes(query)
-    );
-  }, [search, options]);
 
   return (
     <>
@@ -84,32 +70,44 @@ export function SearchableDropdown<TValue extends string = string>({
       )}
 
       <Pressable
-        onPress={() => {
-          setSearch("");
-          bottomSheetRef.current?.present();
-        }}
+        disabled={disabled}
+        onPress={onPress}
         style={{
           height: 48,
+
           borderWidth: 1,
           borderColor: error ? theme.input.errorBorder : theme.input.border,
+
           borderRadius: radius.md,
+
           paddingHorizontal: spacing.md,
+
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          backgroundColor: theme.input.background,
+
+          backgroundColor: disabled
+            ? theme.input.disabledBackground
+            : theme.input.background,
         }}
       >
         <AppText
           variant="body"
           style={{
-            color: selected ? theme.input.text : theme.input.placeholder,
+            color: disabled
+              ? theme.input.placeholder
+              : selected
+                ? theme.input.text
+                : theme.input.placeholder,
           }}
         >
           {selected?.label ?? placeholder}
         </AppText>
-
-        <Ionicons name="chevron-down" size={20} color={theme.input.icon} />
+        <Ionicons
+          name="chevron-down"
+          size={20}
+          color={disabled ? theme.input.disabledText : theme.input.icon}
+        />
       </Pressable>
 
       {error && (
@@ -123,55 +121,6 @@ export function SearchableDropdown<TValue extends string = string>({
           {error}
         </AppText>
       )}
-
-      <BottomSheetModal ref={bottomSheetRef} snapPoints={snapPoints}>
-        <View
-          style={{
-            paddingHorizontal: spacing.lg,
-            paddingTop: spacing.md,
-            paddingBottom: spacing.sm,
-          }}
-        >
-          <Input
-            placeholder="Search country..."
-            value={search}
-            onChangeText={setSearch}
-          />
-        </View>
-        <BottomSheetFlatList
-          data={filteredOptions}
-          keyExtractor={(item) => item.value}
-          contentContainerStyle={{
-            paddingVertical: spacing.sm,
-          }}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => {
-                onSelect(item.value);
-                setSearch("");
-                bottomSheetRef.current?.dismiss();
-              }}
-              style={{
-                paddingHorizontal: spacing.lg,
-                paddingVertical: spacing.md,
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <AppText variant="body">{item.label}</AppText>
-
-              {item.value === value && (
-                <Ionicons
-                  name="checkmark"
-                  size={20}
-                  color={theme.action.primary.background}
-                />
-              )}
-            </Pressable>
-          )}
-        />
-      </BottomSheetModal>
     </>
   );
 }

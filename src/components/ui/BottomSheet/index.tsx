@@ -1,11 +1,6 @@
 import { ReactNode } from "react";
 
-import {
-  Modal,
-  Pressable,
-  View,
-  ScrollView,
-} from "react-native";
+import { Modal, Pressable, ScrollView, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -18,6 +13,21 @@ interface BottomSheetProps {
   title: string;
   children: ReactNode;
   onClose: () => void;
+
+  /**
+   * Shows the close icon in the header.
+   * Defaults to true.
+   */
+  showCloseButton?: boolean;
+
+  /**
+   * Wraps children in a ScrollView.
+   * Set to false when the child manages its own scrolling
+   * (e.g. FlatList, FlashList, SectionList).
+   *
+   * Defaults to true.
+   */
+  scrollable?: boolean;
 }
 
 export function BottomSheet({
@@ -25,6 +35,8 @@ export function BottomSheet({
   title,
   children,
   onClose,
+  showCloseButton = true,
+  scrollable = true,
 }: BottomSheetProps) {
   return (
     <Modal
@@ -81,40 +93,45 @@ export function BottomSheet({
           <View
             style={{
               flexDirection: "row",
-
               alignItems: "center",
-
               justifyContent: "space-between",
 
               paddingHorizontal: spacing.lg,
-
               paddingVertical: spacing.md,
             }}
           >
-            <AppText variant="h3">
-              {title}
-            </AppText>
+            <AppText variant="h3">{title}</AppText>
 
-            <Pressable
-              hitSlop={10}
-              onPress={onClose}
-            >
-              <Ionicons
-                name="close"
-                size={24}
-                color={theme.text.primary}
-              />
-            </Pressable>
+            {showCloseButton ? (
+              <Pressable hitSlop={10} onPress={onClose}>
+                <Ionicons name="close" size={24} color={theme.text.primary} />
+              </Pressable>
+            ) : (
+              // Keeps the title visually centered
+              <View style={{ width: 24 }} />
+            )}
           </View>
 
-          <ScrollView
-            contentContainerStyle={{
-              paddingHorizontal: spacing.lg,
-              paddingBottom: spacing.xl,
-            }}
-          >
-            {children}
-          </ScrollView>
+          {scrollable ? (
+            <ScrollView
+              contentContainerStyle={{
+                paddingHorizontal: spacing.lg,
+                paddingBottom: spacing.xl,
+              }}
+            >
+              {children}
+            </ScrollView>
+          ) : (
+            <View
+              style={{
+                paddingHorizontal: spacing.lg,
+                paddingBottom: spacing.xl,
+                maxHeight: "75%",
+              }}
+            >
+              {children}
+            </View>
+          )}
         </Pressable>
       </Pressable>
     </Modal>

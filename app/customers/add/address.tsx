@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -29,23 +30,61 @@ import { spacing, theme } from "@/theme";
 
 import { SearchableDropdown } from "@/components/ui/Dropdown/SearchableDropdown";
 
-import { countryOptions } from "@/constants/countries";
+import {
+  countryOptions,
+  popularCountryOptions,
+  stateOptions,
+  cityOptions,
+} from "@/constants/address";
+
+import {
+  CountryBottomSheet,
+  StateBottomSheet,
+  CityBottomSheet,
+} from "@/components/bottom-sheet";
 
 export default function CustomerAddressScreen() {
   const { customer, updateCustomer, resetCustomer } = useCustomer();
 
   const createCustomer = useCreateCustomer();
 
-  const { control, handleSubmit, getValues } = useForm<CustomerAddressForm>({
-    resolver: zodResolver(customerAddressSchema),
+  const { control, handleSubmit, getValues, watch, setValue } =
+    useForm<CustomerAddressForm>({
+      resolver: zodResolver(customerAddressSchema),
+      defaultValues: {
+        country: customer.address.country,
+        state: customer.address.state,
+        city: customer.address.city,
+        street: customer.address.street,
+      },
+    });
 
-    defaultValues: {
-      country: customer.address.country,
-      state: customer.address.state,
-      city: customer.address.city,
-      street: customer.address.street,
-    },
-  });
+  const [countrySheetVisible, setCountrySheetVisible] = useState(false);
+  const [stateSheetVisible, setStateSheetVisible] = useState(false);
+  const [citySheetVisible, setCitySheetVisible] = useState(false);
+
+  const [selectedCountry, selectedState] = watch(["country", "state"]);
+
+  const availableStates = useMemo(() => {
+    if (!selectedCountry) {
+      return [];
+    }
+
+    return stateOptions.filter(
+      (state) => state.countryCode === selectedCountry
+    );
+  }, [selectedCountry, stateOptions]);
+
+  const availableCities = useMemo(() => {
+    if (!selectedCountry || !selectedState) {
+      return [];
+    }
+
+    return cityOptions.filter(
+      (city) =>
+        city.countryCode === selectedCountry && city.stateCode === selectedState
+    );
+  }, [selectedCountry, selectedState, cityOptions]);
 
   function onSubmit(data: CustomerAddressForm) {
     // Keep the draft up to date
@@ -139,15 +178,38 @@ export default function CustomerAddressScreen() {
                 field: { onChange, value },
                 fieldState: { error },
               }) => (
-                <SearchableDropdown
-                  label="Country"
-                  required
-                  placeholder="Select country"
-                  value={value}
-                  options={countryOptions}
-                  error={error?.message}
-                  onSelect={onChange}
-                />
+                <>
+                  <SearchableDropdown
+                    label="Country"
+                    required
+                    placeholder="Select country"
+                    value={value}
+                    options={countryOptions}
+                    error={error?.message}
+                    onPress={() => setCountrySheetVisible(true)}
+                  />
+
+                  <CountryBottomSheet
+                    visible={countrySheetVisible}
+                    value={value}
+                    options={countryOptions}
+                    popularOptions={popularCountryOptions}
+                    onSelect={(country) => {
+                      if (country === value) return;
+
+                      onChange(country);
+
+                      setValue("state", "", {
+                        shouldValidate: true,
+                      });
+
+                      setValue("city", "", {
+                        shouldValidate: true,
+                      });
+                    }}
+                    onClose={() => setCountrySheetVisible(false)}
+                  />
+                </>
               )}
             />
 
@@ -165,14 +227,39 @@ export default function CustomerAddressScreen() {
                   field: { onChange, value },
                   fieldState: { error },
                 }) => (
-                  <Input
-                    label="State"
-                    required
-                    placeholder="Lagos"
-                    value={value}
-                    error={error?.message}
-                    onChangeText={onChange}
-                  />
+                  <>
+                    <SearchableDropdown
+                      label="State"
+                      required
+                      placeholder="Select state"
+                      value={value}
+                      options={availableStates}
+                      error={error?.message}
+                      disabled={!selectedCountry}
+                      onPress={() => {
+                        if (!selectedCountry) return;
+
+                        setStateSheetVisible(true);
+                      }}
+                    />
+
+                    <StateBottomSheet
+                      visible={stateSheetVisible}
+                      countryCode={selectedCountry}
+                      value={value}
+                      options={stateOptions}
+                      onSelect={(state) => {
+                        if (state === value) return;
+
+                        onChange(state);
+
+                        setValue("city", "", {
+                          shouldValidate: true,
+                        });
+                      }}
+                      onClose={() => setStateSheetVisible(false)}
+                    />
+                  </>
                 )}
               />
             </View>
@@ -191,14 +278,36 @@ export default function CustomerAddressScreen() {
                   field: { onChange, value },
                   fieldState: { error },
                 }) => (
-                  <Input
-                    label="City"
-                    required
-                    placeholder="Ikeja"
-                    value={value}
-                    error={error?.message}
-                    onChangeText={onChange}
-                  />
+                  <>
+                    <SearchableDropdown
+                      label="City"
+                      required
+                      placeholder="Select city"
+                      value={value}
+                      options={availableCities}
+                      error={error?.message}
+                      disabled={!selectedState}
+                      onPress={() => {
+                        if (!selectedState) return;
+
+                        setCitySheetVisible(true);
+                      }}
+                    />
+
+                    <CityBottomSheet
+                      visible={citySheetVisible}
+                      countryCode={selectedCountry}
+                      stateCode={selectedState}
+                      value={value}
+                      options={cityOptions}
+                      onSelect={(city) => {
+                        if (city === value) return;
+
+                        onChange(city);
+                      }}
+                      onClose={() => setCitySheetVisible(false)}
+                    />
+                  </>
                 )}
               />
             </View>

@@ -37,12 +37,26 @@ export async function createPaymentLink(
 }
 
 export async function deletePaymentLink(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("payment_links")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("payment_links").delete().eq("id", id);
 
   if (error) {
     throw error;
   }
+}
+export async function deactivatePaymentLink(id: string): Promise<PaymentLink> {
+  const { data, error } = await supabase
+    .from("payment_links")
+    .update({
+      status: "inactive",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data as PaymentLink;
 }

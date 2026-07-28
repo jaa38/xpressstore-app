@@ -74,27 +74,6 @@ export default function PaymentSettingsScreen() {
               </AppText>
             </View>
 
-            {/* Edit Button */}
-
-            <Pressable
-              onPress={() => {
-                // router.push(ROUTES.EDIT_PAYMENT_SETTINGS)
-              }}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: radius.full,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: theme.action.primary.background,
-              }}
-            >
-              <Ionicons
-                name="create-outline"
-                size={22}
-                color={theme.action.primary.text}
-              />
-            </Pressable>
           </View>
 
           {/* CONTENT */}

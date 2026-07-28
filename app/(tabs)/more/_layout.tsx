@@ -44,6 +44,13 @@ export default function MoreLayout() {
           headerShown: false,
         }}
       />
+
+      <Stack.Screen
+        name="payment-settings"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

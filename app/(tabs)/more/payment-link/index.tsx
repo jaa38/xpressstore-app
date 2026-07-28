@@ -35,6 +35,8 @@ import { ROUTES } from "@/navigation/routes";
 import { usePaymentLinks } from "@/hooks/paymentLinks/usePaymentLinks";
 import { useDeletePaymentLink } from "@/hooks/paymentLinks/useDeletePaymentLink";
 
+import { useDeactivatePaymentLink } from "@/hooks/paymentLinks/useDeactivatePaymentLink";
+
 function RightActions({ onDelete }: { onDelete: () => void }) {
   return (
     <Pressable
@@ -188,6 +190,42 @@ export default function PaymentLinksScreen() {
       badgeTextColor: "secondary" as const,
     },
   ];
+
+  const deactivatePaymentLinkMutation = useDeactivatePaymentLink();
+
+  function handleDeactivate(paymentLink: PaymentLink) {
+    Alert.alert(
+      "Deactivate Payment Link",
+      `Are you sure you want to deactivate "${paymentLink.title}"?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Deactivate",
+          style: "destructive",
+          onPress: () => {
+            deactivatePaymentLinkMutation.mutate(paymentLink.id, {
+              onSuccess: () => {
+                Alert.alert(
+                  "Payment Link Deactivated",
+                  `"${paymentLink.title}" has been deactivated.`
+                );
+              },
+
+              onError: (error) => {
+                Alert.alert(
+                  "Unable to Deactivate",
+                  error.message ?? "Unable to deactivate payment link."
+                );
+              },
+            });
+          },
+        },
+      ]
+    );
+  }
 
   function handleDelete(paymentLink: PaymentLink) {
     Alert.alert(
@@ -570,6 +608,16 @@ export default function PaymentLinksScreen() {
       <PaymentLinkBottomSheet
         ref={paymentLinkBottomSheetRef}
         paymentLink={selectedPaymentLink}
+        onViewQRCode={(paymentLink) => {
+          router.push({
+            pathname: ROUTES.PAYMENT_LINK_QR_CODE,
+            params: {
+              title: paymentLink.title,
+              url: paymentLink.url,
+            },
+          });
+        }}
+        onDeactivateLink={handleDeactivate}
       />
     </SafeAreaView>
   );

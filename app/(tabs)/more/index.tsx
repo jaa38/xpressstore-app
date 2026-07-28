@@ -230,7 +230,7 @@ export default function MoreScreen() {
             >
               {/* Payment Settings*/}
               <Pressable
-                // onPress={() => router.push(ROUTES.BUSINESS)}
+                onPress={() => router.push(ROUTES.PAYMENT_SETTINGS)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",

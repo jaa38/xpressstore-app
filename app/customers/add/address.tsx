@@ -27,7 +27,7 @@ import { ROUTES } from "@/navigation/routes";
 
 import { spacing, theme } from "@/theme";
 
-import { Dropdown } from "@/components/ui/Dropdown";
+import { SearchableDropdown } from "@/components/ui/Dropdown/SearchableDropdown";
 
 import { countryOptions } from "@/constants/countries";
 
@@ -139,7 +139,7 @@ export default function CustomerAddressScreen() {
                 field: { onChange, value },
                 fieldState: { error },
               }) => (
-                <Dropdown
+                <SearchableDropdown
                   label="Country"
                   required
                   placeholder="Select country"

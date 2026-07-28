@@ -32,6 +32,37 @@ import { useCustomers } from "@/hooks/customers/useCustomers";
 
 import { ROUTES } from "@/navigation/routes";
 
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import { useDeleteCustomer } from "@/hooks/customers/useDeleteCustomer";
+import { Customer } from "@/types/customer";
+
+function RightActions({ onDelete }: { onDelete: () => void }) {
+  return (
+    <Pressable
+      onPress={onDelete}
+      style={{
+        width: 90,
+        marginLeft: spacing.sm,
+
+        justifyContent: "center",
+        alignItems: "center",
+
+        backgroundColor: theme.action.destructive.background,
+
+        borderRadius: radius.md,
+      }}
+    >
+      <Ionicons
+        name="trash-outline"
+        size={24}
+        color={theme.action.destructive.text}
+      />
+
+      <AppText color="inverse">Delete</AppText>
+    </Pressable>
+  );
+}
+
 export default function CustomersScreen() {
   const phoneNumber = "+23493322201234";
 
@@ -41,6 +72,8 @@ export default function CustomersScreen() {
     isRefetching,
     refetch,
   } = useCustomers();
+
+  const deleteCustomerMutation = useDeleteCustomer();
 
   async function handleCall(phone: string) {
     const url = `tel:${phone}`;
@@ -108,6 +141,40 @@ export default function CustomersScreen() {
         return data;
     }
   }, [customers, sortBy]);
+
+  function handleDelete(customer: Customer) {
+    Alert.alert(
+      "Delete Customer",
+      `Are you sure you want to permanently delete "${customer.name}"?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            deleteCustomerMutation.mutate(customer.id, {
+              onSuccess: () => {
+                Alert.alert(
+                  "Customer Deleted",
+                  `"${customer.name}" has been deleted.`
+                );
+              },
+
+              onError: (error) => {
+                Alert.alert(
+                  "Delete Failed",
+                  error.message ?? "Unable to delete customer."
+                );
+              },
+            });
+          },
+        },
+      ]
+    );
+  }
   return (
     <SafeAreaView
       style={{
@@ -266,74 +333,20 @@ export default function CustomersScreen() {
               }
             >
               {sortedCustomers.map((customer) => (
-                <Card key={customer.id}>
-                  {/* Customer */}
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: spacing.sm,
-                    }}
-                  >
-                    <Ionicons
-                      name="person-circle"
-                      size={56}
-                      color={theme.icon.default.icon}
-                    />
-
-                    <View style={{ flex: 1 }}>
-                      <AppText variant="h3">{customer.name}</AppText>
-
-                      <AppText variant="body" color="secondary">
-                        {customer.phone}
-                      </AppText>
-                    </View>
-                  </View>
-
-                  <Divider
-                    style={{
-                      marginVertical: spacing.rg,
-                    }}
-                  />
-
-                  {/* Summary */}
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <View
-                      style={{
-                        flex: 1,
-                        flexDirection: "row",
-                        gap: spacing.md,
+                <Swipeable
+                  key={customer.id}
+                  renderRightActions={() => (
+                    <RightActions
+                      onDelete={() => {
+                        if (!deleteCustomerMutation.isPending) {
+                          handleDelete(customer);
+                        }
                       }}
-                    >
-                      <View>
-                        <AppText variant="label" color="secondary">
-                          Orders
-                        </AppText>
-
-                        <AppText variant="bodyBold">{customer.orders}</AppText>
-                      </View>
-
-                      <View>
-                        <AppText variant="label" color="secondary">
-                          Spent
-                        </AppText>
-
-                        <AppText variant="bodyBold">
-                          {new Intl.NumberFormat("en-NG", {
-                            style: "currency",
-                            currency: "NGN",
-                            maximumFractionDigits: 0,
-                          }).format(customer.spent)}
-                        </AppText>
-                      </View>
-                    </View>
-
+                    />
+                  )}
+                >
+                  <Card>
+                    {/* Customer */}
                     <View
                       style={{
                         flexDirection: "row",
@@ -341,44 +354,113 @@ export default function CustomersScreen() {
                         gap: spacing.sm,
                       }}
                     >
-                      <Pressable
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: radius.full,
-                          justifyContent: "center",
-                          alignItems: "center",
-                          backgroundColor: theme.background.subtle,
-                        }}
-                        onPress={() => handleCall(customer.phone)}
-                      >
-                        <Ionicons
-                          name="call-outline"
-                          size={22}
-                          color={theme.icon.default.icon}
-                        />
-                      </Pressable>
+                      <Ionicons
+                        name="person-circle"
+                        size={56}
+                        color={theme.icon.default.icon}
+                      />
 
-                      <Pressable
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: radius.full,
-                          justifyContent: "center",
-                          alignItems: "center",
-                          backgroundColor: "#25D36615",
-                        }}
-                        onPress={() => handleWhatsApp(customer.phone)}
-                      >
-                        <Ionicons
-                          name="logo-whatsapp"
-                          size={22}
-                          color="#25D366"
-                        />
-                      </Pressable>
+                      <View style={{ flex: 1 }}>
+                        <AppText variant="h3">{customer.name}</AppText>
+
+                        <AppText variant="body" color="secondary">
+                          {customer.phone}
+                        </AppText>
+                      </View>
                     </View>
-                  </View>
-                </Card>
+
+                    <Divider
+                      style={{
+                        marginVertical: spacing.rg,
+                      }}
+                    />
+
+                    {/* Summary */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <View
+                        style={{
+                          flex: 1,
+                          flexDirection: "row",
+                          gap: spacing.md,
+                        }}
+                      >
+                        <View>
+                          <AppText variant="label" color="secondary">
+                            Orders
+                          </AppText>
+
+                          <AppText variant="bodyBold">
+                            {customer.orders}
+                          </AppText>
+                        </View>
+
+                        <View>
+                          <AppText variant="label" color="secondary">
+                            Spent
+                          </AppText>
+
+                          <AppText variant="bodyBold">
+                            {new Intl.NumberFormat("en-NG", {
+                              style: "currency",
+                              currency: "NGN",
+                              maximumFractionDigits: 0,
+                            }).format(customer.spent)}
+                          </AppText>
+                        </View>
+                      </View>
+
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: spacing.sm,
+                        }}
+                      >
+                        <Pressable
+                          style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: radius.full,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            backgroundColor: theme.background.subtle,
+                          }}
+                          onPress={() => handleCall(customer.phone)}
+                        >
+                          <Ionicons
+                            name="call-outline"
+                            size={22}
+                            color={theme.icon.default.icon}
+                          />
+                        </Pressable>
+
+                        <Pressable
+                          style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: radius.full,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            backgroundColor: "#25D36615",
+                          }}
+                          onPress={() => handleWhatsApp(customer.phone)}
+                        >
+                          <Ionicons
+                            name="logo-whatsapp"
+                            size={22}
+                            color="#25D366"
+                          />
+                        </Pressable>
+                      </View>
+                    </View>
+                  </Card>
+                </Swipeable>
               ))}
             </ScrollView>
           )}

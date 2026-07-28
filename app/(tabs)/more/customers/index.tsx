@@ -1,4 +1,11 @@
-import { Pressable, View, Alert, Linking } from "react-native";
+import {
+  Pressable,
+  View,
+  Alert,
+  Linking,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,6 +17,8 @@ import { spacing, theme, radius } from "@/theme";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { Card } from "@/components/ui/Card";
 import { Divider } from "@/components/ui/Divider";
+
+import { useState } from "react";
 
 export default function CustomersScreen() {
   const phoneNumber = "+23493322201234";
@@ -37,6 +46,19 @@ export default function CustomersScreen() {
       Alert.alert("WhatsApp is not installed.");
     }
   }
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+
+    try {
+      // TODO: Fetch customers here
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } finally {
+      setRefreshing(false);
+    }
+  };
   return (
     <SafeAreaView
       style={{
@@ -135,11 +157,24 @@ export default function CustomersScreen() {
             {/* Search */}
             <SearchBar />
 
-            <View
+            <ScrollView
               style={{
+                flex: 1,
                 marginTop: spacing.md,
-                gap: spacing.md,
               }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{
+                gap: spacing.md,
+                paddingBottom: spacing["2xl"],
+              }}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor={theme.action.primary.background}
+                  colors={[theme.action.primary.background]}
+                />
+              }
             >
               <Card>
                 {/* Customer */}
@@ -475,7 +510,7 @@ export default function CustomersScreen() {
                   </View>
                 </View>
               </Card>
-            </View>
+            </ScrollView>
 
             {/* Customer List */}
           </View>

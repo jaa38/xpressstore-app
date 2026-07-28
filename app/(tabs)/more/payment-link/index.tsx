@@ -274,7 +274,7 @@ export default function PaymentLinksScreen() {
         style={{
           flex: 1,
           paddingHorizontal: spacing.lg,
-          paddingTop: spacing.md,
+          // paddingTop: spacing.md,
         }}
       >
         <View

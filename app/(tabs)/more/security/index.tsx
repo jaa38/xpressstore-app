@@ -22,7 +22,7 @@ export default function SecurityScreen() {
         style={{
           flex: 1,
           paddingHorizontal: spacing.lg,
-          paddingTop: spacing.md,
+          // paddingTop: spacing.md,
         }}
       >
         <View

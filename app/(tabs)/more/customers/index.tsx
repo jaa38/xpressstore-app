@@ -72,7 +72,7 @@ export default function CustomersScreen() {
         style={{
           flex: 1,
           paddingHorizontal: spacing.lg,
-          paddingTop: spacing.md,
+          // paddingTop: spacing.md,
         }}
       >
         <View

@@ -21,7 +21,7 @@ import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
 
 import type { CustomerSort } from "@/types/customer-sort";
 
-import { CustomerSortOptions } from "@/components/customer/CustomerSortOptions";
+import { CustomerSortOptions } from "@/components/customers/CustomerSortOptions";
 
 import { Pressable } from "react-native";
 

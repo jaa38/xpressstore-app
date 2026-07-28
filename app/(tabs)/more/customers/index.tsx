@@ -22,35 +22,40 @@ import { useMemo, useRef, useState } from "react";
 
 import { FilterButton } from "@/components/ui/FilterButton";
 
-import { customers } from "@/data/customers";
-
 import type { CustomerSort } from "@/types/customer-sort";
 
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { CustomerSortBottomSheet } from "@/components/bottom-sheet/CustomerSortBottomSheet";
 
+import { useCustomers } from "@/hooks/customers/useCustomers";
+
+import { ROUTES } from "@/navigation/routes";
+
 export default function CustomersScreen() {
   const phoneNumber = "+23493322201234";
 
-  async function handleCall() {
-    const url = `tel:${phoneNumber}`;
+  const {
+    data: customers = [],
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useCustomers();
 
-    const supported = await Linking.canOpenURL(url);
+  async function handleCall(phone: string) {
+    const url = `tel:${phone}`;
 
-    if (supported) {
+    if (await Linking.canOpenURL(url)) {
       await Linking.openURL(url);
     } else {
       Alert.alert("Unable to place call");
     }
   }
 
-  async function handleWhatsApp() {
-    const url = `https://wa.me/${phoneNumber.replace(/\D/g, "")}`;
+  async function handleWhatsApp(phone: string) {
+    const url = `https://wa.me/${phone.replace(/\D/g, "")}`;
 
-    const supported = await Linking.canOpenURL(url);
-
-    if (supported) {
+    if (await Linking.canOpenURL(url)) {
       await Linking.openURL(url);
     } else {
       Alert.alert("WhatsApp is not installed.");
@@ -59,17 +64,8 @@ export default function CustomersScreen() {
 
   const customerSortBottomSheetRef = useRef<BottomSheetModal>(null);
 
-  const [refreshing, setRefreshing] = useState(false);
-
   const onRefresh = async () => {
-    setRefreshing(true);
-
-    try {
-      // TODO: Fetch customers here
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    } finally {
-      setRefreshing(false);
-    }
+    await refetch();
   };
 
   const [sortBy, setSortBy] = useState<CustomerSort>("firstNameAsc");
@@ -97,18 +93,10 @@ export default function CustomersScreen() {
         });
 
       case "highestSpent":
-        return data.sort(
-          (a, b) =>
-            Number(b.spent.replace(/[₦,]/g, "")) -
-            Number(a.spent.replace(/[₦,]/g, ""))
-        );
+        return data.sort((a, b) => b.spent - a.spent);
 
       case "lowestSpent":
-        return data.sort(
-          (a, b) =>
-            Number(a.spent.replace(/[₦,]/g, "")) -
-            Number(b.spent.replace(/[₦,]/g, ""))
-        );
+        return data.sort((a, b) => a.spent - b.spent);
 
       case "mostOrders":
         return data.sort((a, b) => b.orders - a.orders);
@@ -119,7 +107,7 @@ export default function CustomersScreen() {
       default:
         return data;
     }
-  }, [sortBy]);
+  }, [customers, sortBy]);
   return (
     <SafeAreaView
       style={{
@@ -180,16 +168,14 @@ export default function CustomersScreen() {
               <AppText variant="h1">Customers</AppText>
 
               <AppText variant="body" color="secondary">
-                Number of customers
+                {customers.length} customer{customers.length !== 1 ? "s" : ""}
               </AppText>
             </View>
 
             {/* Add Button */}
 
             <Pressable
-              onPress={() => {
-                // router.push(ROUTES.ADD_CUSTOMER)
-              }}
+              onPress={() => router.push(ROUTES.ADD_CUSTOMER)}
               style={{
                 width: 44,
                 height: 44,
@@ -233,89 +219,55 @@ export default function CustomersScreen() {
               }}
             />
           </View>
-
-          <ScrollView
-            style={{
-              flex: 1,
-              marginTop: spacing.md,
-            }}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              gap: spacing.md,
-              paddingBottom: spacing["2xl"],
-            }}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor={theme.action.primary.background}
-                colors={[theme.action.primary.background]}
+          {sortedCustomers.length === 0 ? (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons
+                name="people-outline"
+                size={72}
+                color={theme.icon.default.icon}
               />
-            }
-          >
-            {sortedCustomers.map((customer) => (
-              <Card key={customer.id}>
-                {/* Customer */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: spacing.sm,
-                  }}
-                >
-                  <Ionicons
-                    name="person-circle"
-                    size={56}
-                    color={theme.icon.default.icon}
-                  />
 
-                  <View style={{ flex: 1 }}>
-                    <AppText variant="h3">{customer.name}</AppText>
+              <AppText variant="h3" style={{ marginTop: spacing.md }}>
+                No customers yet
+              </AppText>
 
-                    <AppText variant="body" color="secondary">
-                      {customer.phone}
-                    </AppText>
-                  </View>
-                </View>
-
-                <Divider
-                  style={{
-                    marginVertical: spacing.rg,
-                  }}
+              <AppText
+                variant="body"
+                color="secondary"
+                style={{ textAlign: "center", marginTop: spacing.xs }}
+              >
+                Tap the + button to create your first customer.
+              </AppText>
+            </View>
+          ) : (
+            <ScrollView
+              style={{
+                flex: 1,
+                marginTop: spacing.md,
+              }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{
+                gap: spacing.md,
+                paddingBottom: spacing["2xl"],
+              }}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefetching}
+                  onRefresh={onRefresh}
+                  tintColor={theme.action.primary.background}
+                  colors={[theme.action.primary.background]}
                 />
-
-                {/* Summary */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <View
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      gap: spacing.md,
-                    }}
-                  >
-                    <View>
-                      <AppText variant="label" color="secondary">
-                        Orders
-                      </AppText>
-
-                      <AppText variant="bodyBold">{customer.orders}</AppText>
-                    </View>
-
-                    <View>
-                      <AppText variant="label" color="secondary">
-                        Spent
-                      </AppText>
-
-                      <AppText variant="bodyBold">{customer.spent}</AppText>
-                    </View>
-                  </View>
-
+              }
+            >
+              {sortedCustomers.map((customer) => (
+                <Card key={customer.id}>
+                  {/* Customer */}
                   <View
                     style={{
                       flexDirection: "row",
@@ -323,47 +275,113 @@ export default function CustomersScreen() {
                       gap: spacing.sm,
                     }}
                   >
-                    <Pressable
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: radius.full,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        backgroundColor: theme.background.subtle,
-                      }}
-                      onPress={handleCall}
-                    >
-                      <Ionicons
-                        name="call-outline"
-                        size={22}
-                        color={theme.icon.default.icon}
-                      />
-                    </Pressable>
+                    <Ionicons
+                      name="person-circle"
+                      size={56}
+                      color={theme.icon.default.icon}
+                    />
 
-                    <Pressable
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: radius.full,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        backgroundColor: "#25D36615",
-                      }}
-                      onPress={handleWhatsApp}
-                    >
-                      <Ionicons
-                        name="logo-whatsapp"
-                        size={22}
-                        color="#25D366"
-                      />
-                    </Pressable>
+                    <View style={{ flex: 1 }}>
+                      <AppText variant="h3">{customer.name}</AppText>
+
+                      <AppText variant="body" color="secondary">
+                        {customer.phone}
+                      </AppText>
+                    </View>
                   </View>
-                </View>
-              </Card>
-            ))}
-          </ScrollView>
 
+                  <Divider
+                    style={{
+                      marginVertical: spacing.rg,
+                    }}
+                  />
+
+                  {/* Summary */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <View
+                      style={{
+                        flex: 1,
+                        flexDirection: "row",
+                        gap: spacing.md,
+                      }}
+                    >
+                      <View>
+                        <AppText variant="label" color="secondary">
+                          Orders
+                        </AppText>
+
+                        <AppText variant="bodyBold">{customer.orders}</AppText>
+                      </View>
+
+                      <View>
+                        <AppText variant="label" color="secondary">
+                          Spent
+                        </AppText>
+
+                        <AppText variant="bodyBold">
+                          {new Intl.NumberFormat("en-NG", {
+                            style: "currency",
+                            currency: "NGN",
+                            maximumFractionDigits: 0,
+                          }).format(customer.spent)}
+                        </AppText>
+                      </View>
+                    </View>
+
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: spacing.sm,
+                      }}
+                    >
+                      <Pressable
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: radius.full,
+                          justifyContent: "center",
+                          alignItems: "center",
+                          backgroundColor: theme.background.subtle,
+                        }}
+                        onPress={() => handleCall(customer.phone)}
+                      >
+                        <Ionicons
+                          name="call-outline"
+                          size={22}
+                          color={theme.icon.default.icon}
+                        />
+                      </Pressable>
+
+                      <Pressable
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: radius.full,
+                          justifyContent: "center",
+                          alignItems: "center",
+                          backgroundColor: "#25D36615",
+                        }}
+                        onPress={() => handleWhatsApp(customer.phone)}
+                      >
+                        <Ionicons
+                          name="logo-whatsapp"
+                          size={22}
+                          color="#25D366"
+                        />
+                      </Pressable>
+                    </View>
+                  </View>
+                </Card>
+              ))}
+            </ScrollView>
+          )}
           <CustomerSortBottomSheet
             ref={customerSortBottomSheetRef}
             draftSort={draftSort}

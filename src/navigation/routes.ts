@@ -114,8 +114,17 @@ export const ROUTES = {
   ADD_PAYMENT_LINK_REVIEW: "/payment-link/add/review",
 
   // QR Code
-  // QR Code
   PAYMENT_LINK_QR_CODE: "/(tabs)/more/payment-link/qr-code",
+
+  /**
+   * CUSTOMERS
+   */
+
+  // Create a Customer
+  ADD_CUSTOMER: "/customers/add/information",
+
+  ADD_CUSTOMER_INFORMATION: "/customers/add/information",
+  ADD_CUSTOMER_ADDRESS: "/customers/add/address",
 } as const;
 
 export const getProductDetailsRoute = (id: string) => `/product/${id}` as const;

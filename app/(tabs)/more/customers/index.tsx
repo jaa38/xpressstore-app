@@ -360,13 +360,40 @@ export default function CustomersScreen() {
                         color={theme.icon.default.icon}
                       />
 
-                      <View style={{ flex: 1 }}>
+                      <View
+                        style={{
+                          flex: 1,
+                        }}
+                      >
                         <AppText variant="h3">{customer.name}</AppText>
 
                         <AppText variant="body" color="secondary">
                           {customer.phone}
                         </AppText>
                       </View>
+
+                      <Pressable
+                        onPress={() =>
+                          router.push({
+                            pathname: "/customers/[id]",
+                            params: {
+                              id: customer.id,
+                            },
+                          })
+                        }
+                        style={{
+                          width: 40,
+                          height: 40,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Ionicons
+                          name="create-outline"
+                          size={22}
+                          color={theme.icon.default.icon}
+                        />
+                      </Pressable>
                     </View>
 
                     <Divider

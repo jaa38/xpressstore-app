@@ -44,6 +44,20 @@ export async function getCustomers(): Promise<Customer[]> {
   return (data ?? []).map(mapCustomer);
 }
 
+export async function getCustomerById(id: string): Promise<Customer> {
+  const { data, error } = await supabase
+    .from("customers")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return mapCustomer(data);
+}
+
 export async function createCustomer(
   customer: CreateCustomerPayload
 ): Promise<Customer> {

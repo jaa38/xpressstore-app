@@ -1,18 +1,7 @@
-import {
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
-
-import { queryKeys } from "@/lib/queryKeys";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { updateCustomer } from "@/services/customer-service";
-
 import type { UpdateCustomerPayload } from "@/types/customer";
-
-interface UpdateCustomerMutation {
-  id: string;
-  customer: UpdateCustomerPayload;
-}
 
 export function useUpdateCustomer() {
   const queryClient = useQueryClient();
@@ -21,12 +10,18 @@ export function useUpdateCustomer() {
     mutationFn: ({
       id,
       customer,
-    }: UpdateCustomerMutation) =>
-      updateCustomer(id, customer),
+    }: {
+      id: string;
+      customer: UpdateCustomerPayload;
+    }) => updateCustomer(id, customer),
 
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.customers,
+        queryKey: ["customers"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["customers", variables.id],
       });
     },
   });

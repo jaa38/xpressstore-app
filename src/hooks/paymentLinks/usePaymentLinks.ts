@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getPaymentLinks } from "@/services/paymentLink-service";
+import { getPaymentLinks } from "@/services/payment-link/paymentLink-service";
 
 import { queryKeys } from "@/lib/queryKeys";
 

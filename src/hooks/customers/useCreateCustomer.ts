@@ -5,7 +5,7 @@ import {
 
 import { queryKeys } from "@/lib/queryKeys";
 
-import { createCustomer } from "@/services/customer-service";
+import { createCustomer } from "@/services/customer/customer-service";
 
 export function useCreateCustomer() {
   const queryClient = useQueryClient();

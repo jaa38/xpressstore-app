@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { deactivatePaymentLink } from "@/services/paymentLink-service";
+import { deactivatePaymentLink } from "@/services/payment-link/paymentLink-service";
 
 export function useDeactivatePaymentLink() {
   const queryClient = useQueryClient();

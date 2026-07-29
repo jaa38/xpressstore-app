@@ -5,7 +5,7 @@ import {
 
 import { queryKeys } from "@/lib/queryKeys";
 
-import { deleteCustomer } from "@/services/customer-service";
+import { deleteCustomer } from "@/services/customer/customer-service";
 
 export function useDeleteCustomer() {
   const queryClient = useQueryClient();

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { updateProductVisibility } from "@/services/product-service";
+import { updateProductVisibility } from "@/services/product/product-service";
 
 import type { Product } from "@/types/product";
 

@@ -22,7 +22,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/Input";
 
 import { Dropdown } from "@/components/ui/Dropdown";
-import { getCategories, createCategory } from "@/services/category-service";
+import { getCategories, createCategory } from "@/services/category/category-service";
 
 import { AddProductHeader } from "@/components/product/AddProductHeader";
 

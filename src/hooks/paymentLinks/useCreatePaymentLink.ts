@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { createPaymentLink } from "@/services/paymentLink-service";
+import { createPaymentLink } from "@/services/payment-link/paymentLink-service";
 
 import { queryClient } from "@/lib/query-client";
 

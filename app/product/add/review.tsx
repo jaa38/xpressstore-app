@@ -20,7 +20,7 @@ import { useProduct } from "@/store/product/useProduct";
 import { ROUTES } from "@/navigation/routes";
 import { EditButton } from "@/components/product/EditButton";
 
-import { createProduct } from "@/services/product-service";
+import { createProduct } from "@/services/product/product-service";
 
 import { uploadProductImage } from "@/services/storage-service";
 

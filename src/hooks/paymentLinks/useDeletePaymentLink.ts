@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { deletePaymentLink } from "@/services/paymentLink-service";
+import { deletePaymentLink } from "@/services/payment-link/paymentLink-service";
 
 import { queryClient } from "@/lib/query-client";
 

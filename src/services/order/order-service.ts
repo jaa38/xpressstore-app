@@ -1,5 +1,5 @@
 import type { Order } from "@/types/order";
-import { supabase } from "./supabase/client";
+import { supabase } from "../supabase/client";
 
 // For Supabase
 

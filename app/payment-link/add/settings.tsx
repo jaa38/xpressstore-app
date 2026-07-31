@@ -30,11 +30,11 @@ import {
   paymentLinkSettingsSchema,
 } from "@/schemas/paymentLinkSettingsSchema";
 
-import { usePaymentLink } from "@/hooks/usePaymentLink";
+import { usePaymentLink } from "@/hooks/paymentLinks/usePaymentLink";
 
 import { spacing, theme } from "@/theme";
 
-import type { PaymentType } from "@/hooks/usePaymentLink";
+import type { PaymentType } from "@/hooks/paymentLinks/usePaymentLink";
 
 const paymentTypeOptions: {
   label: string;

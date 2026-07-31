@@ -26,11 +26,11 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 
 import { spacing, theme } from "@/theme";
 
-import { useProduct } from "@/hooks/useProduct";
+import { useProduct } from "@/hooks/products/useProduct";
 
-import { useCreateCategory } from "@/hooks/useCreateCategory";
+import { useCreateCategory } from "@/hooks/categories/useCreateCategory";
 
-import { useCategories } from "@/hooks/useCategories";
+import { useCategories } from "@/hooks/categories/useCategories";
 
 import * as ImagePicker from "expo-image-picker";
 
@@ -47,7 +47,7 @@ import {
 
 import { uploadProductImage } from "@/services/storage-service";
 
-import { useUpdateProduct } from "@/hooks/useUpdateProduct";
+import { useUpdateProduct } from "@/hooks/products/useUpdateProduct";
 
 export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams<{

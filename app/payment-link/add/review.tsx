@@ -14,7 +14,7 @@ import { AppText } from "@/components/ui/AppText";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { usePaymentLink } from "@/hooks/usePaymentLink";
+import { usePaymentLink } from "@/hooks/paymentLinks/usePaymentLink";
 import { Ionicons } from "@expo/vector-icons";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { EditButton } from "@/components/product/EditButton";

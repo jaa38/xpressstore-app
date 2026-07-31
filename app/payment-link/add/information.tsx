@@ -26,7 +26,7 @@ import {
   PaymentLinkInfoForm,
 } from "@/schemas/paymentLinkInfoSchema";
 
-import { usePaymentLink } from "@/hooks/usePaymentLink";
+import { usePaymentLink } from "@/hooks/paymentLinks/usePaymentLink";
 
 import type { Currency } from "@/types/currency";
 

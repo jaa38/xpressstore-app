@@ -25,11 +25,11 @@ import { ROUTES, getProductDetailsRoute } from "@/navigation/routes";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useProducts } from "@/hooks/useProducts";
+import { useProducts } from "@/hooks/products/useProducts";
 
-import { useToggleProductVisibility } from "@/hooks/useToggleProductVisibility";
+import { useToggleProductVisibility } from "@/hooks/products/useToggleProductVisibility";
 
-import { useDeleteProduct } from "@/hooks/useDeleteProduct";
+import { useDeleteProduct } from "@/hooks/products/useDeleteProduct";
 
 import type { Product } from "@/types/product";
 

@@ -342,7 +342,7 @@ export default function TransactionsScreen() {
           <View
             style={{
               flex: 1,
-              //   marginTop: spacing.lg,
+                marginTop: spacing.md,
             }}
           >
             <View

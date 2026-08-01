@@ -485,7 +485,7 @@ export default function CustomerDetailsScreen() {
                 <AppText variant="caption" color="secondary">
                   Country
                 </AppText>
-                <AppText variant="bodyBold">{countryLabel || "—"}</AppText>{" "}
+                <AppText variant="bodyBold">{countryLabel || "—"}</AppText>
               </View>
             </View>
 

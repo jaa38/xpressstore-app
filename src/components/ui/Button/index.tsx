@@ -15,6 +15,7 @@ import { radius } from "@/theme/radius";
 type ButtonVariant =
   | "primary"
   | "secondary"
+  | "whatsapp"
   | "tertiary"
   | "tertiaryDestructive"
   | "destructive";
@@ -109,6 +110,13 @@ function getVariantStyles({
           : theme.action.secondary.background,
       };
 
+    case "whatsapp":
+      return {
+        backgroundColor: pressed
+          ? theme.action.whatsapp.pressed
+          : theme.action.whatsapp.background,
+      };
+
     case "tertiary":
       return {
         backgroundColor: pressed
@@ -149,6 +157,9 @@ function getTextColor(variant: ButtonVariant, disabled: boolean): string {
 
     case "secondary":
       return theme.action.secondary.text;
+
+    case "whatsapp":
+      return theme.action.whatsapp.text;
 
     case "tertiary":
       return theme.action.tertiary.text;
@@ -222,7 +233,9 @@ export function Button({
               sizeStyles.textStyle,
               {
                 color: getTextColor(variant, disabled),
+
                 fontFamily: typography.fontFamily,
+
                 marginHorizontal: leftIcon || rightIcon ? 6 : 0,
               } as TextStyle,
             ]}

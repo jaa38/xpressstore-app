@@ -121,6 +121,15 @@ export const theme = {
       disabledText: colors.gray[500],
     },
 
+    whatsapp: {
+      background: "#25D366",
+      pressed: "#1FAF57",
+      disabled: colors.gray[300],
+
+      text: colors.neutral.white,
+      disabledText: colors.gray[500],
+    },
+
     tertiary: {
       background: colors.neutral.white,
       border: colors.primary[500],

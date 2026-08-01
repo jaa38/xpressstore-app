@@ -30,7 +30,7 @@ import { CustomerSortBottomSheet } from "@/components/bottom-sheet/CustomerSortB
 
 import { useCustomers } from "@/hooks/customers/useCustomers";
 
-import { ROUTES } from "@/navigation/routes";
+import { ROUTES, getCustomerDetailsRoute } from "@/navigation/routes";
 
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useDeleteCustomer } from "@/hooks/customers/useDeleteCustomer";
@@ -372,28 +372,61 @@ export default function CustomersScreen() {
                         </AppText>
                       </View>
 
-                      <Pressable
-                        onPress={() =>
-                          router.push({
-                            pathname: "/customers/[id]",
-                            params: {
-                              id: customer.id,
-                            },
-                          })
-                        }
+                      <View
                         style={{
-                          width: 40,
-                          height: 40,
-                          justifyContent: "center",
+                          flexDirection: "row",
                           alignItems: "center",
+                          gap: spacing.xs,
                         }}
                       >
-                        <Ionicons
-                          name="create-outline"
-                          size={22}
-                          color={theme.icon.default.icon}
-                        />
-                      </Pressable>
+                        <Pressable
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: radius.full,
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                          onPress={() =>
+                            router.push({
+                              pathname: "/customers/view/[id]",
+                              params: {
+                                id: customer.id,
+                              },
+                            })
+                          }
+                        >
+                          <Ionicons
+                            name="eye-outline"
+                            size={20}
+                            color={theme.state.info.icon}
+                          />
+                        </Pressable>
+
+                        <Pressable
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: radius.full,
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                          onPress={() =>
+                            router.push({
+                              pathname: "/customers/[id]",
+                              params: {
+                                id: customer.id,
+                              },
+                            })
+                          }
+                        >
+                          <Ionicons
+                            name="create-outline"
+                            size={20}
+                            color={theme.icon.default.icon}
+                          />
+                        </Pressable>
+                      </View>
                     </View>
 
                     <Divider

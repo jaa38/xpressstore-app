@@ -123,8 +123,13 @@ export const ROUTES = {
   // Create a Customer
   ADD_CUSTOMER: "/customers/add/information",
 
+CUSTOMER_DETAILS: "/more/customers/view/[id]",
+
   ADD_CUSTOMER_INFORMATION: "/customers/add/information",
   ADD_CUSTOMER_ADDRESS: "/customers/add/address",
 } as const;
 
 export const getProductDetailsRoute = (id: string) => `/product/${id}` as const;
+
+export const getCustomerDetailsRoute = (id: string) =>
+  `/more/customers/view/${id}` as const;

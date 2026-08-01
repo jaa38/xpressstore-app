@@ -296,55 +296,46 @@ export default function TransactionsScreen() {
             </View>
           </Card>
 
-          <SearchBar
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search by transaction ID, customer or amount"
-          />
+          <View
+            style={{
+              marginTop: spacing.md,
+            }}
+          >
+            <SearchBar
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Search by transaction ID, customer or amount"
+            />
+          </View>
 
           {/* Filters */}
 
           <View
             style={{
               flexDirection: "row",
-              justifyContent: "space-between",
               marginTop: spacing.md,
+              gap: spacing.sm,
             }}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginTop: spacing.md,
-                gap: spacing.sm,
-              }}
-            >
-              {filterOptions.map((filter) => (
-                <UICard
-                  key={filter.key}
-                  title={filter.title}
-                  variant={selectedStatus === filter.key ? "active" : "default"}
-                  onPress={() => setSelectedStatus(filter.key)}
-                  rightElement={
-                    <AppText
-                      variant="bodySmallBold"
-                      color={
-                        selectedStatus === filter.key ? "inverse" : "secondary"
-                      }
-                    >
-                      {filter.count}
-                    </AppText>
-                  }
-                />
-              ))}
-            </View>
+            {filterOptions.map((filter) => (
+              <UICard
+                key={filter.key}
+                title={filter.title}
+                variant={selectedStatus === filter.key ? "active" : "default"}
+                onPress={() => setSelectedStatus(filter.key)}
+                rightElement={
+                  <AppText
+                    variant="bodySmallBold"
+                    color={
+                      selectedStatus === filter.key ? "inverse" : "secondary"
+                    }
+                  >
+                    {filter.count}
+                  </AppText>
+                }
+              />
+            ))}
           </View>
-
-          <View
-            style={{
-              marginTop: spacing.lg,
-            }}
-          ></View>
 
           {/* Recent Transactions */}
 

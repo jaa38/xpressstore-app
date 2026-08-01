@@ -29,6 +29,7 @@ import { DashboardStatsCard } from "@/components/dashboard/DashboardStatsCard";
 import { formatCurrency } from "@/utils/formatCurrency";
 
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { ROUTES } from "@/navigation/routes";
 
 type PaymentChannel = "bank" | "card" | "qr" | "transfer" | "ussd";
 
@@ -315,7 +316,7 @@ export default function HomeScreen() {
             >
               <AppText variant="h3">Recent Transactions</AppText>
 
-              <Pressable>
+              <Pressable onPress={() => router.push(ROUTES.TRANSACTIONS)}>
                 <AppText variant="bodySmallBold" color="link">
                   View All
                 </AppText>

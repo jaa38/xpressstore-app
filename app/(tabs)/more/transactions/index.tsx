@@ -26,6 +26,10 @@ import { formatCurrency } from "@/utils/formatters/currency";
 
 import { TransactionListItem } from "@/components/transactions/TransactionListItem";
 
+import { TransactionList } from "@/components/transactions/TransactionList";
+
+import { FilterButton } from "@/components/ui/FilterButton";
+
 export default function TransactionsScreen() {
   const [search, setSearch] = useState("");
 
@@ -194,8 +198,6 @@ export default function TransactionsScreen() {
             // marginTop: spacing.md,
           }}
         >
-          {/* Search */}
-
           {/* Transaction Summary */}
 
           <Card
@@ -286,13 +288,29 @@ export default function TransactionsScreen() {
 
           <View
             style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing.sm,
               marginTop: spacing.md,
             }}
           >
-            <SearchBar
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Search by transaction ID, customer or amount"
+            <View
+              style={{
+                flex: 1,
+              }}
+            >
+              <SearchBar
+                value={search}
+                onChangeText={setSearch}
+                placeholder="Search by transaction ID, customer or amount"
+              />
+            </View>
+
+            <FilterButton
+              active={false}
+              onPress={() => {
+                // TODO: Open transaction filter bottom sheet
+              }}
             />
           </View>
 
@@ -362,73 +380,7 @@ export default function TransactionsScreen() {
                 paddingBottom: spacing["2xl"],
               }}
             >
-              {filteredTransactions.length === 0 ? (
-                <Card
-                  style={{
-                    alignItems: "center",
-                    justifyContent: "center",
-                    paddingVertical: spacing["3xl"],
-                    paddingHorizontal: spacing.xl,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: 999,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: theme.icon.default.background,
-                    }}
-                  >
-                    <Ionicons
-                      name="receipt-outline"
-                      size={36}
-                      color={theme.icon.default.icon}
-                    />
-                  </View>
-
-                  <AppText
-                    variant="h3"
-                    style={{
-                      marginTop: spacing.lg,
-                      textAlign: "center",
-                    }}
-                  >
-                    No Transactions Yet
-                  </AppText>
-
-                  <AppText
-                    variant="body"
-                    color="secondary"
-                    style={{
-                      marginTop: spacing.sm,
-                      textAlign: "center",
-                    }}
-                  >
-                    Your completed and pending transactions will appear here
-                    once payments start coming in.
-                  </AppText>
-                </Card>
-              ) : (
-                <Card
-                  style={{
-                    paddingHorizontal: 0,
-                    paddingVertical: 0,
-                    overflow: "hidden",
-                  }}
-                >
-                  <FlatList
-                    data={filteredTransactions}
-                    scrollEnabled={false}
-                    keyExtractor={(item) => item.id}
-                    ItemSeparatorComponent={() => <Divider />}
-                    renderItem={({ item }) => (
-                      <TransactionListItem transaction={item} />
-                    )}
-                  />
-                </Card>
-              )}
+              <TransactionList transactions={filteredTransactions} />
             </ScrollView>
           </View>
         </View>

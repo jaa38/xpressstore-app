@@ -33,6 +33,8 @@ import { useTransactions } from "@/hooks/transactions/useTransactions";
 
 import { TransactionListItem } from "@/components/transactions/TransactionListItem";
 
+import { TransactionList } from "@/components/transactions/TransactionList";
+
 export default function HomeScreen() {
   const { profile, refetch: refetchProfile } = useProfile();
 
@@ -270,27 +272,13 @@ export default function HomeScreen() {
               </Pressable>
             </View>
 
-            <Card
+            <View
               style={{
                 marginTop: spacing.md,
-
-                paddingHorizontal: 0,
-
-                paddingVertical: 0,
-
-                overflow: "hidden",
               }}
             >
-              <FlatList
-                data={recentTransactions}
-                scrollEnabled={false}
-                keyExtractor={(item) => item.id}
-                ItemSeparatorComponent={() => <Divider />}
-                renderItem={({ item }) => (
-                  <TransactionListItem transaction={item} />
-                )}
-              />
-            </Card>
+              <TransactionList transactions={recentTransactions} />
+            </View>
           </View>
         </ScrollView>
       </View>

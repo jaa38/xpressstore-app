@@ -1,5 +1,11 @@
-import { Pressable, View, ScrollView, FlatList } from "react-native";
-import { useEffect } from "react";
+import {
+  Pressable,
+  View,
+  ScrollView,
+  FlatList,
+  RefreshControl,
+} from "react-native";
+import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/ui/AppText";
@@ -18,7 +24,7 @@ import { Card } from "@/components/ui/Card";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { useProfile } from "@/features/home/hooks/use-profile";
+import { useProfile } from "@/hooks/use-profile";
 
 import { supabase } from "@/services/supabase/client";
 
@@ -31,22 +37,39 @@ import { formatCurrency } from "@/utils/formatCurrency";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { ROUTES } from "@/navigation/routes";
 
-type PaymentChannel = "bank" | "card" | "qr" | "transfer" | "ussd";
+import { useTransactions } from "@/hooks/transactions/useTransactions";
 
-type Transaction = {
-  id: string;
-  customer: string;
-  type: "credit" | "debit";
-  channel: PaymentChannel;
-  amount: string;
-  reference: string;
-  time: string;
-};
+import { PaymentChannel } from "@/types/transaction";
+
+import { formatDateTime } from "@/utils/formatters/date";
 
 export default function HomeScreen() {
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
 
-  const { profile } = useProfile();
+  const { profile, refetch: refetchProfile } = useProfile();
+
+  const { data: stats, refetch: refetchDashboardStats } = useDashboardStats();
+
+  const { data: transactions = [], refetch: refetchTransactions } =
+    useTransactions();
+
+  const recentTransactions = transactions.slice(0, 5);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+
+    try {
+      await Promise.all([
+        refetchProfile(),
+        refetchDashboardStats(),
+        refetchTransactions(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   async function handleLogout() {
     try {
@@ -68,56 +91,6 @@ export default function HomeScreen() {
     transfer: "swap-horizontal-outline",
     ussd: "keypad-outline",
   };
-
-  const transactions: Transaction[] = [
-    {
-      id: "1",
-      customer: "John Smith",
-      type: "credit",
-      channel: "card",
-      amount: "₦1,000,000",
-      reference: "XP-293AA",
-      time: "Today, 12:30",
-    },
-    {
-      id: "2",
-      customer: "Mary Johnson",
-      type: "credit",
-      channel: "bank",
-      amount: "₦250,000",
-      reference: "XP-847BB",
-      time: "Today, 11:05",
-    },
-    {
-      id: "3",
-      customer: "David Wilson",
-      type: "debit",
-      channel: "transfer",
-      amount: "₦75,000",
-      reference: "XP-991CC",
-      time: "Today, 09:42",
-    },
-    {
-      id: "4",
-      customer: "Sarah Brown",
-      type: "credit",
-      channel: "qr",
-      amount: "₦500,000",
-      reference: "XP-552DD",
-      time: "Today, 08:15",
-    },
-    {
-      id: "5",
-      customer: "Michael Davis",
-      type: "credit",
-      channel: "ussd",
-      amount: "₦180,000",
-      reference: "XP-672EE",
-      time: "Yesterday, 18:20",
-    },
-  ];
-
-  const { data: stats, isLoading } = useDashboardStats();
 
   return (
     <SafeAreaView
@@ -193,6 +166,15 @@ export default function HomeScreen() {
           contentContainerStyle={{
             paddingBottom: spacing.xl,
           }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.icon.branding.icon}
+              colors={[theme.icon.branding.icon]}
+              progressBackgroundColor={theme.background.surface}
+            />
+          }
         >
           {/* STATS CARD */}
 
@@ -335,7 +317,7 @@ export default function HomeScreen() {
               }}
             >
               <FlatList
-                data={transactions}
+                data={recentTransactions}
                 scrollEnabled={false}
                 keyExtractor={(item) => item.id}
                 ItemSeparatorComponent={() => <Divider />}
@@ -396,7 +378,7 @@ export default function HomeScreen() {
                           />
 
                           <AppText variant="bodySmall" color="secondary">
-                            {item.time}
+                            {formatDateTime(new Date(item.createdAt))}
                           </AppText>
                         </View>
                       </View>
@@ -410,7 +392,11 @@ export default function HomeScreen() {
                           gap: spacing.xs,
                         }}
                       >
-                        <AppText variant="bodyBold">{item.amount}</AppText>
+                        <AppText variant="bodyBold">
+                          {formatCurrency(item.amount, {
+                            currency: item.currency,
+                          })}
+                        </AppText>
 
                         <AppText variant="bodySmall" color="secondary">
                           {item.reference}

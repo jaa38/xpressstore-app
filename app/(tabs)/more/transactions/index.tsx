@@ -22,10 +22,7 @@ import { spacing, theme } from "@/theme";
 
 import { useTransactions } from "@/hooks/transactions/useTransactions";
 
-import { PaymentChannel, Transaction } from "@/types/transaction";
-
 import { formatCurrency } from "@/utils/formatters/currency";
-import { formatDateTime } from "@/utils/formatters/date";
 
 import { TransactionListItem } from "@/components/transactions/TransactionListItem";
 
@@ -37,17 +34,6 @@ export default function TransactionsScreen() {
   >("all");
 
   const onRefresh = () => refetch();
-
-  const paymentChannelIcons: Record<
-    PaymentChannel,
-    React.ComponentProps<typeof Ionicons>["name"]
-  > = {
-    bank: "business-outline",
-    card: "card-outline",
-    qr: "qr-code-outline",
-    transfer: "swap-horizontal-outline",
-    ussd: "keypad-outline",
-  };
 
   const {
     data: transactions = [],

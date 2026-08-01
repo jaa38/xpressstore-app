@@ -5,20 +5,15 @@ import {
   FlatList,
   RefreshControl,
 } from "react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/ui/AppText";
 import { spacing, theme, radius } from "@/theme";
-import { Button } from "@/components/ui/Button";
 
 import { Divider } from "@/components/ui/Divider";
 
 import { router } from "expo-router";
-
-import { clearSession } from "@/features/auth/services/session";
-
-import { useAuthStore } from "@/features/auth/store/auth-store";
 
 import { Card } from "@/components/ui/Card";
 
@@ -26,28 +21,19 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useProfile } from "@/hooks/use-profile";
 
-import { supabase } from "@/services/supabase/client";
-
-import { Alert } from "react-native";
-
 import { DashboardStatsCard } from "@/components/dashboard/DashboardStatsCard";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+
 import { ROUTES } from "@/navigation/routes";
 
 import { useTransactions } from "@/hooks/transactions/useTransactions";
 
-import { PaymentChannel } from "@/types/transaction";
-
-import { formatDateTime } from "@/utils/formatters/date";
-
 import { TransactionListItem } from "@/components/transactions/TransactionListItem";
 
 export default function HomeScreen() {
-  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
-
   const { profile, refetch: refetchProfile } = useProfile();
 
   const { data: stats, refetch: refetchDashboardStats } = useDashboardStats();
@@ -71,27 +57,6 @@ export default function HomeScreen() {
     } finally {
       setRefreshing(false);
     }
-  };
-
-  async function handleLogout() {
-    try {
-      await clearSession();
-      setAuthenticated(false);
-      router.replace("/(auth)/login");
-    } catch (error) {
-      Alert.alert("Error", "Failed to log out. Please try again.");
-    }
-  }
-
-  const paymentChannelIcons: Record<
-    PaymentChannel,
-    React.ComponentProps<typeof Ionicons>["name"]
-  > = {
-    bank: "business-outline",
-    card: "card-outline",
-    qr: "qr-code-outline",
-    transfer: "swap-horizontal-outline",
-    ussd: "keypad-outline",
   };
 
   return (
@@ -281,8 +246,6 @@ export default function HomeScreen() {
               </Pressable>
             </View>
           </View>
-
-          {/* RECENT TRANSACTIONS */}
 
           {/* RECENT TRANSACTIONS */}
 

@@ -214,6 +214,38 @@ export default function MoreScreen() {
                   color={theme.listItem.default.chevron}
                 />
               </Pressable>
+
+              <Divider />
+
+              {/* Transactions */}
+              <Pressable
+                onPress={() => router.push(ROUTES.TRANSACTIONS)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="receipt-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
+
+                <View style={{ flex: 1 }}>
+                  <AppText variant="bodyBold">Transactions</AppText>
+
+                  <AppText variant="bodySmall" color="muted">
+                    View and manage transaction history
+                  </AppText>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
             </Card>
           </View>
 

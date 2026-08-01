@@ -67,6 +67,8 @@ export const ROUTES = {
 
   PAYMENT_SETTINGS: "/(tabs)/more/payment-settings",
 
+  TRANSACTIONS: "/(tabs)/more/transactions",
+
   SETTLEMENTS: "/(tabs)/more/settlements",
 
   CUSTOMERS: "/(tabs)/more/customers",

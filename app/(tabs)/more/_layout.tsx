@@ -51,6 +51,13 @@ export default function MoreLayout() {
           headerShown: false,
         }}
       />
+
+      <Stack.Screen
+        name="transactions"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

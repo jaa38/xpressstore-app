@@ -43,6 +43,8 @@ import { PaymentChannel } from "@/types/transaction";
 
 import { formatDateTime } from "@/utils/formatters/date";
 
+import { TransactionListItem } from "@/components/transactions/TransactionListItem";
+
 export default function HomeScreen() {
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
 
@@ -322,88 +324,7 @@ export default function HomeScreen() {
                 keyExtractor={(item) => item.id}
                 ItemSeparatorComponent={() => <Divider />}
                 renderItem={({ item }) => (
-                  <View
-                    style={{
-                      paddingHorizontal: 16,
-
-                      paddingVertical: spacing.md,
-                    }}
-                  >
-                    <View
-                      style={{
-                        flexDirection: "row",
-
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      {/* LEFT */}
-
-                      <View
-                        style={{
-                          gap: spacing.xs,
-                        }}
-                      >
-                        <AppText variant="body" color="secondary">
-                          {item.customer}
-                        </AppText>
-
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: spacing.xs,
-                          }}
-                        >
-                          <Ionicons
-                            name={paymentChannelIcons[item.channel]}
-                            size={16}
-                            color={
-                              item.type === "credit"
-                                ? theme.icon.success.icon
-                                : theme.icon.error.icon
-                            }
-                          />
-
-                          <AppText
-                            variant="bodySmallBold"
-                            color={item.type === "credit" ? "success" : "error"}
-                          >
-                            {item.type === "credit" ? "Credit" : "Debit"}
-                          </AppText>
-
-                          <Divider
-                            orientation="vertical"
-                            variant="strong"
-                            length={12}
-                          />
-
-                          <AppText variant="bodySmall" color="secondary">
-                            {formatDateTime(new Date(item.createdAt))}
-                          </AppText>
-                        </View>
-                      </View>
-
-                      {/* RIGHT */}
-
-                      <View
-                        style={{
-                          alignItems: "flex-end",
-
-                          gap: spacing.xs,
-                        }}
-                      >
-                        <AppText variant="bodyBold">
-                          {formatCurrency(item.amount, {
-                            currency: item.currency,
-                          })}
-                        </AppText>
-
-                        <AppText variant="bodySmall" color="secondary">
-                          {item.reference}
-                        </AppText>
-                      </View>
-                    </View>
-                  </View>
+                  <TransactionListItem transaction={item} />
                 )}
               />
             </Card>

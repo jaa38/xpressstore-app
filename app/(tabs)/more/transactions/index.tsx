@@ -27,6 +27,8 @@ import { PaymentChannel, Transaction } from "@/types/transaction";
 import { formatCurrency } from "@/utils/formatters/currency";
 import { formatDateTime } from "@/utils/formatters/date";
 
+import { TransactionListItem } from "@/components/transactions/TransactionListItem";
+
 export default function TransactionsScreen() {
   const [search, setSearch] = useState("");
 
@@ -342,7 +344,7 @@ export default function TransactionsScreen() {
           <View
             style={{
               flex: 1,
-                marginTop: spacing.md,
+              marginTop: spacing.md,
             }}
           >
             <View
@@ -436,86 +438,7 @@ export default function TransactionsScreen() {
                     keyExtractor={(item) => item.id}
                     ItemSeparatorComponent={() => <Divider />}
                     renderItem={({ item }) => (
-                      <View
-                        style={{
-                          paddingHorizontal: spacing.md,
-                          paddingVertical: spacing.md,
-                        }}
-                      >
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          {/* Left */}
-                          <View
-                            style={{
-                              flex: 1,
-                              gap: spacing.xs,
-                            }}
-                          >
-                            <AppText variant="body" color="secondary">
-                              {item.customer}
-                            </AppText>
-
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: spacing.xs,
-                              }}
-                            >
-                              <Ionicons
-                                name={paymentChannelIcons[item.channel]}
-                                size={16}
-                                color={
-                                  item.type === "credit"
-                                    ? theme.icon.success.icon
-                                    : theme.icon.error.icon
-                                }
-                              />
-
-                              <AppText
-                                variant="bodySmallBold"
-                                color={
-                                  item.type === "credit" ? "success" : "error"
-                                }
-                              >
-                                {item.type === "credit" ? "Credit" : "Debit"}
-                              </AppText>
-
-                              <Divider
-                                orientation="vertical"
-                                variant="strong"
-                                length={12}
-                              />
-
-                              <AppText variant="bodySmall" color="secondary">
-                                {formatDateTime(new Date(item.createdAt))}
-                              </AppText>
-                            </View>
-                          </View>
-
-                          {/* Right */}
-                          <View
-                            style={{
-                              alignItems: "flex-end",
-                              gap: spacing.xs,
-                              marginLeft: spacing.md,
-                            }}
-                          >
-                            <AppText variant="bodyBold">
-                              {formatCurrency(item.amount, {
-                                currency: item.currency,
-                              })}
-                            </AppText>
-                            <AppText variant="bodySmall" color="secondary">
-                              {item.reference}
-                            </AppText>
-                          </View>
-                        </View>
-                      </View>
+                      <TransactionListItem transaction={item} />
                     )}
                   />
                 </Card>

@@ -21,10 +21,32 @@ import { BottomSheetFooter } from "@/components/ui/BottomSheetFooter";
 import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
 import { UICard } from "@/components/ui/UICard";
 
+import { defaultTransactionFilters } from "@/constants/defaultTransactionFilters";
+
+import { TransactionFilters } from "@/types/transactionFilters";
+
 import { radius, spacing, theme } from "@/theme";
 
-export const TransactionFilterBottomSheet = forwardRef<BottomSheetModal>(
-  (_, ref) => {
+interface TransactionFilterBottomSheetProps {
+  draftFilters: TransactionFilters;
+  setDraftFilters: React.Dispatch<
+    React.SetStateAction<TransactionFilters>
+  >;
+  onApply: (filters: TransactionFilters) => void;
+}
+
+export const TransactionFilterBottomSheet = forwardRef<
+  BottomSheetModal,
+  TransactionFilterBottomSheetProps
+>(
+  (
+    {
+      draftFilters,
+      setDraftFilters,
+      onApply,
+    },
+    ref
+  ) => {
     const bottomSheetRef = useRef<BottomSheetModal>(null);
 
     const snapPoints = useMemo(() => ["75%"], []);
@@ -75,6 +97,8 @@ export const TransactionFilterBottomSheet = forwardRef<BottomSheetModal>(
             paddingBottom: spacing.xl,
           }}
         >
+          {/* Status */}
+
           <BottomSheetSection title="Status">
             <Pressable
               style={{
@@ -83,12 +107,31 @@ export const TransactionFilterBottomSheet = forwardRef<BottomSheetModal>(
                 gap: spacing.sm,
               }}
             >
-              <UICard title="All" variant="active" />
-              <UICard title="Paid" variant="default" />
-              <UICard title="Pending" variant="default" />
-              <UICard title="Failed" variant="default" />
+              {(["all", "paid", "pending", "failed"] as const).map(
+                (status) => (
+                  <UICard
+                    key={status}
+                    title={
+                      status.charAt(0).toUpperCase() + status.slice(1)
+                    }
+                    variant={
+                      draftFilters.status === status
+                        ? "active"
+                        : "default"
+                    }
+                    onPress={() =>
+                      setDraftFilters((previous) => ({
+                        ...previous,
+                        status,
+                      }))
+                    }
+                  />
+                )
+              )}
             </Pressable>
           </BottomSheetSection>
+
+          {/* Payment Channel */}
 
           <BottomSheetSection title="Payment Channel">
             <Pressable
@@ -98,17 +141,79 @@ export const TransactionFilterBottomSheet = forwardRef<BottomSheetModal>(
                 gap: spacing.sm,
               }}
             >
-              <UICard title="Card" variant="default" />
-              <UICard title="Transfer" variant="default" />
-              <UICard title="Bank" variant="default" />
-              <UICard title="QR" variant="default" />
-              <UICard title="USSD" variant="default" />
+              {(
+                [
+                  "all",
+                  "card",
+                  "transfer",
+                  "bank",
+                  "qr",
+                  "ussd",
+                ] as const
+              ).map((channel) => (
+                <UICard
+                  key={channel}
+                  title={
+                    channel === "all"
+                      ? "All"
+                      : channel.toUpperCase()
+                  }
+                  variant={
+                    draftFilters.channel === channel
+                      ? "active"
+                      : "default"
+                  }
+                  onPress={() =>
+                    setDraftFilters((previous) => ({
+                      ...previous,
+                      channel,
+                    }))
+                  }
+                />
+              ))}
+            </Pressable>
+          </BottomSheetSection>
+
+          {/* Transaction Type */}
+
+          <BottomSheetSection title="Transaction Type">
+            <Pressable
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: spacing.sm,
+              }}
+            >
+              {(["all", "credit", "debit"] as const).map((type) => (
+                <UICard
+                  key={type}
+                  title={
+                    type.charAt(0).toUpperCase() + type.slice(1)
+                  }
+                  variant={
+                    draftFilters.type === type
+                      ? "active"
+                      : "default"
+                  }
+                  onPress={() =>
+                    setDraftFilters((previous) => ({
+                      ...previous,
+                      type,
+                    }))
+                  }
+                />
+              ))}
             </Pressable>
           </BottomSheetSection>
         </BottomSheetScrollView>
 
         <BottomSheetFooter>
           <Pressable
+            onPress={() => {
+              setDraftFilters(defaultTransactionFilters);
+              onApply(defaultTransactionFilters);
+              bottomSheetRef.current?.dismiss();
+            }}
             style={{
               flex: 1,
               height: 48,
@@ -123,6 +228,10 @@ export const TransactionFilterBottomSheet = forwardRef<BottomSheetModal>(
           </Pressable>
 
           <Pressable
+            onPress={() => {
+              onApply(draftFilters);
+              bottomSheetRef.current?.dismiss();
+            }}
             style={{
               flex: 1,
               height: 48,
@@ -142,4 +251,5 @@ export const TransactionFilterBottomSheet = forwardRef<BottomSheetModal>(
   }
 );
 
-TransactionFilterBottomSheet.displayName = "TransactionFilterBottomSheet";
+TransactionFilterBottomSheet.displayName =
+  "TransactionFilterBottomSheet";

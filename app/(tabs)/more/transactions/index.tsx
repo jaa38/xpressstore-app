@@ -34,12 +34,20 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { TransactionFilterBottomSheet } from "@/components/bottom-sheet/TransactionFilterBottomSheet";
 
+import { defaultTransactionFilters } from "@/constants/defaultTransactionFilters";
+
+import { TransactionFilters } from "@/types/transactionFilters";
+
 export default function TransactionsScreen() {
   const [search, setSearch] = useState("");
 
-  const [selectedStatus, setSelectedStatus] = useState<
-    "all" | "pending" | "paid" | "failed" | "inactive"
-  >("all");
+  const [filters, setFilters] = useState<TransactionFilters>(
+    defaultTransactionFilters
+  );
+
+  const [draftFilters, setDraftFilters] = useState<TransactionFilters>(
+    defaultTransactionFilters
+  );
 
   const onRefresh = () => refetch();
 
@@ -52,11 +60,18 @@ export default function TransactionsScreen() {
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((transaction) => {
-      // Status filter
+      // Status
       const matchesStatus =
-        selectedStatus === "all" || transaction.status === selectedStatus;
+        filters.status === "all" || transaction.status === filters.status;
 
-      // Search filter
+      // Payment Channel
+      const matchesChannel =
+        filters.channel === "all" || transaction.channel === filters.channel;
+
+      const matchesType =
+        filters.type === "all" || transaction.type === filters.type;
+
+      // Search
       const query = search.trim().toLowerCase();
 
       const matchesSearch =
@@ -70,9 +85,9 @@ export default function TransactionsScreen() {
           .toLowerCase()
           .includes(query);
 
-      return matchesStatus && matchesSearch;
+      return matchesStatus && matchesChannel && matchesType && matchesSearch;
     });
-  }, [transactions, selectedStatus, search]);
+  }, [transactions, filters, search]);
 
   const totalAmount = useMemo(() => {
     return filteredTransactions.reduce(
@@ -82,18 +97,18 @@ export default function TransactionsScreen() {
   }, [filteredTransactions]);
 
   const summaryTitle =
-    selectedStatus === "all"
+    filters.status === "all"
       ? "Transaction Value"
-      : `${selectedStatus.charAt(0).toUpperCase()}${selectedStatus.slice(1)} Value`;
+      : `${filters.status.charAt(0).toUpperCase()}${filters.status.slice(1)} Value`;
 
   const summaryAmount = formatCurrency(totalAmount);
 
   const summaryCount = filteredTransactions.length;
 
   const summaryLabel =
-    selectedStatus === "all"
+    filters.status === "all"
       ? "Transactions"
-      : `${selectedStatus.charAt(0).toUpperCase()}${selectedStatus.slice(1)}`;
+      : `${filters.status.charAt(0).toUpperCase()}${filters.status.slice(1)}`;
 
   const transactionFilterRef = useRef<BottomSheetModal>(null);
 
@@ -137,7 +152,7 @@ export default function TransactionsScreen() {
       count: transactions.filter((t) => t.status === "failed").length,
     },
   ] satisfies {
-    key: typeof selectedStatus;
+    key: TransactionFilters["status"];
     title: string;
     count: number;
   }[];
@@ -313,8 +328,13 @@ export default function TransactionsScreen() {
             </View>
 
             <FilterButton
-              active={false}
-              onPress={() => transactionFilterRef.current?.present()}
+              active={filters.status !== "all" || filters.channel !== "all"}
+              onPress={() => {
+                // Sync the bottom sheet with the currently applied filters
+                setDraftFilters(filters);
+
+                transactionFilterRef.current?.present();
+              }}
             />
           </View>
 
@@ -331,13 +351,21 @@ export default function TransactionsScreen() {
               <UICard
                 key={filter.key}
                 title={filter.title}
-                variant={selectedStatus === filter.key ? "active" : "default"}
-                onPress={() => setSelectedStatus(filter.key)}
+                variant={filters.status === filter.key ? "active" : "default"}
+                onPress={() => {
+                  const nextFilters = {
+                    ...filters,
+                    status: filter.key,
+                  };
+
+                  setFilters(nextFilters);
+                  setDraftFilters(nextFilters);
+                }}
                 rightElement={
                   <AppText
                     variant="bodySmallBold"
                     color={
-                      selectedStatus === filter.key ? "inverse" : "secondary"
+                      filters.status === filter.key ? "inverse" : "secondary"
                     }
                   >
                     {filter.count}
@@ -386,7 +414,12 @@ export default function TransactionsScreen() {
             >
               <TransactionList transactions={filteredTransactions} />
             </ScrollView>
-            <TransactionFilterBottomSheet ref={transactionFilterRef} />
+            <TransactionFilterBottomSheet
+              ref={transactionFilterRef}
+              draftFilters={draftFilters}
+              setDraftFilters={setDraftFilters}
+              onApply={setFilters}
+            />
           </View>
         </View>
       </View>

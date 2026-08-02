@@ -12,7 +12,8 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
-import { AppText } from "@/components/ui/AppText";
+import { AppText, type Color } from "@/components/ui/AppText";
+
 import { SearchBar } from "@/components/ui/SearchBar";
 import { UICard } from "@/components/ui/UICard";
 import { Card } from "@/components/ui/Card";
@@ -137,6 +138,15 @@ export default function TransactionsScreen() {
     activeFilterLabel === null
       ? "Transactions"
       : activeFilterLabel.charAt(0).toUpperCase() + activeFilterLabel.slice(1);
+
+  const summaryStatusColors: Record<TransactionFilters["status"], Color> = {
+    all: "strong",
+    paid: "success",
+    pending: "warning",
+    failed: "error",
+  };
+
+  const summaryStatusColor = summaryStatusColors[filters.status];
 
   const transactionFilterRef = useRef<BottomSheetModal>(null);
 
@@ -378,7 +388,7 @@ export default function TransactionsScreen() {
 
                 <AppText variant="h2">{summaryCount}</AppText>
 
-                <AppText variant="caption" color="brand">
+                <AppText variant="caption" color={summaryStatusColor}>
                   {summaryLabel}
                 </AppText>
               </View>

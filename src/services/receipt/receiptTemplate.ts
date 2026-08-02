@@ -3,33 +3,12 @@ import { Transaction } from "@/types/transaction";
 import { formatCurrency } from "@/utils/formatters/currency";
 import { formatDateTime } from "@/utils/formatters/date";
 
-export function receiptTemplate(
-  transaction: Transaction
-) {
-  const statusColor = {
-    paid: "#16A34A",
-    pending: "#D97706",
-    failed: "#DC2626",
-  }[transaction.status];
+export function receiptTemplate(transaction: Transaction) {
+  const amount = formatCurrency(transaction.amount, {
+    currency: transaction.currency,
+  });
 
-  const statusLabel = {
-    paid: "Paid",
-    pending: "Pending",
-    failed: "Failed",
-  }[transaction.status];
-
-  const paymentChannel = {
-    bank: "Bank",
-    card: "Card",
-    qr: "QR Code",
-    transfer: "Transfer",
-    ussd: "USSD",
-  }[transaction.channel];
-
-  const transactionType =
-    transaction.type === "credit"
-      ? "Credit"
-      : "Debit";
+  const date = formatDateTime(new Date(transaction.createdAt));
 
   return `
 <!DOCTYPE html>
@@ -38,85 +17,113 @@ export function receiptTemplate(
 
 <head>
 
-<meta charset="UTF-8"/>
+<meta charset="UTF-8" />
 
 <style>
 
-*{
-box-sizing:border-box;
-margin:0;
-padding:0;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-}
-
 body{
-padding:32px;
-background:#F9FAFB;
-color:#111827;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:#f9fafb;
+    color:#111827;
+    padding:32px;
 }
 
 .receipt{
-max-width:480px;
-margin:0 auto;
-background:white;
-border:1px solid #E5E7EB;
-border-radius:16px;
-padding:32px;
+
+    max-width:680px;
+
+    margin:auto;
+
+    background:#ffffff;
+
+    border:1px solid #E5E7EB;
+
+    border-radius:16px;
+
+    overflow:hidden;
+}
+
+.header{
+
+    text-align:center;
+
+    padding:32px;
+
+    background:#E6F4E6;
+
+    border-bottom:1px solid #CDE9CD;
 }
 
 .logo{
-font-size:24px;
-font-weight:700;
-color:#006F01;
-text-align:center;
-margin-bottom:8px;
+
+    font-size:28px;
+
+    font-weight:700;
+
+    color:#006F01;
+
+    letter-spacing:1px;
 }
 
 .subtitle{
-text-align:center;
-color:#6B7280;
-margin-bottom:32px;
-font-size:14px;
+
+    margin-top:8px;
+
+    color:#4B5563;
+
+    font-size:15px;
 }
 
-.amount{
-font-size:36px;
-font-weight:700;
-text-align:center;
-margin-bottom:8px;
+.receipt-number{
+
+    margin-top:24px;
+
+    font-size:13px;
+
+    color:#6B7280;
 }
 
-.status{
-text-align:center;
-font-weight:600;
-margin-bottom:32px;
-color:${statusColor};
+.reference{
+
+    font-size:18px;
+
+    font-weight:700;
+
+    color:#111827;
+
+    margin-top:4px;
+}
+
+.date{
+
+    margin-top:16px;
+
+    color:#4B5563;
+
+    font-size:14px;
 }
 
 .section{
-margin-top:24px;
+
+    padding:24px 32px;
 }
 
-.row{
-display:flex;
-justify-content:space-between;
-padding:12px 0;
-border-bottom:1px solid #F3F4F6;
+.amount{
+
+    font-size:42px;
+
+    font-weight:700;
+
+    color:#111827;
+
+    text-align:center;
 }
 
-.label{
-color:#6B7280;
-}
+.divider{
 
-.value{
-font-weight:600;
-}
+    height:1px;
 
-.footer{
-margin-top:40px;
-text-align:center;
-font-size:13px;
-color:#6B7280;
+    background:#E5E7EB;
 }
 
 </style>
@@ -127,66 +134,51 @@ color:#6B7280;
 
 <div class="receipt">
 
+<div class="header">
+
 <div class="logo">
+
 XPRESSSTORE
+
 </div>
 
 <div class="subtitle">
-Payment Receipt
+
+Digital Payment Receipt
+
 </div>
 
-<div class="amount">
-${formatCurrency(transaction.amount, {
-  currency: transaction.currency,
-})}
+<div class="receipt-number">
+
+Receipt Number
+
 </div>
 
-<div class="status">
-${statusLabel}
+<div class="reference">
+
+${transaction.reference}
+
+</div>
+
+<div class="date">
+
+${date}
+
+</div>
+
 </div>
 
 <div class="section">
 
-<div class="row">
-<span class="label">Reference</span>
-<span class="value">${transaction.reference}</span>
-</div>
+<div class="amount">
 
-<div class="row">
-<span class="label">Customer</span>
-<span class="value">${transaction.customer}</span>
-</div>
+${amount}
 
-<div class="row">
-<span class="label">Payment Channel</span>
-<span class="value">${paymentChannel}</span>
-</div>
-
-<div class="row">
-<span class="label">Transaction Type</span>
-<span class="value">${transactionType}</span>
-</div>
-
-<div class="row">
-<span class="label">Date</span>
-<span class="value">
-${formatDateTime(
-  new Date(transaction.createdAt)
-)}
-</span>
 </div>
 
 </div>
 
-<div class="footer">
-
-Thank you for using XpressStore.
-
-<br/><br/>
-
-Powered by Xpress Payments
-
-</div>
+<div class="divider"></div>
 
 </div>
 

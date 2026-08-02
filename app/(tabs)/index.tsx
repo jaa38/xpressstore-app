@@ -5,7 +5,7 @@ import {
   FlatList,
   RefreshControl,
 } from "react-native";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/ui/AppText";
@@ -44,6 +44,26 @@ export default function HomeScreen() {
     useTransactions();
 
   const recentTransactions = transactions.slice(0, 5);
+
+  const dashboardMetrics = useMemo(() => {
+    const paidTransactions = transactions.filter(
+      (transaction) => transaction.status === "paid"
+    );
+
+    const pendingTransactions = transactions.filter(
+      (transaction) => transaction.status === "pending"
+    );
+
+    const failedTransactions = transactions.filter(
+      (transaction) => transaction.status === "failed"
+    );
+
+    return {
+      paid: paidTransactions.length,
+      pending: pendingTransactions.length,
+      failed: failedTransactions.length,
+    };
+  }, [transactions]);
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -159,11 +179,11 @@ export default function HomeScreen() {
                 },
                 {
                   label: "Transactions",
-                  value: stats.orders.toString(),
+                  value: dashboardMetrics.paid.toString(),
                 },
                 {
                   label: "Pending",
-                  value: "5", // Replace with stats.pendingTransactions when available
+                  value: dashboardMetrics.pending.toString(),
                 },
               ]}
             />

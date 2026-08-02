@@ -15,7 +15,9 @@ interface TransactionListItemProps {
   transaction: Transaction;
 }
 
-export function TransactionListItem({ transaction }: TransactionListItemProps) {
+export function TransactionListItem({
+  transaction,
+}: TransactionListItemProps) {
   const paymentChannelIcons: Record<
     PaymentChannel,
     React.ComponentProps<typeof Ionicons>["name"]
@@ -52,6 +54,12 @@ export function TransactionListItem({ transaction }: TransactionListItemProps) {
     paid: transaction.type === "credit" ? "Credit" : "Debit",
     pending: "Pending",
     failed: "Failed",
+  } as const;
+
+  const transactionAmountColors = {
+    paid: "success",
+    pending: "warning",
+    failed: "error",
   } as const;
 
   return (
@@ -99,9 +107,16 @@ export function TransactionListItem({ transaction }: TransactionListItemProps) {
               {transactionStatusLabels[transaction.status]}
             </AppText>
 
-            <Divider orientation="vertical" variant="strong" length={12} />
+            <Divider
+              orientation="vertical"
+              variant="strong"
+              length={12}
+            />
 
-            <AppText variant="bodySmall" color="secondary">
+            <AppText
+              variant="bodySmall"
+              color="secondary"
+            >
               {formatDateTime(new Date(transaction.createdAt))}
             </AppText>
           </View>
@@ -116,13 +131,19 @@ export function TransactionListItem({ transaction }: TransactionListItemProps) {
             marginLeft: spacing.md,
           }}
         >
-          <AppText variant="bodyBold">
+          <AppText
+            variant="bodyBold"
+            color={transactionAmountColors[transaction.status]}
+          >
             {formatCurrency(transaction.amount, {
               currency: transaction.currency,
             })}
           </AppText>
 
-          <AppText variant="bodySmall" color="secondary">
+          <AppText
+            variant="bodySmall"
+            color="secondary"
+          >
             {transaction.reference}
           </AppText>
         </View>

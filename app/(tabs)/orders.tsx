@@ -42,6 +42,8 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import { useProducts } from "@/hooks/products/useProducts";
 import { Order } from "@/types/order";
 
+import { OrderActionsBottomSheet } from "@/components/bottom-sheet/OrderActionsBottomSheet";
+
 export default function OrdersScreen() {
   const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
 
@@ -153,6 +155,8 @@ export default function OrdersScreen() {
   }, [products]);
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const [actionsVisible, setActionsVisible] = useState(false);
 
   const orderSummaryBottomSheetRef = useRef<BottomSheetModal>(null);
 
@@ -461,7 +465,7 @@ export default function OrdersScreen() {
                           hitSlop={10}
                           onPress={() => {
                             setSelectedOrder(order);
-                            orderSummaryBottomSheetRef.current?.present();
+                            setActionsVisible(true);
                           }}
                         >
                           <Ionicons
@@ -485,6 +489,15 @@ export default function OrdersScreen() {
         setDraftFilters={setDraftFilters}
         onApply={(filters) => {
           setAppliedFilters(filters);
+        }}
+      />
+
+      <OrderActionsBottomSheet
+        visible={actionsVisible}
+        order={selectedOrder}
+        onClose={() => {
+          setActionsVisible(false);
+          setSelectedOrder(null);
         }}
       />
     </>

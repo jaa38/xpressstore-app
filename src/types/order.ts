@@ -15,6 +15,10 @@ export interface Order {
 
   customerName: string;
 
+  customerPhone: string;
+
+  customerEmail?: string;
+
   total: number;
 
   currency: Currency;

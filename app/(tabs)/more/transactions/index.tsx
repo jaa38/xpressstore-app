@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -29,6 +29,10 @@ import { TransactionListItem } from "@/components/transactions/TransactionListIt
 import { TransactionList } from "@/components/transactions/TransactionList";
 
 import { FilterButton } from "@/components/ui/FilterButton";
+
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+
+import { TransactionFilterBottomSheet } from "@/components/bottom-sheet/TransactionFilterBottomSheet";
 
 export default function TransactionsScreen() {
   const [search, setSearch] = useState("");
@@ -90,6 +94,8 @@ export default function TransactionsScreen() {
     selectedStatus === "all"
       ? "Transactions"
       : `${selectedStatus.charAt(0).toUpperCase()}${selectedStatus.slice(1)}`;
+
+  const transactionFilterRef = useRef<BottomSheetModal>(null);
 
   if (isLoading) {
     return (
@@ -308,9 +314,7 @@ export default function TransactionsScreen() {
 
             <FilterButton
               active={false}
-              onPress={() => {
-                // TODO: Open transaction filter bottom sheet
-              }}
+              onPress={() => transactionFilterRef.current?.present()}
             />
           </View>
 
@@ -382,6 +386,7 @@ export default function TransactionsScreen() {
             >
               <TransactionList transactions={filteredTransactions} />
             </ScrollView>
+            <TransactionFilterBottomSheet ref={transactionFilterRef} />
           </View>
         </View>
       </View>

@@ -1,4 +1,4 @@
-import { Alert, Linking, View } from "react-native";
+import { Alert, Linking } from "react-native";
 import { router } from "expo-router";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
@@ -23,8 +23,10 @@ export function OrderActionsBottomSheet({
     return null;
   }
 
+  const currentOrder = order;
+
   async function handleCallCustomer() {
-    const url = `tel:${order.customerPhone ?? ""}`;
+    const url = `tel:${currentOrder.customerPhone}`;
 
     const supported = await Linking.canOpenURL(url);
 
@@ -43,7 +45,7 @@ export function OrderActionsBottomSheet({
   }
 
   async function handleWhatsApp() {
-    const phone = (order.customerPhone ?? "").replace(/\D/g, "");
+    const phone = currentOrder.customerPhone.replace(/\D/g, "");
 
     const url = `https://wa.me/${phone}`;
 
@@ -69,6 +71,8 @@ export function OrderActionsBottomSheet({
       title="Order Actions"
       onClose={onClose}
     >
+      {/* Order */}
+
       <BottomSheetSection title="Order">
         <OrderActionItem
           title="View Order"
@@ -80,7 +84,7 @@ export function OrderActionsBottomSheet({
             router.push({
               pathname: "/orders/[id]",
               params: {
-                id: order.id,
+                id: currentOrder.id,
               },
             });
           }}
@@ -90,7 +94,7 @@ export function OrderActionsBottomSheet({
           title="View Receipt"
           subtitle="Open payment receipt"
           icon="receipt-outline"
-          showDivider={order.status === "paid"}
+          showDivider={currentOrder.status === "paid"}
           onPress={() => {
             onClose();
 
@@ -102,23 +106,54 @@ export function OrderActionsBottomSheet({
         />
       </BottomSheetSection>
 
+      {/* Customer */}
+
       <BottomSheetSection title="Customer">
         <OrderActionItem
           title="Call Customer"
-          subtitle={order.customerName}
+          subtitle={currentOrder.customerName}
           icon="call-outline"
           onPress={handleCallCustomer}
         />
 
         <OrderActionItem
           title="WhatsApp Customer"
-          subtitle={order.customerName}
+          subtitle={currentOrder.customerName}
           icon="logo-whatsapp"
           iconColor="#25D366"
-          showDivider={false}
+          showDivider={!!currentOrder.customerEmail}
           onPress={handleWhatsApp}
         />
+
+        {currentOrder.customerEmail ? (
+          <OrderActionItem
+            title="Email Customer"
+            subtitle={currentOrder.customerEmail}
+            icon="mail-outline"
+            showDivider={false}
+            onPress={async () => {
+              const url = `mailto:${currentOrder.customerEmail}`;
+
+              const supported = await Linking.canOpenURL(url);
+
+              if (!supported) {
+                Alert.alert(
+                  "Unable to send email",
+                  "No email application is available."
+                );
+
+                return;
+              }
+
+              await Linking.openURL(url);
+
+              onClose();
+            }}
+          />
+        ) : null}
       </BottomSheetSection>
+
+      {/* Payments */}
 
       <BottomSheetSection title="Payments">
         <OrderActionItem

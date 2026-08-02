@@ -1,4 +1,6 @@
-import { Transaction } from "@/types/transaction";
+import { Receipt } from "@/types/receipt";
+
+import { PAYMENT_CHANNEL_LABELS } from "@/types/payment";
 
 import { formatCurrency } from "@/utils/formatters/currency";
 import { formatDateTime } from "@/utils/formatters/date";
@@ -6,22 +8,22 @@ import { formatDateTime } from "@/utils/formatters/date";
 import type { ReceiptVerification } from "./receiptVerification";
 
 export function receiptTemplate(
-  transaction: Transaction,
+  receipt: Receipt,
   verification: ReceiptVerification,
   qrCodeDataUri: string
 ) {
-  const amount = formatCurrency(transaction.amount, {
-    currency: transaction.currency,
+  const amount = formatCurrency(receipt.amount, {
+    currency: receipt.currency,
   });
 
-  const date = formatDateTime(new Date(transaction.createdAt));
+  const date = formatDateTime(new Date(receipt.createdAt));
 
   const processingFee = formatCurrency(0, {
-    currency: transaction.currency,
+    currency: receipt.currency,
   });
 
   const vat = formatCurrency(0, {
-    currency: transaction.currency,
+    currency: receipt.currency,
   });
 
   const total = amount;
@@ -37,14 +39,6 @@ export function receiptTemplate(
     pending: "#FEF3C7",
     failed: "#FEE2E2",
   } as const;
-
-  const paymentChannels = {
-    bank: "Bank",
-    card: "Card",
-    qr: "QR Code",
-    transfer: "Transfer",
-    ussd: "USSD",
-  };
 
   const merchant = {
     name: "XpressStore Merchant",
@@ -176,8 +170,8 @@ margin-top:18px;
 border-radius:999px;
 font-weight:700;
 font-size:13px;
-background:${statusBackgrounds[transaction.status]};
-color:${statusColors[transaction.status]};
+background:${statusBackgrounds[receipt.status]};
+color:${statusColors[receipt.status]};
 }
 
 .amount{
@@ -337,7 +331,7 @@ Receipt Number
 
 <div class="reference-number">
 
-${transaction.reference}
+${receipt.reference}
 
 </div>
 
@@ -349,7 +343,7 @@ ${date}
 
 <div class="status">
 
-${transaction.status.toUpperCase()}
+${receipt.status.toUpperCase()}
 
 </div>
 
@@ -390,16 +384,16 @@ Payment Summary
 
 <div class="row">
 <div class="label">Currency</div>
-<div class="value">${transaction.currency ?? "NGN"}</div>
+<div class="value">${receipt.currency}</div>
 </div>
 
 <div class="row">
 <div class="label">Payment Status</div>
 <div
   class="value"
-  style="color:${statusColors[transaction.status]}"
+  style="color:${statusColors[receipt.status]}"
 >
-${transaction.status.toUpperCase()}
+${receipt.status.toUpperCase()}
 </div>
 </div>
 
@@ -424,25 +418,25 @@ Transaction Information
 
 <div class="row">
 <div class="label">Reference</div>
-<div class="value">${transaction.reference}</div>
+<div class="value">${receipt.reference}</div>
 </div>
 
 <div class="row">
 <div class="label">Customer</div>
-<div class="value">${transaction.customer}</div>
+<div class="value">${receipt.customer}</div>
 </div>
 
 <div class="row">
 <div class="label">Payment Channel</div>
 <div class="value">
-${paymentChannels[transaction.channel]}
+${PAYMENT_CHANNEL_LABELS[receipt.channel]}
 </div>
 </div>
 
 <div class="row">
 <div class="label">Transaction Type</div>
 <div class="value">
-${transaction.type === "credit" ? "Credit" : "Debit"}
+${receipt.type === "credit" ? "Credit" : "Debit"}
 </div>
 </div>
 

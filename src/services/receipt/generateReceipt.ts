@@ -1,6 +1,6 @@
 import * as Print from "expo-print";
 
-import { Transaction } from "@/types/transaction";
+import { Receipt } from "@/types/receipt";
 
 import { receiptTemplate } from "./receiptTemplate";
 import { getReceiptVerification } from "./receiptVerification";
@@ -10,28 +10,30 @@ export interface GeneratedReceipt {
 }
 
 export async function generateReceipt(
-  transaction: Transaction
+  receipt: Receipt
 ): Promise<GeneratedReceipt> {
-  const verification = getReceiptVerification(transaction);
+  const verification =
+    getReceiptVerification(receipt);
 
   /**
    * Placeholder QR image.
    *
-   * In the next phase this will be replaced with
-   * a generated Base64 QR Code image.
+   * This will be replaced with a generated
+   * Base64 QR code in a later phase.
    */
   const qrCodeDataUri = "";
 
   const html = receiptTemplate(
-    transaction,
+    receipt,
     verification,
     qrCodeDataUri
   );
 
-  const { uri } = await Print.printToFileAsync({
-    html,
-    base64: false,
-  });
+  const { uri } =
+    await Print.printToFileAsync({
+      html,
+      base64: false,
+    });
 
   return {
     uri,

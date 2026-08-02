@@ -1,18 +1,17 @@
 import * as Sharing from "expo-sharing";
 
-import {
-  File,
-  Paths,
-} from "expo-file-system";
-
 import { Transaction } from "@/types/transaction";
 
 import { generateReceipt } from "./generateReceipt";
+import { receiptFromTransaction } from "./receiptFromTransaction";
 
 export async function shareReceipt(
   transaction: Transaction
 ) {
-  const receipt = await generateReceipt(transaction);
+  const receipt = receiptFromTransaction(transaction);
+
+  const generatedReceipt =
+    await generateReceipt(receipt);
 
   const available =
     await Sharing.isAvailableAsync();
@@ -23,7 +22,7 @@ export async function shareReceipt(
     );
   }
 
-  await Sharing.shareAsync(receipt.uri, {
+  await Sharing.shareAsync(generatedReceipt.uri, {
     mimeType: "application/pdf",
     dialogTitle: "Share Receipt",
     UTI: "com.adobe.pdf",
@@ -33,7 +32,10 @@ export async function shareReceipt(
 export async function downloadReceipt(
   transaction: Transaction
 ) {
-  const receipt = await generateReceipt(transaction);
+  const receipt = receiptFromTransaction(transaction);
+
+  const generatedReceipt =
+    await generateReceipt(receipt);
 
   const available =
     await Sharing.isAvailableAsync();
@@ -44,7 +46,7 @@ export async function downloadReceipt(
     );
   }
 
-  await Sharing.shareAsync(receipt.uri, {
+  await Sharing.shareAsync(generatedReceipt.uri, {
     mimeType: "application/pdf",
     dialogTitle: "Save Receipt",
     UTI: "com.adobe.pdf",

@@ -60,6 +60,8 @@ export default function OrdersScreen() {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
 
   const hasActiveFilters = useMemo(() => {
+    const hasStatusFilter = selectedFilter !== "all";
+
     const hasAmountFilter =
       appliedFilters.amount.min !== undefined ||
       appliedFilters.amount.max !== undefined;
@@ -70,8 +72,8 @@ export default function OrdersScreen() {
 
     const hasSortFilter = appliedFilters.sort !== "mostRecent";
 
-    return hasAmountFilter || hasDateFilter || hasSortFilter;
-  }, [appliedFilters]);
+    return hasStatusFilter || hasAmountFilter || hasDateFilter || hasSortFilter;
+  }, [selectedFilter, appliedFilters]);
 
   const filteredOrders = useMemo(() => {
     const filtered = orders.filter((order) => {

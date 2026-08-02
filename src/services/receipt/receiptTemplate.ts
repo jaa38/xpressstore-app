@@ -8,45 +8,27 @@ export function receiptTemplate(transaction: Transaction) {
     currency: transaction.currency,
   });
 
-  const date = formatDateTime(
-    new Date(transaction.createdAt)
-  );
+  const date = formatDateTime(new Date(transaction.createdAt));
 
-  const statusConfig = {
-    paid: {
-      label: "PAID",
-      background: "#DCFCE7",
-      color: "#15803D",
-    },
-
-    pending: {
-      label: "PENDING",
-      background: "#FEF3C7",
-      color: "#D97706",
-    },
-
-    failed: {
-      label: "FAILED",
-      background: "#FEE2E2",
-      color: "#B91C1C",
-    },
+  const statusColors = {
+    paid: "#16A34A",
+    pending: "#D97706",
+    failed: "#DC2626",
   } as const;
 
-  const status =
-    statusConfig[transaction.status];
+  const statusBackgrounds = {
+    paid: "#DCFCE7",
+    pending: "#FEF3C7",
+    failed: "#FEE2E2",
+  } as const;
 
-  const paymentChannelLabels = {
+  const paymentChannels = {
     bank: "Bank",
     card: "Card",
     qr: "QR Code",
     transfer: "Transfer",
     ussd: "USSD",
-  } as const;
-
-  const transactionType =
-    transaction.type === "credit"
-      ? "Credit"
-      : "Debit";
+  };
 
   return `
 <!DOCTYPE html>
@@ -55,20 +37,30 @@ export function receiptTemplate(transaction: Transaction) {
 
 <head>
 
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 
 <style>
 
+*{
+    box-sizing:border-box;
+}
+
 body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    background:#F9FAFB;
-    color:#111827;
+
+    margin:0;
+
     padding:32px;
+
+    background:#F9FAFB;
+
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+
+    color:#111827;
 }
 
 .receipt{
 
-    max-width:680px;
+    max-width:720px;
 
     margin:auto;
 
@@ -76,16 +68,16 @@ body{
 
     border:1px solid #E5E7EB;
 
-    border-radius:16px;
+    border-radius:18px;
 
     overflow:hidden;
 }
 
 .header{
 
-    text-align:center;
+    padding:36px;
 
-    padding:32px;
+    text-align:center;
 
     background:#E6F4E6;
 
@@ -94,7 +86,7 @@ body{
 
 .logo{
 
-    font-size:28px;
+    font-size:30px;
 
     font-weight:700;
 
@@ -107,9 +99,9 @@ body{
 
     margin-top:8px;
 
-    color:#4B5563;
-
     font-size:15px;
+
+    color:#4B5563;
 }
 
 .receipt-number{
@@ -123,78 +115,68 @@ body{
 
 .reference{
 
-    font-size:18px;
+    margin-top:4px;
+
+    font-size:20px;
 
     font-weight:700;
 
     color:#111827;
-
-    margin-top:4px;
 }
 
 .date{
 
     margin-top:16px;
 
-    color:#4B5563;
-
     font-size:14px;
+
+    color:#4B5563;
 }
 
-.status-container{
+.section{
 
-    text-align:center;
-
-    padding-top:24px;
+    padding:28px 32px;
 }
 
 .status{
 
     display:inline-block;
 
-    padding:10px 24px;
+    margin-bottom:24px;
+
+    padding:8px 18px;
 
     border-radius:999px;
 
-    font-size:14px;
+    font-size:13px;
 
     font-weight:700;
 
-    letter-spacing:1px;
-}
+    color:${statusColors[transaction.status]};
 
-.section{
-
-    padding:24px 32px;
+    background:${statusBackgrounds[transaction.status]};
 }
 
 .amount{
 
-    font-size:42px;
+    font-size:44px;
 
     font-weight:700;
 
-    color:#111827;
-
     text-align:center;
-}
 
-.divider{
-
-    height:1px;
-
-    background:#E5E7EB;
+    color:#111827;
 }
 
 .section-title{
+
+    margin-bottom:20px;
 
     font-size:18px;
 
     font-weight:700;
 
     color:#111827;
-
-    margin-bottom:20px;
 }
 
 .row{
@@ -205,21 +187,14 @@ body{
 
     align-items:center;
 
-    padding:12px 0;
-
-    border-bottom:1px solid #F3F4F6;
-}
-
-.row:last-child{
-
-    border-bottom:none;
+    padding:14px 0;
 }
 
 .label{
 
-    color:#6B7280;
-
     font-size:14px;
+
+    color:#6B7280;
 }
 
 .value{
@@ -229,6 +204,15 @@ body{
     font-weight:600;
 
     color:#111827;
+
+    text-align:right;
+}
+
+.divider{
+
+    height:1px;
+
+    background:#E5E7EB;
 }
 
 </style>
@@ -273,23 +257,13 @@ ${date}
 
 </div>
 
-<div class="status-container">
+<div class="section" style="text-align:center;">
 
-<div
-class="status"
-style="
-background:${status.background};
-color:${status.color};
-"
->
+<div class="status">
 
-${status.label}
+${transaction.status.toUpperCase()}
 
 </div>
-
-</div>
-
-<div class="section">
 
 <div class="amount">
 
@@ -305,7 +279,7 @@ ${amount}
 
 <div class="section-title">
 
-Transaction Details
+Transaction Information
 
 </div>
 
@@ -329,13 +303,13 @@ ${transaction.reference}
 
 <div class="label">
 
-Payment Method
+Payment Channel
 
 </div>
 
 <div class="value">
 
-${paymentChannelLabels[transaction.channel]}
+${paymentChannels[transaction.channel]}
 
 </div>
 
@@ -351,7 +325,7 @@ Transaction Type
 
 <div class="value">
 
-${transactionType}
+${transaction.type === "credit" ? "Credit" : "Debit"}
 
 </div>
 
@@ -367,12 +341,10 @@ Status
 
 <div
 class="value"
-style="
-color:${status.color};
-"
+style="color:${statusColors[transaction.status]};"
 >
 
-${status.label}
+${transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
 
 </div>
 
@@ -389,6 +361,34 @@ Date & Time
 <div class="value">
 
 ${date}
+
+</div>
+
+</div>
+
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+
+<div class="section-title">
+
+Customer Information
+
+</div>
+
+<div class="row">
+
+<div class="label">
+
+Customer Name
+
+</div>
+
+<div class="value">
+
+${transaction.customer}
 
 </div>
 

@@ -1,3 +1,11 @@
+import type { Currency } from "./currency";
+import type { PaymentChannel } from "./payment";
+
+export type ReceiptStatus =
+  | "paid"
+  | "pending"
+  | "failed";
+
 export interface Receipt {
   id: string;
 
@@ -7,18 +15,13 @@ export interface Receipt {
 
   amount: number;
 
-  currency: string;
+  currency: Currency;
 
-  status: "paid" | "pending" | "failed";
+  channel: PaymentChannel;
 
-  channel:
-    | "card"
-    | "bank"
-    | "bankTransfer"
-    | "nqr"
-    | "ussd";
-
-  createdAt: string;
+  status: ReceiptStatus;
 
   type: "credit" | "debit";
+
+  createdAt: string;
 }

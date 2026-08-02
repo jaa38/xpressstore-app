@@ -8,7 +8,32 @@ export function receiptTemplate(transaction: Transaction) {
     currency: transaction.currency,
   });
 
-  const date = formatDateTime(new Date(transaction.createdAt));
+  const date = formatDateTime(
+    new Date(transaction.createdAt)
+  );
+
+  const statusConfig = {
+    paid: {
+      label: "PAID",
+      background: "#DCFCE7",
+      color: "#15803D",
+    },
+
+    pending: {
+      label: "PENDING",
+      background: "#FEF3C7",
+      color: "#D97706",
+    },
+
+    failed: {
+      label: "FAILED",
+      background: "#FEE2E2",
+      color: "#B91C1C",
+    },
+  } as const;
+
+  const status =
+    statusConfig[transaction.status];
 
   return `
 <!DOCTYPE html>
@@ -23,7 +48,7 @@ export function receiptTemplate(transaction: Transaction) {
 
 body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    background:#f9fafb;
+    background:#F9FAFB;
     color:#111827;
     padding:32px;
 }
@@ -34,7 +59,7 @@ body{
 
     margin:auto;
 
-    background:#ffffff;
+    background:#FFFFFF;
 
     border:1px solid #E5E7EB;
 
@@ -103,6 +128,28 @@ body{
     font-size:14px;
 }
 
+.status-container{
+
+    text-align:center;
+
+    padding-top:24px;
+}
+
+.status{
+
+    display:inline-block;
+
+    padding:10px 24px;
+
+    border-radius:999px;
+
+    font-size:14px;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+}
+
 .section{
 
     padding:24px 32px;
@@ -163,6 +210,22 @@ ${transaction.reference}
 <div class="date">
 
 ${date}
+
+</div>
+
+</div>
+
+<div class="status-container">
+
+<div
+class="status"
+style="
+background:${status.background};
+color:${status.color};
+"
+>
+
+${status.label}
 
 </div>
 

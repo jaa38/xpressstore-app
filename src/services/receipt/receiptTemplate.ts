@@ -3,7 +3,13 @@ import { Transaction } from "@/types/transaction";
 import { formatCurrency } from "@/utils/formatters/currency";
 import { formatDateTime } from "@/utils/formatters/date";
 
-export function receiptTemplate(transaction: Transaction) {
+import type { ReceiptVerification } from "./receiptVerification";
+
+export function receiptTemplate(
+  transaction: Transaction,
+  verification: ReceiptVerification,
+  qrCodeDataUri: string
+) {
   const amount = formatCurrency(transaction.amount, {
     currency: transaction.currency,
   });
@@ -49,7 +55,33 @@ export function receiptTemplate(transaction: Transaction) {
     address: "Lagos, Nigeria",
   };
 
-  const receiptUrl = `https://merchant.xpresspayments.com/receipt/${transaction.reference}`;
+  const qrMarkup = qrCodeDataUri
+    ? `
+<img
+  src="${qrCodeDataUri}"
+  width="140"
+  height="140"
+/>
+`
+    : `
+<div
+  style="
+    width:140px;
+    height:140px;
+    margin:auto;
+    background:#E5E7EB;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#6B7280;
+    font-size:14px;
+    font-weight:600;
+  "
+>
+  QR CODE
+</div>
+`;
 
   return `
 <!DOCTYPE html>
@@ -202,27 +234,19 @@ background:#E5E7EB;
 }
 
 .verify{
-padding:28px 36px;
+padding:32px 36px;
 background:#F9FAFB;
 }
 
 .verify-box{
 border:1px dashed #D1D5DB;
 border-radius:14px;
-padding:22px;
+padding:24px;
 text-align:center;
 }
 
 .qr{
-width:120px;
-height:120px;
-margin:0 auto 18px;
-background:#E5E7EB;
-display:flex;
-justify-content:center;
-align-items:center;
-font-size:12px;
-color:#6B7280;
+margin-bottom:20px;
 }
 
 .verify-title{
@@ -237,18 +261,26 @@ color:#6B7280;
 }
 
 .verify-link{
-margin-top:16px;
+margin-top:14px;
 font-size:13px;
 color:#006F01;
 word-break:break-all;
 }
 
+.verify-code{
+margin-top:14px;
+font-size:13px;
+font-weight:700;
+letter-spacing:1px;
+color:#111827;
+}
+
 .footer{
 padding:28px;
+background:#FAFAFA;
 text-align:center;
 font-size:13px;
 color:#6B7280;
-background:#FAFAFA;
 }
 
 </style>
@@ -342,58 +374,38 @@ Payment Summary
 <div class="summary">
 
 <div class="row">
-
 <div class="label">Transaction Amount</div>
-
 <div class="value">${amount}</div>
-
 </div>
 
 <div class="row">
-
 <div class="label">Processing Fee</div>
-
 <div class="value">${processingFee}</div>
-
 </div>
 
 <div class="row">
-
 <div class="label">VAT</div>
-
 <div class="value">${vat}</div>
-
 </div>
 
 <div class="row">
-
 <div class="label">Currency</div>
-
 <div class="value">${transaction.currency ?? "NGN"}</div>
-
 </div>
 
 <div class="row">
-
 <div class="label">Payment Status</div>
-
 <div
-class="value"
-style="color:${statusColors[transaction.status]}"
+  class="value"
+  style="color:${statusColors[transaction.status]}"
 >
-
 ${transaction.status.toUpperCase()}
-
 </div>
-
 </div>
 
 <div class="row total">
-
 <div>Total Paid</div>
-
 <div>${total}</div>
-
 </div>
 
 </div>
@@ -411,55 +423,32 @@ Transaction Information
 </div>
 
 <div class="row">
-
 <div class="label">Reference</div>
-
 <div class="value">${transaction.reference}</div>
-
 </div>
 
 <div class="row">
-
 <div class="label">Customer</div>
-
 <div class="value">${transaction.customer}</div>
-
 </div>
 
 <div class="row">
-
-<div class="label">Channel</div>
-
+<div class="label">Payment Channel</div>
 <div class="value">
-
 ${paymentChannels[transaction.channel]}
-
 </div>
-
 </div>
 
 <div class="row">
-
 <div class="label">Transaction Type</div>
-
 <div class="value">
-
 ${transaction.type === "credit" ? "Credit" : "Debit"}
-
 </div>
-
 </div>
 
 <div class="row">
-
 <div class="label">Date & Time</div>
-
-<div class="value">
-
-${date}
-
-</div>
-
+<div class="value">${date}</div>
 </div>
 
 </div>
@@ -472,7 +461,7 @@ ${date}
 
 <div class="qr">
 
-QR CODE
+${qrMarkup}
 
 </div>
 
@@ -484,13 +473,23 @@ Verify this Receipt
 
 <div class="verify-text">
 
-Use the QR code or visit the URL below to verify this receipt.
+Scan the QR code or visit the verification URL below.
 
 </div>
 
 <div class="verify-link">
 
-${receiptUrl}
+${verification.verificationUrl}
+
+</div>
+
+<div class="verify-code">
+
+Verification Code
+
+<br /><br />
+
+${verification.verificationCode}
 
 </div>
 

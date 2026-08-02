@@ -14,6 +14,12 @@ import { OrderSummarySection } from "@/components/orders/OrderSummarySection";
 
 import { CustomerInformationSection } from "@/components/orders/CustomerInformationSection";
 
+import { OrderItemsSection } from "@/components/orders/OrderItemsSection";
+
+import { PaymentInformationSection } from "@/components/orders/PaymentInformationSection";
+
+import { OrderTimelineSection } from "@/components/orders/OrderTimelineSection";
+
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams<{
     id: string;
@@ -128,6 +134,12 @@ export default function OrderDetailsScreen() {
           <OrderSummarySection order={order} />
 
           <CustomerInformationSection order={order} />
+
+          <OrderItemsSection order={order} />
+
+          <PaymentInformationSection order={order} />
+
+          <OrderTimelineSection order={order} />
         </ScrollView>
       </View>
     </SafeAreaView>

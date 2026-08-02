@@ -11,6 +11,7 @@ import { spacing, theme } from "@/theme";
 import { useTransactions } from "@/hooks/transactions/useTransactions";
 
 import { TransactionSummarySection } from "@/components/transactions/TransactionSummarySection";
+import { TransactionInformationSection } from "@/components/transactions/TransactionInformationSection";
 
 export default function TransactionDetailsScreen() {
   const { id } = useLocalSearchParams<{
@@ -19,9 +20,7 @@ export default function TransactionDetailsScreen() {
 
   const { data: transactions = [] } = useTransactions();
 
-  const transaction = transactions.find(
-    (item) => item.id === id
-  );
+  const transaction = transactions.find((item) => item.id === id);
 
   if (!transaction) {
     return (
@@ -83,14 +82,9 @@ export default function TransactionDetailsScreen() {
               flex: 1,
             }}
           >
-            <AppText variant="h1">
-              Transaction
-            </AppText>
+            <AppText variant="h1">Transaction</AppText>
 
-            <AppText
-              variant="body"
-              color="secondary"
-            >
+            <AppText variant="body" color="secondary">
               Receipt Details
             </AppText>
           </View>
@@ -105,9 +99,9 @@ export default function TransactionDetailsScreen() {
             paddingBottom: spacing["3xl"],
           }}
         >
-          <TransactionSummarySection
-            transaction={transaction}
-          />
+          <TransactionSummarySection transaction={transaction} />
+
+          <TransactionInformationSection transaction={transaction} />
         </ScrollView>
       </View>
     </SafeAreaView>

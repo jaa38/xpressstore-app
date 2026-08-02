@@ -22,7 +22,7 @@ import { EditButton } from "@/components/product/EditButton";
 
 import { createProduct } from "@/services/product/product-service";
 
-import { uploadProductImage } from "@/services/storage-service";
+import { uploadProductImage } from "@/services/storage/storage-service";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 

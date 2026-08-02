@@ -45,7 +45,7 @@ import {
   EditProductForm,
 } from "@/schemas/editProductSchema";
 
-import { uploadProductImage } from "@/services/storage-service";
+import { uploadProductImage } from "@/services/storage/storage-service";
 
 import { useUpdateProduct } from "@/hooks/products/useUpdateProduct";
 

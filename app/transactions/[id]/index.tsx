@@ -12,6 +12,7 @@ import { useTransactions } from "@/hooks/transactions/useTransactions";
 
 import { TransactionSummarySection } from "@/components/transactions/TransactionSummarySection";
 import { TransactionInformationSection } from "@/components/transactions/TransactionInformationSection";
+import { CustomerInformationSection } from "@/components/transactions/CustomerInformationSection";
 
 export default function TransactionDetailsScreen() {
   const { id } = useLocalSearchParams<{
@@ -102,6 +103,8 @@ export default function TransactionDetailsScreen() {
           <TransactionSummarySection transaction={transaction} />
 
           <TransactionInformationSection transaction={transaction} />
+
+          <CustomerInformationSection transaction={transaction} />
         </ScrollView>
       </View>
     </SafeAreaView>

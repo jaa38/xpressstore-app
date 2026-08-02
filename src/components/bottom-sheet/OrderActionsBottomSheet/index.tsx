@@ -8,17 +8,15 @@ import { OrderActionItem } from "@/components/orders/OrderActionItem";
 
 import { Order } from "@/types/order";
 
+import { getOrderDetailsRoute } from "@/navigation/routes";
+
 interface Props {
   visible: boolean;
   order: Order | null;
   onClose: () => void;
 }
 
-export function OrderActionsBottomSheet({
-  visible,
-  order,
-  onClose,
-}: Props) {
+export function OrderActionsBottomSheet({ visible, order, onClose }: Props) {
   if (!order) {
     return null;
   }
@@ -52,10 +50,7 @@ export function OrderActionsBottomSheet({
     const supported = await Linking.canOpenURL(url);
 
     if (!supported) {
-      Alert.alert(
-        "WhatsApp unavailable",
-        "WhatsApp is not installed."
-      );
+      Alert.alert("WhatsApp unavailable", "WhatsApp is not installed.");
 
       return;
     }
@@ -66,11 +61,7 @@ export function OrderActionsBottomSheet({
   }
 
   return (
-    <BottomSheet
-      visible={visible}
-      title="Order Actions"
-      onClose={onClose}
-    >
+    <BottomSheet visible={visible} title="Order Actions" onClose={onClose}>
       {/* Order */}
 
       <BottomSheetSection title="Order">
@@ -81,12 +72,7 @@ export function OrderActionsBottomSheet({
           onPress={() => {
             onClose();
 
-            router.push({
-              pathname: "/orders/[id]",
-              params: {
-                id: currentOrder.id,
-              },
-            });
+            router.push(getOrderDetailsRoute(currentOrder.id));
           }}
         />
 

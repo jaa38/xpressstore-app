@@ -54,6 +54,8 @@ export const ROUTES = {
 
   ORDERS: "/(tabs)/orders",
 
+  ORDER_DETAILS: "/orders/[id]",
+
   PRODUCTS: "/(tabs)/products",
 
   MORE: "/(tabs)/more",
@@ -140,3 +142,6 @@ export const getCustomerDetailsRoute = (id: string) =>
 
 export const getTransactionDetailsRoute = (id: string) =>
   `/transactions/${id}` as const;
+
+export const getOrderDetailsRoute = (id: string) =>
+  `/orders/${id}` as const;

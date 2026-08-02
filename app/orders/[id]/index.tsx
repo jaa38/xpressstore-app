@@ -10,6 +10,10 @@ import { spacing, theme } from "@/theme";
 
 import { useOrders } from "@/hooks/products/useOrders";
 
+import { OrderSummarySection } from "@/components/orders/OrderSummarySection";
+
+import { CustomerInformationSection } from "@/components/orders/CustomerInformationSection";
+
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams<{
     id: string;
@@ -104,14 +108,9 @@ export default function OrderDetailsScreen() {
               flex: 1,
             }}
           >
-            <AppText variant="h1">
-              Order
-            </AppText>
+            <AppText variant="h1">Order</AppText>
 
-            <AppText
-              variant="body"
-              color="secondary"
-            >
+            <AppText variant="body" color="secondary">
               Order Details
             </AppText>
           </View>
@@ -126,7 +125,9 @@ export default function OrderDetailsScreen() {
             paddingBottom: spacing["3xl"],
           }}
         >
-          {/* Sections will be added next */}
+          <OrderSummarySection order={order} />
+
+          <CustomerInformationSection order={order} />
         </ScrollView>
       </View>
     </SafeAreaView>

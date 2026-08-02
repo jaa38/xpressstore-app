@@ -35,6 +35,19 @@ export function receiptTemplate(transaction: Transaction) {
   const status =
     statusConfig[transaction.status];
 
+  const paymentChannelLabels = {
+    bank: "Bank",
+    card: "Card",
+    qr: "QR Code",
+    transfer: "Transfer",
+    ussd: "USSD",
+  } as const;
+
+  const transactionType =
+    transaction.type === "credit"
+      ? "Credit"
+      : "Debit";
+
   return `
 <!DOCTYPE html>
 
@@ -173,6 +186,51 @@ body{
     background:#E5E7EB;
 }
 
+.section-title{
+
+    font-size:18px;
+
+    font-weight:700;
+
+    color:#111827;
+
+    margin-bottom:20px;
+}
+
+.row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:12px 0;
+
+    border-bottom:1px solid #F3F4F6;
+}
+
+.row:last-child{
+
+    border-bottom:none;
+}
+
+.label{
+
+    color:#6B7280;
+
+    font-size:14px;
+}
+
+.value{
+
+    font-size:15px;
+
+    font-weight:600;
+
+    color:#111827;
+}
+
 </style>
 
 </head>
@@ -236,6 +294,103 @@ ${status.label}
 <div class="amount">
 
 ${amount}
+
+</div>
+
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+
+<div class="section-title">
+
+Transaction Details
+
+</div>
+
+<div class="row">
+
+<div class="label">
+
+Reference
+
+</div>
+
+<div class="value">
+
+${transaction.reference}
+
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="label">
+
+Payment Method
+
+</div>
+
+<div class="value">
+
+${paymentChannelLabels[transaction.channel]}
+
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="label">
+
+Transaction Type
+
+</div>
+
+<div class="value">
+
+${transactionType}
+
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="label">
+
+Status
+
+</div>
+
+<div
+class="value"
+style="
+color:${status.color};
+"
+>
+
+${status.label}
+
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="label">
+
+Date & Time
+
+</div>
+
+<div class="value">
+
+${date}
+
+</div>
 
 </div>
 

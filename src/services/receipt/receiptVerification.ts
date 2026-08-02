@@ -1,4 +1,4 @@
-import { Transaction } from "@/types/transaction";
+import { Receipt } from "@/types/receipt";
 
 export interface ReceiptVerification {
   verificationUrl: string;
@@ -6,13 +6,11 @@ export interface ReceiptVerification {
 }
 
 export function getReceiptVerification(
-  transaction: Transaction
+  receipt: Receipt
 ): ReceiptVerification {
   return {
-    verificationUrl:
-      `https://merchant.xpresspayments.com/receipt/${transaction.reference}`,
+    verificationUrl: `https://merchant.xpresspayments.com/receipt/${receipt.reference}`,
 
-    verificationCode:
-      `${transaction.reference}-${transaction.id}`,
+    verificationCode: `${receipt.reference}-${receipt.id}`,
   };
 }

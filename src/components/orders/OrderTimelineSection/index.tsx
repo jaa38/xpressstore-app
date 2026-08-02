@@ -34,14 +34,16 @@ export function OrderTimelineSection({
         return [
           {
             title: "Order Created",
-            subtitle: "Customer placed this order.",
+            subtitle:
+              "Customer placed this order.",
             icon: "receipt-outline",
             state: "completed",
             date: formattedDate,
           },
           {
             title: "Payment Received",
-            subtitle: "Payment completed successfully.",
+            subtitle:
+              "Payment completed successfully.",
             icon: "card-outline",
             state: "completed",
             date: formattedDate,
@@ -59,21 +61,24 @@ export function OrderTimelineSection({
         return [
           {
             title: "Order Created",
-            subtitle: "Customer placed this order.",
+            subtitle:
+              "Customer placed this order.",
             icon: "receipt-outline",
             state: "completed",
             date: formattedDate,
           },
           {
             title: "Payment Received",
-            subtitle: "Payment completed successfully.",
+            subtitle:
+              "Payment completed successfully.",
             icon: "card-outline",
             state: "completed",
             date: formattedDate,
           },
           {
             title: "Delivered",
-            subtitle: "Order has been delivered.",
+            subtitle:
+              "Order has been delivered.",
             icon: "cube-outline",
             state: "completed",
             date: formattedDate,
@@ -84,21 +89,24 @@ export function OrderTimelineSection({
         return [
           {
             title: "Order Created",
-            subtitle: "Customer placed this order.",
+            subtitle:
+              "Customer placed this order.",
             icon: "receipt-outline",
             state: "completed",
             date: formattedDate,
           },
           {
             title: "Payment Received",
-            subtitle: "Payment completed successfully.",
+            subtitle:
+              "Payment completed successfully.",
             icon: "card-outline",
             state: "completed",
             date: formattedDate,
           },
           {
             title: "Returned",
-            subtitle: "Customer returned the order.",
+            subtitle:
+              "Customer returned the order.",
             icon: "return-up-back-outline",
             state: "error",
             date: formattedDate,
@@ -109,21 +117,24 @@ export function OrderTimelineSection({
         return [
           {
             title: "Order Created",
-            subtitle: "Customer attempted checkout.",
+            subtitle:
+              "Customer attempted checkout.",
             icon: "receipt-outline",
             state: "completed",
             date: formattedDate,
           },
           {
             title: "Payment Failed",
-            subtitle: "Payment could not be processed.",
+            subtitle:
+              "Payment could not be processed.",
             icon: "close-circle-outline",
             state: "error",
             date: formattedDate,
           },
           {
             title: "Order Cancelled",
-            subtitle: "Order was not created.",
+            subtitle:
+              "Order was not created.",
             icon: "ban-outline",
             state: "pending",
             date: "Not Applicable",
@@ -133,7 +144,9 @@ export function OrderTimelineSection({
   })() satisfies {
     title: string;
     subtitle: string;
-    icon: React.ComponentProps<typeof Ionicons>["name"];
+    icon: React.ComponentProps<
+      typeof Ionicons
+    >["name"];
     state: TimelineState;
     date: string;
   }[];
@@ -199,6 +212,16 @@ export function OrderTimelineSection({
         <AppText variant="h3">
           Order Timeline
         </AppText>
+
+        <AppText
+          variant="bodySmall"
+          color="secondary"
+          style={{
+            marginTop: spacing.xs,
+          }}
+        >
+          Track the progress of this order.
+        </AppText>
       </View>
 
       <Divider />
@@ -227,18 +250,23 @@ export function OrderTimelineSection({
               >
                 <View
                   style={{
-                    width: 40,
-                    height: 40,
+                    width: 44,
+                    height: 44,
                     borderRadius: 999,
                     justifyContent: "center",
                     alignItems: "center",
+
                     backgroundColor:
+                      appearance.background,
+
+                    borderWidth: 1,
+                    borderColor:
                       appearance.background,
                   }}
                 >
                   <Ionicons
                     name={item.icon}
-                    size={20}
+                    size={22}
                     color={appearance.icon}
                   />
                 </View>
@@ -249,8 +277,9 @@ export function OrderTimelineSection({
                     style={{
                       width: 2,
                       flex: 1,
-                      minHeight: 36,
+                      minHeight: 48,
                       marginTop: spacing.sm,
+                      borderRadius: 999,
                       backgroundColor:
                         appearance.line,
                     }}
@@ -263,7 +292,7 @@ export function OrderTimelineSection({
               <View
                 style={{
                   flex: 1,
-                  paddingBottom: spacing.md,
+                  paddingBottom: spacing.lg,
                 }}
               >
                 <AppText
@@ -289,7 +318,7 @@ export function OrderTimelineSection({
                   variant="caption"
                   color="muted"
                   style={{
-                    marginTop: spacing.xs,
+                    marginTop: spacing.sm,
                   }}
                 >
                   {item.date}

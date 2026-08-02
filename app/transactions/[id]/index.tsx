@@ -63,23 +63,17 @@ export default function TransactionDetailsScreen() {
   };
 
   const handleDownloadReceipt = async () => {
-    try {
-      const location =
-        await downloadReceipt(transaction);
-
-      Alert.alert(
-        "Receipt Saved",
-        `Receipt saved to:\n\n${location}`
-      );
-    } catch (error) {
-      Alert.alert(
-        "Download Failed",
-        error instanceof Error
-          ? error.message
-          : "Unable to save receipt."
-      );
-    }
-  };
+  try {
+    await downloadReceipt(transaction);
+  } catch (error) {
+    Alert.alert(
+      "Unable to Save Receipt",
+      error instanceof Error
+        ? error.message
+        : "Something went wrong."
+    );
+  }
+};
 
   return (
     <SafeAreaView

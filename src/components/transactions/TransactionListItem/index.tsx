@@ -15,9 +15,7 @@ interface TransactionListItemProps {
   transaction: Transaction;
 }
 
-export function TransactionListItem({
-  transaction,
-}: TransactionListItemProps) {
+export function TransactionListItem({ transaction }: TransactionListItemProps) {
   const paymentChannelIcons: Record<
     PaymentChannel,
     React.ComponentProps<typeof Ionicons>["name"]
@@ -28,6 +26,33 @@ export function TransactionListItem({
     transfer: "swap-horizontal-outline",
     ussd: "keypad-outline",
   };
+
+  const transactionStatusIcons: Record<
+    Transaction["status"],
+    React.ComponentProps<typeof Ionicons>["name"]
+  > = {
+    paid: paymentChannelIcons[transaction.channel],
+    pending: "time-outline",
+    failed: "close-circle-outline",
+  };
+
+  const transactionStatusColors = {
+    paid: theme.icon.success.icon,
+    pending: theme.icon.warning.icon,
+    failed: theme.icon.error.icon,
+  } as const;
+
+  const transactionStatusTextColors = {
+    paid: "success",
+    pending: "warning",
+    failed: "error",
+  } as const;
+
+  const transactionStatusLabels = {
+    paid: transaction.type === "credit" ? "Credit" : "Debit",
+    pending: "Pending",
+    failed: "Failed",
+  } as const;
 
   return (
     <View
@@ -62,27 +87,19 @@ export function TransactionListItem({
             }}
           >
             <Ionicons
-              name={paymentChannelIcons[transaction.channel]}
+              name={transactionStatusIcons[transaction.status]}
               size={16}
-              color={
-                transaction.type === "credit"
-                  ? theme.icon.success.icon
-                  : theme.icon.error.icon
-              }
+              color={transactionStatusColors[transaction.status]}
             />
 
             <AppText
               variant="bodySmallBold"
-              color={transaction.type === "credit" ? "success" : "error"}
+              color={transactionStatusTextColors[transaction.status]}
             >
-              {transaction.type === "credit" ? "Credit" : "Debit"}
+              {transactionStatusLabels[transaction.status]}
             </AppText>
 
-            <Divider
-              orientation="vertical"
-              variant="strong"
-              length={12}
-            />
+            <Divider orientation="vertical" variant="strong" length={12} />
 
             <AppText variant="bodySmall" color="secondary">
               {formatDateTime(new Date(transaction.createdAt))}

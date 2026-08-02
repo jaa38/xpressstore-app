@@ -1,3 +1,8 @@
+import type {
+  AmountRange,
+  DateRange,
+} from "@/types/filters";
+
 export type TransactionStatus =
   | "all"
   | "paid"
@@ -21,4 +26,6 @@ export interface TransactionFilters {
   status: TransactionStatus;
   channel: PaymentChannel;
   type: TransactionType;
+  amount: AmountRange;
+  date: DateRange;
 }

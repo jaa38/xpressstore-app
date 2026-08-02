@@ -71,6 +71,18 @@ export default function TransactionsScreen() {
       const matchesType =
         filters.type === "all" || transaction.type === filters.type;
 
+      const matchesAmount =
+        (filters.amount.min == null ||
+          transaction.amount >= filters.amount.min) &&
+        (filters.amount.max == null ||
+          transaction.amount <= filters.amount.max);
+
+      const transactionDate = new Date(transaction.createdAt);
+
+      const matchesDate =
+        (filters.date.start == null || transactionDate >= filters.date.start) &&
+        (filters.date.end == null || transactionDate <= filters.date.end);
+
       // Search
       const query = search.trim().toLowerCase();
 
@@ -85,7 +97,14 @@ export default function TransactionsScreen() {
           .toLowerCase()
           .includes(query);
 
-      return matchesStatus && matchesChannel && matchesType && matchesSearch;
+      return (
+        matchesStatus &&
+        matchesChannel &&
+        matchesType &&
+        matchesAmount &&
+        matchesDate &&
+        matchesSearch
+      );
     });
   }, [transactions, filters, search]);
 
@@ -96,19 +115,28 @@ export default function TransactionsScreen() {
     );
   }, [filteredTransactions]);
 
+  const activeFilterLabel =
+    filters.status !== "all"
+      ? filters.status
+      : filters.channel !== "all"
+        ? filters.channel
+        : filters.type !== "all"
+          ? filters.type
+          : null;
+
   const summaryTitle =
-    filters.status === "all"
+    activeFilterLabel === null
       ? "Transaction Value"
-      : `${filters.status.charAt(0).toUpperCase()}${filters.status.slice(1)} Value`;
+      : `${activeFilterLabel.charAt(0).toUpperCase()}${activeFilterLabel.slice(1)} Value`;
 
   const summaryAmount = formatCurrency(totalAmount);
 
   const summaryCount = filteredTransactions.length;
 
   const summaryLabel =
-    filters.status === "all"
+    activeFilterLabel === null
       ? "Transactions"
-      : `${filters.status.charAt(0).toUpperCase()}${filters.status.slice(1)}`;
+      : activeFilterLabel.charAt(0).toUpperCase() + activeFilterLabel.slice(1);
 
   const transactionFilterRef = useRef<BottomSheetModal>(null);
 
@@ -130,28 +158,78 @@ export default function TransactionsScreen() {
     );
   }
 
-  const filterOptions = [
-    {
-      key: "all",
-      title: "All",
-      count: transactions.length,
-    },
-    {
-      key: "paid",
-      title: "Paid",
-      count: transactions.filter((t) => t.status === "paid").length,
-    },
-    {
-      key: "pending",
-      title: "Pending",
-      count: transactions.filter((t) => t.status === "pending").length,
-    },
-    {
-      key: "failed",
-      title: "Failed",
-      count: transactions.filter((t) => t.status === "failed").length,
-    },
-  ] satisfies {
+  const filterOptions = useMemo(() => {
+    // Apply every filter except Status
+    const baseTransactions = transactions.filter((transaction) => {
+      const matchesChannel =
+        filters.channel === "all" || transaction.channel === filters.channel;
+
+      const matchesType =
+        filters.type === "all" || transaction.type === filters.type;
+
+      const matchesAmount =
+        (filters.amount.min == null ||
+          transaction.amount >= filters.amount.min) &&
+        (filters.amount.max == null ||
+          transaction.amount <= filters.amount.max);
+
+      const transactionDate = new Date(transaction.createdAt);
+
+      const matchesDate =
+        (filters.date.start == null || transactionDate >= filters.date.start) &&
+        (filters.date.end == null || transactionDate <= filters.date.end);
+
+      const query = search.trim().toLowerCase();
+
+      const matchesSearch =
+        query.length === 0 ||
+        transaction.customer.toLowerCase().includes(query) ||
+        transaction.reference.toLowerCase().includes(query) ||
+        transaction.id.toLowerCase().includes(query) ||
+        formatCurrency(transaction.amount, {
+          currency: transaction.currency,
+        })
+          .toLowerCase()
+          .includes(query);
+
+      return (
+        matchesChannel &&
+        matchesType &&
+        matchesAmount &&
+        matchesDate &&
+        matchesSearch
+      );
+    });
+
+    return [
+      {
+        key: "all",
+        title: "All",
+        count: baseTransactions.length,
+      },
+      {
+        key: "paid",
+        title: "Paid",
+        count: baseTransactions.filter(
+          (transaction) => transaction.status === "paid"
+        ).length,
+      },
+      {
+        key: "pending",
+        title: "Pending",
+        count: baseTransactions.filter(
+          (transaction) => transaction.status === "pending"
+        ).length,
+      },
+      {
+        key: "failed",
+        title: "Failed",
+        count: baseTransactions.filter(
+          (transaction) => transaction.status === "failed"
+        ).length,
+      },
+    ];
+  }, [transactions, filters, search]) satisfies {
     key: TransactionFilters["status"];
     title: string;
     count: number;
@@ -328,7 +406,15 @@ export default function TransactionsScreen() {
             </View>
 
             <FilterButton
-              active={filters.status !== "all" || filters.channel !== "all"}
+              active={
+                filters.status !== "all" ||
+                filters.channel !== "all" ||
+                filters.type !== "all" ||
+                filters.amount.min != null ||
+                filters.amount.max != null ||
+                filters.date.start != null ||
+                filters.date.end != null
+              }
               onPress={() => {
                 // Sync the bottom sheet with the currently applied filters
                 setDraftFilters(filters);
@@ -353,7 +439,7 @@ export default function TransactionsScreen() {
                 title={filter.title}
                 variant={filters.status === filter.key ? "active" : "default"}
                 onPress={() => {
-                  const nextFilters = {
+                  const nextFilters: TransactionFilters = {
                     ...filters,
                     status: filter.key,
                   };

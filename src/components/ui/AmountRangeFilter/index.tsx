@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { View } from "react-native";
+import { Switch, View } from "react-native";
 
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 
@@ -11,11 +11,16 @@ import { spacing, theme } from "@/theme";
 import { formatCurrency } from "@/utils/formatCurrency";
 
 interface AmountRangeFilterProps {
-  min: number;
-  max: number;
+  min?: number;
+  max?: number;
+
   minimumValue?: number;
   maximumValue?: number;
-  onValueChange: (min: number, max: number) => void;
+
+  onValueChange: (
+    min?: number,
+    max?: number
+  ) => void;
 }
 
 export function AmountRangeFilter({
@@ -27,8 +32,56 @@ export function AmountRangeFilter({
 }: AmountRangeFilterProps) {
   const [sliderWidth, setSliderWidth] = useState(0);
 
+  const [enabled, setEnabled] = useState(
+    min != null || max != null
+  );
+
+  const sliderMin = min ?? minimumValue;
+
+  const sliderMax = max ?? maximumValue;
+
+  useEffect(() => {
+    setEnabled(min != null || max != null);
+  }, [min, max]);
+
   return (
     <View>
+      {/* Header */}
+
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: spacing.lg,
+        }}
+      >
+        <AppText variant="bodyBold">
+          Enable Amount Filter
+        </AppText>
+
+        <Switch
+          value={enabled}
+          trackColor={{
+            false: theme.border.default,
+            true: theme.action.primary.background,
+          }}
+          thumbColor={theme.background.primary}
+          onValueChange={(value) => {
+            setEnabled(value);
+
+            if (!value) {
+              onValueChange(undefined, undefined);
+            } else {
+              onValueChange(
+                minimumValue,
+                maximumValue
+              );
+            }
+          }}
+        />
+      </View>
+
       {/* Selected */}
 
       <AppText
@@ -45,29 +98,41 @@ export function AmountRangeFilter({
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
-          alignItems: "center",
           marginBottom: spacing.md,
         }}
       >
-        <AppText variant="bodyLargeBold">
-          {formatCurrency(min)}
+        <AppText
+          variant="bodyLargeBold"
+          color={enabled ? "primary" : "secondary"}
+        >
+          {formatCurrency(sliderMin)}
         </AppText>
 
-        <AppText variant="bodyLargeBold">
-          {formatCurrency(max)}
+        <AppText
+          variant="bodyLargeBold"
+          color={enabled ? "primary" : "secondary"}
+        >
+          {formatCurrency(sliderMax)}
         </AppText>
       </View>
 
       {/* Slider */}
 
       <View
+        style={{
+          opacity: enabled ? 1 : 0.35,
+        }}
         onLayout={(event) => {
-          setSliderWidth(event.nativeEvent.layout.width);
+          setSliderWidth(
+            event.nativeEvent.layout.width
+          );
         }}
       >
         {sliderWidth > 0 && (
           <MultiSlider
-            values={[min, max]}
+            enabledOne={enabled}
+            enabledTwo={enabled}
+            values={[sliderMin, sliderMax]}
             min={minimumValue}
             max={maximumValue}
             step={1000}
@@ -88,28 +153,31 @@ export function AmountRangeFilter({
             markerStyle={{
               backgroundColor:
                 theme.button.primary.background,
-              height: 22,
               width: 22,
+              height: 22,
               borderRadius: 11,
               borderWidth: 2,
-              borderColor: theme.background.primary,
+              borderColor:
+                theme.background.primary,
             }}
             pressedMarkerStyle={{
-              height: 26,
               width: 26,
+              height: 26,
               borderRadius: 13,
             }}
             onValuesChange={(values) => {
-              const [minValue, maxValue] = values;
+              if (!enabled) return;
+
+              const [newMin, newMax] = values;
 
               if (
-                minValue === undefined ||
-                maxValue === undefined
+                newMin == null ||
+                newMax == null
               ) {
                 return;
               }
 
-              onValueChange(minValue, maxValue);
+              onValueChange(newMin, newMax);
             }}
           />
         )}
@@ -125,14 +193,13 @@ export function AmountRangeFilter({
           marginBottom: spacing.xs,
         }}
       >
-        Available
+        Available Range
       </AppText>
 
       <View
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
-          alignItems: "center",
         }}
       >
         <AppText

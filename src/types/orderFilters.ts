@@ -1,12 +1,4 @@
-export interface AmountRange {
-  min?: number;
-  max?: number;
-}
-
-export interface DateRange {
-  start?: Date;
-  end?: Date;
-}
+import type { AmountRange, DateRange } from "@/types/filters";
 
 export type OrderSort = "mostRecent" | "amountHighToLow" | "amountLowToHigh";
 

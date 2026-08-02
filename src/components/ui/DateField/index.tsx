@@ -1,5 +1,4 @@
 import { Pressable, View } from "react-native";
-
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
@@ -26,7 +25,9 @@ export function DateField({
       onPress={onPress}
       style={{
         borderWidth: 1,
-        borderColor: isActive ? theme.input.focusBorder : theme.border.default,
+        borderColor: isActive
+          ? theme.input.focusBorder
+          : theme.border.default,
         backgroundColor: isActive
           ? theme.background.brand
           : theme.background.surface,
@@ -54,7 +55,9 @@ export function DateField({
           name="calendar-outline"
           size={20}
           color={
-            isActive ? theme.action.primary.background : theme.text.secondary
+            isActive
+              ? theme.action.primary.background
+              : theme.text.secondary
           }
         />
       </View>

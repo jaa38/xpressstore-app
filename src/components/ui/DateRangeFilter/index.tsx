@@ -8,7 +8,7 @@ import { spacing, theme } from "@/theme";
 
 import { DateField } from "@/components/ui/DateField";
 
-import type { DateRange } from "@/types/orderFilters";
+import type { DateRange } from "@/types/filters";
 
 interface DateRangeFilterProps {
   value: DateRange;
@@ -39,7 +39,7 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
     if (activeField === "start") {
       const start = selectedDate;
 
-      const end = value.end && value.end < start ? start : value.end;
+      const end = value.end != null && value.end < start ? start : value.end;
 
       onChange({
         start,
@@ -53,7 +53,7 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
 
     const end = selectedDate;
 
-    const start = value.start && value.start > end ? end : value.start;
+    const start = value.start != null && value.start > end ? end : value.start;
 
     onChange({
       start,
@@ -66,13 +66,13 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
   const getMarkedDates = () => {
     const markedDates: Record<string, CalendarMarkedDate> = {};
 
-    if (!value.start) {
+    if (value.start == null) {
       return markedDates;
     }
 
     const start = new Date(value.start);
 
-    const end = value.end ? new Date(value.end) : new Date(value.start);
+    const end = value.end != null ? new Date(value.end) : new Date(value.start);
 
     const current = new Date(start);
 
@@ -137,13 +137,9 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
           calendarBackground: theme.background.surface,
 
           textSectionTitleColor: theme.text.secondary,
-
           monthTextColor: theme.text.heading,
-
           dayTextColor: theme.text.primary,
-
           todayTextColor: theme.action.primary.background,
-
           arrowColor: theme.action.primary.background,
 
           selectedDayBackgroundColor: theme.action.primary.background,

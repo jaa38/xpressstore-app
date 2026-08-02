@@ -3,26 +3,40 @@ import * as FileSystem from "expo-file-system";
 
 import { Order } from "@/types/order";
 
-import { generateOrderReceipt } from "./generateOrderReceipt";
+import { generateReceipt } from "./generateReceipt";
+import { receiptFromOrder } from "./receiptFromOrder";
 
-export async function shareOrderReceipt(order: Order) {
-  const receipt = await generateOrderReceipt(order);
+export async function shareOrderReceipt(
+  order: Order
+) {
+  const receipt = receiptFromOrder(order);
 
-  const available = await Sharing.isAvailableAsync();
+  const generatedReceipt =
+    await generateReceipt(receipt);
+
+  const available =
+    await Sharing.isAvailableAsync();
 
   if (!available) {
-    throw new Error("Sharing is not available on this device.");
+    throw new Error(
+      "Sharing is not available on this device."
+    );
   }
 
-  await Sharing.shareAsync(receipt.uri, {
+  await Sharing.shareAsync(generatedReceipt.uri, {
     mimeType: "application/pdf",
     dialogTitle: "Share Receipt",
     UTI: "com.adobe.pdf",
   });
 }
 
-export async function downloadOrderReceipt(order: Order) {
-  const receipt = await generateOrderReceipt(order);
+export async function downloadOrderReceipt(
+  order: Order
+) {
+  const receipt = receiptFromOrder(order);
+
+  const generatedReceipt =
+    await generateReceipt(receipt);
 
   const fileName = `Order-${order.reference}.pdf`;
 
@@ -35,18 +49,26 @@ export async function downloadOrderReceipt(order: Order) {
     directory.create();
   }
 
-  const destination = new FileSystem.File(directory, fileName);
+  const destination = new FileSystem.File(
+    directory,
+    fileName
+  );
 
   await FileSystem.copyAsync({
-    from: receipt.uri,
+    from: generatedReceipt.uri,
     to: destination.uri,
   });
 
   return destination.uri;
 }
 
-export async function printOrderReceipt(order: Order) {
-  const receipt = await generateOrderReceipt(order);
+export async function printOrderReceipt(
+  order: Order
+) {
+  const receipt = receiptFromOrder(order);
 
-  return receipt.uri;
+  const generatedReceipt =
+    await generateReceipt(receipt);
+
+  return generatedReceipt.uri;
 }

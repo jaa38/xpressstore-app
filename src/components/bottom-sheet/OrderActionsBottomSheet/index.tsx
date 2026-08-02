@@ -1,4 +1,6 @@
-import { Alert, Linking } from "react-native";
+import { useState } from "react";
+
+import { Alert } from "react-native";
 import { router } from "expo-router";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
@@ -8,7 +10,10 @@ import { OrderActionItem } from "@/components/orders/OrderActionItem";
 
 import { Order } from "@/types/order";
 
-import { getOrderDetailsRoute } from "@/navigation/routes";
+import {
+  downloadOrderReceipt,
+  shareOrderReceipt,
+} from "@/services/receipt/orderReceiptActions";
 
 interface Props {
   visible: boolean;
@@ -16,7 +21,15 @@ interface Props {
   onClose: () => void;
 }
 
-export function OrderActionsBottomSheet({ visible, order, onClose }: Props) {
+export function OrderActionsBottomSheet({
+  visible,
+  order,
+  onClose,
+}: Props) {
+  const [loadingAction, setLoadingAction] = useState<
+    "share" | "download" | null
+  >(null);
+
   if (!order) {
     return null;
   }
@@ -24,46 +37,70 @@ export function OrderActionsBottomSheet({ visible, order, onClose }: Props) {
   const currentOrder = order;
 
   async function handleCallCustomer() {
-    const url = `tel:${currentOrder.customerPhone}`;
-
-    const supported = await Linking.canOpenURL(url);
-
-    if (!supported) {
-      Alert.alert(
-        "Unable to place call",
-        "Calling is not available on this device."
-      );
-
-      return;
-    }
-
-    await Linking.openURL(url);
-
-    onClose();
+    Alert.alert(
+      "Unavailable",
+      "Customer phone numbers are not currently available."
+    );
   }
 
   async function handleWhatsApp() {
-    const phone = currentOrder.customerPhone.replace(/\D/g, "");
+    Alert.alert(
+      "Unavailable",
+      "Customer phone numbers are not currently available."
+    );
+  }
 
-    const url = `https://wa.me/${phone}`;
+  async function handleShareReceipt() {
+    try {
+      setLoadingAction("share");
 
-    const supported = await Linking.canOpenURL(url);
+      await shareOrderReceipt(currentOrder);
 
-    if (!supported) {
-      Alert.alert("WhatsApp unavailable", "WhatsApp is not installed.");
-
-      return;
+      onClose();
+    } catch (error) {
+      Alert.alert(
+        "Unable to Share Receipt",
+        error instanceof Error
+          ? error.message
+          : "Something went wrong."
+      );
+    } finally {
+      setLoadingAction(null);
     }
+  }
 
-    await Linking.openURL(url);
+  async function handleDownloadReceipt() {
+    try {
+      setLoadingAction("download");
 
-    onClose();
+      const path = await downloadOrderReceipt(
+        currentOrder
+      );
+
+      Alert.alert(
+        "Receipt Saved",
+        `Receipt successfully generated.\n\n${path}`
+      );
+
+      onClose();
+    } catch (error) {
+      Alert.alert(
+        "Unable to Download Receipt",
+        error instanceof Error
+          ? error.message
+          : "Something went wrong."
+      );
+    } finally {
+      setLoadingAction(null);
+    }
   }
 
   return (
-    <BottomSheet visible={visible} title="Order Actions" onClose={onClose}>
-      {/* Order */}
-
+    <BottomSheet
+      visible={visible}
+      title="Order Actions"
+      onClose={onClose}
+    >
       <BottomSheetSection title="Order">
         <OrderActionItem
           title="View Order"
@@ -72,27 +109,40 @@ export function OrderActionsBottomSheet({ visible, order, onClose }: Props) {
           onPress={() => {
             onClose();
 
-            router.push(getOrderDetailsRoute(currentOrder.id));
+            router.push({
+              pathname: "/orders/[id]",
+              params: {
+                id: currentOrder.id,
+              },
+            });
           }}
         />
 
         <OrderActionItem
-          title="View Receipt"
-          subtitle="Open payment receipt"
-          icon="receipt-outline"
-          showDivider={currentOrder.status === "paid"}
-          onPress={() => {
-            onClose();
+          title={
+            loadingAction === "share"
+              ? "Sharing Receipt..."
+              : "Share Receipt"
+          }
+          subtitle="Share PDF receipt"
+          icon="share-social-outline"
+          disabled={loadingAction !== null}
+          onPress={handleShareReceipt}
+        />
 
-            Alert.alert(
-              "Coming Soon",
-              "Receipt viewer will be available shortly."
-            );
-          }}
+        <OrderActionItem
+          title={
+            loadingAction === "download"
+              ? "Downloading Receipt..."
+              : "Download Receipt"
+          }
+          subtitle="Save receipt as PDF"
+          icon="download-outline"
+          disabled={loadingAction !== null}
+          showDivider={false}
+          onPress={handleDownloadReceipt}
         />
       </BottomSheetSection>
-
-      {/* Customer */}
 
       <BottomSheetSection title="Customer">
         <OrderActionItem
@@ -107,39 +157,10 @@ export function OrderActionsBottomSheet({ visible, order, onClose }: Props) {
           subtitle={currentOrder.customerName}
           icon="logo-whatsapp"
           iconColor="#25D366"
-          showDivider={!!currentOrder.customerEmail}
+          showDivider={false}
           onPress={handleWhatsApp}
         />
-
-        {currentOrder.customerEmail ? (
-          <OrderActionItem
-            title="Email Customer"
-            subtitle={currentOrder.customerEmail}
-            icon="mail-outline"
-            showDivider={false}
-            onPress={async () => {
-              const url = `mailto:${currentOrder.customerEmail}`;
-
-              const supported = await Linking.canOpenURL(url);
-
-              if (!supported) {
-                Alert.alert(
-                  "Unable to send email",
-                  "No email application is available."
-                );
-
-                return;
-              }
-
-              await Linking.openURL(url);
-
-              onClose();
-            }}
-          />
-        ) : null}
       </BottomSheetSection>
-
-      {/* Payments */}
 
       <BottomSheetSection title="Payments">
         <OrderActionItem

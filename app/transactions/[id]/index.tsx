@@ -1,18 +1,42 @@
-import { Pressable, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 
 import { AppText } from "@/components/ui/AppText";
-import { Card } from "@/components/ui/Card";
 
 import { spacing, theme } from "@/theme";
+
+import { useTransactions } from "@/hooks/transactions/useTransactions";
+
+import { TransactionSummarySection } from "@/components/transactions/TransactionSummarySection";
 
 export default function TransactionDetailsScreen() {
   const { id } = useLocalSearchParams<{
     id: string;
   }>();
+
+  const { data: transactions = [] } = useTransactions();
+
+  const transaction = transactions.find(
+    (item) => item.id === id
+  );
+
+  if (!transaction) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.background.primary,
+        }}
+      >
+        <AppText>Transaction not found.</AppText>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -59,31 +83,32 @@ export default function TransactionDetailsScreen() {
               flex: 1,
             }}
           >
-            <AppText variant="h1">Transaction Details</AppText>
+            <AppText variant="h1">
+              Transaction
+            </AppText>
 
-            <AppText variant="body" color="secondary">
-              {id}
+            <AppText
+              variant="body"
+              color="secondary"
+            >
+              Receipt Details
             </AppText>
           </View>
         </View>
 
-        <Card
+        <ScrollView
           style={{
-            marginTop: spacing.lg,
+            flex: 1,
+          }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: spacing["3xl"],
           }}
         >
-          <AppText variant="bodyLargeBold">Transaction Details</AppText>
-
-          <AppText
-            color="secondary"
-            style={{
-              marginTop: spacing.sm,
-            }}
-          >
-            Phase 2 will build the receipt summary, customer information,
-            payment information, timeline and actions.
-          </AppText>
-        </Card>
+          <TransactionSummarySection
+            transaction={transaction}
+          />
+        </ScrollView>
       </View>
     </SafeAreaView>
   );

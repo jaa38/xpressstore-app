@@ -40,6 +40,17 @@ export function receiptTemplate(transaction: Transaction) {
     ussd: "USSD",
   };
 
+  const merchant = {
+    name: "XpressStore Merchant",
+    id: "MCH-000001",
+    email: "support@xpresspayments.com",
+    phone: "+234 700 XPRESS",
+    website: "www.xpresspayments.com",
+    address: "Lagos, Nigeria",
+  };
+
+  const receiptUrl = `https://merchant.xpresspayments.com/receipt/${transaction.reference}`;
+
   return `
 <!DOCTYPE html>
 
@@ -52,237 +63,192 @@ export function receiptTemplate(transaction: Transaction) {
 <style>
 
 *{
-    box-sizing:border-box;
+box-sizing:border-box;
 }
 
 body{
-
-    margin:0;
-
-    padding:32px;
-
-    background:#F9FAFB;
-
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-
-    color:#111827;
+margin:0;
+padding:40px;
+background:#F5F6F8;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+color:#111827;
 }
 
 .receipt{
-
-    max-width:720px;
-
-    margin:auto;
-
-    background:#FFFFFF;
-
-    border-radius:18px;
-
-    overflow:hidden;
-
-    border:1px solid #E5E7EB;
+max-width:760px;
+margin:auto;
+background:#FFFFFF;
+border-radius:18px;
+overflow:hidden;
+border:1px solid #E5E7EB;
 }
 
 .header{
+padding:36px;
+background:#E6F4E6;
+border-bottom:1px solid #CDE9CD;
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+}
 
-    padding:36px;
-
-    background:#E6F4E6;
-
-    text-align:center;
-
-    border-bottom:1px solid #CDE9CD;
+.branding{
+flex:1;
 }
 
 .logo{
-
-    font-size:30px;
-
-    font-weight:700;
-
-    color:#006F01;
-
-    letter-spacing:1px;
+font-size:30px;
+font-weight:700;
+color:#006F01;
 }
 
 .subtitle{
-
-    margin-top:8px;
-
-    color:#4B5563;
-
-    font-size:15px;
+margin-top:6px;
+font-size:15px;
+color:#4B5563;
 }
 
-.receipt-number{
-
-    margin-top:24px;
-
-    color:#6B7280;
-
-    font-size:13px;
+.merchant{
+text-align:right;
+font-size:13px;
+line-height:1.8;
+color:#4B5563;
 }
 
 .reference{
+padding:28px;
+text-align:center;
+}
 
-    margin-top:6px;
+.reference-title{
+font-size:13px;
+color:#6B7280;
+}
 
-    font-size:20px;
-
-    font-weight:700;
-
-    color:#111827;
+.reference-number{
+margin-top:8px;
+font-size:22px;
+font-weight:700;
 }
 
 .date{
-
-    margin-top:16px;
-
-    color:#4B5563;
-
-    font-size:14px;
-}
-
-.section{
-
-    padding:30px 34px;
+margin-top:8px;
+font-size:14px;
+color:#6B7280;
 }
 
 .status{
-
-    display:inline-block;
-
-    padding:8px 18px;
-
-    border-radius:999px;
-
-    font-size:13px;
-
-    font-weight:700;
-
-    color:${statusColors[transaction.status]};
-
-    background:${statusBackgrounds[transaction.status]};
+display:inline-block;
+padding:8px 18px;
+margin-top:18px;
+border-radius:999px;
+font-weight:700;
+font-size:13px;
+background:${statusBackgrounds[transaction.status]};
+color:${statusColors[transaction.status]};
 }
 
 .amount{
+margin-top:28px;
+font-size:46px;
+font-weight:700;
+}
 
-    margin-top:24px;
-
-    font-size:46px;
-
-    font-weight:700;
-
-    text-align:center;
-
-    color:#111827;
+.section{
+padding:30px 36px;
 }
 
 .section-title{
-
-    margin-bottom:22px;
-
-    font-size:18px;
-
-    font-weight:700;
-}
-
-.row{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    padding:14px 0;
-}
-
-.label{
-
-    color:#6B7280;
-
-    font-size:14px;
-}
-
-.value{
-
-    font-size:15px;
-
-    font-weight:600;
-
-    color:#111827;
-
-    text-align:right;
+font-size:18px;
+font-weight:700;
+margin-bottom:20px;
 }
 
 .summary{
-
-    background:#F9FAFB;
-
-    border:1px solid #E5E7EB;
-
-    border-radius:14px;
-
-    padding:22px;
-
-    margin-top:18px;
+background:#F9FAFB;
+border:1px solid #E5E7EB;
+border-radius:14px;
+padding:22px;
 }
 
-.summary-row{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    margin-bottom:14px;
+.row{
+display:flex;
+justify-content:space-between;
+padding:14px 0;
 }
 
-.summary-label{
-
-    color:#6B7280;
-
-    font-size:14px;
+.label{
+font-size:14px;
+color:#6B7280;
 }
 
-.summary-value{
-
-    font-size:15px;
-
-    font-weight:600;
+.value{
+font-size:15px;
+font-weight:600;
+text-align:right;
 }
 
 .total{
-
-    border-top:1px solid #D1D5DB;
-
-    margin-top:16px;
-
-    padding-top:18px;
-
-    font-size:18px;
-
-    font-weight:700;
+margin-top:14px;
+padding-top:18px;
+border-top:1px solid #D1D5DB;
+font-size:18px;
+font-weight:700;
 }
 
 .divider{
+height:1px;
+background:#E5E7EB;
+}
 
-    height:1px;
+.verify{
+padding:28px 36px;
+background:#F9FAFB;
+}
 
-    background:#E5E7EB;
+.verify-box{
+border:1px dashed #D1D5DB;
+border-radius:14px;
+padding:22px;
+text-align:center;
+}
+
+.qr{
+width:120px;
+height:120px;
+margin:0 auto 18px;
+background:#E5E7EB;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:12px;
+color:#6B7280;
+}
+
+.verify-title{
+font-size:18px;
+font-weight:700;
+}
+
+.verify-text{
+margin-top:8px;
+font-size:14px;
+color:#6B7280;
+}
+
+.verify-link{
+margin-top:16px;
+font-size:13px;
+color:#006F01;
+word-break:break-all;
 }
 
 .footer{
-
-    text-align:center;
-
-    padding:36px;
-
-    color:#6B7280;
-
-    font-size:13px;
+padding:28px;
+text-align:center;
+font-size:13px;
+color:#6B7280;
+background:#FAFAFA;
 }
 
 </style>
@@ -294,6 +260,8 @@ body{
 <div class="receipt">
 
 <div class="header">
+
+<div class="branding">
 
 <div class="logo">
 
@@ -307,13 +275,35 @@ Digital Payment Receipt
 
 </div>
 
-<div class="receipt-number">
+</div>
+
+<div class="merchant">
+
+<div><strong>${merchant.name}</strong></div>
+
+<div>${merchant.address}</div>
+
+<div>${merchant.phone}</div>
+
+<div>${merchant.email}</div>
+
+<div>${merchant.website}</div>
+
+<div>Merchant ID: ${merchant.id}</div>
+
+</div>
+
+</div>
+
+<div class="reference">
+
+<div class="reference-title">
 
 Receipt Number
 
 </div>
 
-<div class="reference">
+<div class="reference-number">
 
 ${transaction.reference}
 
@@ -324,10 +314,6 @@ ${transaction.reference}
 ${date}
 
 </div>
-
-</div>
-
-<div class="section" style="text-align:center">
 
 <div class="status">
 
@@ -355,80 +341,44 @@ Payment Summary
 
 <div class="summary">
 
-<div class="summary-row">
+<div class="row">
 
-<div class="summary-label">
+<div class="label">Transaction Amount</div>
 
-Transaction Amount
-
-</div>
-
-<div class="summary-value">
-
-${amount}
+<div class="value">${amount}</div>
 
 </div>
 
-</div>
+<div class="row">
 
-<div class="summary-row">
+<div class="label">Processing Fee</div>
 
-<div class="summary-label">
-
-Processing Fee
+<div class="value">${processingFee}</div>
 
 </div>
 
-<div class="summary-value">
+<div class="row">
 
-${processingFee}
+<div class="label">VAT</div>
 
-</div>
-
-</div>
-
-<div class="summary-row">
-
-<div class="summary-label">
-
-VAT
+<div class="value">${vat}</div>
 
 </div>
 
-<div class="summary-value">
+<div class="row">
 
-${vat}
+<div class="label">Currency</div>
 
-</div>
-
-</div>
-
-<div class="summary-row">
-
-<div class="summary-label">
-
-Currency
+<div class="value">${transaction.currency ?? "NGN"}</div>
 
 </div>
 
-<div class="summary-value">
+<div class="row">
 
-${transaction.currency ?? "NGN"}
-
-</div>
-
-</div>
-
-<div class="summary-row">
-
-<div class="summary-label">
-
-Payment Status
-
-</div>
+<div class="label">Payment Status</div>
 
 <div
-class="summary-value"
+class="value"
 style="color:${statusColors[transaction.status]}"
 >
 
@@ -438,19 +388,11 @@ ${transaction.status.toUpperCase()}
 
 </div>
 
-<div class="summary-row total">
+<div class="row total">
 
-<div>
+<div>Total Paid</div>
 
-Total Paid
-
-</div>
-
-<div>
-
-${total}
-
-</div>
+<div>${total}</div>
 
 </div>
 
@@ -470,27 +412,23 @@ Transaction Information
 
 <div class="row">
 
-<div class="label">
+<div class="label">Reference</div>
 
-Reference
-
-</div>
-
-<div class="value">
-
-${transaction.reference}
-
-</div>
+<div class="value">${transaction.reference}</div>
 
 </div>
 
 <div class="row">
 
-<div class="label">
+<div class="label">Customer</div>
 
-Payment Channel
+<div class="value">${transaction.customer}</div>
 
 </div>
+
+<div class="row">
+
+<div class="label">Channel</div>
 
 <div class="value">
 
@@ -502,11 +440,7 @@ ${paymentChannels[transaction.channel]}
 
 <div class="row">
 
-<div class="label">
-
-Transaction Type
-
-</div>
+<div class="label">Transaction Type</div>
 
 <div class="value">
 
@@ -518,30 +452,7 @@ ${transaction.type === "credit" ? "Credit" : "Debit"}
 
 <div class="row">
 
-<div class="label">
-
-Status
-
-</div>
-
-<div
-class="value"
-style="color:${statusColors[transaction.status]}"
->
-
-${transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-
-</div>
-
-</div>
-
-<div class="row">
-
-<div class="label">
-
-Date & Time
-
-</div>
+<div class="label">Date & Time</div>
 
 <div class="value">
 
@@ -555,37 +466,41 @@ ${date}
 
 <div class="divider"></div>
 
-<div class="section">
+<div class="verify">
 
-<div class="section-title">
+<div class="verify-box">
 
-Customer Information
+<div class="qr">
 
-</div>
-
-<div class="row">
-
-<div class="label">
-
-Customer
+QR CODE
 
 </div>
 
-<div class="value">
+<div class="verify-title">
 
-${transaction.customer}
+Verify this Receipt
+
+</div>
+
+<div class="verify-text">
+
+Use the QR code or visit the URL below to verify this receipt.
+
+</div>
+
+<div class="verify-link">
+
+${receiptUrl}
 
 </div>
 
 </div>
 
 </div>
-
-<div class="divider"></div>
 
 <div class="footer">
 
-Generated by XpressStore Merchant Platform
+Generated securely by XpressStore Merchant Platform
 
 </div>
 

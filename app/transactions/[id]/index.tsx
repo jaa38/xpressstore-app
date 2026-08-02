@@ -16,7 +16,10 @@ import { CustomerInformationSection } from "@/components/transactions/CustomerIn
 import { TransactionTimelineSection } from "@/components/transactions/TransactionTimelineSection";
 import { TransactionReceiptActions } from "@/components/transactions/TransactionReceiptActions";
 
-import * as Sharing from "expo-sharing";
+import {
+  shareReceipt,
+  downloadReceipt,
+} from "@/services/receipt/receiptActions";
 
 export default function TransactionDetailsScreen() {
   const { id } = useLocalSearchParams<{
@@ -25,21 +28,9 @@ export default function TransactionDetailsScreen() {
 
   const { data: transactions = [] } = useTransactions();
 
-  const transaction = transactions.find((item) => item.id === id);
-
-  const handleShareReceipt = async () => {
-    Alert.alert(
-      "Share Receipt",
-      "Receipt sharing will be connected in the next phase."
-    );
-  };
-
-  const handleDownloadReceipt = async () => {
-    Alert.alert(
-      "Download Receipt",
-      "PDF generation will be implemented in the next phase."
-    );
-  };
+  const transaction = transactions.find(
+    (item) => item.id === id
+  );
 
   if (!transaction) {
     return (
@@ -51,10 +42,44 @@ export default function TransactionDetailsScreen() {
           backgroundColor: theme.background.primary,
         }}
       >
-        <AppText>Transaction not found.</AppText>
+        <AppText>
+          Transaction not found.
+        </AppText>
       </SafeAreaView>
     );
   }
+
+  const handleShareReceipt = async () => {
+    try {
+      await shareReceipt(transaction);
+    } catch (error) {
+      Alert.alert(
+        "Unable to Share Receipt",
+        error instanceof Error
+          ? error.message
+          : "Something went wrong."
+      );
+    }
+  };
+
+  const handleDownloadReceipt = async () => {
+    try {
+      const location =
+        await downloadReceipt(transaction);
+
+      Alert.alert(
+        "Receipt Saved",
+        `Receipt saved to:\n\n${location}`
+      );
+    } catch (error) {
+      Alert.alert(
+        "Download Failed",
+        error instanceof Error
+          ? error.message
+          : "Unable to save receipt."
+      );
+    }
+  };
 
   return (
     <SafeAreaView
@@ -71,8 +96,6 @@ export default function TransactionDetailsScreen() {
           paddingHorizontal: spacing.lg,
         }}
       >
-        {/* Header */}
-
         <View
           style={{
             flexDirection: "row",
@@ -101,9 +124,14 @@ export default function TransactionDetailsScreen() {
               flex: 1,
             }}
           >
-            <AppText variant="h1">Transaction</AppText>
+            <AppText variant="h1">
+              Transaction
+            </AppText>
 
-            <AppText variant="body" color="secondary">
+            <AppText
+              variant="body"
+              color="secondary"
+            >
               Receipt Details
             </AppText>
           </View>
@@ -118,13 +146,21 @@ export default function TransactionDetailsScreen() {
             paddingBottom: spacing["3xl"],
           }}
         >
-          <TransactionSummarySection transaction={transaction} />
+          <TransactionSummarySection
+            transaction={transaction}
+          />
 
-          <CustomerInformationSection transaction={transaction} />
+          <CustomerInformationSection
+            transaction={transaction}
+          />
 
-          <TransactionInformationSection transaction={transaction} />
+          <TransactionInformationSection
+            transaction={transaction}
+          />
 
-          <TransactionTimelineSection transaction={transaction} />
+          <TransactionTimelineSection
+            transaction={transaction}
+          />
 
           <TransactionReceiptActions
             transaction={transaction}

@@ -96,16 +96,10 @@ export function DashboardStatsCard({
               gap: spacing.lg,
             }}
           >
-            <DashboardMetric
-              label={metric.label}
-              value={metric.value}
-            />
+            <DashboardMetric label={metric.label} value={metric.value} />
 
             {index < metrics.length - 1 && (
-              <Divider
-                orientation="vertical"
-                length={32}
-              />
+              <Divider orientation="vertical" length={32} />
             )}
           </View>
         ))}

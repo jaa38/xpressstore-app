@@ -154,16 +154,16 @@ export default function HomeScreen() {
               trend={`${stats.growth}%`}
               metrics={[
                 {
-                  label: "This Week",
-                  value: formatCurrency(stats.weekRevenue, stats.currency),
+                  label: "Today",
+                  value: formatCurrency(stats.todayRevenue, stats.currency),
                 },
                 {
-                  label: "Orders",
+                  label: "Transactions",
                   value: stats.orders.toString(),
                 },
                 {
-                  label: "New Clients",
-                  value: stats.newCustomers.toString(),
+                  label: "Pending",
+                  value: "5", // Replace with stats.pendingTransactions when available
                 },
               ]}
             />

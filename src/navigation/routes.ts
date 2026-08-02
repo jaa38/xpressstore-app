@@ -69,6 +69,8 @@ export const ROUTES = {
 
   TRANSACTIONS: "/(tabs)/more/transactions",
 
+  TRANSACTION_DETAILS: "/transactions/[id]",
+
   SETTLEMENTS: "/(tabs)/more/settlements",
 
   CUSTOMERS: "/(tabs)/more/customers",
@@ -125,7 +127,7 @@ export const ROUTES = {
   // Create a Customer
   ADD_CUSTOMER: "/customers/add/information",
 
-CUSTOMER_DETAILS: "/more/customers/view/[id]",
+  CUSTOMER_DETAILS: "/more/customers/view/[id]",
 
   ADD_CUSTOMER_INFORMATION: "/customers/add/information",
   ADD_CUSTOMER_ADDRESS: "/customers/add/address",
@@ -135,3 +137,6 @@ export const getProductDetailsRoute = (id: string) => `/product/${id}` as const;
 
 export const getCustomerDetailsRoute = (id: string) =>
   `/more/customers/view/${id}` as const;
+
+export const getTransactionDetailsRoute = (id: string) =>
+  `/transactions/${id}` as const;

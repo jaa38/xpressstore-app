@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
@@ -11,13 +11,15 @@ import { PaymentChannel, Transaction } from "@/types/transaction";
 import { formatCurrency } from "@/utils/formatters/currency";
 import { formatDateTime } from "@/utils/formatters/date";
 
+import { router } from "expo-router";
+
+import { getTransactionDetailsRoute } from "@/navigation/routes";
+
 interface TransactionListItemProps {
   transaction: Transaction;
 }
 
-export function TransactionListItem({
-  transaction,
-}: TransactionListItemProps) {
+export function TransactionListItem({ transaction }: TransactionListItemProps) {
   const paymentChannelIcons: Record<
     PaymentChannel,
     React.ComponentProps<typeof Ionicons>["name"]
@@ -63,11 +65,13 @@ export function TransactionListItem({
   } as const;
 
   return (
-    <View
-      style={{
+    <Pressable
+      onPress={() => router.push(getTransactionDetailsRoute(transaction.id))}
+      style={({ pressed }) => ({
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.md,
-      }}
+        opacity: pressed ? 0.7 : 1,
+      })}
     >
       <View
         style={{
@@ -107,16 +111,9 @@ export function TransactionListItem({
               {transactionStatusLabels[transaction.status]}
             </AppText>
 
-            <Divider
-              orientation="vertical"
-              variant="strong"
-              length={12}
-            />
+            <Divider orientation="vertical" variant="strong" length={12} />
 
-            <AppText
-              variant="bodySmall"
-              color="secondary"
-            >
+            <AppText variant="bodySmall" color="secondary">
               {formatDateTime(new Date(transaction.createdAt))}
             </AppText>
           </View>
@@ -140,14 +137,11 @@ export function TransactionListItem({
             })}
           </AppText>
 
-          <AppText
-            variant="bodySmall"
-            color="secondary"
-          >
+          <AppText variant="bodySmall" color="secondary">
             {transaction.reference}
           </AppText>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }

@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,6 +14,9 @@ import { TransactionSummarySection } from "@/components/transactions/Transaction
 import { TransactionInformationSection } from "@/components/transactions/TransactionInformationSection";
 import { CustomerInformationSection } from "@/components/transactions/CustomerInformationSection";
 import { TransactionTimelineSection } from "@/components/transactions/TransactionTimelineSection";
+import { TransactionReceiptActions } from "@/components/transactions/TransactionReceiptActions";
+
+import * as Sharing from "expo-sharing";
 
 export default function TransactionDetailsScreen() {
   const { id } = useLocalSearchParams<{
@@ -23,6 +26,20 @@ export default function TransactionDetailsScreen() {
   const { data: transactions = [] } = useTransactions();
 
   const transaction = transactions.find((item) => item.id === id);
+
+  const handleShareReceipt = async () => {
+    Alert.alert(
+      "Share Receipt",
+      "Receipt sharing will be connected in the next phase."
+    );
+  };
+
+  const handleDownloadReceipt = async () => {
+    Alert.alert(
+      "Download Receipt",
+      "PDF generation will be implemented in the next phase."
+    );
+  };
 
   if (!transaction) {
     return (
@@ -108,6 +125,12 @@ export default function TransactionDetailsScreen() {
           <TransactionInformationSection transaction={transaction} />
 
           <TransactionTimelineSection transaction={transaction} />
+
+          <TransactionReceiptActions
+            transaction={transaction}
+            onShare={handleShareReceipt}
+            onDownload={handleDownloadReceipt}
+          />
         </ScrollView>
       </View>
     </SafeAreaView>

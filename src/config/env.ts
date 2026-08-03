@@ -1,40 +1,31 @@
 export const ENV = {
-  /**
-   * App
-   */
   APP_NAME: "XpressStore",
 
   ENVIRONMENT: "development",
 
   /**
-   * Xpress API
+   * Authentication Server
    */
-  API_BASE_URL:
-    "https://api.xpresspayments.com",
+  AUTH_BASE_URL: "https://sso.xpresspayments.com:2503/api/v2/",
 
-  API_VERSION: "v1",
-
-  API_TIMEOUT: 30000,
+  /**
+   * API Gateway
+   */
+  API_BASE_URL: "https://api.myxpresspay.com/api/",
 
   /**
    * GraphQL
    */
-  GRAPHQL_ENDPOINT:
-    "https://api.xpresspayments.com/graphql",
+  GRAPHQL_ENDPOINT: "https://myxpresspay.com:7015/",
 
-  /**
-   * Authentication
-   */
+  API_TIMEOUT: 30000,
+
   TOKEN_STORAGE_KEY: "xpress_access_token",
 
-  REFRESH_TOKEN_STORAGE_KEY:
-    "xpress_refresh_token",
+  REFRESH_TOKEN_STORAGE_KEY: "xpress_refresh_token",
 
   USER_STORAGE_KEY: "xpress_user",
 
-  /**
-   * Feature Flags
-   */
   ENABLE_API_LOGGING: true,
 
   ENABLE_NETWORK_LOGGING: true,

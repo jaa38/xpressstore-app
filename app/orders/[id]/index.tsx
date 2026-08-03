@@ -11,13 +11,10 @@ import { spacing, theme } from "@/theme";
 import { useOrders } from "@/hooks/products/useOrders";
 
 import { OrderSummarySection } from "@/components/orders/OrderSummarySection";
-
 import { CustomerInformationSection } from "@/components/orders/CustomerInformationSection";
-
 import { OrderItemsSection } from "@/components/orders/OrderItemsSection";
-
+import { OrderTotalsSection } from "@/components/orders/OrderTotalsSection";
 import { PaymentInformationSection } from "@/components/orders/PaymentInformationSection";
-
 import { OrderTimelineSection } from "@/components/orders/OrderTimelineSection";
 
 export default function OrderDetailsScreen() {
@@ -114,13 +111,20 @@ export default function OrderDetailsScreen() {
               flex: 1,
             }}
           >
-            <AppText variant="h1">Order</AppText>
+            <AppText variant="h1">
+              Order
+            </AppText>
 
-            <AppText variant="body" color="secondary">
+            <AppText
+              variant="body"
+              color="secondary"
+            >
               Order Details
             </AppText>
           </View>
         </View>
+
+        {/* Content */}
 
         <ScrollView
           style={{
@@ -131,15 +135,41 @@ export default function OrderDetailsScreen() {
             paddingBottom: spacing["3xl"],
           }}
         >
-          <OrderSummarySection order={order} />
+          {/* Summary */}
 
-          <CustomerInformationSection order={order} />
+          <OrderSummarySection
+            order={order}
+          />
 
-          <OrderItemsSection order={order} />
+          {/* Customer */}
 
-          <PaymentInformationSection order={order} />
+          <CustomerInformationSection
+            order={order}
+          />
 
-          <OrderTimelineSection order={order} />
+          {/* Items */}
+
+          <OrderItemsSection
+            order={order}
+          />
+
+          {/* Totals */}
+
+          <OrderTotalsSection
+            order={order}
+          />
+
+          {/* Payment */}
+
+          <PaymentInformationSection
+            order={order}
+          />
+
+          {/* Timeline */}
+
+          <OrderTimelineSection
+            order={order}
+          />
         </ScrollView>
       </View>
     </SafeAreaView>

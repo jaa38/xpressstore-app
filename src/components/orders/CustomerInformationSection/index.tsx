@@ -2,8 +2,8 @@ import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Card } from "@/components/ui/Card";
-import { AppText } from "@/components/ui/AppText";
 import { Divider } from "@/components/ui/Divider";
+import { AppText } from "@/components/ui/AppText";
 
 import { spacing, theme } from "@/theme";
 
@@ -13,31 +13,40 @@ interface Props {
   order: Order;
 }
 
-export function CustomerInformationSection({ order }: Props) {
+export function CustomerInformationSection({
+  order,
+}: Props) {
   const rows: {
     label: string;
     value: string;
     icon: React.ComponentProps<typeof Ionicons>["name"];
   }[] = [
     {
-      label: "Customer",
+      label: "Customer Name",
       value: order.customerName,
       icon: "person-outline",
     },
     {
       label: "Phone Number",
-      value: order.customerPhone,
+      value: "Not Available",
       icon: "call-outline",
     },
-  ];
-
-  if (order.customerEmail) {
-    rows.push({
+    {
       label: "Email Address",
-      value: order.customerEmail,
+      value: "Not Available",
       icon: "mail-outline",
-    });
-  }
+    },
+    {
+      label: "Items Purchased",
+      value: `${order.items.length}`,
+      icon: "bag-handle-outline",
+    },
+    {
+      label: "Order Reference",
+      value: order.reference,
+      icon: "document-text-outline",
+    },
+  ];
 
   return (
     <Card
@@ -48,12 +57,16 @@ export function CustomerInformationSection({ order }: Props) {
         overflow: "hidden",
       }}
     >
+      {/* Header */}
+
       <View
         style={{
           padding: spacing.lg,
         }}
       >
-        <AppText variant="h3">Customer Information</AppText>
+        <AppText variant="h3">
+          Customer Information
+        </AppText>
       </View>
 
       <Divider />
@@ -75,7 +88,8 @@ export function CustomerInformationSection({ order }: Props) {
                 borderRadius: 999,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: theme.icon.default.background,
+                backgroundColor:
+                  theme.icon.default.background,
               }}
             >
               <Ionicons
@@ -91,7 +105,10 @@ export function CustomerInformationSection({ order }: Props) {
                 marginLeft: spacing.md,
               }}
             >
-              <AppText variant="bodySmall" color="secondary">
+              <AppText
+                variant="bodySmall"
+                color="secondary"
+              >
                 {row.label}
               </AppText>
 
@@ -106,7 +123,9 @@ export function CustomerInformationSection({ order }: Props) {
             </View>
           </View>
 
-          {index < rows.length - 1 && <Divider />}
+          {index < rows.length - 1 && (
+            <Divider />
+          )}
         </View>
       ))}
     </Card>

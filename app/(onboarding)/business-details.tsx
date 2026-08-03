@@ -225,8 +225,6 @@ export default function BusinessDetailsScreen() {
             )}
           />
 
-          
-
           <Controller
             control={control}
             name="businessCategory"

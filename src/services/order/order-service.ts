@@ -1,28 +1,46 @@
 import type { Order } from "@/types/order";
 import { supabase } from "../supabase/client";
 
-// For Supabase
+// -----------------------------------------------------------------------------
+// Supabase Implementation
+// -----------------------------------------------------------------------------
 
 // export async function getOrders(): Promise<Order[]> {
 //   const { data, error } = await supabase
 //     .from("orders")
-//     .select("*");
-//     // .order("created_at", { ascending: false });
+//     .select("*")
+//     .order("created_at", { ascending: false });
 
-//   if (error) throw error;
+//   if (error) {
+//     throw error;
+//   }
 
-//   return data;
+//   return data as Order[];
 // }
 
-// For testing purposes, we can return a static list of orders.
-// In a real application, you would fetch this data from your backend or database.
+// -----------------------------------------------------------------------------
+// Mock Implementation
+// -----------------------------------------------------------------------------
 
 export async function getOrders(): Promise<Order[]> {
   const orders: Order[] = [
     {
       id: "1",
+
       reference: "XP-12345",
+
       customerName: "Nancy Drew",
+
+      customerPhone: "+1 555-0101",
+
+      customerEmail: "nancy@example.com",
+
+      deliveryAddress: {
+        street: "12 Admiralty Way",
+        city: "Lekki Phase 1",
+        state: "Lagos",
+        country: "Nigeria",
+      },
 
       items: [
         {
@@ -36,17 +54,45 @@ export async function getOrders(): Promise<Order[]> {
       ],
 
       total: 20,
+
       currency: "USD",
 
       paymentChannel: "card",
+
       status: "paid",
+
+      statusHistory: [
+        {
+          id: "history-1-1",
+          status: "paid",
+          createdAt: "2026-07-17T10:24:00Z",
+          updatedBy: "System",
+          note: "Payment received successfully.",
+        },
+      ],
+
       createdAt: "2026-07-17T10:24:00Z",
+
+      updatedAt: "2026-07-17T10:24:00Z",
     },
 
     {
       id: "2",
+
       reference: "XP-12346",
+
       customerName: "John Smith",
+
+      customerPhone: "+1 555-0102",
+
+      customerEmail: "john@example.com",
+
+      deliveryAddress: {
+        street: "45 Allen Avenue",
+        city: "Ikeja",
+        state: "Lagos",
+        country: "Nigeria",
+      },
 
       items: [
         {
@@ -60,17 +106,52 @@ export async function getOrders(): Promise<Order[]> {
       ],
 
       total: 45,
+
       currency: "USD",
 
       paymentChannel: "bankTransfer",
+
       status: "returned",
+
+      statusHistory: [
+        {
+          id: "history-2-1",
+          status: "paid",
+          createdAt: "2026-07-17T09:40:00Z",
+          updatedBy: "System",
+          note: "Payment completed.",
+        },
+        {
+          id: "history-2-2",
+          status: "returned",
+          createdAt: "2026-07-18T11:10:00Z",
+          updatedBy: "Merchant",
+          note: "Customer returned the order.",
+        },
+      ],
+
       createdAt: "2026-07-17T09:40:00Z",
+
+      updatedAt: "2026-07-18T11:10:00Z",
     },
 
     {
       id: "3",
+
       reference: "XP-12347",
+
       customerName: "Sarah Johnson",
+
+      customerPhone: "+1 555-0103",
+
+      customerEmail: "sarah@example.com",
+
+      deliveryAddress: {
+        street: "18 Herbert Macaulay Way",
+        city: "Yaba",
+        state: "Lagos",
+        country: "Nigeria",
+      },
 
       items: [
         {
@@ -84,17 +165,45 @@ export async function getOrders(): Promise<Order[]> {
       ],
 
       total: 18,
+
       currency: "USD",
 
       paymentChannel: "bank",
+
       status: "failed",
+
+      statusHistory: [
+        {
+          id: "history-3-1",
+          status: "failed",
+          createdAt: "2026-07-16T17:08:00Z",
+          updatedBy: "System",
+          note: "Payment authorization failed.",
+        },
+      ],
+
       createdAt: "2026-07-16T17:05:00Z",
+
+      updatedAt: "2026-07-16T17:08:00Z",
     },
 
     {
       id: "4",
+
       reference: "XP-12348",
+
       customerName: "Michael Brown",
+
+      customerPhone: "+1 555-0104",
+
+      customerEmail: "michael@example.com",
+
+      deliveryAddress: {
+        street: "8 Gana Street",
+        city: "Maitama",
+        state: "FCT Abuja",
+        country: "Nigeria",
+      },
 
       items: [
         {
@@ -108,15 +217,39 @@ export async function getOrders(): Promise<Order[]> {
       ],
 
       total: 60,
+
       currency: "USD",
 
       paymentChannel: "nqr",
+
       status: "delivered",
+
+      statusHistory: [
+        {
+          id: "history-4-1",
+          status: "paid",
+          createdAt: "2026-07-16T14:30:00Z",
+          updatedBy: "System",
+          note: "Payment completed.",
+        },
+        {
+          id: "history-4-2",
+          status: "delivered",
+          createdAt: "2026-07-17T09:00:00Z",
+          updatedBy: "Delivery Agent",
+          note: "Order delivered successfully.",
+        },
+      ],
+
       createdAt: "2026-07-16T14:30:00Z",
+
+      updatedAt: "2026-07-17T09:00:00Z",
     },
   ];
 
-  return orders.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  return [...orders].sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() -
+      new Date(a.createdAt).getTime()
   );
 }

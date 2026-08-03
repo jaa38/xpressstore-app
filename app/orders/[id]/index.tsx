@@ -1,7 +1,13 @@
-import { Pressable, ScrollView, View } from "react-native";
+import { useEffect, useState } from "react";
+
+import { Alert, Pressable, ScrollView, View } from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
+
 import { StatusBar } from "expo-status-bar";
+
 import { Ionicons } from "@expo/vector-icons";
+
 import { router, useLocalSearchParams } from "expo-router";
 
 import { AppText } from "@/components/ui/AppText";
@@ -9,13 +15,20 @@ import { AppText } from "@/components/ui/AppText";
 import { spacing, theme } from "@/theme";
 
 import { useOrders } from "@/hooks/products/useOrders";
+import { useUpdateOrderStatus } from "@/hooks/orders/useUpdateOrderStatus";
+
+import { Order } from "@/types/order";
 
 import { OrderSummarySection } from "@/components/orders/OrderSummarySection";
+import { OrderStatusCard } from "@/components/orders/OrderStatusCard";
 import { CustomerInformationSection } from "@/components/orders/CustomerInformationSection";
 import { OrderItemsSection } from "@/components/orders/OrderItemsSection";
 import { OrderTotalsSection } from "@/components/orders/OrderTotalsSection";
 import { PaymentInformationSection } from "@/components/orders/PaymentInformationSection";
 import { OrderTimelineSection } from "@/components/orders/OrderTimelineSection";
+import { OrderStatusHistorySection } from "@/components/orders/OrderStatusHistorySection";
+
+import { UpdateOrderStatusBottomSheet } from "@/components/bottom-sheet/UpdateOrderStatusBottomSheet";
 
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams<{
@@ -24,9 +37,24 @@ export default function OrderDetailsScreen() {
 
   const { data: orders = [] } = useOrders();
 
-  const order = orders.find((item) => item.id === id);
+  const foundOrder = orders.find((item) => item.id === id);
 
-  if (!order) {
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(
+    foundOrder ?? null
+  );
+
+  const [statusBottomSheetVisible, setStatusBottomSheetVisible] =
+    useState(false);
+
+  const updateStatus = useUpdateOrderStatus();
+
+  useEffect(() => {
+    if (foundOrder) {
+      setCurrentOrder(foundOrder);
+    }
+  }, [foundOrder]);
+
+  if (!currentOrder) {
     return (
       <SafeAreaView
         style={{
@@ -64,6 +92,38 @@ export default function OrderDetailsScreen() {
         </AppText>
       </SafeAreaView>
     );
+  }
+
+  const order = currentOrder;
+
+  async function handleUpdateStatus(status: Order["status"]) {
+    try {
+      await updateStatus.mutateAsync({
+        orderId: order.id,
+        status,
+      });
+
+      setCurrentOrder((previous) => {
+        if (!previous) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          status,
+          updatedAt: new Date().toISOString(),
+        };
+      });
+
+      setStatusBottomSheetVisible(false);
+
+      Alert.alert("Success", "Order status updated successfully.");
+    } catch (error) {
+      Alert.alert(
+        "Unable to Update Order",
+        error instanceof Error ? error.message : "Something went wrong."
+      );
+    }
   }
 
   return (
@@ -111,20 +171,13 @@ export default function OrderDetailsScreen() {
               flex: 1,
             }}
           >
-            <AppText variant="h1">
-              Order
-            </AppText>
+            <AppText variant="h1">Order</AppText>
 
-            <AppText
-              variant="body"
-              color="secondary"
-            >
+            <AppText variant="body" color="secondary">
               Order Details
             </AppText>
           </View>
         </View>
-
-        {/* Content */}
 
         <ScrollView
           style={{
@@ -135,43 +188,34 @@ export default function OrderDetailsScreen() {
             paddingBottom: spacing["3xl"],
           }}
         >
-          {/* Summary */}
+          <OrderSummarySection order={order} />
 
-          <OrderSummarySection
+          <CustomerInformationSection order={order} />
+
+          <OrderStatusCard
             order={order}
+            onUpdateStatus={() => setStatusBottomSheetVisible(true)}
           />
 
-          {/* Customer */}
+          <OrderItemsSection order={order} />
 
-          <CustomerInformationSection
-            order={order}
-          />
+          <OrderTotalsSection order={order} />
 
-          {/* Items */}
+          <PaymentInformationSection order={order} />
 
-          <OrderItemsSection
-            order={order}
-          />
+          <OrderTimelineSection order={order} />
 
-          {/* Totals */}
-
-          <OrderTotalsSection
-            order={order}
-          />
-
-          {/* Payment */}
-
-          <PaymentInformationSection
-            order={order}
-          />
-
-          {/* Timeline */}
-
-          <OrderTimelineSection
-            order={order}
-          />
+          <OrderStatusHistorySection order={order} />
         </ScrollView>
       </View>
+
+      <UpdateOrderStatusBottomSheet
+        visible={statusBottomSheetVisible}
+        order={order}
+        loading={updateStatus.isPending}
+        onClose={() => setStatusBottomSheetVisible(false)}
+        onUpdateStatus={handleUpdateStatus}
+      />
     </SafeAreaView>
   );
 }

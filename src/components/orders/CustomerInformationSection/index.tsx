@@ -13,27 +13,34 @@ interface Props {
   order: Order;
 }
 
-export function CustomerInformationSection({
-  order,
-}: Props) {
+export function CustomerInformationSection({ order }: Props) {
   const rows: {
     label: string;
     value: string;
     icon: React.ComponentProps<typeof Ionicons>["name"];
   }[] = [
     {
-      label: "Customer Name",
-      value: order.customerName,
-      icon: "person-outline",
+      label: "Delivery Address",
+      value: order.deliveryAddress
+        ? [
+            order.deliveryAddress.street,
+            order.deliveryAddress.city,
+            order.deliveryAddress.state,
+            order.deliveryAddress.country,
+          ]
+            .filter(Boolean)
+            .join(", ")
+        : "Address not available",
+      icon: "location-outline",
     },
     {
       label: "Phone Number",
-      value: "Not Available",
+      value: order.customerPhone ?? "Not Available",
       icon: "call-outline",
     },
     {
       label: "Email Address",
-      value: "Not Available",
+      value: order.customerEmail ?? "Not Available",
       icon: "mail-outline",
     },
     {
@@ -64,9 +71,7 @@ export function CustomerInformationSection({
           padding: spacing.lg,
         }}
       >
-        <AppText variant="h3">
-          Customer Information
-        </AppText>
+        <AppText variant="h3">Customer Information</AppText>
       </View>
 
       <Divider />
@@ -88,8 +93,7 @@ export function CustomerInformationSection({
                 borderRadius: 999,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor:
-                  theme.icon.default.background,
+                backgroundColor: theme.icon.default.background,
               }}
             >
               <Ionicons
@@ -105,10 +109,7 @@ export function CustomerInformationSection({
                 marginLeft: spacing.md,
               }}
             >
-              <AppText
-                variant="bodySmall"
-                color="secondary"
-              >
+              <AppText variant="bodySmall" color="secondary">
                 {row.label}
               </AppText>
 
@@ -123,9 +124,7 @@ export function CustomerInformationSection({
             </View>
           </View>
 
-          {index < rows.length - 1 && (
-            <Divider />
-          )}
+          {index < rows.length - 1 && <Divider />}
         </View>
       ))}
     </Card>

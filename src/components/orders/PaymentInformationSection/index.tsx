@@ -7,6 +7,9 @@ import { AppText } from "@/components/ui/AppText";
 
 import { spacing, theme } from "@/theme";
 
+import { ORDER_STATUS } from "@/constants/orderStatus";
+import { PAYMENT_CHANNEL_ICONS } from "@/types/payment";
+
 import { Order } from "@/types/order";
 
 import { formatOrderDate } from "@/utils/formatOrderDate";
@@ -18,46 +21,26 @@ interface Props {
 export function PaymentInformationSection({
   order,
 }: Props) {
+  const status =
+    ORDER_STATUS[order.status];
+
   const paymentChannelLabels: Record<
     Order["paymentChannel"],
     string
   > = {
     bank: "Bank",
     card: "Card",
-    nqr: "NQR",
     bankTransfer: "Bank Transfer",
+    nqr: "NQR",
     ussd: "USSD",
-  };
-
-  const paymentChannelIcons: Record<
-    Order["paymentChannel"],
-    React.ComponentProps<typeof Ionicons>["name"]
-  > = {
-    bank: "business-outline",
-    card: "card-outline",
-    nqr: "qr-code-outline",
-    bankTransfer: "swap-horizontal-outline",
-    ussd: "keypad-outline",
-  };
-
-  const statusLabels = {
-    paid: "Paid",
-    delivered: "Delivered",
-    returned: "Returned",
-    failed: "Failed",
-  };
-
-  const statusColors = {
-    paid: theme.text.success,
-    delivered: theme.text.success,
-    returned: theme.text.warning,
-    failed: theme.text.error,
   };
 
   const rows: {
     label: string;
     value: string;
-    icon: React.ComponentProps<typeof Ionicons>["name"];
+    icon: React.ComponentProps<
+      typeof Ionicons
+    >["name"];
     valueColor?: string;
   }[] = [
     {
@@ -67,21 +50,20 @@ export function PaymentInformationSection({
     },
     {
       label: "Payment Channel",
-      value: paymentChannelLabels[order.paymentChannel],
-      icon: paymentChannelIcons[order.paymentChannel],
+      value:
+        paymentChannelLabels[
+          order.paymentChannel
+        ],
+      icon:
+        PAYMENT_CHANNEL_ICONS[
+          order.paymentChannel
+        ],
     },
     {
       label: "Status",
-      value: statusLabels[order.status],
-      icon:
-        order.status === "paid"
-          ? "checkmark-circle-outline"
-          : order.status === "delivered"
-            ? "cube-outline"
-            : order.status === "returned"
-              ? "return-up-back-outline"
-              : "close-circle-outline",
-      valueColor: statusColors[order.status],
+      value: status.label,
+      icon: status.icon,
+      valueColor: status.textColor,
     },
     {
       label: "Currency",
@@ -90,7 +72,9 @@ export function PaymentInformationSection({
     },
     {
       label: "Date",
-      value: formatOrderDate(order.createdAt),
+      value: formatOrderDate(
+        order.createdAt
+      ),
       icon: "calendar-outline",
     },
   ];
@@ -104,6 +88,8 @@ export function PaymentInformationSection({
         overflow: "hidden",
       }}
     >
+      {/* Header */}
+
       <View
         style={{
           padding: spacing.lg,
@@ -122,32 +108,46 @@ export function PaymentInformationSection({
             style={{
               flexDirection: "row",
               alignItems: "center",
-              paddingHorizontal: spacing.lg,
-              paddingVertical: spacing.md,
+              paddingHorizontal:
+                spacing.lg,
+              paddingVertical:
+                spacing.md,
             }}
           >
             <View
               style={{
                 width: 42,
                 height: 42,
+
                 borderRadius: 999,
-                justifyContent: "center",
+
+                justifyContent:
+                  "center",
+
                 alignItems: "center",
+
                 backgroundColor:
-                  theme.icon.default.background,
+                  theme.icon.default
+                    .background,
               }}
             >
               <Ionicons
                 name={row.icon}
                 size={20}
-                color={theme.icon.default.icon}
+                color={
+                  row.label === "Status"
+                    ? status.iconColor
+                    : theme.icon.default
+                        .icon
+                }
               />
             </View>
 
             <View
               style={{
                 flex: 1,
-                marginLeft: spacing.md,
+                marginLeft:
+                  spacing.md,
               }}
             >
               <AppText
@@ -160,8 +160,11 @@ export function PaymentInformationSection({
               <AppText
                 variant="bodyBold"
                 style={{
-                  marginTop: spacing.xs,
-                  color: row.valueColor,
+                  marginTop:
+                    spacing.xs,
+
+                  color:
+                    row.valueColor,
                 }}
               >
                 {row.value}
@@ -169,7 +172,8 @@ export function PaymentInformationSection({
             </View>
           </View>
 
-          {index < rows.length - 1 && (
+          {index <
+            rows.length - 1 && (
             <Divider />
           )}
         </View>

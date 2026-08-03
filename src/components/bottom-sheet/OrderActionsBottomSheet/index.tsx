@@ -162,7 +162,7 @@ export function OrderActionsBottomSheet({
         />
       </BottomSheetSection>
 
-      <BottomSheetSection title="Payments">
+      {/* <BottomSheetSection title="Payments">
         <OrderActionItem
           title="Refund Payment"
           subtitle="Available after backend integration"
@@ -171,7 +171,7 @@ export function OrderActionsBottomSheet({
           disabled
           showDivider={false}
         />
-      </BottomSheetSection>
+      </BottomSheetSection> */}
     </BottomSheet>
   );
 }

@@ -449,11 +449,12 @@ export default function OrdersScreen() {
                         </AppText>
 
                         <AppText
-                          color={
-                            order.status === "paid"
-                              ? "success"
-                              : status!.amountColor
-                          }
+                          style={{
+                            color:
+                              order.status === "paid"
+                                ? theme.text.success
+                                : status!.textColor,
+                          }}
                           variant="bodyLargeBold"
                         >
                           {formatCurrency(order.total, {

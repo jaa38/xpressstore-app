@@ -2,11 +2,21 @@ import type { PaymentChannel } from "./payment";
 import type { Currency } from "./currency";
 import type { OrderItem } from "./orderItem";
 
+import type { OrderStatusHistory } from "./orderStatusHistory";
+
 export type OrderStatus =
   | "delivered"
   | "returned"
   | "failed"
   | "paid";
+
+export interface DeliveryAddress {
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode?: string;
+}
 
 export interface Order {
   id: string;
@@ -19,6 +29,8 @@ export interface Order {
 
   customerEmail?: string;
 
+  deliveryAddress?: DeliveryAddress;
+
   total: number;
 
   currency: Currency;
@@ -30,4 +42,8 @@ export interface Order {
   status: OrderStatus;
 
   createdAt: string;
+
+  updatedAt?: string;
+
+  statusHistory: OrderStatusHistory[];
 }

@@ -1,7 +1,7 @@
 /**
- * --------------------------------------------------------------------------
+ * -----------------------------------------------------------------------------
  * Login
- * --------------------------------------------------------------------------
+ * -----------------------------------------------------------------------------
  */
 
 export interface LoginRequest {
@@ -10,24 +10,26 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
-  accessToken: string;
+export interface LoginToken {
+  jwtToken: string;
 
   refreshToken: string;
 
-  expiresIn: number;
-
-  user: AuthUser;
+  tokenExpireOn: string;
 }
 
-/**
- * --------------------------------------------------------------------------
- * Register
- * --------------------------------------------------------------------------
- */
+export interface MerchantDetails {
+  merchantId: string;
 
-export interface RegisterRequest {
+  businessName: string;
+
+  bvn?: string;
+}
+
+export interface AuthUser {
   firstName: string;
+
+  middleName?: string;
 
   lastName: string;
 
@@ -35,13 +37,41 @@ export interface RegisterRequest {
 
   phoneNumber: string;
 
-  password: string;
+  roleName: string;
+
+  isEmailVerified: boolean;
+
+  isMerchantuserAdmin: boolean;
+
+  merchantDetails: MerchantDetails;
+}
+
+export interface LoginResponse {
+  token: LoginToken;
+
+  data: AuthUser;
 }
 
 /**
- * --------------------------------------------------------------------------
+ * -----------------------------------------------------------------------------
+ * Register
+ * -----------------------------------------------------------------------------
+ */
+
+export interface RegisterRequest {
+  email: string;
+
+  firstName: string;
+
+  lastName: string;
+
+  phoneNumber: string;
+}
+
+/**
+ * -----------------------------------------------------------------------------
  * Verify Email
- * --------------------------------------------------------------------------
+ * -----------------------------------------------------------------------------
  */
 
 export interface VerifyOtpRequest {
@@ -50,10 +80,30 @@ export interface VerifyOtpRequest {
   otp: string;
 }
 
+export interface VerifyOtpResponse {
+  token: LoginToken;
+
+  data: AuthUser;
+}
+
 /**
- * --------------------------------------------------------------------------
+ * -----------------------------------------------------------------------------
+ * Update Password
+ * -----------------------------------------------------------------------------
+ */
+
+export interface UpdatePasswordRequest {
+  email: string;
+
+  password: string;
+
+  confirmPassword: string;
+}
+
+/**
+ * -----------------------------------------------------------------------------
  * Forgot Password
- * --------------------------------------------------------------------------
+ * -----------------------------------------------------------------------------
  */
 
 export interface ForgotPasswordRequest {
@@ -61,39 +111,31 @@ export interface ForgotPasswordRequest {
 }
 
 /**
- * --------------------------------------------------------------------------
+ * -----------------------------------------------------------------------------
  * Change Password
- * --------------------------------------------------------------------------
+ * -----------------------------------------------------------------------------
  */
 
 export interface ChangePasswordRequest {
-  currentPassword: string;
+  oldPassword: string;
 
   newPassword: string;
-
-  confirmPassword: string;
 }
 
 /**
- * --------------------------------------------------------------------------
- * Authenticated User
- * --------------------------------------------------------------------------
+ * -----------------------------------------------------------------------------
+ * Merchant Business Details
+ * -----------------------------------------------------------------------------
  */
 
-export interface AuthUser {
-  id: string;
+export interface UpdateBusinessDetailsRequest {
+  merchantId: string;
 
-  merchantId?: string;
+  businessName: string;
 
-  firstName: string;
+  tradingName: string;
 
-  lastName: string;
+  businessEmail: string;
 
-  email: string;
-
-  phoneNumber?: string;
-
-  businessName?: string;
-
-  isEmailVerified?: boolean;
+  businessPhoneNumber: string;
 }

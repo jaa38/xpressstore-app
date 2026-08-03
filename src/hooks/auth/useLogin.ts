@@ -2,10 +2,12 @@ import { useMutation } from "@tanstack/react-query";
 
 import { authService } from "@/services/auth/authService";
 
+import { mapLoginResponse } from "@/services/auth/authMapper";
+
 import {
   saveAccessToken,
-  saveRefreshToken,
   saveCurrentUser,
+  saveRefreshToken,
 } from "@/storage/authStorage";
 
 import { LoginRequest } from "@/types/auth";
@@ -13,17 +15,27 @@ import { LoginRequest } from "@/types/auth";
 export function useLogin() {
   return useMutation({
     mutationFn: async (payload: LoginRequest) => {
+      /**
+       * Call Xpress Login API
+       */
       const response = await authService.login(payload);
 
-      const { accessToken, refreshToken, user } = response.data;
+      /**
+       * Convert API response into
+       * application session.
+       */
+      const session = mapLoginResponse(response.data);
 
-      await saveAccessToken(accessToken);
+      /**
+       * Persist session.
+       */
+      await saveAccessToken(session.accessToken);
 
-      await saveRefreshToken(refreshToken);
+      await saveRefreshToken(session.refreshToken);
 
-      await saveCurrentUser(user);
+      await saveCurrentUser(session.user);
 
-      return response.data;
+      return session;
     },
   });
 }

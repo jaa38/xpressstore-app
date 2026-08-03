@@ -1,27 +1,27 @@
 /**
  * -----------------------------------------------------------------------------
- * Generic API Response
+ * Standard Xpress API Response
  * -----------------------------------------------------------------------------
  */
 
 export interface ApiResponse<T> {
-  succeeded: boolean;
+  responseCode: string;
 
-  message: string;
+  responseMessage: string;
 
   data: T;
 }
 
 /**
  * -----------------------------------------------------------------------------
- * Paginated API Response
+ * Paginated Response
  * -----------------------------------------------------------------------------
  */
 
 export interface PaginatedResponse<T> {
-  succeeded: boolean;
+  responseCode: string;
 
-  message: string;
+  responseMessage: string;
 
   data: T[];
 
@@ -41,18 +41,16 @@ export interface PaginatedResponse<T> {
  */
 
 export interface ApiError {
-  succeeded: false;
+  responseCode: string;
 
-  message: string;
+  responseMessage: string;
 
   errors?: string[];
-
-  statusCode?: number;
 }
 
 /**
  * -----------------------------------------------------------------------------
- * Pagination Request
+ * Pagination
  * -----------------------------------------------------------------------------
  */
 
@@ -62,106 +60,4 @@ export interface PaginationParams {
   pageSize?: number;
 
   search?: string;
-}
-
-/**
- * -----------------------------------------------------------------------------
- * Authentication
- * -----------------------------------------------------------------------------
- */
-
-export interface AuthTokens {
-  accessToken: string;
-
-  refreshToken: string;
-
-  expiresIn: number;
-}
-
-/**
- * -----------------------------------------------------------------------------
- * Logged In User
- * -----------------------------------------------------------------------------
- */
-
-export interface AuthenticatedUser {
-  id: string;
-
-  email: string;
-
-  firstName: string;
-
-  lastName: string;
-
-  phoneNumber?: string;
-
-  merchantId?: string;
-
-  businessName?: string;
-}
-
-/**
- * -----------------------------------------------------------------------------
- * Login Request
- * -----------------------------------------------------------------------------
- */
-
-export interface LoginRequest {
-  email: string;
-
-  password: string;
-}
-
-/**
- * -----------------------------------------------------------------------------
- * Register Request
- * -----------------------------------------------------------------------------
- */
-
-export interface RegisterRequest {
-  firstName: string;
-
-  lastName: string;
-
-  email: string;
-
-  phoneNumber: string;
-
-  password: string;
-}
-
-/**
- * -----------------------------------------------------------------------------
- * OTP Verification
- * -----------------------------------------------------------------------------
- */
-
-export interface VerifyOtpRequest {
-  email: string;
-
-  otp: string;
-}
-
-/**
- * -----------------------------------------------------------------------------
- * Forgot Password
- * -----------------------------------------------------------------------------
- */
-
-export interface ForgotPasswordRequest {
-  email: string;
-}
-
-/**
- * -----------------------------------------------------------------------------
- * Change Password
- * -----------------------------------------------------------------------------
- */
-
-export interface ChangePasswordRequest {
-  currentPassword: string;
-
-  newPassword: string;
-
-  confirmPassword: string;
 }

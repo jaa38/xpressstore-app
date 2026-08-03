@@ -1,25 +1,40 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  View,
+} from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
+
 import { StatusBar } from "expo-status-bar";
+
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+
+import {
+  router,
+  useLocalSearchParams,
+} from "expo-router";
+
 import { WebView } from "react-native-webview";
 
 import { AppText } from "@/components/ui/AppText";
 
-import { spacing, theme, radius } from "@/theme";
+import { ReceiptHeader } from "@/components/receipt/ReceiptHeader";
+import { ReceiptActionButton } from "@/components/receipt/ReceiptActionButton";
+
+import { spacing, theme } from "@/theme";
 
 import { useOrders } from "@/hooks/products/useOrders";
 
 import { generateReceipt } from "@/services/receipt/generateReceipt";
 import { receiptFromOrder } from "@/services/receipt/receiptFromOrder";
+
 import {
   downloadOrderReceipt,
   shareOrderReceipt,
 } from "@/services/receipt/orderReceiptActions";
-
-import { ReceiptActionButton } from "@/components/receipt/ReceiptActionButton";
 
 export default function OrderReceiptScreen() {
   const { id } = useLocalSearchParams<{
@@ -28,11 +43,21 @@ export default function OrderReceiptScreen() {
 
   const { data: orders = [] } = useOrders();
 
-  const order = orders.find((item) => item.id === id);
+  const order = orders.find(
+    (item) => item.id === id
+  );
 
-  const [receiptUri, setReceiptUri] = useState<string>();
+  const [receiptUri, setReceiptUri] =
+    useState<string>();
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
+
+  const [sharing, setSharing] =
+    useState(false);
+
+  const [downloading, setDownloading] =
+    useState(false);
 
   useEffect(() => {
     async function loadReceipt() {
@@ -41,15 +66,19 @@ export default function OrderReceiptScreen() {
       }
 
       try {
-        const receipt = receiptFromOrder(order);
+        const receipt =
+          receiptFromOrder(order);
 
-        const generatedReceipt = await generateReceipt(receipt);
+        const generatedReceipt =
+          await generateReceipt(receipt);
 
         setReceiptUri(generatedReceipt.uri);
       } catch (error) {
         Alert.alert(
           "Unable to Generate Receipt",
-          error instanceof Error ? error.message : "Something went wrong."
+          error instanceof Error
+            ? error.message
+            : "Something went wrong."
         );
       } finally {
         setLoading(false);
@@ -66,7 +95,8 @@ export default function OrderReceiptScreen() {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: theme.background.primary,
+          backgroundColor:
+            theme.background.primary,
         }}
       >
         <Ionicons
@@ -93,7 +123,8 @@ export default function OrderReceiptScreen() {
             paddingHorizontal: spacing.xl,
           }}
         >
-          The requested receipt could not be generated.
+          The requested receipt could not be
+          generated.
         </AppText>
       </SafeAreaView>
     );
@@ -103,7 +134,8 @@ export default function OrderReceiptScreen() {
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: theme.background.primary,
+        backgroundColor:
+          theme.background.primary,
       }}
     >
       <StatusBar style="auto" />
@@ -116,6 +148,7 @@ export default function OrderReceiptScreen() {
           alignItems: "center",
           gap: spacing.md,
           paddingHorizontal: spacing.lg,
+          paddingTop: spacing.sm,
         }}
       >
         <Pressable
@@ -127,7 +160,11 @@ export default function OrderReceiptScreen() {
             alignItems: "center",
           }}
         >
-          <Ionicons name="chevron-back" size={24} color={theme.text.primary} />
+          <Ionicons
+            name="chevron-back"
+            size={24}
+            color={theme.text.primary}
+          />
         </Pressable>
 
         <View
@@ -135,20 +172,32 @@ export default function OrderReceiptScreen() {
             flex: 1,
           }}
         >
-          <AppText variant="h1">Receipt</AppText>
+          <AppText variant="h1">
+            Receipt
+          </AppText>
 
-          <AppText variant="body" color="secondary">
-            Preview Receipt
+          <AppText
+            variant="body"
+            color="secondary"
+          >
+            Receipt Preview
           </AppText>
         </View>
       </View>
 
-      {/* Preview */}
+      {/* Receipt Header */}
+
+      <ReceiptHeader order={order} />
+
+      {/* PDF */}
 
       <View
         style={{
           flex: 1,
-          marginTop: spacing.md,
+          marginHorizontal: spacing.lg,
+          marginBottom: spacing.lg,
+          overflow: "hidden",
+          borderRadius: 16,
         }}
       >
         {loading ? (
@@ -159,7 +208,10 @@ export default function OrderReceiptScreen() {
               alignItems: "center",
             }}
           >
-            <ActivityIndicator size="large" color={theme.icon.branding.icon} />
+            <ActivityIndicator
+              size="large"
+              color={theme.icon.branding.icon}
+            />
 
             <AppText
               color="secondary"
@@ -179,7 +231,30 @@ export default function OrderReceiptScreen() {
               flex: 1,
             }}
           />
-        ) : null}
+        ) : (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Ionicons
+              name="warning-outline"
+              size={48}
+              color={theme.icon.warning.icon}
+            />
+
+            <AppText
+              variant="bodyLargeBold"
+              style={{
+                marginTop: spacing.md,
+              }}
+            >
+              Receipt unavailable
+            </AppText>
+          </View>
+        )}
       </View>
 
       {/* Actions */}
@@ -188,27 +263,63 @@ export default function OrderReceiptScreen() {
         style={{
           flexDirection: "row",
           gap: spacing.md,
-          padding: spacing.lg,
+          paddingHorizontal: spacing.lg,
+          paddingBottom: spacing.lg,
         }}
       >
         <ReceiptActionButton
           icon="print-outline"
           title="Print"
           onPress={() => {
-            // Next phase
+            Alert.alert(
+              "Coming Soon",
+              "Printing will be added next."
+            );
           }}
         />
 
         <ReceiptActionButton
           icon="download-outline"
           title="Download"
-          onPress={() => downloadOrderReceipt(order)}
+          loading={downloading}
+          onPress={async () => {
+            try {
+              setDownloading(true);
+
+              await downloadOrderReceipt(order);
+            } catch (error) {
+              Alert.alert(
+                "Unable to Download",
+                error instanceof Error
+                  ? error.message
+                  : "Something went wrong."
+              );
+            } finally {
+              setDownloading(false);
+            }
+          }}
         />
 
         <ReceiptActionButton
           icon="share-social-outline"
           title="Share"
-          onPress={() => shareOrderReceipt(order)}
+          loading={sharing}
+          onPress={async () => {
+            try {
+              setSharing(true);
+
+              await shareOrderReceipt(order);
+            } catch (error) {
+              Alert.alert(
+                "Unable to Share",
+                error instanceof Error
+                  ? error.message
+                  : "Something went wrong."
+              );
+            } finally {
+              setSharing(false);
+            }
+          }}
         />
       </View>
     </SafeAreaView>

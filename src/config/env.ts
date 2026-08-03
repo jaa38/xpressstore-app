@@ -1,7 +1,41 @@
 export const ENV = {
-  SUPABASE_URL:
-    "https://uivnxmxgcqwvrtpubfmx.supabase.co",
+  /**
+   * App
+   */
+  APP_NAME: "XpressStore",
 
-  SUPABASE_ANON_KEY:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpdm54bXhnY3F3dnJ0cHViZm14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzQ3NTYsImV4cCI6MjA5NTQ1MDc1Nn0.0knxks6aGvTwyzro9nKHfe6u-_B_MGB5Eho9VSlIIdo",
-};
+  ENVIRONMENT: "development",
+
+  /**
+   * Xpress API
+   */
+  API_BASE_URL:
+    "https://api.xpresspayments.com",
+
+  API_VERSION: "v1",
+
+  API_TIMEOUT: 30000,
+
+  /**
+   * GraphQL
+   */
+  GRAPHQL_ENDPOINT:
+    "https://api.xpresspayments.com/graphql",
+
+  /**
+   * Authentication
+   */
+  TOKEN_STORAGE_KEY: "xpress_access_token",
+
+  REFRESH_TOKEN_STORAGE_KEY:
+    "xpress_refresh_token",
+
+  USER_STORAGE_KEY: "xpress_user",
+
+  /**
+   * Feature Flags
+   */
+  ENABLE_API_LOGGING: true,
+
+  ENABLE_NETWORK_LOGGING: true,
+} as const;

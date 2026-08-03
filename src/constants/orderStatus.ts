@@ -1,38 +1,81 @@
-import type { Ionicons } from "@expo/vector-icons";
-
-import type { OrderStatus } from "@/types/order";
-
-import type { Color } from "@/components/ui/AppText";
+import { Ionicons } from "@expo/vector-icons";
 
 import { theme } from "@/theme";
 
-type OrderStatusConfig = {
-  icon: React.ComponentProps<typeof Ionicons>["name"];
-
-  iconColor: string;
-
-  amountColor: Color;
-};
+import { OrderStatus } from "@/types/order";
 
 export const ORDER_STATUS: Record<
-  Exclude<OrderStatus, "paid">,
-  OrderStatusConfig
+  OrderStatus,
+  {
+    label: string;
+    icon: React.ComponentProps<
+      typeof Ionicons
+    >["name"];
+
+    background: string;
+
+    textColor: string;
+
+    iconColor: string;
+  }
 > = {
-  delivered: {
+  paid: {
+    label: "Paid",
+
     icon: "checkmark-circle",
-    iconColor: theme.icon.success.icon,
-    amountColor: "success",
+
+    background:
+      theme.state.success.background,
+
+    textColor:
+      theme.text.success,
+
+    iconColor:
+      theme.icon.success.icon,
+  },
+
+  delivered: {
+    label: "Delivered",
+
+    icon: "cube",
+
+    background:
+      theme.state.success.background,
+
+    textColor:
+      theme.text.success,
+
+    iconColor:
+      theme.icon.success.icon,
   },
 
   returned: {
-    icon: "return-down-back",
-    iconColor: theme.orderStatus.returned.text,
-    amountColor: "returned",
+    label: "Returned",
+
+    icon: "return-up-back",
+
+    background:
+      theme.state.warning.background,
+
+    textColor:
+      theme.text.warning,
+
+    iconColor:
+      theme.icon.warning.icon,
   },
 
   failed: {
-    icon: "close-circle-outline",
-    iconColor: theme.orderStatus.failed.text,
-    amountColor: "error",
+    label: "Failed",
+
+    icon: "close-circle",
+
+    background:
+      theme.state.error.background,
+
+    textColor:
+      theme.text.error,
+
+    iconColor:
+      theme.icon.error.icon,
   },
 };

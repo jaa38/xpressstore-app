@@ -4,6 +4,7 @@ import { Receipt } from "@/types/receipt";
 
 import { receiptTemplate } from "./receiptTemplate";
 import { getReceiptVerification } from "./receiptVerification";
+import { generateReceiptQrCode } from "./receiptQrCode";
 
 export interface GeneratedReceipt {
   uri: string;
@@ -21,7 +22,10 @@ export async function generateReceipt(
    * This will be replaced with a generated
    * Base64 QR code in a later phase.
    */
-  const qrCodeDataUri = "";
+  const qrCodeDataUri =
+    await generateReceiptQrCode(
+        verification.verificationUrl
+    );
 
   const html = receiptTemplate(
     receipt,

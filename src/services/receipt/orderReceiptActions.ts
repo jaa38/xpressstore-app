@@ -6,21 +6,17 @@ import { Order } from "@/types/order";
 import { generateReceipt } from "./generateReceipt";
 import { receiptFromOrder } from "./receiptFromOrder";
 
-export async function shareOrderReceipt(
-  order: Order
-) {
+import * as Print from "expo-print";
+
+export async function shareOrderReceipt(order: Order) {
   const receipt = receiptFromOrder(order);
 
-  const generatedReceipt =
-    await generateReceipt(receipt);
+  const generatedReceipt = await generateReceipt(receipt);
 
-  const available =
-    await Sharing.isAvailableAsync();
+  const available = await Sharing.isAvailableAsync();
 
   if (!available) {
-    throw new Error(
-      "Sharing is not available on this device."
-    );
+    throw new Error("Sharing is not available on this device.");
   }
 
   await Sharing.shareAsync(generatedReceipt.uri, {
@@ -30,13 +26,10 @@ export async function shareOrderReceipt(
   });
 }
 
-export async function downloadOrderReceipt(
-  order: Order
-) {
+export async function downloadOrderReceipt(order: Order) {
   const receipt = receiptFromOrder(order);
 
-  const generatedReceipt =
-    await generateReceipt(receipt);
+  const generatedReceipt = await generateReceipt(receipt);
 
   const fileName = `Order-${order.reference}.pdf`;
 
@@ -49,10 +42,7 @@ export async function downloadOrderReceipt(
     directory.create();
   }
 
-  const destination = new FileSystem.File(
-    directory,
-    fileName
-  );
+  const destination = new FileSystem.File(directory, fileName);
 
   await FileSystem.copyAsync({
     from: generatedReceipt.uri,
@@ -62,13 +52,12 @@ export async function downloadOrderReceipt(
   return destination.uri;
 }
 
-export async function printOrderReceipt(
-  order: Order
-) {
+export async function printOrderReceipt(order: Order) {
   const receipt = receiptFromOrder(order);
 
-  const generatedReceipt =
-    await generateReceipt(receipt);
+  const generatedReceipt = await generateReceipt(receipt);
 
-  return generatedReceipt.uri;
+  await Print.printAsync({
+    uri: generatedReceipt.uri,
+  });
 }

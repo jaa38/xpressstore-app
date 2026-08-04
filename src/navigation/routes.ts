@@ -22,6 +22,8 @@ export const ROUTES = {
   // Step 4
   BIOMETRIC_VERIFICATION: "/(onboarding)/biometric-verification",
 
+  DOCUMENT_UPLOAD: "/(onboarding)/document-upload",
+
   /**
    * AUTH
    */
@@ -143,5 +145,4 @@ export const getCustomerDetailsRoute = (id: string) =>
 export const getTransactionDetailsRoute = (id: string) =>
   `/transactions/${id}` as const;
 
-export const getOrderDetailsRoute = (id: string) =>
-  `/orders/${id}` as const;
+export const getOrderDetailsRoute = (id: string) => `/orders/${id}` as const;

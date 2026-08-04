@@ -1,4 +1,4 @@
-import { Pressable, View, ScrollView } from "react-native";
+import { Pressable, View, ScrollView, Alert } from "react-native";
 
 import { Link, router } from "expo-router";
 
@@ -14,87 +14,54 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { AppText } from "@/components/ui/AppText";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { PhoneNumberInput } from "@/components/ui/PhoneInput";
 
 import { radius, spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { validatePhoneNumber, formatPhoneNumber } from "@/utils/phone";
+import { useOnboardingStore } from "@/store/onboarding/onboardingStore";
 
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 
-import { createUserProfile } from "@/api/auth/profile-api";
+import { useVerifyBVN } from "@/hooks/kyc/useVerifyBVN";
 
 type IdVerificationForm = {
   idType: string;
 
   idNumber: string;
-
-  fullName: string;
-
-  phoneNumber: string;
-
-  countryCode: string;
-
-  dateOfBirth: Date | null;
 };
 
 export default function IdVerificationScreen() {
-  const { control, handleSubmit, watch, setValue } =
-    useForm<IdVerificationForm>({
-      defaultValues: {
-        idType: "",
+  const { control, handleSubmit, watch } = useForm<IdVerificationForm>({
+    defaultValues: {
+      idType: "bvn",
 
-        idNumber: "",
+      idNumber: "",
+    },
+  });
 
-        fullName: "",
+  const { idNumber, idType } = watch();
 
-        phoneNumber: "",
+  const isValid = idType.length > 0 && idNumber.length === 11;
 
-        countryCode: "NG",
+  const { setBVN, setVerifiedBVN } = useOnboardingStore();
 
-        dateOfBirth: null,
-      },
-    });
-
-  const values = watch();
-
-  const isPhoneValid = validatePhoneNumber(
-    values.phoneNumber,
-    values.countryCode
-  );
-
-  const isValid = Boolean(
-    values.fullName.trim() &&
-    values.dateOfBirth &&
-    values.idType &&
-    values.idNumber.trim() &&
-    values.idNumber.length === 11 &&
-    isPhoneValid
-  );
+  const verifyBVN = useVerifyBVN();
 
   async function onSubmit(data: IdVerificationForm) {
-    const response = await createUserProfile({
-      fullName: data.fullName,
+    try {
+      const response = await verifyBVN.mutateAsync({
+        bvn: data.idNumber,
+      });
 
-      phoneNumber: formatPhoneNumber(data.phoneNumber, data.countryCode),
+      setBVN(data.idNumber);
 
-      dateOfBirth: data.dateOfBirth!,
+      setVerifiedBVN(response.data);
 
-      idType: data.idType,
-
-      idNumber: data.idNumber,
-    });
-
-    if (response.error) {
-      console.log(response.error);
-
-      return;
+      router.push(ROUTES.DOCUMENT_UPLOAD);
+    } catch (error) {
+      Alert.alert("Verification Failed", "Unable to verify your identity.");
     }
-
-    router.push(ROUTES.BIOMETRIC_VERIFICATION);
   }
 
   return (
@@ -230,55 +197,6 @@ export default function IdVerificationScreen() {
               gap: spacing.md,
             }}
           >
-            <Controller
-              control={control}
-              name="fullName"
-              render={({ field: { value, onChange } }) => (
-                <Input
-                  label="Full Name (as on ID)"
-                  placeholder="Enter full name"
-                  value={value}
-                  onChangeText={onChange}
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="dateOfBirth"
-              render={({ field: { value, onChange } }) => (
-                <DatePicker
-                  label="Date of Birth"
-                  placeholder="Select Date of Birth"
-                  value={value ?? undefined}
-                  onChange={onChange}
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="phoneNumber"
-              render={({ field: { value, onChange } }) => (
-                <PhoneNumberInput
-                  label="Phone Number"
-                  value={value}
-                  onChangeText={onChange}
-                  countryCode={watch("countryCode") || "NG"}
-                  onCountryCodeChange={(code) =>
-                    setValue("countryCode", code, {
-                      shouldValidate: true,
-                    })
-                  }
-                  error={
-                    value && !validatePhoneNumber(value, watch("countryCode"))
-                      ? "Invalid phone number"
-                      : undefined
-                  }
-                />
-              )}
-            />
-
             <Controller
               control={control}
               name="idType"

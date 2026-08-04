@@ -3,11 +3,11 @@ export interface VerifyBVNRequest {
 }
 
 export interface BVNDetails {
+  bvn: string;
+
   firstName: string;
 
   lastName: string;
-
-  middleName?: string;
 
   dateOfBirth: string;
 
@@ -19,7 +19,7 @@ export interface BusinessVerificationRequest {
 }
 
 export interface BusinessVerification {
-  businessName: string;
+  companyName: string;
 
   rcNumber: string;
 
@@ -29,17 +29,35 @@ export interface BusinessVerification {
 }
 
 export interface MerchantKycRequest {
-  kycTierId: number;
+  merchantId: string;
+
+  kycTierId: string;
 
   documentType: string;
 
-  documentNumber: string;
-
   documentUrl: string;
+
+  bvn?: string;
 }
 
 export interface UploadDocumentResponse {
-  fileName: string;
+  filename: string;
 
-  fileUrl: string;
+  url: string;
+}
+
+export interface MerchantKyc {
+  merchantKycId: number;
+
+  merchantId: number;
+
+  kycTierId: number;
+
+  status: string;
+
+  remarks?: string;
+
+  createdAt: string;
+
+  updatedAt?: string;
 }

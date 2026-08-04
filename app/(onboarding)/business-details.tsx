@@ -22,10 +22,10 @@ import { spacing, theme } from "@/theme";
 import { ROUTES } from "@/navigation/routes";
 import { useState } from "react";
 
-import { useBusinessCategories } from "@/features/business/hooks/use-business-categories";
-
 import { useUpdateBusinessDetails } from "@/hooks/merchant/useUpdateBusinessDetails";
 import { useUpdateBusinessType } from "@/hooks/merchant/useUpdateBusinessType";
+
+import { useBusinessCategories } from "@/hooks/lookup/useBusinessCategories";
 
 type BusinessDetailsForm = {
   businessType: string;
@@ -248,8 +248,8 @@ export default function BusinessDetailsScreen() {
                 }
                 value={value}
                 options={categories.map((category) => ({
-                  label: category.name,
-                  value: category.id,
+                  label: category.categoryName,
+                  value: String(category.businessCategoryId),
                 }))}
                 onSelect={onChange}
               />

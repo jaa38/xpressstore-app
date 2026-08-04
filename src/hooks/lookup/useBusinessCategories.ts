@@ -1,21 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getBusinessCategories } from "../../../api/business/business-api";
+import { lookupService } from "@/services/lookup/lookupService";
 
 export function useBusinessCategories() {
   const query = useQuery({
     queryKey: ["business-categories"],
-    queryFn: getBusinessCategories,
+
+    queryFn: () => lookupService.getBusinessCategories(),
   });
 
-  console.log(
-    "React Query Categories:",
-    query.data
-  );
-
   return {
-    categories: query.data ?? [],
+    categories: query.data?.data ?? [],
+
     isLoading: query.isLoading,
+
     error: query.error,
+
+    refetch: query.refetch,
   };
 }

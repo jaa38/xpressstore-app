@@ -15,7 +15,11 @@ import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { OTPInput } from "@/components/ui/OTPInput";
 
-import { verifyEmailOtp, resendEmailOtp } from "@/features/auth/api/otp-api";
+import { useVerifyEmailOtp } from "@/hooks/auth/useVerifyEmailOtp";
+
+import { useResendOtp } from "@/hooks/auth/useResendOtp";
+
+import { getApiErrorMessage } from "@/api/errors";
 
 import { spacing, theme } from "@/theme";
 
@@ -28,9 +32,9 @@ export default function EmailVerificationScreen() {
 
   const [verificationCode, setVerificationCode] = useState("");
 
-  const [loading, setLoading] = useState(false);
+  const verifyEmailOtp = useVerifyEmailOtp();
 
-  const [resending, setResending] = useState(false);
+  const resendOtp = useResendOtp();
 
   function handleVerify(code: string) {
     setVerificationCode(code);
@@ -38,21 +42,10 @@ export default function EmailVerificationScreen() {
 
   async function handleSubmitOTP() {
     try {
-      setLoading(true);
-
-      console.log("Email:", email);
-
-      console.log("Verification Code:", verificationCode);
-
-      const response = await verifyEmailOtp(email, verificationCode);
-
-      console.log("Verify Response:", JSON.stringify(response, null, 2));
-
-      if (response.error) {
-        Alert.alert("Verification Failed", response.error.message);
-
-        return;
-      }
+      await verifyEmailOtp.mutateAsync({
+        email,
+        otp: verificationCode,
+      });
 
       Alert.alert(
         "Email Verified",
@@ -61,33 +54,17 @@ export default function EmailVerificationScreen() {
 
       router.replace(ROUTES.BUSINESS_DETAILS);
     } catch (error) {
-      console.log("OTP Verification Error:", error);
-
-      Alert.alert("Error", "Something went wrong.");
-    } finally {
-      setLoading(false);
+      Alert.alert("Verification Failed", getApiErrorMessage(error));
     }
   }
 
   async function handleResendOTP() {
     try {
-      setResending(true);
-
-      const response = await resendEmailOtp(email);
-
-      if (response.error) {
-        Alert.alert("Failed", response.error.message);
-
-        return;
-      }
+      await resendOtp.mutateAsync(email);
 
       Alert.alert("Success", "Verification code sent.");
     } catch (error) {
-      console.log(error);
-
-      Alert.alert("Error", "Unable to resend code.");
-    } finally {
-      setResending(false);
+      Alert.alert("Unable to Resend", getApiErrorMessage(error));
     }
   }
 
@@ -225,9 +202,12 @@ export default function EmailVerificationScreen() {
                   </AppText>
                 </View>
 
-                <Pressable disabled={resending} onPress={handleResendOTP}>
+                <Pressable
+                  disabled={resendOtp.isPending}
+                  onPress={handleResendOTP}
+                >
                   <AppText variant="bodyBold" color="link">
-                    {resending ? "Sending..." : "Resend OTP"}
+                    {resendOtp.isPending ? "Sending..." : "Resend OTP"}
                   </AppText>
                 </Pressable>
               </View>
@@ -242,10 +222,12 @@ export default function EmailVerificationScreen() {
             }}
           >
             <Button
-              title={loading ? "Verifying..." : "Verify Email"}
+              title={verifyEmailOtp.isPending ? "Verifying..." : "Verify Email"}
               variant="primary"
               size="large"
-              disabled={verificationCode.length !== 8 || loading}
+              disabled={
+                verificationCode.length !== 8 || verifyEmailOtp.isPending
+              }
               onPress={handleSubmitOTP}
             />
           </View>

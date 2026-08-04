@@ -15,17 +15,13 @@ export const API_ENDPOINTS = {
 
     forgotPassword: "/StoreFront/ForgotPassword",
 
-    changePassword:
-      "/Account/ChangePasswordMobile",
+    changePassword: "/Account/ChangePasswordMobile",
 
-    fetchUser:
-      "/Merchants/FetchStorefrontUser",
+    fetchUser: "/Merchants/FetchStorefrontUser",
 
-    updateBusinessDetails:
-      "/StoreFront/UpdateMerchantBusinessDetails",
+    updateBusinessDetails: "/StoreFront/UpdateMerchantBusinessDetails",
 
-    updateBusinessType:
-      "/StoreFront/UpdateMerchantBusinessType",
+    updateBusinessType: "/StoreFront/UpdateMerchantBusinessType",
   },
 
   /**
@@ -34,29 +30,21 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   kyc: {
-    tiers:
-      "/kycTiers/GetAllkycTiers",
+    tiers: "/kycTiers/GetAllkycTiers",
 
-    requirements:
-      "/KycTiers/GetKycRequirementByKycTier",
+    requirements: "/KycTiers/GetKycRequirementByKycTier",
 
-    create:
-      "/MerchantKyc/CreateMerchantKyc",
+    create: "/MerchantKyc/CreateMerchantKyc",
 
-    createStorefront:
-      "/StoreFront/CreateMerchantKycStoreFront",
+    createStorefront: "/StoreFront/CreateMerchantKycStoreFront",
 
-    merchant:
-      "/MerchantKyc/GetMerchantKycAll",
+    merchant: "/MerchantKyc/GetMerchantKycAll",
 
-    uploadDocument:
-      "/FileUploader/UploadDocument",
+    uploadDocument: "/FileUploader/UploadDocument",
 
-    verifyBVN:
-      "/Validator/GetBVNDetails",
+    verifyBVN: "/Validator/GetBVNDetails",
 
-    businessDetails:
-      "/Validator/GetBusinessDetails",
+    businessDetails: "/Validator/GetBusinessDetails",
   },
 
   /**
@@ -65,8 +53,7 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   dashboard: {
-    summary:
-      "/Store/dashboard",
+    summary: "/Store/dashboard",
   },
 
   /**
@@ -75,20 +62,15 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   stores: {
-    list:
-      "/Store/GetStores",
+    list: "/Store/GetStores",
 
-    details: (storeId: string) =>
-      `/Store/GetStoreById/${storeId}`,
+    details: (storeId: string) => `/Store/GetStoreById/${storeId}`,
 
-    create:
-      "/Store/CreateStore",
+    create: "/Store/CreateStore",
 
-    update:
-      "/Store/UpdateStore",
+    update: "/Store/UpdateStore",
 
-    delete: (storeId: string) =>
-      `/Store/DeleteStore/${storeId}`,
+    delete: (storeId: string) => `/Store/DeleteStore/${storeId}`,
   },
 
   /**
@@ -97,20 +79,15 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   products: {
-    merchant:
-      "/Product/GetMerchantProducts",
+    merchant: "/Product/GetMerchantProducts",
 
-    byStore: (storeId: string) =>
-      `/Product/stores/${storeId}`,
+    byStore: (storeId: string) => `/Product/stores/${storeId}`,
 
-    create:
-      "/Product/CreateProduct",
+    create: "/Product/CreateProduct",
 
-    update:
-      "/Product/UpdateProduct",
+    update: "/Product/UpdateProduct",
 
-    delete: (productId: string) =>
-      `/Product/DeleteProduct/${productId}`,
+    delete: (productId: string) => `/Product/DeleteProduct/${productId}`,
   },
 
   /**
@@ -119,11 +96,9 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   invoices: {
-    merchant:
-      "/Invoices/GetMerchantInvoice",
+    merchant: "/Invoices/GetMerchantInvoice",
 
-    create:
-      "/Invoices/CreateInvoice",
+    create: "/Invoices/CreateInvoice",
   },
 
   /**
@@ -132,17 +107,13 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   paymentPages: {
-    list:
-      "/PaymentPages/GetPaymentPages",
+    list: "/PaymentPages/GetPaymentPages",
 
-    create:
-      "/PaymentPages/CreatePaymentPage",
+    create: "/PaymentPages/CreatePaymentPage",
 
-    update:
-      "/PaymentPages/UpdatePaymentPage",
+    update: "/PaymentPages/UpdatePaymentPage",
 
-    delete: (id: string) =>
-      `/PaymentPages/DeletePaymentPage/${id}`,
+    delete: (id: string) => `/PaymentPages/DeletePaymentPage/${id}`,
   },
 
   /**
@@ -151,25 +122,38 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   merchants: {
-    settlementAccounts:
-      "/Merchants/GetSettlementAccounts",
+    settlementAccounts: "/Merchants/GetSettlementAccounts",
 
-    updateSettlementAccount:
-      "/Merchants/UpdateSettlementAccount",
+    updateSettlementAccount: "/Merchants/UpdateSettlementAccount",
 
-    deleteSettlementAccount: (
-      settlementId: string
-    ) =>
+    deleteSettlementAccount: (settlementId: string) =>
       `/Merchants/DeleteSettlementAccount/${settlementId}`,
 
-    paymentMethods:
-      "/Merchants/payment-methods",
+    paymentMethods: "/Merchants/payment-methods",
 
-    updatePaymentMethod:
-      "/Merchants/UpdatePaymentMethod",
+    updatePaymentMethod: "/Merchants/UpdatePaymentMethod",
 
-    registerPushNotification:
-      "/Merchants/RegisterPushNotification",
+    registerPushNotification: "/Merchants/RegisterPushNotification",
+  },
+
+  auth: {
+    login: "/StoreFront/Login",
+
+    register: "/StoreFront/CreateUserStoreFront",
+
+    verifyEmail: "/StoreFront/VerifyUserEmail",
+
+    resendOtp: "/StoreFront/UpdateUserEmailVerification",
+
+    forgotPassword: "/StoreFront/ForgotPassword",
+
+    changePassword: "/StoreFront/ChangePassword",
+
+    fetchUser: "/StoreFront/GetUser",
+
+    updateBusinessDetails: "/StoreFront/UpdateMerchantBusinessDetails",
+
+    updateBusinessType: "/StoreFront/UpdateMerchantBusinessType",
   },
 
   /**
@@ -178,16 +162,12 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   graphql: {
-    transactions:
-      "storeTransactions",
+    transactions: "storeTransactions",
 
-    transactionSummary:
-      "storeTransactionSummarry",
+    transactionSummary: "storeTransactionSummarry",
 
-    payments:
-      "transactions",
+    payments: "transactions",
 
-    paymentSummary:
-      "transactionSummarry",
+    paymentSummary: "transactionSummarry",
   },
 } as const;

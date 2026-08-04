@@ -157,3 +157,14 @@ export interface UpdateBusinessDetailsRequest {
 
   businessPhoneNumber: string;
 }
+
+
+export interface VerifyEmailOtpRequest {
+  email: string;
+
+  otp: string;
+}
+
+export interface ResendOtpRequest {
+  email: string;
+}

@@ -8,6 +8,10 @@ import {
 
 import { AuthUser } from "@/types/auth";
 
+import { authenticateWithBiometrics } from "@/services/biometrics";
+
+import { isBiometricsEnabled } from "@/services/biometrics/storage";
+
 interface AuthContextValue {
   isAuthenticated: boolean;
 
@@ -15,8 +19,19 @@ interface AuthContextValue {
 
   user: AuthUser | null;
 
-  setUser: React.Dispatch<React.SetStateAction<AuthUser | null>>;
+  /**
+   * Authenticate the current user.
+   */
+  login: (user: AuthUser) => Promise<void>;
 
+  /**
+   * Reload the stored user.
+   */
+  refreshUser: () => Promise<void>;
+
+  /**
+   * Logout the current user.
+   */
   logout: () => Promise<void>;
 }
 
@@ -43,14 +58,38 @@ export function AuthProvider({ children }: Props) {
         return;
       }
 
+      const biometricsEnabled = await isBiometricsEnabled();
+
+      if (biometricsEnabled) {
+        const result = await authenticateWithBiometrics();
+
+        if (!result.success) {
+          await clearSession();
+
+          return;
+        }
+      }
+
       const storedUser = await getCurrentUser<AuthUser>();
 
       if (storedUser) {
         setUser(storedUser);
       }
+    } catch (error) {
+      console.error("Failed to restore session:", error);
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function login(user: AuthUser) {
+    setUser(user);
+  }
+
+  async function refreshUser() {
+    const storedUser = await getCurrentUser<AuthUser>();
+
+    setUser(storedUser);
   }
 
   async function logout() {
@@ -69,7 +108,9 @@ export function AuthProvider({ children }: Props) {
 
       isAuthenticated: user !== null,
 
-      setUser,
+      login,
+
+      refreshUser,
 
       logout,
     }),

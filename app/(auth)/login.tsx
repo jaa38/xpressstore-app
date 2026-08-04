@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useAuth } from "@/providers/AuthProvider";
 
-import { LoginSchema, loginSchema } from "@/features/auth/schemas/login-schema";
+import { LoginSchema, loginSchema } from "@/schemas/login-schema";
 
 import { authenticateWithBiometrics } from "@/services/biometrics";
 

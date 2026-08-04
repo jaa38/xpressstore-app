@@ -1,4 +1,4 @@
-import { Pressable, View, ScrollView } from "react-native";
+import { Pressable, View, ScrollView, Alert } from "react-native";
 
 import { Link, router } from "expo-router";
 
@@ -24,7 +24,8 @@ import { useState } from "react";
 
 import { useBusinessCategories } from "@/features/business/hooks/use-business-categories";
 
-import { useCreateBusiness } from "@/hooks/business/useCreateBusiness";
+import { useUpdateBusinessDetails } from "@/hooks/merchant/useUpdateBusinessDetails";
+import { useUpdateBusinessType } from "@/hooks/merchant/useUpdateBusinessType";
 
 type BusinessDetailsForm = {
   businessType: string;
@@ -60,23 +61,38 @@ export default function BusinessDetailsScreen() {
 
   const { categories, isLoading } = useBusinessCategories();
 
-  const createBusiness = useCreateBusiness();
+  const updateBusinessDetails = useUpdateBusinessDetails();
+
+  const updateBusinessType = useUpdateBusinessType();
 
   async function onSubmit(data: BusinessDetailsForm) {
     try {
-      await createBusiness.mutateAsync({
+      /**
+       * Update merchant business details
+       */
+      await updateBusinessDetails.mutateAsync({
         businessName: data.businessName,
 
-        businessType: data.businessType,
+        businessAddress: data.businessAddress,
 
         businessCategory: data.businessCategory,
+      });
 
-        businessAddress: data.businessAddress,
+      /**
+       * Update merchant business type
+       */
+      await updateBusinessType.mutateAsync({
+        businessType: data.businessType,
       });
 
       router.push(ROUTES.ID_VERIFICATION);
     } catch (error) {
-      console.log("Failed to create business:", error);
+      console.error("Failed to update merchant:", error);
+
+      Alert.alert(
+        "Unable to Continue",
+        "We couldn't save your business information. Please try again."
+      );
     }
   }
 
@@ -249,10 +265,18 @@ export default function BusinessDetailsScreen() {
           }}
         >
           <Button
-            title={createBusiness.isPending ? "Saving..." : "Continue"}
+            title={
+              updateBusinessDetails.isPending || updateBusinessType.isPending
+                ? "Saving..."
+                : "Continue"
+            }
             variant="primary"
             size="large"
-            disabled={!isValid || createBusiness.isPending}
+            disabled={
+              !isValid ||
+              updateBusinessDetails.isPending ||
+              updateBusinessType.isPending
+            }
             onPress={handleSubmit(onSubmit)}
           />
         </View>

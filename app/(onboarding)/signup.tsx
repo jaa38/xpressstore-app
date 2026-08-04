@@ -26,7 +26,7 @@ import { ROUTES } from "@/navigation/routes";
 import {
   signupSchema,
   SignupSchema,
-} from "@/features/auth/schemas/signup-schema";
+} from "@/schemas/signup-schema";
 
 import { signupUser } from "@/features/auth/api/auth-api";
 import { Alert } from "react-native";

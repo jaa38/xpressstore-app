@@ -5,9 +5,9 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   auth: {
-    register: "/StoreFront/CreateUserStoreFront",
-
     login: "/StoreFront/Login",
+
+    register: "/StoreFront/CreateUserStoreFront",
 
     verifyEmail: "/StoreFront/VerifyUserEmail",
 
@@ -15,9 +15,9 @@ export const API_ENDPOINTS = {
 
     forgotPassword: "/StoreFront/ForgotPassword",
 
-    changePassword: "/Account/ChangePasswordMobile",
+    changePassword: "/StoreFront/ChangePassword",
 
-    fetchUser: "/Merchants/FetchStorefrontUser",
+    fetchUser: "/StoreFront/GetUser",
 
     updateBusinessDetails: "/StoreFront/UpdateMerchantBusinessDetails",
 
@@ -134,26 +134,6 @@ export const API_ENDPOINTS = {
     updatePaymentMethod: "/Merchants/UpdatePaymentMethod",
 
     registerPushNotification: "/Merchants/RegisterPushNotification",
-  },
-
-  auth: {
-    login: "/StoreFront/Login",
-
-    register: "/StoreFront/CreateUserStoreFront",
-
-    verifyEmail: "/StoreFront/VerifyUserEmail",
-
-    resendOtp: "/StoreFront/UpdateUserEmailVerification",
-
-    forgotPassword: "/StoreFront/ForgotPassword",
-
-    changePassword: "/StoreFront/ChangePassword",
-
-    fetchUser: "/StoreFront/GetUser",
-
-    updateBusinessDetails: "/StoreFront/UpdateMerchantBusinessDetails",
-
-    updateBusinessType: "/StoreFront/UpdateMerchantBusinessType",
   },
 
   /**

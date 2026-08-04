@@ -9,8 +9,9 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { registerInterceptors } from "@/api/interceptors";
 
 import { AppProvider } from "@/providers/app-provider";
-import { ToastProvider } from "@/providers/toast-provider";
+import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryProvider } from "@/providers/query-provider";
+import { ToastProvider } from "@/providers/toast-provider";
 
 import { ProductProvider } from "@/store/product/ProductProvider";
 
@@ -28,17 +29,19 @@ export default function RootLayout() {
     >
       <BottomSheetModalProvider>
         <AppProvider>
-          <QueryProvider>
-            <ToastProvider>
-              <ProductProvider>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                  }}
-                />
-              </ProductProvider>
-            </ToastProvider>
-          </QueryProvider>
+          <AuthProvider>
+            <QueryProvider>
+              <ToastProvider>
+                <ProductProvider>
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                    }}
+                  />
+                </ProductProvider>
+              </ToastProvider>
+            </QueryProvider>
+          </AuthProvider>
         </AppProvider>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

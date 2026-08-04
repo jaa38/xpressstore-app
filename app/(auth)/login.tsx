@@ -14,8 +14,6 @@ import { Controller, useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { loginUser } from "@/features/auth/api/auth-api";
-
 import { useAuthStore } from "@/features/auth/store/auth-store";
 
 import { LoginSchema, loginSchema } from "@/features/auth/schemas/login-schema";
@@ -32,11 +30,15 @@ import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { hasValidSession } from "@/features/auth/services/session";
+import { getAccessToken } from "@/storage/authStorage";
 
 import { getBiometricEmail } from "@/services/biometrics/user";
 
 import { saveBiometricEmail } from "@/services/biometrics/user";
+
+import { useLogin } from "@/hooks/auth/useLogin";
+
+import { getApiErrorMessage } from "@/api/errors";
 
 export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
@@ -50,6 +52,8 @@ export default function LoginScreen() {
   const setUser = useAuthStore((state) => state.setUser);
 
   const [biometricEmail, setBiometricEmail] = useState("");
+
+  const login = useLogin();
 
   useEffect(() => {
     checkBiometrics();
@@ -84,13 +88,14 @@ export default function LoginScreen() {
       // ✅ Ask Supabase directly — never a stale, separately-stored copy.
       // If autoRefreshToken silently rotated the token in the background,
       // this always reflects the current, valid state.
-      const sessionIsValid = await hasValidSession();
+      const token = await getAccessToken();
 
-      if (!sessionIsValid) {
+      if (!token) {
         Alert.alert(
           "Session Expired",
           "Please sign in with your email and password."
         );
+
         return;
       }
 
@@ -122,28 +127,20 @@ export default function LoginScreen() {
   // ─── UPDATED onSubmit — remove manual token saving ───────────────────────
   async function onSubmit(data: LoginSchema) {
     try {
-      const response = await loginUser(data.email, data.password);
+      const session = await login.mutateAsync({
+        email: data.email,
+        password: data.password,
+      });
 
-      if (response.error) {
-        console.log(response.error.message);
-        return;
-      }
+      await saveBiometricEmail(data.email);
 
-      if (response.data.user && response.data.session) {
-        // ❌ REMOVED — Supabase already persisted this session automatically
-        // await saveAccessToken(response.data.session.access_token);
-        // await saveRefreshToken(response.data.session.refresh_token);
+      setAuthenticated(true);
 
-        // ✅ Still needed — this is app-specific (which email to greet on
-        // the biometric prompt), not session data Supabase manages.
-        await saveBiometricEmail(data.email);
+      setUser(session.user);
 
-        setAuthenticated(true);
-        setUser(response.data.user);
-        router.replace(ROUTES.TABS);
-      }
+      router.replace(ROUTES.TABS);
     } catch (error) {
-      console.log("Login Error:", error);
+      Alert.alert("Login Failed", getApiErrorMessage(error));
     }
   }
 
@@ -361,10 +358,10 @@ export default function LoginScreen() {
             }}
           >
             <Button
-              title="Log In"
+              title={login.isPending ? "Signing In..." : "Log In"}
               variant="primary"
               size="large"
-              disabled={!isValid}
+              disabled={!isValid || login.isPending}
               onPress={handleSubmit(onSubmit)}
             />
 

@@ -23,6 +23,12 @@ export interface MerchantDetails {
 
   businessName: string;
 
+  tradingName?: string;
+
+  businessEmail?: string;
+
+  businessPhoneNumber?: string;
+
   bvn?: string;
 }
 
@@ -41,7 +47,7 @@ export interface AuthUser {
 
   isEmailVerified: boolean;
 
-  isMerchantuserAdmin: boolean;
+  isMerchantUserAdmin: boolean;
 
   merchantDetails: MerchantDetails;
 }
@@ -52,6 +58,16 @@ export interface LoginResponse {
   data: AuthUser;
 }
 
+export interface AuthSession {
+  accessToken: string;
+
+  refreshToken: string;
+
+  expiresAt: string;
+
+  user: AuthUser;
+}
+
 /**
  * -----------------------------------------------------------------------------
  * Register
@@ -59,13 +75,15 @@ export interface LoginResponse {
  */
 
 export interface RegisterRequest {
-  email: string;
-
   firstName: string;
 
   lastName: string;
 
+  email: string;
+
   phoneNumber: string;
+
+  password: string;
 }
 
 /**
@@ -88,6 +106,16 @@ export interface VerifyOtpResponse {
 
 /**
  * -----------------------------------------------------------------------------
+ * Forgot Password
+ * -----------------------------------------------------------------------------
+ */
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+/**
+ * -----------------------------------------------------------------------------
  * Update Password
  * -----------------------------------------------------------------------------
  */
@@ -98,16 +126,6 @@ export interface UpdatePasswordRequest {
   password: string;
 
   confirmPassword: string;
-}
-
-/**
- * -----------------------------------------------------------------------------
- * Forgot Password
- * -----------------------------------------------------------------------------
- */
-
-export interface ForgotPasswordRequest {
-  email: string;
 }
 
 /**

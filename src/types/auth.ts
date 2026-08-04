@@ -75,13 +75,7 @@ export interface AuthSession {
  */
 
 export interface RegisterRequest {
-  firstName: string;
-
-  lastName: string;
-
   email: string;
-
-  phoneNumber: string;
 
   password: string;
 }
@@ -92,13 +86,13 @@ export interface RegisterRequest {
  * -----------------------------------------------------------------------------
  */
 
-export interface VerifyOtpRequest {
+export interface VerifyEmailOtpRequest {
   email: string;
 
   otp: string;
 }
 
-export interface VerifyOtpResponse {
+export interface VerifyEmailOtpResponse {
   token: LoginToken;
 
   data: AuthUser;
@@ -158,7 +152,6 @@ export interface UpdateBusinessDetailsRequest {
   businessPhoneNumber: string;
 }
 
-
 export interface VerifyEmailOtpRequest {
   email: string;
 
@@ -167,4 +160,18 @@ export interface VerifyEmailOtpRequest {
 
 export interface ResendOtpRequest {
   email: string;
+}
+
+/**
+ * -----------------------------------------------------------------------------
+ * Complete Profile
+ * -----------------------------------------------------------------------------
+ */
+
+export interface CompleteProfileRequest {
+  firstName: string;
+
+  lastName: string;
+
+  phoneNumber: string;
 }

@@ -1,5 +1,4 @@
-import { Pressable, View } from "react-native";
-
+import { Alert, Pressable, View } from "react-native";
 import { useState } from "react";
 
 import { Link, router } from "expo-router";
@@ -23,13 +22,11 @@ import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-import {
-  signupSchema,
-  SignupSchema,
-} from "@/schemas/signup-schema";
+import { signupSchema, SignupSchema } from "@/schemas/signup-schema";
 
-import { signupUser } from "@/features/auth/api/auth-api";
-import { Alert } from "react-native";
+import { useRegister } from "@/hooks/auth/useRegister";
+
+import { getApiErrorMessage } from "@/api/errors";
 
 function PasswordRule({ passed, text }: { passed: boolean; text: string }) {
   return (
@@ -60,8 +57,6 @@ export default function SignupScreen() {
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-
   const {
     control,
     watch,
@@ -81,6 +76,8 @@ export default function SignupScreen() {
     },
   });
 
+  const register = useRegister();
+
   const password = watch("password") || "";
 
   const passwordRules = {
@@ -97,21 +94,10 @@ export default function SignupScreen() {
 
   async function onSubmit(data: SignupSchema) {
     try {
-      setLoading(true);
-
-      const response = await signupUser(data.email, data.password);
-
-      if (response.error) {
-        console.log("Signup Error:", response.error);
-
-        Alert.alert("Sign Up Failed", response.error.message);
-
-        return;
-      }
-
-      console.log("User:", response.data.user);
-
-      console.log("Session:", response.data.session);
+      await register.mutateAsync({
+        email: data.email,
+        password: data.password,
+      });
 
       Alert.alert(
         "Check Your Email",
@@ -125,11 +111,7 @@ export default function SignupScreen() {
         },
       });
     } catch (error) {
-      console.log(error);
-
-      Alert.alert("Error", "Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+      Alert.alert("Sign Up Failed", getApiErrorMessage(error));
     }
   }
 
@@ -380,10 +362,10 @@ export default function SignupScreen() {
             }}
           >
             <Button
-              title={loading ? "Creating Account..." : "Get Started"}
+              title={register.isPending ? "Creating Account..." : "Get Started"}
               variant="primary"
               size="large"
-              disabled={!isValid || loading}
+              disabled={!isValid || register.isPending}
               onPress={handleSubmit(onSubmit)}
             />
 

@@ -1,4 +1,4 @@
-import { View, Pressable } from "react-native";
+import { View, Pressable, Alert } from "react-native";
 
 import { router } from "expo-router";
 
@@ -22,7 +22,9 @@ import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { sendPasswordResetOtp } from "@/features/auth/api/password-recovery-api";
+import { useForgotPassword } from "@/hooks/auth/useForgotPassword";
+
+import { getApiErrorMessage } from "@/api/errors";
 
 const forgotPasswordSchema = z.object({
   email: z.email("Please enter a valid email address"),
@@ -43,18 +45,18 @@ export default function ForgotPasswordScreen() {
     },
   });
 
+  const forgotPassword = useForgotPassword();
+
   async function onSubmit(data: ForgotPasswordSchema) {
     try {
-      const response = await sendPasswordResetOtp(data.email);
+      await forgotPassword.mutateAsync({
+        email: data.email,
+      });
 
-      if (response.error) {
-        throw response.error;
-      }
-
-      /**
-       * TODO:
-       * Call forgot password endpoint
-       */
+      Alert.alert(
+        "Reset Code Sent",
+        "We've sent an 8-digit verification code to your email."
+      );
 
       router.push({
         pathname: ROUTES.VERIFY_OTP,
@@ -63,7 +65,7 @@ export default function ForgotPasswordScreen() {
         },
       });
     } catch (error) {
-      console.log("Reset Password Error:", error);
+      Alert.alert("Unable to Send Reset Code", getApiErrorMessage(error));
     }
   }
 
@@ -157,10 +159,12 @@ export default function ForgotPasswordScreen() {
             }}
           >
             <Button
-              title="Send Reset Code"
+              title={
+                forgotPassword.isPending ? "Sending..." : "Send Reset Code"
+              }
               variant="primary"
               size="large"
-              disabled={!isValid}
+              disabled={!isValid || forgotPassword.isPending}
               onPress={handleSubmit(onSubmit)}
             />
 

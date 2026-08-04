@@ -10,7 +10,7 @@ import {
   LoginRequest,
   LoginResponse,
   RegisterRequest,
-  VerifyOtpRequest,
+  VerifyEmailOtpRequest,
 } from "@/types/auth";
 
 import { encodeLoginRequest } from "./authEncoder";
@@ -22,16 +22,12 @@ export const authService = {
    * ---------------------------------------------------------------------------
    */
   async login(payload: LoginRequest) {
-    const encodedPayload =
-      encodeLoginRequest(payload);
+    const encodedPayload = encodeLoginRequest(payload);
 
-    const { data } =
-      await authClient.post<
-        ApiResponse<LoginResponse>
-      >(
-        API_ENDPOINTS.auth.login,
-        encodedPayload
-      );
+    const { data } = await authClient.post<ApiResponse<LoginResponse>>(
+      API_ENDPOINTS.auth.login,
+      encodedPayload
+    );
 
     return data;
   },
@@ -41,16 +37,11 @@ export const authService = {
    * Register
    * ---------------------------------------------------------------------------
    */
-  async register(
-    payload: RegisterRequest
-  ) {
-    const { data } =
-      await authClient.post<
-        ApiResponse<void>
-      >(
-        API_ENDPOINTS.auth.register,
-        payload
-      );
+  async register(payload: RegisterRequest) {
+    const { data } = await authClient.post<ApiResponse<void>>(
+      API_ENDPOINTS.auth.register,
+      payload
+    );
 
     return data;
   },
@@ -60,16 +51,11 @@ export const authService = {
    * Verify Email OTP
    * ---------------------------------------------------------------------------
    */
-  async verifyOtp(
-    payload: VerifyOtpRequest
-  ) {
-    const { data } =
-      await authClient.post<
-        ApiResponse<void>
-      >(
-        API_ENDPOINTS.auth.verifyEmail,
-        payload
-      );
+  async verifyEmailOtp(payload: VerifyEmailOtpRequest) {
+    const { data } = await authClient.post<ApiResponse<void>>(
+      API_ENDPOINTS.auth.verifyEmail,
+      payload
+    );
 
     return data;
   },
@@ -79,21 +65,16 @@ export const authService = {
    * Resend Verification Email
    * ---------------------------------------------------------------------------
    */
-  async resendOtp(
-    email: string
-  ) {
-    const { data } =
-      await authClient.post<
-        ApiResponse<void>
-      >(
-        API_ENDPOINTS.auth.resendOtp,
-        null,
-        {
-          params: {
-            Email: email,
-          },
-        }
-      );
+  async resendOtp(email: string) {
+    const { data } = await authClient.post<ApiResponse<void>>(
+      API_ENDPOINTS.auth.resendOtp,
+      null,
+      {
+        params: {
+          Email: email,
+        },
+      }
+    );
 
     return data;
   },
@@ -103,22 +84,16 @@ export const authService = {
    * Forgot Password
    * ---------------------------------------------------------------------------
    */
-  async forgotPassword(
-    payload: ForgotPasswordRequest
-  ) {
-    const { data } =
-      await authClient.post<
-        ApiResponse<void>
-      >(
-        API_ENDPOINTS.auth.forgotPassword,
-        null,
-        {
-          params: {
-            EmailAddress:
-              payload.email,
-          },
-        }
-      );
+  async forgotPassword(payload: ForgotPasswordRequest) {
+    const { data } = await authClient.post<ApiResponse<void>>(
+      API_ENDPOINTS.auth.forgotPassword,
+      null,
+      {
+        params: {
+          EmailAddress: payload.email,
+        },
+      }
+    );
 
     return data;
   },
@@ -128,16 +103,11 @@ export const authService = {
    * Change Password
    * ---------------------------------------------------------------------------
    */
-  async changePassword(
-    payload: ChangePasswordRequest
-  ) {
-    const { data } =
-      await authClient.post<
-        ApiResponse<void>
-      >(
-        API_ENDPOINTS.auth.changePassword,
-        payload
-      );
+  async changePassword(payload: ChangePasswordRequest) {
+    const { data } = await authClient.post<ApiResponse<void>>(
+      API_ENDPOINTS.auth.changePassword,
+      payload
+    );
 
     return data;
   },
@@ -147,20 +117,15 @@ export const authService = {
    * Fetch Current User
    * ---------------------------------------------------------------------------
    */
-  async getCurrentUser(
-    token: string
-  ) {
-    const { data } =
-      await authClient.get<
-        ApiResponse<AuthUser>
-      >(
-        API_ENDPOINTS.auth.fetchUser,
-        {
-          params: {
-            token,
-          },
-        }
-      );
+  async getCurrentUser(token: string) {
+    const { data } = await authClient.get<ApiResponse<AuthUser>>(
+      API_ENDPOINTS.auth.fetchUser,
+      {
+        params: {
+          token,
+        },
+      }
+    );
 
     return data;
   },

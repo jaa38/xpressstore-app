@@ -26,6 +26,8 @@ import { useCreateMerchantKyc } from "@/hooks/kyc/useCreateMerchantKyc";
 
 import { useOnboardingStore } from "@/store/onboarding/onboardingStore";
 
+import { getApiErrorMessage } from "@/api/errors";
+
 export default function DocumentUploadScreen() {
   const uploadDocument = useUploadDocument();
 
@@ -38,19 +40,49 @@ export default function DocumentUploadScreen() {
     useState<DocumentPicker.DocumentPickerAsset | null>(null);
 
   async function pickDocument() {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: "*/*",
-      copyToCacheDirectory: true,
-    });
+  const result = await DocumentPicker.getDocumentAsync({
+    type: [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+    ],
+    copyToCacheDirectory: true,
+  });
 
-    if (result.canceled) {
+  if (result.canceled || !result.assets?.length) {
+    return;
+  }
+
+  const file = result.assets[0];
+
+  if (!file) {
+    return;
+  }
+
+  const maxSize = 5 * 1024 * 1024; // 5 MB
+
+  if ((file.size ?? 0) > maxSize) {
+    Alert.alert(
+      "File Too Large",
+      "Maximum upload size is 5 MB."
+    );
+
+    return;
+  }
+
+  setSelectedFile(file);
+}
+
+  async function handleContinue() {
+    if (!merchantId || !kycTierId) {
+      Alert.alert(
+        "Missing Information",
+        "Please complete the previous onboarding steps."
+      );
+
       return;
     }
 
-    setSelectedFile(result.assets[0]);
-  }
-
-  async function handleContinue() {
     if (!selectedFile) {
       Alert.alert(
         "Document Required",
@@ -87,7 +119,7 @@ export default function DocumentUploadScreen() {
 
       router.push(ROUTES.BIOMETRIC_VERIFICATION);
     } catch (error) {
-      Alert.alert("Upload Failed", "Unable to upload your document.");
+      Alert.alert("Upload Failed", getApiErrorMessage(error));
     }
   }
 
@@ -162,9 +194,22 @@ export default function DocumentUploadScreen() {
         <Card
           style={{
             marginTop: spacing.xl,
-            padding: spacing.lg,
+
             gap: spacing.md,
+
             alignItems: "center",
+
+            borderWidth: 2,
+
+            borderStyle: "dashed",
+
+            borderColor: selectedFile
+              ? theme.state.success.border
+              : theme.border.default,
+
+            backgroundColor: selectedFile
+              ? theme.state.success.background
+              : theme.background.surface,
           }}
         >
           <Ionicons
@@ -173,15 +218,45 @@ export default function DocumentUploadScreen() {
             color={theme.icon.branding.icon}
           />
 
-          <AppText variant="body" align="center">
-            {selectedFile ? selectedFile.name : "No document selected"}
-          </AppText>
+          {selectedFile ? (
+            <>
+              <Ionicons
+                name="checkmark-circle"
+                size={48}
+                color={theme.icon.success.icon}
+              />
+
+              <AppText variant="bodyBold" align="center">
+                {selectedFile.name}
+              </AppText>
+
+              <AppText variant="bodySmall" color="success" align="center">
+                Ready to upload
+              </AppText>
+            </>
+          ) : (
+            <>
+              <Ionicons
+                name="document-outline"
+                size={72}
+                color={theme.icon.branding.icon}
+              />
+
+              <AppText variant="body" color="secondary" align="center">
+                No document selected
+              </AppText>
+            </>
+          )}
 
           <Button
-            title="Choose Document"
+            title={selectedFile ? "Choose Another Document" : "Choose Document"}
             variant="secondary"
             onPress={pickDocument}
           />
+
+          <AppText variant="caption" color="muted" align="center">
+            Accepted formats: PDF, JPG, PNG (Max 5 MB)
+          </AppText>
         </Card>
 
         <View
@@ -197,9 +272,11 @@ export default function DocumentUploadScreen() {
         >
           <Button
             title={
-              uploadDocument.isPending || createMerchantKyc.isPending
-                ? "Uploading..."
-                : "Continue"
+              uploadDocument.isPending
+                ? "Uploading document..."
+                : createMerchantKyc.isPending
+                  ? "Submitting..."
+                  : "Continue"
             }
             variant="primary"
             size="large"

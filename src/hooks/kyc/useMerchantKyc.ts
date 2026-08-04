@@ -2,11 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 
 import { kycService } from "@/services/kyc/kycService";
 
-export function useMerchantKyc() {
+export function useMerchantKyc(merchantId: string | null) {
   const query = useQuery({
-    queryKey: ["merchant-kyc"],
+    queryKey: ["merchant-kyc", merchantId],
 
-    queryFn: () => kycService.getMerchantKyc(),
+    queryFn: () => kycService.getMerchantKyc(merchantId!),
+
+    enabled: !!merchantId,
   });
 
   return {

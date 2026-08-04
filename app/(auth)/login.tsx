@@ -51,11 +51,11 @@ export default function LoginScreen() {
 
   const [loadingBiometric, setLoadingBiometric] = useState(false);
 
-  const { setUser } = useAuth();
+  const { login: loginUser } = useAuth();
 
   const [biometricEmail, setBiometricEmail] = useState("");
 
-  const login = useLogin();
+  const loginMutation = useLogin();
 
   useEffect(() => {
     checkBiometrics();
@@ -109,7 +109,7 @@ export default function LoginScreen() {
         return;
       }
 
-      setUser(user);
+      await loginUser(user);
 
       router.replace(ROUTES.TABS);
     } catch (error) {
@@ -138,14 +138,14 @@ export default function LoginScreen() {
   // ─── UPDATED onSubmit — remove manual token saving ───────────────────────
   async function onSubmit(data: LoginSchema) {
     try {
-      const session = await login.mutateAsync({
+      const session = await loginMutation.mutateAsync({
         email: data.email,
         password: data.password,
       });
 
       await saveBiometricEmail(data.email);
 
-      setUser(session.user);
+      await loginUser(session.user);
 
       router.replace(ROUTES.TABS);
     } catch (error) {
@@ -367,10 +367,10 @@ export default function LoginScreen() {
             }}
           >
             <Button
-              title={login.isPending ? "Signing In..." : "Log In"}
+              title={loginMutation.isPending ? "Signing In..." : "Log In"}
               variant="primary"
               size="large"
-              disabled={!isValid || login.isPending}
+              disabled={!isValid || loginMutation.isPending}
               onPress={handleSubmit(onSubmit)}
             />
 

@@ -136,6 +136,29 @@ export const API_ENDPOINTS = {
     registerPushNotification: "/Merchants/RegisterPushNotification",
   },
 
+  lookup: {
+    /**
+     * Business Categories
+     */
+    businessCategories: "/BusinessCategory/GetBusinessCategories",
+
+    /**
+     * Business Types
+     */
+    businessTypes: "/Industry/GetBusinessTypes",
+
+    /**
+     * Industries
+     */
+    industries: "/Industry/GetIndustries",
+
+    /**
+     * Industry Categories
+     */
+    industryCategories: (industryId: number) =>
+      `/Industry/GetIndustryCategories?IndustryId=${industryId}`,
+  },
+
   /**
    * ---------------------------------------------------------------------------
    * GraphQL

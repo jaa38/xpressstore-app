@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 import {
   clearSession,
@@ -21,30 +15,21 @@ interface AuthContextValue {
 
   user: AuthUser | null;
 
-  setUser: (
-    user: AuthUser | null
-  ) => void;
+  setUser: React.Dispatch<React.SetStateAction<AuthUser | null>>;
 
   logout: () => Promise<void>;
 }
 
-const AuthContext =
-  createContext<AuthContextValue | null>(
-    null
-  );
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 interface Props {
   children: React.ReactNode;
 }
 
-export function AuthProvider({
-  children,
-}: Props) {
-  const [user, setUser] =
-    useState<AuthUser | null>(null);
+export function AuthProvider({ children }: Props) {
+  const [user, setUser] = useState<AuthUser | null>(null);
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     bootstrap();
@@ -52,15 +37,13 @@ export function AuthProvider({
 
   async function bootstrap() {
     try {
-      const token =
-        await getAccessToken();
+      const token = await getAccessToken();
 
       if (!token) {
         return;
       }
 
-      const storedUser =
-        await getCurrentUser<AuthUser>();
+      const storedUser = await getCurrentUser<AuthUser>();
 
       if (storedUser) {
         setUser(storedUser);
@@ -71,9 +54,11 @@ export function AuthProvider({
   }
 
   async function logout() {
-    await clearSession();
-
-    setUser(null);
+    try {
+      await clearSession();
+    } finally {
+      setUser(null);
+    }
   }
 
   const value = useMemo(
@@ -82,8 +67,7 @@ export function AuthProvider({
 
       isLoading,
 
-      isAuthenticated:
-        user !== null,
+      isAuthenticated: user !== null,
 
       setUser,
 
@@ -92,23 +76,14 @@ export function AuthProvider({
     [user, isLoading]
   );
 
-  return (
-    <AuthContext.Provider
-      value={value}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  const context =
-    useContext(AuthContext);
+  const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error(
-      "useAuth must be used inside AuthProvider."
-    );
+    throw new Error("useAuth must be used inside AuthProvider.");
   }
 
   return context;

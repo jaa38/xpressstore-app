@@ -18,18 +18,18 @@ import { radius, spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
+import { useAuth } from "@/providers/AuthProvider";
+
 import { authenticateWithBiometrics } from "@/services/biometrics";
 import { enableBiometrics } from "@/services/biometrics/storage";
-import { completeOnboarding } from "@/services/auth/storage";
-
-import { supabase } from "@/services/supabase/client";
-
 import { saveBiometricEmail } from "@/services/biometrics/user";
 
-
+import { completeOnboarding } from "@/services/auth/storage";
 
 export default function BiometricVerificationScreen() {
   const [loading, setLoading] = useState(false);
+
+  const { user } = useAuth();
 
   async function handleVerification() {
     await completeOnboarding();
@@ -53,10 +53,6 @@ export default function BiometricVerificationScreen() {
       }
 
       await enableBiometrics();
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
 
       if (user?.email) {
         await saveBiometricEmail(user.email);

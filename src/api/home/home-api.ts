@@ -1,20 +1,19 @@
+//Reference: https://supabase.com/docs/guides/auth/row-level-security#row-level-security-rules
 import { supabase } from "@/services/supabase/client";
 
-export async function getProfile() {
+export async function getBusiness() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  console.log("Profile User:", user);
 
   if (!user) {
     throw new Error("User not found");
   }
 
   const { data, error } = await supabase
-    .from("user_profiles")
+    .from("businesses")
     .select("*")
-    .eq("user_id", user?.id)
+    .eq("user_id", user.id)
     .single();
 
   if (error) {

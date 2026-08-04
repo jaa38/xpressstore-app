@@ -25,7 +25,7 @@ import { validatePhoneNumber, formatPhoneNumber } from "@/utils/phone";
 
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 
-import { createUserProfile } from "@/features/auth/api/profile-api";
+import { createUserProfile } from "@/api/auth/profile-api";
 
 type IdVerificationForm = {
   idType: string;

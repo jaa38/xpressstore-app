@@ -9,22 +9,22 @@ import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from "@/components/ui/Button";
 
-import { clearSession } from "@/features/auth/services/session";
 import { router } from "expo-router";
 import { ROUTES } from "@/navigation/routes";
 import { Alert } from "react-native";
-import { useAuthStore } from "@/features/auth/store/auth-store";
 import { Divider } from "@/components/ui/Divider";
 import { UICard } from "@/components/ui/UICard";
 
+import { useAuth } from "@/providers/AuthProvider";
+
 export default function MoreScreen() {
-  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+  const { logout } = useAuth();
 
   async function handleLogout() {
     try {
-      await clearSession();
-      setAuthenticated(false);
-      router.replace("/(auth)/login");
+      await logout();
+
+      router.replace(ROUTES.LOGIN);
     } catch (error) {
       Alert.alert("Error", "Failed to log out. Please try again.");
     }

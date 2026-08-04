@@ -14,7 +14,7 @@ import { Controller, useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { useAuthStore } from "@/features/auth/store/auth-store";
+import { useAuth } from "@/providers/AuthProvider";
 
 import { LoginSchema, loginSchema } from "@/features/auth/schemas/login-schema";
 
@@ -40,6 +40,10 @@ import { useLogin } from "@/hooks/auth/useLogin";
 
 import { getApiErrorMessage } from "@/api/errors";
 
+import { AuthUser } from "@/types/auth";
+
+import { getCurrentUser } from "@/storage/authStorage";
+
 export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -47,9 +51,7 @@ export default function LoginScreen() {
 
   const [loadingBiometric, setLoadingBiometric] = useState(false);
 
-  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
-
-  const setUser = useAuthStore((state) => state.setUser);
+  const { setUser } = useAuth();
 
   const [biometricEmail, setBiometricEmail] = useState("");
 
@@ -99,7 +101,16 @@ export default function LoginScreen() {
         return;
       }
 
-      setAuthenticated(true);
+      const user = await getCurrentUser<AuthUser>();
+
+      if (!user) {
+        Alert.alert("Unable to restore session", "Please sign in again.");
+
+        return;
+      }
+
+      setUser(user);
+
       router.replace(ROUTES.TABS);
     } catch (error) {
       console.log("Biometric login failed:", error);
@@ -133,8 +144,6 @@ export default function LoginScreen() {
       });
 
       await saveBiometricEmail(data.email);
-
-      setAuthenticated(true);
 
       setUser(session.user);
 

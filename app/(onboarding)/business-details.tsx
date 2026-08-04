@@ -24,7 +24,7 @@ import { useState } from "react";
 
 import { useBusinessCategories } from "@/features/business/hooks/use-business-categories";
 
-import { createBusiness } from "@/features/business/api/business-api";
+import { useCreateBusiness } from "@/hooks/business/useCreateBusiness";
 
 type BusinessDetailsForm = {
   businessType: string;
@@ -60,13 +60,11 @@ export default function BusinessDetailsScreen() {
 
   const { categories, isLoading } = useBusinessCategories();
 
-  const [loading, setLoading] = useState(false);
+  const createBusiness = useCreateBusiness();
 
   async function onSubmit(data: BusinessDetailsForm) {
     try {
-      setLoading(true);
-
-      await createBusiness({
+      await createBusiness.mutateAsync({
         businessName: data.businessName,
 
         businessType: data.businessType,
@@ -79,8 +77,6 @@ export default function BusinessDetailsScreen() {
       router.push(ROUTES.ID_VERIFICATION);
     } catch (error) {
       console.log("Failed to create business:", error);
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -253,10 +249,10 @@ export default function BusinessDetailsScreen() {
           }}
         >
           <Button
-            title={loading ? "Saving..." : "Continue"}
+            title={createBusiness.isPending ? "Saving..." : "Continue"}
             variant="primary"
             size="large"
-            disabled={!isValid || loading}
+            disabled={!isValid || createBusiness.isPending}
             onPress={handleSubmit(onSubmit)}
           />
         </View>

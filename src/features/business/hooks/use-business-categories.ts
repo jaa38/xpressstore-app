@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getBusinessCategories } from "../api/business-api";
+import { getBusinessCategories } from "../../../api/business/business-api";
 
 export function useBusinessCategories() {
   const query = useQuery({

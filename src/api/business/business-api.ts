@@ -1,3 +1,4 @@
+//Reference: https://supabase.com/docs/guides/auth/row-level-security#row-level-security-rules
 import { supabase } from "@/services/supabase/client";
 
 export async function getBusinessCategories() {

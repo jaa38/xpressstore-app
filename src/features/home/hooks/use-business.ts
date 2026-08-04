@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getBusiness } from "../api/home-api";
+import { getBusiness } from "../../../api/home/home-api";
 
 export function useBusiness() {
   const query = useQuery({

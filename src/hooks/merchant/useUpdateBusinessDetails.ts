@@ -1,12 +1,17 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { merchantService } from "@/services/merchant/merchantService";
 
-import { UpdateBusinessDetailsRequest } from "@/types/merchant";
-
 export function useUpdateBusinessDetails() {
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (payload: UpdateBusinessDetailsRequest) =>
-      merchantService.updateBusinessDetails(payload),
+    mutationFn: merchantService.updateBusinessDetails,
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["merchant-profile"],
+      });
+    },
   });
 }

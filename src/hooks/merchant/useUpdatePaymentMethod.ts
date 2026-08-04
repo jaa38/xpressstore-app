@@ -2,15 +2,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { merchantService } from "@/services/merchant/merchantService";
 
-export function useUpdateBusinessType() {
+export function useUpdatePaymentMethod() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: merchantService.updateBusinessType,
+    mutationFn: merchantService.updatePaymentMethod,
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["merchant-profile"],
+        queryKey: ["payment-methods"],
       });
     },
   });

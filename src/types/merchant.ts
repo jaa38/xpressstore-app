@@ -36,7 +36,7 @@ export interface MerchantProfile {
 
 /**
  * -----------------------------------------------------------------------------
- * Merchant Business Details
+ * Update Merchant Business Details
  * -----------------------------------------------------------------------------
  */
 
@@ -54,14 +54,16 @@ export interface UpdateBusinessDetailsRequest {
 
 /**
  * -----------------------------------------------------------------------------
- * Merchant Business Type
+ * Update Merchant Business Type
  * -----------------------------------------------------------------------------
  */
 
 export interface UpdateBusinessTypeRequest {
   merchantId: string;
 
-  businessType: string;
+  businessTypeId: number;
+
+  businessRegistrationTypeId: number;
 }
 
 /**

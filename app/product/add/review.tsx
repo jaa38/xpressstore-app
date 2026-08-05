@@ -31,6 +31,8 @@ import type { ProductVariationDto } from "@/types/product";
 
 import type { ProductOptionDto } from "@/types/product";
 
+import { ROUTES } from "@/navigation/routes";
+
 import type { Currency } from "@/types/currency";
 
 function editInfo() {
@@ -197,7 +199,9 @@ export default function ReviewScreen() {
                     }}
                   >
                     <Image
-                      source={{ uri: product.image }}
+                      source={{
+                        uri: product.image || product.images?.[0] || undefined,
+                      }}
                       style={{
                         width: "100%",
                         height: "100%",
@@ -240,7 +244,9 @@ export default function ReviewScreen() {
                   <AppText color="secondary">{product.category}</AppText>
 
                   <AppText variant="bodyLargeBold" color="link">
-                    {formatCurrency(product.price, product.currency)}
+                    {formatCurrency(product.price, {
+                      currency: product.currency,
+                    })}
                   </AppText>
                 </View>
               </View>
@@ -385,7 +391,9 @@ export default function ReviewScreen() {
                       textAlign: "right",
                     }}
                   >
-                    {formatCurrency(product.costPrice, product.currency)}
+                    {formatCurrency(product.costPrice, {
+                      currency: product.currency,
+                    })}
                   </AppText>
                 </View>
 
@@ -407,7 +415,9 @@ export default function ReviewScreen() {
                       textAlign: "right",
                     }}
                   >
-                    {formatCurrency(product.price, product.currency)}
+                    {formatCurrency(product.price, {
+                      currency: product.currency,
+                    })}
                   </AppText>
                 </View>
 
@@ -548,23 +558,27 @@ export default function ReviewScreen() {
                     gap: spacing.xs,
                   }}
                 >
-                  {product.variants.map((variant) => (
-                    <View
-                      key={variant.name}
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <AppText variant="body" color="secondary">
-                        {variant.name}
-                      </AppText>
+                  {product.variants.length === 0 ? (
+                    <AppText color="secondary">No variants configured.</AppText>
+                  ) : (
+                    product.variants.map((variant) => (
+                      <View
+                        key={variant.name}
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <AppText variant="body" color="secondary">
+                          {variant.name}
+                        </AppText>
 
-                      <AppText variant="bodyBold" color="primary">
-                        {variant.options.length} Option(s)
-                      </AppText>
-                    </View>
-                  ))}
+                        <AppText variant="bodyBold" color="primary">
+                          {variant.options.length} Option(s)
+                        </AppText>
+                      </View>
+                    ))
+                  )}
                 </View>
               </View>
             </Card>
@@ -633,7 +647,7 @@ export default function ReviewScreen() {
                   </AppText>
 
                   <AppText variant="bodyBold" color="primary">
-                    {product.images.length}
+                    {product.images?.length ?? 0}
                   </AppText>
                 </View>
                 <View
@@ -654,8 +668,9 @@ export default function ReviewScreen() {
                       textAlign: "right",
                     }}
                   >
-                    {product.dimensions.length} ×{product.dimensions.width} ×
-                    {product.dimensions.height} cm
+                    {product.dimensions.length || "-"} ×
+                    {product.dimensions.width || "-"} ×
+                    {product.dimensions.height || "-"} cm
                   </AppText>
                 </View>
                 <View

@@ -1,26 +1,21 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 
-import { updateProduct } from "@/services/product/product-service";
+import { productService } from "@/services/products/productService";
 
 export function useUpdateProduct() {
-  const queryClient = useQueryClient();
+  const queryClient =
+    useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      values,
-    }: {
-      id: string;
-      values: Parameters<typeof updateProduct>[1];
-    }) => updateProduct(id, values),
+    mutationFn:
+      productService.updateProduct,
 
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["products"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["product", variables.id],
       });
     },
   });

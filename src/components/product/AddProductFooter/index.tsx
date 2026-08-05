@@ -6,12 +6,18 @@ interface AddProductFooterProps {
   onNext: () => void;
 
   nextLabel?: string;
+
+  loading?: boolean;
+
+  disabled?: boolean;
 }
 
 export function AddProductFooter({
   onSaveDraft,
   onNext,
   nextLabel = "Next",
+  loading = false,
+  disabled = false,
 }: AddProductFooterProps) {
   return (
     <WizardFooter
@@ -19,6 +25,8 @@ export function AddProductFooter({
       onSecondary={onSaveDraft}
       primaryLabel={nextLabel}
       secondaryLabel="Save as Draft"
+      loading={loading}
+      disabled={disabled}
     />
   );
 }

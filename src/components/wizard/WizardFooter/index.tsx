@@ -17,6 +17,8 @@ interface WizardFooterProps {
   hideSecondary?: boolean;
 
   loading?: boolean;
+
+  disabled?: boolean;
 }
 
 export function WizardFooter({
@@ -29,6 +31,8 @@ export function WizardFooter({
   hideSecondary = false,
 
   loading = false,
+
+  disabled = false,
 }: WizardFooterProps) {
   return (
     <>
@@ -66,7 +70,12 @@ export function WizardFooter({
             flex: 1,
           }}
         >
-          <Button title={primaryLabel} loading={loading} onPress={onPrimary} />
+          <Button
+            title={primaryLabel}
+            loading={loading}
+            disabled={disabled}
+            onPress={onPrimary}
+          />
         </View>
       </View>
     </>

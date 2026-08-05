@@ -35,6 +35,10 @@ import { ROUTES } from "@/navigation/routes";
 
 import type { Currency } from "@/types/currency";
 
+import { useState } from "react";
+
+import { useToast } from "@/hooks/useToast";
+
 function editInfo() {
   router.replace(ROUTES.ADD_PRODUCT_INFO);
 }
@@ -58,14 +62,21 @@ export default function ReviewScreen() {
 
   const uploadImagesMutation = useUploadProductImage();
 
+  const { showToast } = useToast();
+
+  const [publishing, setPublishing] = useState(false);
+
   async function publishProduct() {
     try {
+      setPublishing(true);
+
       /**
        * ------------------------------------------------------------
-       * Upload product images
+       * Upload Product Images
        * ------------------------------------------------------------
        */
-      let uploadedImages: ProductImageDto[] = [];
+
+      const uploadedImages: ProductImageDto[] = [];
 
       const imagesToUpload = [product.image, ...product.images].filter(
         (image): image is string => Boolean(image)
@@ -87,35 +98,34 @@ export default function ReviewScreen() {
 
       /**
        * ------------------------------------------------------------
-       * Build request payload
+       * Build Xpress API Payload
        * ------------------------------------------------------------
        */
+
       const payload: CreateProductRequest = {
         id: 0,
 
-        name: product.productName,
+        name: product.productName.trim(),
 
-        description: product.description,
-
-        currency: product.currency as Currency,
-
-        price: product.price,
-
-        hasVariants: product.variantsEnabled,
-
-        images: uploadedImages,
-
-        categoryIds: product.category ? [Number(product.category)] : [],
-
-        publishNow: product.productStatus === "active",
+        description: product.description.trim(),
 
         youtubeLink: "",
+
+        currency: product.currency,
+
+        price: Number(product.price),
 
         unit: "",
 
         productLocation: "",
 
         minOrderQty: "",
+
+        hasVariants: product.variantsEnabled && product.variants.length > 0,
+
+        images: uploadedImages,
+
+        categoryIds: product.category ? [Number(product.category)] : [],
 
         variations: product.variants.map<ProductVariationDto>((variant) => ({
           name: variant.name,
@@ -126,6 +136,8 @@ export default function ReviewScreen() {
           name: variant.name,
           values: variant.options,
         })),
+
+        publishNow: product.productStatus === "active",
       };
 
       /**
@@ -133,13 +145,21 @@ export default function ReviewScreen() {
        * Create Product
        * ------------------------------------------------------------
        */
+
       await createProductMutation.mutateAsync(payload);
 
       /**
        * ------------------------------------------------------------
-       * Cleanup
+       * Success
        * ------------------------------------------------------------
        */
+
+      showToast({
+        type: "success",
+        title: "Product Created",
+        message: "Your product has been published successfully.",
+      });
+
       resetProduct();
 
       router.replace({
@@ -150,6 +170,14 @@ export default function ReviewScreen() {
       });
     } catch (error) {
       console.error("CREATE PRODUCT ERROR", error);
+
+      showToast({
+        type: "error",
+        title: "Unable to Create Product",
+        message: "Please try again.",
+      });
+    } finally {
+      setPublishing(false);
     }
   }
 
@@ -710,10 +738,13 @@ export default function ReviewScreen() {
             </Card>
           </View>
         </ScrollView>
-
         {/* FOOTER */}
-
-        <AddProductFooter nextLabel="Publish Product" onNext={publishProduct} />
+        <AddProductFooter
+          nextLabel={publishing ? "Publishing..." : "Publish Product"}
+          loading={publishing}
+          disabled={publishing}
+          onNext={publishProduct}
+        />
       </View>
     </SafeAreaView>
   );

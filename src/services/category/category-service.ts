@@ -1,47 +1,30 @@
-import { supabase } from "@/services/supabase/client";
+import { productService } from "@/services/products/productService";
 
 import type { DropdownOption } from "@/components/ui/Dropdown";
 
 export async function getCategories(): Promise<DropdownOption[]> {
-  const { data, error } = await supabase
-    .from("categories")
-    .select("*")
-    .order("name", {
-      ascending: true,
-    });
-
-  if (error) {
-    throw error;
-  }
-
-  console.log("RAW CATEGORIES:", data);
+  const response = await productService.getCategories();
 
   return (
-    data?.map((category) => ({
-      label: category.name,
-      value: category.slug,
-    })) ?? []
+    response.data
+      ?.filter((category) => category.isActive)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((category) => ({
+        label: category.name,
+        value: String(category.id),
+      })) ?? []
   );
 }
 
-export async function createCategory(name: string): Promise<DropdownOption> {
-  const slug = name.trim().toLowerCase().replace(/\s+/g, "-");
-
-  const { data, error } = await supabase
-    .from("categories")
-    .insert({
-      name,
-      slug,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    throw error;
-  }
+export async function createCategory(
+  name: string
+): Promise<DropdownOption> {
+  const response = await productService.createCategory({
+    name: name.trim(),
+  });
 
   return {
-    label: data.name,
-    value: data.slug,
+    label: response.data.name,
+    value: String(response.data.id),
   };
 }

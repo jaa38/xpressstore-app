@@ -5,7 +5,9 @@ import { ApiResponse } from "@/types/api";
 
 import {
   CreateProductRequest,
+  CreateProductCategoryRequest,
   MerchantProduct,
+  ProductCategoryDto,
   ProductImageDto,
   UpdateProductRequest,
 } from "@/types/product";
@@ -126,8 +128,17 @@ export const productService = {
    * ---------------------------------------------------------------------------
    */
   async getCategories() {
-    const { data } = await authClient.get<ApiResponse<any[]>>(
+    const { data } = await authClient.get<ApiResponse<ProductCategoryDto[]>>(
       API_ENDPOINTS.products.categories
+    );
+
+    return data;
+  },
+
+  async createCategory(payload: CreateProductCategoryRequest) {
+    const { data } = await authClient.post<ApiResponse<ProductCategoryDto>>(
+      API_ENDPOINTS.products.createCategory,
+      payload
     );
 
     return data;

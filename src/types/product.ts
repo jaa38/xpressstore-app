@@ -189,3 +189,19 @@ export interface EditProduct extends MerchantProduct {
 
   visible: boolean;
 }
+
+export interface ProductCategoryDto {
+  id: number;
+
+  name: string;
+
+  description: string;
+
+  isActive: boolean;
+}
+
+export interface CreateProductCategoryRequest {
+  name: string;
+
+  description?: string;
+}

@@ -42,6 +42,8 @@ import { useCategories } from "@/hooks/categories/useCategories";
 import { useCreateCategory } from "@/hooks/categories/useCreateCategory";
 import { useToast } from "@/hooks/useToast";
 
+import { useUploadProductImage } from "@/hooks/products/useUploadProductImage";
+
 export default function InfoScreen() {
   const { product, updateProduct } = useProduct();
 
@@ -72,6 +74,12 @@ export default function InfoScreen() {
   const createCategoryMutation = useCreateCategory();
 
   const { showToast } = useToast();
+
+  const uploadImageMutation = useUploadProductImage();
+
+  const [galleryImages, setGalleryImages] = useState<string[]>(
+    product.image ? [product.image] : []
+  );
 
   const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
     mediaTypes: ["images"],
@@ -177,22 +185,43 @@ export default function InfoScreen() {
     }
   }
 
-  function handleNext(data: ProductInfoForm) {
-    updateProduct({
-      productName: data.productName,
+  async function handleNext(data: ProductInfoForm) {
+    try {
+      let image = data.image;
 
-      description: data.description,
+      if (image && !image.startsWith("http")) {
+        const formData = new FormData();
 
-      category: data.category,
+        formData.append("file", {
+          uri: image,
+          name: `product-${Date.now()}.jpg`,
+          type: "image/jpeg",
+        } as any);
 
-      brand: data.brand,
+        const response = await uploadImageMutation.mutateAsync(formData);
 
-      sku: data.sku,
+        image = response.data.url;
+      }
 
-      image: data.image,
-    });
+      updateProduct({
+        productName: data.productName,
+        description: data.description,
+        category: data.category,
+        brand: data.brand,
+        sku: data.sku,
+        image,
+      });
 
-    router.push(ROUTES.ADD_PRODUCT_PRICING);
+      router.push(ROUTES.ADD_PRODUCT_PRICING);
+    } catch (error) {
+      console.log("UPLOAD IMAGE ERROR", error);
+
+      showToast({
+        type: "error",
+        title: "Image Upload Failed",
+        message: "Please try again.",
+      });
+    }
   }
 
   return (

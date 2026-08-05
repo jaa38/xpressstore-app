@@ -79,15 +79,51 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   products: {
+    /**
+     * Merchant Products
+     */
     merchant: "/Product/GetMerchantProducts",
 
-    byStore: (storeId: string) => `/Product/stores/${storeId}`,
+    product: (productId: number) => `/Product/GetProductById/${productId}`,
 
+    byStore: (storeId: number) => `/Product/GetProductsByStore/${storeId}`,
+
+    /**
+     * CRUD
+     */
     create: "/Product/CreateProduct",
 
     update: "/Product/UpdateProduct",
 
-    delete: (productId: string) => `/Product/DeleteProduct/${productId}`,
+    delete: (productId: number) => `/Product/DeleteProduct/${productId}`,
+
+    /**
+     * Status
+     */
+    toggleStatus: (productId: number, status: boolean) =>
+      `/Product/ToggleProduct/${productId}/${status}`,
+
+    /**
+     * Images
+     */
+    uploadImage: "/FileUploader/UploadProductImage",
+
+    /**
+     * Store Assignment
+     */
+    addToStore: "/Product/AddProductToStores",
+
+    /**
+     * Categories
+     */
+    categories: "/Product/GetAllProductCategory",
+
+    createCategory: "/Product/CreateProductCategory",
+
+    updateCategory: "/Product/UpdateProductCategory",
+
+    deleteCategory: (categoryId: number) =>
+      `/Product/DeleteProductCategory/${categoryId}`,
   },
 
   /**

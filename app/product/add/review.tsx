@@ -58,17 +58,74 @@ export default function ReviewScreen() {
 
   async function publishProduct() {
     try {
-      let imageUrl = "";
+      /**
+       * ------------------------------------------------------------
+       * Upload product images
+       * ------------------------------------------------------------
+       */
+      let uploadedImages: ProductImageDto[] = [];
 
-      if (product.image) {
-        imageUrl = await uploadProductImage(product.image);
+      const imagesToUpload = [product.image, ...product.images].filter(Boolean);
+
+      if (imagesToUpload.length > 0) {
+        uploadedImages = await uploadImagesMutation.mutateAsync(imagesToUpload);
       }
 
-      await createProduct({
-        ...product,
-        image: imageUrl,
-      });
+      /**
+       * ------------------------------------------------------------
+       * Build request payload
+       * ------------------------------------------------------------
+       */
+      const payload: CreateProductRequest = {
+        id: 0,
 
+        name: product.productName,
+
+        description: product.description,
+
+        currency: product.currency as Currency,
+
+        price: product.price,
+
+        hasVariants: product.variantsEnabled,
+
+        images: uploadedImages,
+
+        categoryIds: product.category ? [Number(product.category)] : [],
+
+        publishNow: product.productStatus === "active",
+
+        youtubeLink: "",
+
+        unit: "",
+
+        productLocation: "",
+
+        minOrderQty: "",
+
+        variations: product.variants.map<ProductVariationDto>((variant) => ({
+          name: variant.name,
+          options: variant.options,
+        })),
+
+        options: product.variants.map<ProductOptionDto>((variant) => ({
+          name: variant.name,
+          values: variant.options,
+        })),
+      };
+
+      /**
+       * ------------------------------------------------------------
+       * Create Product
+       * ------------------------------------------------------------
+       */
+      await createProductMutation.mutateAsync(payload);
+
+      /**
+       * ------------------------------------------------------------
+       * Cleanup
+       * ------------------------------------------------------------
+       */
       resetProduct();
 
       router.replace({
@@ -77,12 +134,8 @@ export default function ReviewScreen() {
           refresh: Date.now().toString(),
         },
       });
-
-      resetProduct();
-
-      router.replace(ROUTES.PRODUCTS);
     } catch (error) {
-      console.error(error);
+      console.error("CREATE PRODUCT ERROR", error);
     }
   }
 

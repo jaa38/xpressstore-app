@@ -66,35 +66,38 @@ export default function BusinessDetailsScreen() {
   const updateBusinessType = useUpdateBusinessType();
 
   async function onSubmit(data: BusinessDetailsForm) {
-    try {
-      /**
-       * Update merchant business details
-       */
-      await updateBusinessDetails.mutateAsync({
-        businessName: data.businessName,
+  try {
+    await updateBusinessDetails.mutateAsync({
+      merchantId: "",
 
-        businessAddress: data.businessAddress,
+      businessName: data.businessName,
 
-        businessCategory: data.businessCategory,
-      });
+      tradingName: data.businessName,
 
-      /**
-       * Update merchant business type
-       */
-      await updateBusinessType.mutateAsync({
-        businessType: data.businessType,
-      });
+      businessEmail: "",
 
-      router.push(ROUTES.ID_VERIFICATION);
-    } catch (error) {
-      console.error("Failed to update merchant:", error);
+      businessPhoneNumber: "",
+    });
 
-      Alert.alert(
-        "Unable to Continue",
-        "We couldn't save your business information. Please try again."
-      );
-    }
+    await updateBusinessType.mutateAsync({
+      merchantId: "",
+
+      businessTypeId:
+        data.businessType === "registered" ? 2 : 1,
+
+      businessRegistrationTypeId: 1,
+    });
+
+    router.push(ROUTES.ID_VERIFICATION);
+  } catch (error) {
+    console.error("Failed to update merchant:", error);
+
+    Alert.alert(
+      "Unable to Continue",
+      "We couldn't save your business information. Please try again."
+    );
   }
+}
 
   return (
     <SafeAreaView

@@ -1,4 +1,11 @@
-import { View, Pressable, ScrollView, Share } from "react-native";
+import {
+  View,
+  Pressable,
+  ScrollView,
+  Share,
+  Alert,
+  RefreshControl,
+} from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,6 +22,12 @@ import { UICard } from "@/components/ui/UICard";
 
 import * as Clipboard from "expo-clipboard";
 import { Divider } from "@/components/ui/Divider";
+
+import { useStores } from "@/hooks/store/useStores";
+
+import { formatCurrency } from "@/utils/formatCurrency";
+
+import { useState } from "react";
 
 function SettingsRow({
   title,
@@ -58,15 +71,45 @@ function SettingsRow({
 }
 
 export default function StoreScreen() {
-  const storeUrl = "https://xpressstore.app/jeremiah-productions";
+  const { stores, isLoading, refetch } = useStores();
+
+  const store = stores[0];
+
+  const storeUrl = store?.storeLink ?? "";
+
+  const totalProducts = store?.products?.length ?? 0;
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function onRefresh() {
+    setRefreshing(true);
+
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   async function handleCopyLink() {
+    if (!storeUrl) {
+      Alert.alert("Store URL", "No store URL available.");
+
+      return;
+    }
+
     await Clipboard.setStringAsync(storeUrl);
 
-    console.log("Link copied");
+    Alert.alert("Copied", "Store link copied to clipboard.");
   }
 
   async function handleShareLink() {
+    if (!storeUrl) {
+      Alert.alert("Store URL", "No store URL available.");
+
+      return;
+    }
+
     try {
       await Share.share({
         message: storeUrl,
@@ -94,6 +137,15 @@ export default function StoreScreen() {
           paddingBottom: spacing.xl,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.icon.branding.icon}
+            colors={[theme.icon.branding.icon]}
+            progressBackgroundColor={theme.background.surface}
+          />
+        }
       >
         {/* HEADER */}
 
@@ -129,7 +181,7 @@ export default function StoreScreen() {
                 Total Products
               </AppText>
               <AppText variant="h3" color="strong">
-                4
+                {isLoading ? "--" : totalProducts}
               </AppText>
             </View>
 
@@ -163,9 +215,13 @@ export default function StoreScreen() {
               alignItems: "center",
             }}
           >
-            <AppText variant="bodyBold">Jeremiah Productions</AppText>
-
-            <UICard title="Live" variant="active" />
+            <AppText variant="bodyBold">
+              {isLoading ? "Loading..." : (store?.storeName ?? "Unnamed Store")}
+            </AppText>
+            <UICard
+              title={store?.isActive ? "Live" : "Offline"}
+              variant={store?.isActive ? "active" : "status"}
+            />{" "}
           </View>
 
           <View
@@ -274,20 +330,17 @@ export default function StoreScreen() {
           >
             <SettingsRow
               title="Store Name & Info"
-              subtitle="Jeremiah's Store"
+              subtitle={store?.storeName ?? "No Store"}
             />
-
             <Divider />
-
             <SettingsRow title="Theme" subtitle="Forest Green" />
-
             <Divider />
-
             <SettingsRow title="Layout" subtitle="Grid view" />
-
             <Divider />
-
-            <SettingsRow title="Products in store" subtitle="5 of 6 visible" />
+            <SettingsRow
+              title="Products in Store"
+              subtitle={`${totalProducts} products`}
+            />{" "}
           </Card>
         </View>
       </ScrollView>

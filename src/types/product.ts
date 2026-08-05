@@ -1,6 +1,11 @@
 import type { ShippingClass } from "@/schemas/storefrontSchema";
-
 import type { Currency } from "./currency";
+
+/**
+ * ============================================================================
+ * UI MODELS
+ * ============================================================================
+ */
 
 export interface ProductVariant {
   name: string;
@@ -16,13 +21,17 @@ export interface ProductDimensions {
 
 export interface ProductDraft {
   productName: string;
+
   description: string;
 
   category: string;
+
   brand: string;
+
   sku: string;
 
   price: number;
+
   costPrice: number;
 
   currency: Currency;
@@ -34,10 +43,13 @@ export interface ProductDraft {
   productStatus: "active" | "draft";
 
   stock: number;
+
   lowStockAlert: number;
+
   reorderLevel: number;
 
   image: string;
+
   images: string[];
 
   visible: boolean;
@@ -55,4 +67,96 @@ export interface ProductDraft {
 
 export interface Product extends ProductDraft {
   id: string;
+}
+
+/**
+ * ============================================================================
+ * API DTOs
+ * ============================================================================
+ */
+
+export interface ProductImageDto {
+  filename: string;
+
+  url: string;
+}
+
+export interface ProductOptionDto {
+  name: string;
+
+  values: string[];
+}
+
+export interface ProductVariationDto {
+  name: string;
+
+  options: string[];
+}
+
+export interface CreateProductRequest {
+  id: number;
+
+  name: string;
+
+  description: string;
+
+  youtubeLink?: string;
+
+  currency: string;
+
+  price: number;
+
+  unit?: string;
+
+  productLocation?: string;
+
+  minOrderQty?: string;
+
+  hasVariants: boolean;
+
+  images: ProductImageDto[];
+
+  categoryIds: number[];
+
+  variations: ProductVariationDto[];
+
+  options: ProductOptionDto[];
+
+  publishNow: boolean;
+}
+
+export interface UpdateProductRequest extends CreateProductRequest {}
+
+export interface MerchantProduct {
+  id: number;
+
+  productReference: string;
+
+  productName: string;
+
+  description: string;
+
+  unitPrice: number;
+
+  currency: string;
+
+  inStock: boolean;
+
+  totalInStock: number;
+
+  isActive: boolean;
+
+  youtubeLink?: string;
+
+  productImages: ProductImageDto[];
+
+  productCategories: unknown[];
+
+  variations: ProductVariationDto[];
+}
+
+export interface UploadProductImageResponse {
+  filename: string;
+
+  url: string;
 }

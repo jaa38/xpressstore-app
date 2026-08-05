@@ -19,8 +19,6 @@ import { Card } from "@/components/ui/Card";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { useProfile } from "@/hooks/use-profile";
-
 import { DashboardStatsCard } from "@/components/dashboard/DashboardStatsCard";
 
 import { formatCurrency } from "@/utils/formatCurrency";
@@ -35,8 +33,14 @@ import { TransactionListItem } from "@/components/transactions/TransactionListIt
 
 import { TransactionList } from "@/components/transactions/TransactionList";
 
+import { useMerchantProfile } from "@/hooks/merchant/useMerchantProfile";
+
 export default function HomeScreen() {
-  const { profile, refetch: refetchProfile } = useProfile();
+  const {
+    profile,
+    isLoading: profileLoading,
+    refetch: refetchProfile,
+  } = useMerchantProfile();
 
   const { data: stats, refetch: refetchDashboardStats } = useDashboardStats();
 
@@ -118,7 +122,11 @@ export default function HomeScreen() {
               Good morning,
             </AppText>
 
-            <AppText variant="h1">{profile?.full_name ?? "Merchant"}</AppText>
+            <AppText variant="h1">
+              {profileLoading
+                ? "Loading..."
+                : (profile?.businessName ?? "Merchant")}
+            </AppText>
           </View>
 
           <Pressable>

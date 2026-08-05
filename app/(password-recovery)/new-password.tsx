@@ -24,7 +24,9 @@ import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { updatePassword } from "@/features/auth/api/password-recovery-api";
+import { useChangePassword } from "@/hooks/auth/useChangePassword";
+
+import { getApiErrorMessage } from "@/api/errors";
 
 const newPasswordSchema = z
   .object({
@@ -50,7 +52,7 @@ export default function NewPasswordScreen() {
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const changePassword = useChangePassword();
 
   const {
     control,
@@ -69,18 +71,10 @@ export default function NewPasswordScreen() {
 
   async function onSubmit(data: NewPasswordSchema) {
     try {
-      setIsLoading(true);
-
-      const response = await updatePassword(data.password);
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      /**
-       * TODO:
-       * Call reset password API
-       */
+      await changePassword.mutateAsync({
+        oldPassword: "", // Not required during password reset
+        newPassword: data.password,
+      });
 
       Alert.alert(
         "Password Updated",
@@ -89,9 +83,7 @@ export default function NewPasswordScreen() {
 
       router.replace(ROUTES.LOGIN);
     } catch (error) {
-      console.log("Reset Password Error:", error);
-    } finally {
-      setIsLoading(false);
+      Alert.alert("Reset Password Failed", getApiErrorMessage(error));
     }
   }
 

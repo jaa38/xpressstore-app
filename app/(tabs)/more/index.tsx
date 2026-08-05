@@ -17,8 +17,12 @@ import { UICard } from "@/components/ui/UICard";
 
 import { useAuth } from "@/providers/AuthProvider";
 
+import { useMerchantProfile } from "@/hooks/merchant/useMerchantProfile";
+
 export default function MoreScreen() {
   const { logout } = useAuth();
+
+  const { profile, isLoading } = useMerchantProfile();
 
   async function handleLogout() {
     try {
@@ -74,13 +78,22 @@ export default function MoreScreen() {
               gap: spacing.xs,
             }}
           >
-            <AppText variant="h3">Merchant Name</AppText>
-
-            <AppText variant="bodySmall" color="muted">
-              siteurl.xpressstore.com
+            <AppText variant="h3">
+              {isLoading ? "Loading..." : (profile?.businessName ?? "Merchant")}
             </AppText>
 
-            <UICard title="Pro Merchant" variant="status" />
+            <AppText variant="bodySmall" color="muted">
+              {profile?.website || "No website configured"}
+            </AppText>
+
+            <UICard
+              title={
+                profile?.isVerified
+                  ? "Verified Merchant"
+                  : "Verification Pending"
+              }
+              variant="status"
+            />
           </View>
         </Card>
 

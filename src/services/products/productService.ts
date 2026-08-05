@@ -54,10 +54,13 @@ export const productService = {
     return data;
   },
 
-  async updateProduct(payload: UpdateProductRequest) {
+  async updateProduct(productId: number, payload: UpdateProductRequest) {
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.products.update,
-      payload
+      {
+        ...payload,
+        id: productId,
+      }
     );
 
     return data;

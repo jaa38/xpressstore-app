@@ -45,7 +45,11 @@ import {
   EditProductForm,
 } from "@/schemas/editProductSchema";
 
-import { uploadProductImage } from "@/services/storage/storage-service";
+import { useUploadProductImages } from "@/hooks/products/useUploadProductImages";
+
+import type { UpdateProductRequest } from "@/types/product";
+
+import type { ProductImageDto } from "@/types/product";
 
 import { useUpdateProduct } from "@/hooks/products/useUpdateProduct";
 
@@ -56,7 +60,7 @@ export default function ProductDetailsScreen() {
 
   const router = useRouter();
 
-  const { data: product, isLoading: loading } = useProduct(id);
+  const { product, isLoading: loading } = useProduct(Number(id));
 
   const { data: categories = [] } = useCategories();
 
@@ -73,6 +77,8 @@ export default function ProductDetailsScreen() {
   const { showToast } = useToast();
 
   const updateProductMutation = useUpdateProduct();
+
+  const uploadImagesMutation = useUploadProductImages();
 
   const {
     control,
@@ -109,12 +115,18 @@ export default function ProductDetailsScreen() {
 
     reset({
       productName: product.productName,
-      category: product.category,
+
+      category: product.productCategories?.[0]?.toString() ?? "",
+
       description: product.description,
-      price: String(product.price),
-      stock: String(product.stock),
-      image: product.image,
-      visible: product.visible,
+
+      price: String(product.unitPrice),
+
+      stock: String(product.totalInStock),
+
+      image: product.productImages?.[0]?.url ?? "",
+
+      visible: product.isActive,
     });
   }, [product, reset]);
 
@@ -231,19 +243,53 @@ export default function ProductDetailsScreen() {
     try {
       setSaving(true);
 
-      const imageUrl = await uploadProductImage(data.image);
+      let images: ProductImageDto[] = product?.productImages ?? [];
+
+      const selectedImage = data.image.trim();
+
+      /**
+       * Upload only if a new local image
+       * has been selected.
+       */
+      if (selectedImage && !selectedImage.startsWith("http")) {
+        images = await uploadImagesMutation.mutateAsync([selectedImage]);
+      }
+
+      const payload: UpdateProductRequest = {
+        id: Number(id),
+
+        name: data.productName.trim(),
+
+        description: data.description.trim(),
+
+        youtubeLink: product?.youtubeLink ?? "",
+
+        currency: product?.currency ?? "NGN",
+
+        price: Number(data.price),
+
+        unit: "",
+
+        productLocation: "",
+
+        minOrderQty: "",
+
+        hasVariants: (product?.variations.length ?? 0) > 0,
+
+        images,
+
+        categoryIds: data.category ? [Number(data.category)] : [],
+
+        variations: product?.variations ?? [],
+
+        options: [],
+
+        publishNow: data.visible,
+      };
 
       await updateProductMutation.mutateAsync({
-        id,
-        values: {
-          product_name: data.productName.trim(),
-          category: data.category,
-          description: data.description.trim(),
-          image: imageUrl,
-          price: Number(data.price),
-          stock: Number(data.stock),
-          visible: data.visible,
-        },
+        productId: Number(id),
+        payload,
       });
 
       showToast({
@@ -253,6 +299,8 @@ export default function ProductDetailsScreen() {
       });
 
       setHasSaved(true);
+
+      router.back();
     } catch (error) {
       console.log("UPDATE PRODUCT ERROR", error);
 

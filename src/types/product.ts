@@ -162,3 +162,24 @@ export interface UploadProductImageResponse {
 
   url: string;
 }
+
+/**
+ * ============================================================================
+ * UI VIEW MODELS
+ * ============================================================================
+ */
+
+export interface EditProduct extends MerchantProduct {
+  /**
+   * UI-friendly aliases
+   */
+  category: string;
+
+  image: string;
+
+  price: number;
+
+  stock: number;
+
+  visible: boolean;
+}

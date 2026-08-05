@@ -23,7 +23,7 @@ import { PAYMENT_CHANNELS } from "@/constants/paymentChannels";
 import { formatCurrency } from "@/utils/formatCurrency";
 
 import { ORDER_STATUS } from "@/constants/orderStatus";
-import { useOrders } from "@/hooks/products/useOrders";
+import { useOrders } from "@/hooks/orders/useOrders";
 
 import { formatOrderDate } from "@/utils/formatOrderDate";
 

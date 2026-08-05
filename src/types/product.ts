@@ -144,6 +144,8 @@ export interface MerchantProduct {
 
   totalInStock: number;
 
+  lowStockAlert: number;
+
   isActive: boolean;
 
   youtubeLink?: string;

@@ -14,7 +14,7 @@ import { AppText } from "@/components/ui/AppText";
 
 import { spacing, theme } from "@/theme";
 
-import { useOrders } from "@/hooks/products/useOrders";
+import { useOrders } from "@/hooks/orders/useOrders";
 import { useUpdateOrderStatus } from "@/hooks/orders/useUpdateOrderStatus";
 
 import { Order } from "@/types/order";

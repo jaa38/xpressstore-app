@@ -17,7 +17,7 @@ import { ReceiptSkeleton } from "@/components/receipt/ReceiptSkeleton";
 
 import { radius, spacing, theme } from "@/theme";
 
-import { useOrders } from "@/hooks/products/useOrders";
+import { useOrders } from "@/hooks/orders/useOrders";
 
 import { generateReceipt } from "@/services/receipt/generateReceipt";
 import { receiptFromOrder } from "@/services/receipt/receiptFromOrder";

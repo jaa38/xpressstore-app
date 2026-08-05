@@ -5,9 +5,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
-import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 
 import { spacing, theme } from "@/theme";
 
@@ -17,14 +15,23 @@ import { Card } from "@/components/ui/Card";
 
 import { useProduct } from "@/store/product/useProduct";
 
-import { ROUTES } from "@/navigation/routes";
 import { EditButton } from "@/components/product/EditButton";
 
-import { createProduct } from "@/services/product/product-service";
+import { useCreateProduct } from "@/hooks/products/useCreateProduct";
 
-import { uploadProductImage } from "@/services/storage/storage-service";
+import { useUploadProductImages } from "@/hooks/products/useUploadProductImages";
 
-import { formatCurrency } from "@/utils/formatCurrency";
+import { formatCurrency } from "@/utils/formatters/currency";
+
+import type { CreateProductRequest } from "@/types/product";
+
+import type { ProductImageDto } from "@/types/product";
+
+import type { ProductVariationDto } from "@/types/product";
+
+import type { ProductOptionDto } from "@/types/product";
+
+import type { Currency } from "@/types/currency";
 
 function editInfo() {
   router.replace(ROUTES.ADD_PRODUCT_INFO);
@@ -43,7 +50,11 @@ function editStorefront() {
 }
 
 export default function ReviewScreen() {
-  const { product, addProduct, resetProduct } = useProduct();
+  const { product, resetProduct } = useProduct();
+
+  const createProductMutation = useCreateProduct();
+
+  const uploadImagesMutation = useUploadProductImages();
 
   async function publishProduct() {
     try {
@@ -343,7 +354,7 @@ export default function ReviewScreen() {
                       textAlign: "right",
                     }}
                   >
-                   {formatCurrency(product.price, product.currency)}
+                    {formatCurrency(product.price, product.currency)}
                   </AppText>
                 </View>
 

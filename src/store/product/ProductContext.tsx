@@ -19,7 +19,7 @@ export interface ProductContextType {
   ) => void;
 
   updatePublishedProduct: (
-    productId: string,
+    productId: number,
     data: Partial<Product>
   ) => void;
 

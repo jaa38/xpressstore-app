@@ -139,10 +139,10 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   // UPDATE PUBLISHED PRODUCT
   // ─────────────────────────────
 
-  function updatePublishedProduct(productId: string, data: Partial<Product>) {
+  function updatePublishedProduct(productId: number, data: Partial<Product>) {
     setProducts((current) =>
       current.map((product) =>
-        product.id === productId
+        Number(product.id) === productId
           ? {
               ...product,
               ...data,

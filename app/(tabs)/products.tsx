@@ -27,17 +27,18 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useProducts } from "@/hooks/products/useProducts";
 
-import { useToggleProductVisibility } from "@/hooks/products/useToggleProductVisibility";
-
 import { useDeleteProduct } from "@/hooks/products/useDeleteProduct";
-
-import type { Product } from "@/types/product";
 
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
-import { formatCurrency } from "@/utils/formatCurrency";
+import { formatCurrency } from "@/utils/formatters/currency";
+
 import { ProductImage } from "@/components/ui/ProductImage";
-import OrdersScreen from "./orders";
+
+import { useToggleProductStatus } from "@/hooks/products/useToggleProductStatus";
+
+import type { MerchantProduct } from "@/types/product";
+import { Currency } from "@/types/currency";
 
 function RightActions({ onDelete }: { onDelete: () => void }) {
   return (
@@ -68,10 +69,10 @@ function ProductCard({
   onDelete,
   onEdit,
 }: {
-  product: Product;
-  onToggle: (productId: string, value: boolean) => void;
-  onDelete: (productId: string) => void;
-  onEdit: (productId: string) => void;
+  product: MerchantProduct;
+  onToggle: (productId: number, value: boolean) => void;
+  onDelete: (productId: number) => void;
+  onEdit: (productId: number) => void;
 }) {
   return (
     <Swipeable
@@ -89,7 +90,8 @@ function ProductCard({
           borderColor: theme.border.default,
         }}
       >
-        <ProductImage image={product.image} />
+        <ProductImage image={product.productImages?.[0]?.url ?? ""} />
+
         <View
           style={{
             flex: 1,
@@ -103,7 +105,7 @@ function ProductCard({
           </AppText> */}
 
           <AppText variant="bodySmall" color="secondary">
-            {product.stock} in stock
+            {product.totalInStock} in stock
           </AppText>
 
           <View
@@ -114,8 +116,8 @@ function ProductCard({
             }}
           >
             <AppText variant="bodyBold" color="warning">
-              {formatCurrency(product.price, {
-                currency: product.currency,
+              {formatCurrency(product.unitPrice, {
+                currency: product.currency as Currency,
               })}
             </AppText>
 
@@ -126,7 +128,6 @@ function ProductCard({
             </AppText> */}
           </View>
         </View>
-
         <View
           style={{
             alignSelf: "stretch",
@@ -144,7 +145,7 @@ function ProductCard({
           </Pressable>
 
           <Switch
-            value={product.visible}
+            value={product.isActive}
             onValueChange={(value) => onToggle(product.id, value)}
           />
         </View>
@@ -155,7 +156,7 @@ function ProductCard({
 
 export default function ProductScreen() {
   const {
-    data: products = [],
+    products,
     isLoading: loading,
     isRefetching: refreshing,
     error,
@@ -164,7 +165,7 @@ export default function ProductScreen() {
 
   const deleteProductMutation = useDeleteProduct();
 
-  const toggleVisibilityMutation = useToggleProductVisibility();
+  const toggleStatusMutation = useToggleProductStatus();
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -174,15 +175,17 @@ export default function ProductScreen() {
 
   const PRODUCTS_PER_PAGE = 5;
 
+  const LOW_STOCK_THRESHOLD = 5;
+
   async function onRefresh() {
     await refetch();
   }
 
-  const sortedProducts = useMemo(
-    () =>
-      [...products].sort((a, b) => a.productName.localeCompare(b.productName)),
-    [products]
-  );
+  const sortedProducts = useMemo(() => {
+    return [...products].sort((a, b) =>
+      a.productName.localeCompare(b.productName)
+    );
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -191,12 +194,9 @@ export default function ProductScreen() {
       return sortedProducts;
     }
 
-    return sortedProducts.filter((product) => {
-      return (
-        product.productName.toLowerCase().includes(query) ||
-        product.category.toLowerCase().includes(query)
-      );
-    });
+    return sortedProducts.filter((product) =>
+      product.productName.toLowerCase().includes(query)
+    );
   }, [sortedProducts, searchQuery]);
 
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
@@ -210,13 +210,11 @@ export default function ProductScreen() {
     Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE)
   );
 
-  const lowStockProducts = useMemo(
-    () =>
-      filteredProducts.filter(
-        (product) => product.stock <= product.lowStockAlert
-      ),
-    [filteredProducts]
-  );
+  const lowStockProducts = useMemo(() => {
+    return filteredProducts.filter(
+      (product) => product.totalInStock <= product.lowStockAlert
+    );
+  }, [filteredProducts]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -230,18 +228,18 @@ export default function ProductScreen() {
     }, [lowStockProducts.length])
   );
 
-  async function toggleProduct(productId: string, value: boolean) {
+  async function toggleProduct(productId: number, value: boolean) {
     try {
-      await toggleVisibilityMutation.mutateAsync({
+      await toggleStatusMutation.mutateAsync({
         productId,
-        value,
+        status: value,
       });
     } catch (error) {
-      console.log("UPDATE VISIBILITY ERROR", error);
+      console.log("UPDATE STATUS ERROR", error);
     }
   }
 
-  async function handleDelete(productId: string) {
+  async function handleDelete(productId: number) {
     Alert.alert("Delete Product", "This product will be permanently removed.", [
       {
         text: "Cancel",
@@ -255,17 +253,22 @@ export default function ProductScreen() {
             await deleteProductMutation.mutateAsync(productId);
           } catch (error) {
             console.log("DELETE ERROR", error);
+
+            Alert.alert(
+              "Delete Failed",
+              "Unable to delete this product. Please try again."
+            );
           }
         },
       },
     ]);
   }
 
-  function handleEdit(productId: string) {
+  function handleEdit(productId: number) {
     router.push({
       pathname: "/product/[id]",
       params: {
-        id: productId,
+        id: String(productId),
       },
     });
   }
@@ -294,52 +297,52 @@ export default function ProductScreen() {
           {/* TOP */}
 
           <View
-  style={{
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  }}
->
-  <View
-    style={{
-      flex: 1,
-      gap: spacing.xs,
-    }}
-  >
-    <AppText variant="h1">Products</AppText>
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                flex: 1,
+                gap: spacing.xs,
+              }}
+            >
+              <AppText variant="h1">Products</AppText>
 
-    <AppText variant="body" color="secondary">
-      {products.length === 1
-        ? "1 item in catalog"
-        : `${products.length} items in catalog`}
-    </AppText>
-  </View>
+              <AppText variant="body" color="secondary">
+                {products.length === 1
+                  ? "1 item in catalog"
+                  : `${products.length} items in catalog`}
+              </AppText>
+            </View>
 
-  <Pressable
-    accessibilityRole="button"
-    accessibilityLabel="Add Product"
-    onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
-    style={({ pressed }) => ({
-      width: 44,
-      height: 44,
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Add Product"
+              onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
+              style={({ pressed }) => ({
+                width: 44,
+                height: 44,
 
-      borderRadius: radius.full,
+                borderRadius: radius.full,
 
-      justifyContent: "center",
-      alignItems: "center",
+                justifyContent: "center",
+                alignItems: "center",
 
-      backgroundColor: pressed
-        ? theme.action.primary.pressed
-        : theme.action.primary.background,
-    })}
-  >
-    <Ionicons
-      name="add"
-      size={24}
-      color={theme.action.primary.text}
-    />
-  </Pressable>
-</View>
+                backgroundColor: pressed
+                  ? theme.action.primary.pressed
+                  : theme.action.primary.background,
+              })}
+            >
+              <Ionicons
+                name="add"
+                size={24}
+                color={theme.action.primary.text}
+              />
+            </Pressable>
+          </View>
 
           {showLowStockBanner && lowStockProducts.length > 0 && (
             <Card
@@ -532,7 +535,7 @@ export default function ProductScreen() {
                 }
                 // scrollEnabled
                 showsVerticalScrollIndicator={false}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                   <ProductCard
                     product={item}

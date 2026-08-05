@@ -22,7 +22,6 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/Input";
 
 import { Dropdown } from "@/components/ui/Dropdown";
-import { getCategories, createCategory } from "@/services/category/category-service";
 
 import { AddProductHeader } from "@/components/product/AddProductHeader";
 
@@ -38,6 +37,10 @@ import {
 } from "@/schemas/productInfoSchema";
 
 import { useProduct } from "@/store/product/useProduct";
+
+import { useCategories } from "@/hooks/categories/useCategories";
+import { useCreateCategory } from "@/hooks/categories/useCreateCategory";
+import { useToast } from "@/hooks/useToast";
 
 export default function InfoScreen() {
   const { product, updateProduct } = useProduct();
@@ -64,16 +67,11 @@ export default function InfoScreen() {
 
   const [newCategory, setNewCategory] = useState("");
 
-  const [categories, setCategories] = useState<
-    {
-      label: string;
-      value: string;
-    }[]
-  >([]);
+  const { data: categories = [] } = useCategories();
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
+  const createCategoryMutation = useCreateCategory();
+
+  const { showToast } = useToast();
 
   const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
     mediaTypes: ["images"],
@@ -149,37 +147,33 @@ export default function InfoScreen() {
     setValue("sku", `SKU-${random}-${timestamp}`);
   }
 
-  async function loadCategories() {
-    try {
-      const data = await getCategories();
-
-      console.log("MAPPED CATEGORIES:", data);
-
-      setCategories(data.sort((a, b) => a.label.localeCompare(b.label)));
-    } catch (error) {
-      console.log("LOAD CATEGORIES ERROR", error);
-    }
-  }
-
   async function handleCreateCategory() {
     if (!newCategory.trim()) {
       return;
     }
 
     try {
-      const category = await createCategory(newCategory);
-
-      setCategories((current) =>
-        [...current, category].sort((a, b) => a.label.localeCompare(b.label))
-      );
+      const category = await createCategoryMutation.mutateAsync(newCategory);
 
       setValue("category", category.value, {
         shouldValidate: true,
       });
 
       setNewCategory("");
+
+      showToast({
+        type: "success",
+        title: "Category Created",
+        message: `${category.label} has been added.`,
+      });
     } catch (error) {
       console.log("CREATE CATEGORY ERROR", error);
+
+      showToast({
+        type: "error",
+        title: "Unable to Create Category",
+        message: "Please try again.",
+      });
     }
   }
 

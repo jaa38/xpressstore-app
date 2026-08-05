@@ -87,9 +87,7 @@ export default function LoginScreen() {
       const email = await getBiometricEmail();
       console.log("Biometric User:", email);
 
-      // ✅ Ask Supabase directly — never a stale, separately-stored copy.
-      // If autoRefreshToken silently rotated the token in the background,
-      // this always reflects the current, valid state.
+      
       const token = await getAccessToken();
 
       if (!token) {

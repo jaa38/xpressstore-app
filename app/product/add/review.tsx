@@ -19,7 +19,7 @@ import { EditButton } from "@/components/product/EditButton";
 
 import { useCreateProduct } from "@/hooks/products/useCreateProduct";
 
-import { useUploadProductImages } from "@/hooks/products/useUploadProductImages";
+import { useUploadProductImage } from "@/hooks/products/useUploadProductImage";
 
 import { formatCurrency } from "@/utils/formatters/currency";
 
@@ -56,7 +56,7 @@ export default function ReviewScreen() {
 
   const createProductMutation = useCreateProduct();
 
-  const uploadImagesMutation = useUploadProductImages();
+  const uploadImagesMutation = useUploadProductImage();
 
   async function publishProduct() {
     try {
@@ -67,10 +67,22 @@ export default function ReviewScreen() {
        */
       let uploadedImages: ProductImageDto[] = [];
 
-      const imagesToUpload = [product.image, ...product.images].filter(Boolean);
+      const imagesToUpload = [product.image, ...product.images].filter(
+        (image): image is string => Boolean(image)
+      );
 
-      if (imagesToUpload.length > 0) {
-        uploadedImages = await uploadImagesMutation.mutateAsync(imagesToUpload);
+      for (const imageUri of imagesToUpload) {
+        const formData = new FormData();
+
+        formData.append("file", {
+          uri: imageUri,
+          name: `product-${Date.now()}.jpg`,
+          type: "image/jpeg",
+        } as any);
+
+        const response = await uploadImagesMutation.mutateAsync(formData);
+
+        uploadedImages.push(response.data);
       }
 
       /**

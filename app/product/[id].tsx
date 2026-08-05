@@ -5,6 +5,8 @@ import {
   Alert,
   BackHandler,
   Switch,
+  Image,
+  Pressable,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -46,7 +48,7 @@ import {
   EditProductForm,
 } from "@/schemas/editProductSchema";
 
-import { useUploadProductImages } from "@/hooks/products/useUploadProductImages";
+import { useUploadProductImage } from "@/hooks/products/useUploadProductImage";
 
 import type { UpdateProductRequest } from "@/types/product";
 
@@ -73,6 +75,8 @@ export default function ProductDetailsScreen() {
 
   const [newCategory, setNewCategory] = useState("");
 
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+
   const createCategoryMutation = useCreateCategory();
 
   const [saving, setSaving] = useState(false);
@@ -83,7 +87,7 @@ export default function ProductDetailsScreen() {
 
   const updateProductMutation = useUpdateProduct();
 
-  const uploadImagesMutation = useUploadProductImages();
+  const uploadImagesMutation = useUploadProductImage();
 
   const {
     control,
@@ -113,10 +117,16 @@ export default function ProductDetailsScreen() {
     quality: 0.8,
   };
 
+  const MAX_GALLERY_IMAGES = 5;
+
   useEffect(() => {
     if (!product) {
       return;
     }
+
+    const images = product.productImages?.map((image) => image.url) ?? [];
+
+    setGalleryImages(images);
 
     reset({
       productName: product.productName,
@@ -129,7 +139,7 @@ export default function ProductDetailsScreen() {
 
       stock: String(product.totalInStock),
 
-      image: product.productImages?.[0]?.url ?? "",
+      image: images[0] ?? "",
 
       visible: product.isActive,
 
@@ -165,6 +175,16 @@ export default function ProductDetailsScreen() {
   );
 
   async function handleCamera() {
+    if (galleryImages.length >= MAX_GALLERY_IMAGES) {
+      showToast({
+        type: "error",
+        title: "Gallery Full",
+        message: `Maximum of ${MAX_GALLERY_IMAGES} images allowed.`,
+      });
+
+      return;
+    }
+
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permission.granted) {
@@ -177,34 +197,87 @@ export default function ProductDetailsScreen() {
       const asset = result.assets?.[0];
 
       if (asset) {
-        setValue("image", asset.uri, {
-          shouldDirty: true,
-          shouldValidate: true,
+        setGalleryImages((current) => {
+          const updated = [...current, asset.uri];
+
+          setValue("image", updated[0] ?? "", {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+
+          return updated;
         });
       }
     }
   }
 
   async function handleGallery() {
-    const result =
-      await ImagePicker.launchImageLibraryAsync(IMAGE_PICKER_OPTIONS);
+    if (galleryImages.length >= MAX_GALLERY_IMAGES) {
+      showToast({
+        type: "error",
+        title: "Gallery Full",
+        message: `Maximum of ${MAX_GALLERY_IMAGES} images allowed.`,
+      });
+
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      ...IMAGE_PICKER_OPTIONS,
+
+      allowsMultipleSelection: true,
+
+      selectionLimit: MAX_GALLERY_IMAGES - galleryImages.length,
+    });
 
     if (!result.canceled) {
-      const asset = result.assets?.[0];
+      const selectedImages = result.assets.map((asset) => asset.uri);
 
-      if (asset) {
-        setValue("image", asset.uri, {
+      setGalleryImages((current) => {
+        /**
+         * Remove duplicates
+         */
+        const merged = [...current, ...selectedImages];
+
+        const uniqueImages = [...new Set(merged)].slice(0, MAX_GALLERY_IMAGES);
+
+        setValue("image", uniqueImages[0] ?? "", {
           shouldDirty: true,
           shouldValidate: true,
         });
-      }
+
+        return uniqueImages;
+      });
     }
   }
 
-  function handleRemoveImage() {
+  // function handleRemoveImage() {
+  //   Alert.alert(
+  //     "Remove Product Image?",
+  //     "This will remove the current product image. You can always add another one before saving.",
+  //     [
+  //       {
+  //         text: "Cancel",
+  //         style: "cancel",
+  //       },
+  //       {
+  //         text: "Remove",
+  //         style: "destructive",
+  //         onPress: () => {
+  //           setValue("image", "", {
+  //             shouldDirty: true,
+  //             shouldValidate: true,
+  //           });
+  //         },
+  //       },
+  //     ]
+  //   );
+  // }
+
+  function removeGalleryImage(index: number) {
     Alert.alert(
-      "Remove Product Image?",
-      "This will remove the current product image. You can always add another one before saving.",
+      "Remove Image?",
+      "This image will be permanently removed from this product when you save your changes.",
       [
         {
           text: "Cancel",
@@ -214,14 +287,43 @@ export default function ProductDetailsScreen() {
           text: "Remove",
           style: "destructive",
           onPress: () => {
-            setValue("image", "", {
-              shouldDirty: true,
-              shouldValidate: true,
+            setGalleryImages((current) => {
+              const updated = current.filter((_, i) => i !== index);
+
+              setValue("image", updated[0] ?? "", {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+
+              return updated;
             });
           },
         },
       ]
     );
+  }
+
+  function makeCoverImage(index: number) {
+    if (index === 0) {
+      return;
+    }
+
+    setGalleryImages((current) => {
+      const selected = current[index];
+
+      if (!selected) {
+        return current;
+      }
+
+      const reordered = [selected, ...current.filter((_, i) => i !== index)];
+
+      setValue("image", reordered[0] ?? "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+
+      return reordered;
+    });
   }
 
   async function handleCreateCategory() {
@@ -256,25 +358,64 @@ export default function ProductDetailsScreen() {
     try {
       setSaving(true);
 
-      let images: ProductImageDto[] = product?.productImages ?? [];
-
-      const selectedImage = data.image.trim();
-
       /**
-       * Image removed
+       * Build the gallery payload while preserving:
+       *
+       * • Existing remote images
+       * • Newly selected local images
+       * • Image order (cover image first)
        */
-      if (!selectedImage) {
-        images = [];
-      } else if (selectedImage.startsWith("http")) {
+      let images: ProductImageDto[] = [];
+
+      if (galleryImages.length > 0) {
+        const remoteImages = galleryImages.filter((uri) =>
+          uri.startsWith("http")
+        );
+
+        const localImages = galleryImages.filter(
+          (uri) => !uri.startsWith("http")
+        );
+
         /**
-         * Existing image
+         * Upload only newly selected images.
          */
-        images = product?.productImages ?? [];
-      } else {
+        const uploadedImages: ProductImageDto[] = [];
+
+        for (const imageUri of localImages) {
+          const formData = new FormData();
+
+          formData.append("file", {
+            uri: imageUri,
+            name: `product-${Date.now()}.jpg`,
+            type: "image/jpeg",
+          } as any);
+
+          const response = await uploadImagesMutation.mutateAsync(formData);
+
+          uploadedImages.push(response.data);
+        }
+
         /**
-         * New local image
+         * Convert remote URLs back into ProductImageDto.
          */
-        images = await uploadImagesMutation.mutateAsync([selectedImage]);
+        const existingImages: ProductImageDto[] = remoteImages.map((url) => ({
+          filename:
+            product?.productImages.find((image) => image.url === url)
+              ?.filename ?? "",
+
+          url,
+        }));
+
+        /**
+         * Merge everything while preserving gallery order.
+         */
+        images = galleryImages.map((uri) => {
+          if (uri.startsWith("http")) {
+            return existingImages.find((image) => image.url === uri)!;
+          }
+
+          return uploadedImages.shift()!;
+        });
       }
 
       const payload: UpdateProductRequest = {
@@ -322,7 +463,14 @@ export default function ProductDetailsScreen() {
 
       setHasSaved(true);
 
-      reset(data);
+      const updatedGallery = images.map((image) => image.url);
+
+      setGalleryImages(updatedGallery);
+
+      reset({
+        ...data,
+        image: updatedGallery[0] ?? "",
+      });
 
       router.back();
     } catch (error) {
@@ -423,33 +571,185 @@ export default function ProductDetailsScreen() {
             Update your product details, category and image.
           </AppText>
 
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <ImageActionCard
-              title="Take Photo"
-              icon="camera-outline"
-              imageUri={watch("image") || undefined}
-              onPress={handleCamera}
-            />
+          <Card>
+            <View
+              style={{
+                gap: spacing.sm,
+              }}
+            >
+              <View
+                style={{
+                  gap: spacing.md,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: spacing.md,
+                  }}
+                >
+                  <ImageActionCard
+                    title="Take Photo"
+                    icon="camera-outline"
+                    disabled={galleryImages.length >= MAX_GALLERY_IMAGES}
+                    onPress={handleCamera}
+                  />
 
-            <ImageActionCard
-              title="Gallery"
-              icon="image-outline"
-              onPress={handleGallery}
-            />
+                  <ImageActionCard
+                    title="Gallery"
+                    icon="image-outline"
+                    disabled={galleryImages.length >= MAX_GALLERY_IMAGES}
+                    onPress={handleGallery}
+                  />
+                </View>
 
-            <ImageActionCard
-              title="Remove"
-              icon="trash-outline"
-              iconColor={theme.state.error.icon}
-              disabled={!watch("image")}
-              onPress={handleRemoveImage}
-            />
-          </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <AppText variant="bodySmall" color="secondary">
+                      Tap an image to make it the cover photo.
+                    </AppText>
+
+                    <AppText variant="bodySmall" color="secondary">
+                      {galleryImages.length}/{MAX_GALLERY_IMAGES}
+                    </AppText>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: spacing.sm,
+                    }}
+                  >
+                    {galleryImages.length === 0 && (
+                      <Card
+                        style={{
+                          width: 220,
+                        }}
+                      >
+                        <AppText variant="bodyBold">No Images Added</AppText>
+
+                        <AppText variant="bodySmall" color="secondary">
+                          Use Camera or Gallery above to add product images.
+                        </AppText>
+                      </Card>
+                    )}
+
+                    {galleryImages.map((uri, index) => (
+                      <Pressable
+                        key={`${uri}-${index}`}
+                        onPress={() => makeCoverImage(index)}
+                        style={{
+                          position: "relative",
+                        }}
+                      >
+                        <Image
+                          source={{ uri }}
+                          style={{
+                            width: 90,
+                            height: 90,
+                            borderRadius: 12,
+
+                            borderWidth: index === 0 ? 3 : 1,
+
+                            borderColor:
+                              index === 0
+                                ? theme.border.brand
+                                : theme.border.strong,
+                          }}
+                        />
+
+                        {index === 0 && (
+                          <View
+                            style={{
+                              position: "absolute",
+                              left: 6,
+                              top: 6,
+                              backgroundColor: theme.background.brand,
+                              paddingHorizontal: 6,
+                              paddingVertical: 2,
+                              borderRadius: 6,
+                            }}
+                          >
+                            <AppText variant="caption" color="inverse">
+                              Primary
+                            </AppText>
+                          </View>
+                        )}
+
+                        <Pressable
+                          onPress={() => removeGalleryImage(index)}
+                          style={{
+                            position: "absolute",
+                            top: -6,
+                            right: -6,
+                            width: 24,
+                            height: 24,
+                            borderRadius: 12,
+                            backgroundColor: theme.state.error.background,
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <AppText variant="bodyBold" color="inverse">
+                            ×
+                          </AppText>
+                        </Pressable>
+                      </Pressable>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <AppText variant="body" color="secondary">
+                  Currency
+                </AppText>
+
+                <AppText variant="bodyBold">{product?.currency}</AppText>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <AppText variant="body" color="secondary">
+                  Inventory Status
+                </AppText>
+
+                <AppText
+                  variant="bodyBold"
+                  color={product?.inStock ? "success" : "error"}
+                >
+                  {product?.inStock ? "In Stock" : "Out of Stock"}
+                </AppText>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <AppText variant="body" color="secondary">
+                  Low Stock Alert
+                </AppText>
+
+                <AppText variant="bodyBold">{product?.lowStockAlert}</AppText>
+              </View>
+            </View>
+          </Card>
 
           <Controller
             control={control}
@@ -505,7 +805,11 @@ export default function ProductDetailsScreen() {
               gap: spacing.md,
             }}
           >
-            <AppText variant="h3">Pricing</AppText>
+            <AppText variant="h3">Pricing & Inventory</AppText>
+
+            <AppText variant="body" color="secondary">
+              Manage pricing, stock levels and product visibility.
+            </AppText>
 
             <Controller
               control={control}
@@ -599,8 +903,11 @@ export default function ProductDetailsScreen() {
             marginTop: spacing.lg,
           }}
         >
-          <AppText variant="h3">Product Details</AppText>
+          <AppText variant="h3">Additional Information</AppText>
 
+          <AppText variant="body" color="secondary">
+            Optional information to help customers understand this product.
+          </AppText>
           <Controller
             control={control}
             name="youtubeLink"
@@ -659,7 +966,7 @@ export default function ProductDetailsScreen() {
         </View>
 
         <Button
-          title="Save Changes"
+          title={saving ? "Saving..." : isDirty ? "Save Changes" : "No Changes"}
           variant="primary"
           loading={saving}
           disabled={saving || !isDirty || !isValid}

@@ -159,6 +159,36 @@ export const API_ENDPOINTS = {
       `/Industry/GetIndustryCategories?IndustryId=${industryId}`,
   },
 
+  store: {
+    getStores: "/Store/GetStores",
+
+    getStore: (storeId: number) => `/Store/GetStoreById/${storeId}`,
+
+    createStore: "/Store/CreateStore",
+
+    updateStore: "/Store/UpdateStore",
+
+    deleteStore: (storeId: number) => `/Store/DeleteStore/${storeId}`,
+
+    validateStoreName: (storeName: string) =>
+      `/Store/ValidateStoreName/${storeName}`,
+
+    validateStoreReference: (reference: string) =>
+      `/Store/ValidateStoreReference/${reference}`,
+
+    getShippingRegions: "/Store/GetAllMerchantShippingRegions",
+
+    createShippingRegion: "/Store/CreateShippingRegion",
+
+    updateShippingRegion: "/Store/UpdateShippingRegion",
+
+    deleteShippingRegion: (regionId: number) =>
+      `/Store/DeleteShippingRegion/${regionId}`,
+
+    toggleDelivery: (transactionId: string, isDelivery: boolean) =>
+      `/Store/ToggleDelivery?IsDelivery=${isDelivery}&TransactionId=${transactionId}`,
+  },
+
   /**
    * ---------------------------------------------------------------------------
    * GraphQL

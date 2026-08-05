@@ -150,6 +150,12 @@ export interface MerchantProduct {
 
   youtubeLink?: string;
 
+  unit?: string;
+
+  productLocation?: string;
+
+  minOrderQty?: string;
+
   productImages: ProductImageDto[];
 
   productCategories: unknown[];

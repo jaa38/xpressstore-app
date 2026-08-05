@@ -19,6 +19,7 @@ import { ImageActionCard } from "@/components/ui/ImageActionCard";
 
 import { Divider } from "@/components/ui/Divider";
 import { Input } from "@/components/ui/Input";
+import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { AppText } from "@/components/ui/AppText";
 
@@ -52,6 +53,10 @@ import type { UpdateProductRequest } from "@/types/product";
 import type { ProductImageDto } from "@/types/product";
 
 import { useUpdateProduct } from "@/hooks/products/useUpdateProduct";
+
+import type { Currency } from "@/types/currency";
+
+import { Card } from "@/components/ui/Card";
 
 export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams<{
@@ -127,6 +132,14 @@ export default function ProductDetailsScreen() {
       image: product.productImages?.[0]?.url ?? "",
 
       visible: product.isActive,
+
+      youtubeLink: product.youtubeLink ?? "",
+
+      unit: product.unit ?? "",
+
+      productLocation: product.productLocation ?? "",
+
+      minOrderQty: product.minOrderQty ?? "",
     });
   }, [product, reset]);
 
@@ -248,10 +261,19 @@ export default function ProductDetailsScreen() {
       const selectedImage = data.image.trim();
 
       /**
-       * Upload only if a new local image
-       * has been selected.
+       * Image removed
        */
-      if (selectedImage && !selectedImage.startsWith("http")) {
+      if (!selectedImage) {
+        images = [];
+      } else if (selectedImage.startsWith("http")) {
+        /**
+         * Existing image
+         */
+        images = product?.productImages ?? [];
+      } else {
+        /**
+         * New local image
+         */
         images = await uploadImagesMutation.mutateAsync([selectedImage]);
       }
 
@@ -262,17 +284,17 @@ export default function ProductDetailsScreen() {
 
         description: data.description.trim(),
 
-        youtubeLink: product?.youtubeLink ?? "",
+        youtubeLink: data.youtubeLink.trim(),
 
         currency: product?.currency ?? "NGN",
 
         price: Number(data.price),
 
-        unit: "",
+        unit: data.unit.trim(),
 
-        productLocation: "",
+        productLocation: data.productLocation.trim(),
 
-        minOrderQty: "",
+        minOrderQty: data.minOrderQty.trim(),
 
         hasVariants: (product?.variations.length ?? 0) > 0,
 
@@ -299,6 +321,8 @@ export default function ProductDetailsScreen() {
       });
 
       setHasSaved(true);
+
+      reset(data);
 
       router.back();
     } catch (error) {
@@ -393,7 +417,11 @@ export default function ProductDetailsScreen() {
             gap: spacing.md,
           }}
         >
-          <AppText variant="caption">Product Image</AppText>
+          <AppText variant="h3">Product Information</AppText>
+
+          <AppText variant="body" color="secondary">
+            Update your product details, category and image.
+          </AppText>
 
           <View
             style={{
@@ -472,78 +500,82 @@ export default function ProductDetailsScreen() {
             />
           </View>
 
-          <Controller
-            control={control}
-            name="price"
-            render={({ field: { onChange, value }, fieldState: { error } }) => (
-              <Input
-                label="Selling Price"
-                keyboardType="numeric"
-                value={value}
-                error={error?.message}
-                onChangeText={onChange}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="stock"
-            render={({ field: { onChange, value }, fieldState: { error } }) => (
-              <Input
-                label="Stock"
-                keyboardType="numeric"
-                value={value}
-                error={error?.message}
-                onChangeText={onChange}
-              />
-            )}
-          />
-
           <View
             style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingVertical: spacing.sm,
+              gap: spacing.md,
             }}
           >
-            <View
-              style={{
-                flex: 1,
-                marginRight: spacing.md,
-              }}
-            >
-              <AppText variant="bodyLargeBold">Visible</AppText>
+            <AppText variant="h3">Pricing</AppText>
 
-              <AppText variant="bodySmall" color="secondary">
-                Make this product visible to customers.
-              </AppText>
-            </View>
+            <Controller
+              control={control}
+              name="price"
+              render={({ field, fieldState }) => (
+                <CurrencyInput
+                  label="Selling Price"
+                  required
+                  keyboardType="decimal-pad"
+                  value={field.value}
+                  currency={product?.currency ?? "NGN"}
+                  disableCurrencySelection
+                  error={fieldState.error?.message}
+                  onChangeText={field.onChange}
+                />
+              )}
+            />
 
-            <View
-              style={{
-                width: 56,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Controller
-                control={control}
-                name="visible"
-                render={({ field: { value, onChange } }) => (
-                  <Switch
-                    value={value}
-                    onValueChange={onChange}
-                    trackColor={{
-                      false: theme.input.border,
-                      true: theme.icon.branding.icon,
-                    }}
-                    thumbColor="#FFFFFF"
-                  />
-                )}
-              />
-            </View>
+            <Card>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: spacing.md,
+                }}
+              >
+                <View
+                  style={{
+                    flex: 1,
+                  }}
+                >
+                  <AppText variant="bodyLargeBold">Product Status</AppText>
+
+                  <AppText variant="body" color="secondary">
+                    Publish or hide this product from customers.
+                  </AppText>
+                </View>
+
+                <Controller
+                  control={control}
+                  name="visible"
+                  render={({ field }) => (
+                    <Switch
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      trackColor={{
+                        false: theme.input.border,
+                        true: theme.icon.branding.icon,
+                      }}
+                      thumbColor="#FFFFFF"
+                    />
+                  )}
+                />
+              </View>
+            </Card>
+
+            <Controller
+              control={control}
+              name="stock"
+              render={({ field, fieldState }) => (
+                <Input
+                  label="Current Stock"
+                  keyboardType="numeric"
+                  value={field.value}
+                  error={fieldState.error?.message}
+                  onChangeText={field.onChange}
+                />
+              )}
+            />
           </View>
 
           <Controller
@@ -556,6 +588,71 @@ export default function ProductDetailsScreen() {
                 value={value}
                 error={error?.message}
                 onChangeText={onChange}
+              />
+            )}
+          />
+        </View>
+
+        <View
+          style={{
+            gap: spacing.md,
+            marginTop: spacing.lg,
+          }}
+        >
+          <AppText variant="h3">Product Details</AppText>
+
+          <Controller
+            control={control}
+            name="youtubeLink"
+            render={({ field, fieldState }) => (
+              <Input
+                label="YouTube Link"
+                placeholder="https://youtube.com/..."
+                value={field.value}
+                error={fieldState.error?.message}
+                onChangeText={field.onChange}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="unit"
+            render={({ field, fieldState }) => (
+              <Input
+                label="Unit"
+                placeholder="Piece"
+                value={field.value}
+                error={fieldState.error?.message}
+                onChangeText={field.onChange}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="minOrderQty"
+            render={({ field, fieldState }) => (
+              <Input
+                label="Minimum Order Quantity"
+                keyboardType="numeric"
+                value={field.value}
+                error={fieldState.error?.message}
+                onChangeText={field.onChange}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="productLocation"
+            render={({ field, fieldState }) => (
+              <Input
+                label="Product Location"
+                placeholder="Warehouse A"
+                value={field.value}
+                error={fieldState.error?.message}
+                onChangeText={field.onChange}
               />
             )}
           />

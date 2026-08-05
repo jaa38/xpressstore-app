@@ -26,6 +26,14 @@ export const editProductSchema = z.object({
   image: z.string(),
 
   visible: z.boolean(),
+
+  youtubeLink: z.string(),
+
+  unit: z.string(),
+
+  productLocation: z.string(),
+
+  minOrderQty: z.string(),
 });
 
 export type EditProductForm = z.infer<typeof editProductSchema>;

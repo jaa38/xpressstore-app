@@ -1,71 +1,87 @@
-import { z } from "zod";
+import {
+  getPaymentLinks,
+  getPaymentLink,
+  createPaymentLink,
+  updatePaymentLink,
+  deletePaymentLink,
+  validatePaymentLinkReference,
+  getPaymentLinkTransactions,
+} from "@/api/payment-links/payment-links-api";
 
-export const paymentLinkSettingsSchema = z.object({
+import type {
+  CreatePaymentLinkRequest,
+  UpdatePaymentLinkRequest,
+} from "@/types/paymentLink";
+
+export const paymentLinkService = {
   /**
    * ---------------------------------------------------------------------------
-   * Expiry
+   * Get Payment Links
    * ---------------------------------------------------------------------------
    */
-  expiryDate: z.date().nullable(),
-
-  /**
-   * ---------------------------------------------------------------------------
-   * Payment Page Type
-   * ---------------------------------------------------------------------------
-   */
-  pageType: z.enum(["single", "multiple"]),
-
-  /**
-   * ---------------------------------------------------------------------------
-   * Payment Behaviour
-   * ---------------------------------------------------------------------------
-   */
-  isFixedAmount: z.boolean(),
-
-  allowMultiplePayments: z.boolean(),
-
-  /**
-   * ---------------------------------------------------------------------------
-   * Customer Information
-   * ---------------------------------------------------------------------------
-   */
-  collectCustomerName: z.boolean(),
-
-  collectCustomerEmail: z.boolean(),
-
-  isPhoneNumberRequired: z.boolean(),
+  getPaymentLinks() {
+    return getPaymentLinks();
+  },
 
   /**
    * ---------------------------------------------------------------------------
-   * Environment
+   * Get Payment Link
    * ---------------------------------------------------------------------------
    */
-  isTestMode: z.boolean(),
+  getPaymentLink(id: number) {
+    return getPaymentLink(id);
+  },
 
   /**
    * ---------------------------------------------------------------------------
-   * Redirect URL
+   * Create Payment Link
    * ---------------------------------------------------------------------------
    */
-  redirectUrl: z
-    .string()
-    .trim()
-    .url("Enter a valid URL")
-    .optional()
-    .or(z.literal("")),
+  createPaymentLink(
+    payload: CreatePaymentLinkRequest
+  ) {
+    return createPaymentLink(payload);
+  },
 
   /**
    * ---------------------------------------------------------------------------
-   * Optional Advanced Fields
+   * Update Payment Link
    * ---------------------------------------------------------------------------
    */
-  subAccountId: z.number().optional(),
+  updatePaymentLink(
+    payload: UpdatePaymentLinkRequest
+  ) {
+    return updatePaymentLink(payload);
+  },
 
-  subAccountGroupId: z.number().optional(),
+  /**
+   * ---------------------------------------------------------------------------
+   * Delete Payment Link
+   * ---------------------------------------------------------------------------
+   */
+  deletePaymentLink(id: number) {
+    return deletePaymentLink(id);
+  },
 
-  extraFields: z.string().optional(),
-});
+  /**
+   * ---------------------------------------------------------------------------
+   * Validate Payment Link Reference
+   * ---------------------------------------------------------------------------
+   */
+  validatePaymentLinkReference(
+    reference: string
+  ) {
+    return validatePaymentLinkReference(reference);
+  },
 
-export type PaymentLinkSettingsForm = z.infer<
-  typeof paymentLinkSettingsSchema
->;
+  /**
+   * ---------------------------------------------------------------------------
+   * Payment Link Transactions
+   * ---------------------------------------------------------------------------
+   */
+  getPaymentLinkTransactions(
+    paymentPageId: number
+  ) {
+    return getPaymentLinkTransactions(paymentPageId);
+  },
+};

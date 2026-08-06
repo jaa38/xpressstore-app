@@ -1,20 +1,34 @@
 import { create } from "zustand";
 
 import type { Currency } from "@/types/currency";
-
-export type PaymentType = "one-time" | "subscription";
+import type { PaymentLinkType } from "@/types/paymentLink";
 
 export interface PaymentLinkDraft {
-  // Step 1
+  /**
+   * ---------------------------------------------------------------------------
+   * Step 1 - Information
+   * ---------------------------------------------------------------------------
+   */
+
   linkName: string;
+
   amount: string;
+
   currency: Currency;
+
   description: string;
 
-  // Step 2
+  /**
+   * ---------------------------------------------------------------------------
+   * Step 2 - Settings
+   * ---------------------------------------------------------------------------
+   */
+
   expiryDate: Date | null;
 
-  paymentType: PaymentType;
+  pageType: PaymentLinkType;
+
+  isFixedAmount: boolean;
 
   allowMultiplePayments: boolean;
 
@@ -22,37 +36,62 @@ export interface PaymentLinkDraft {
 
   collectCustomerEmail: boolean;
 
+  isPhoneNumberRequired: boolean;
+
+  isTestMode: boolean;
+
   redirectUrl: string;
+
+  subAccountId?: number;
+
+  subAccountGroupId?: number;
+
+  extraFields?: string;
 }
 
 interface PaymentLinkState {
   /**
-   * Draft used by the payment link creation wizard.
+   * Draft used throughout the payment link creation wizard.
    */
   paymentLink: PaymentLinkDraft;
 
   /**
-   * Update one or more draft fields.
+   * Merge new values into the current draft.
    */
   updatePaymentLink: (data: Partial<PaymentLinkDraft>) => void;
 
   /**
-   * Reset the draft after a successful creation.
+   * Reset the draft after successful creation.
    */
   resetPaymentLink: () => void;
 }
 
 const initialState: PaymentLinkDraft = {
-  // Step 1
+  /**
+   * ---------------------------------------------------------------------------
+   * Step 1
+   * ---------------------------------------------------------------------------
+   */
+
   linkName: "",
+
   amount: "",
+
   currency: "NGN",
+
   description: "",
 
-  // Step 2
+  /**
+   * ---------------------------------------------------------------------------
+   * Step 2
+   * ---------------------------------------------------------------------------
+   */
+
   expiryDate: null,
 
-  paymentType: "one-time",
+  pageType: "single",
+
+  isFixedAmount: true,
 
   allowMultiplePayments: false,
 
@@ -60,18 +99,22 @@ const initialState: PaymentLinkDraft = {
 
   collectCustomerEmail: false,
 
+  isPhoneNumberRequired: false,
+
+  isTestMode: false,
+
   redirectUrl: "",
+
+  subAccountId: undefined,
+
+  subAccountGroupId: undefined,
+
+  extraFields: "",
 };
 
 export const usePaymentLink = create<PaymentLinkState>((set) => ({
-  /**
-   * Current draft
-   */
   paymentLink: initialState,
 
-  /**
-   * Update the draft
-   */
   updatePaymentLink: (data) =>
     set((state) => ({
       paymentLink: {
@@ -80,9 +123,6 @@ export const usePaymentLink = create<PaymentLinkState>((set) => ({
       },
     })),
 
-  /**
-   * Reset the draft
-   */
   resetPaymentLink: () =>
     set({
       paymentLink: initialState,

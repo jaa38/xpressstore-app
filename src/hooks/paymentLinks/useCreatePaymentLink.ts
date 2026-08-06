@@ -1,16 +1,19 @@
-import { useMutation } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 
-import { createPaymentLink } from "@/services/payment-link/paymentLink-service";
-
-import { queryClient } from "@/lib/query-client";
+import { paymentLinkService } from "@/services/payment-links/paymentLinkService";
 
 import { queryKeys } from "@/lib/queryKeys";
 
 export function useCreatePaymentLink() {
-  return useMutation({
-    mutationFn: createPaymentLink,
+  const queryClient = useQueryClient();
 
-    onSuccess() {
+  return useMutation({
+    mutationFn: paymentLinkService.createPaymentLink,
+
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.paymentLinks,
       });

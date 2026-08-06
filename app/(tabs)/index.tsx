@@ -23,7 +23,7 @@ import { DashboardStatsCard } from "@/components/dashboard/DashboardStatsCard";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
-import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useDashboard } from "@/hooks/dashboard/useDashboard";
 
 import { ROUTES } from "@/navigation/routes";
 
@@ -42,7 +42,11 @@ export default function HomeScreen() {
     refetch: refetchProfile,
   } = useMerchantProfile();
 
-  const { data: stats, refetch: refetchDashboardStats } = useDashboardStats();
+  const {
+    dashboard,
+    refetch: refetchDashboard,
+    isLoading: dashboardLoading,
+  } = useDashboard();
 
   const { data: transactions = [], refetch: refetchTransactions } =
     useTransactions();
@@ -77,7 +81,7 @@ export default function HomeScreen() {
     try {
       await Promise.all([
         refetchProfile(),
-        refetchDashboardStats(),
+        refetchDashboard(),
         refetchTransactions(),
       ]);
     } finally {
@@ -175,23 +179,27 @@ export default function HomeScreen() {
         >
           {/* STATS CARD */}
 
-          {stats && (
+          {dashboard && (
             <DashboardStatsCard
               title="Today's Revenue"
-              amount={formatCurrency(stats.todayRevenue, stats.currency)}
-              trend={`${stats.growth}%`}
+              amount={formatCurrency(dashboard.todayRevenue, {
+                currency: dashboard.currency,
+              })}
+              trend={`${dashboard.growth}%`}
               metrics={[
                 {
                   label: "Today",
-                  value: formatCurrency(stats.todayRevenue, stats.currency),
+                  value: formatCurrency(dashboard.todayRevenue, {
+                    currency: dashboard.currency,
+                  }),
                 },
                 {
-                  label: "Transactions",
-                  value: dashboardMetrics.paid.toString(),
+                  label: "Successful",
+                  value: dashboard.successfulTransactions.toString(),
                 },
                 {
                   label: "Pending",
-                  value: dashboardMetrics.pending.toString(),
+                  value: dashboard.pendingTransactions.toString(),
                 },
               ]}
             />

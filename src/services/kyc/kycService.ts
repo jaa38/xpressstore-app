@@ -1,9 +1,9 @@
 import { authClient } from "@/api/client";
 import { API_ENDPOINTS } from "@/api/endpoints";
 
-import { ApiResponse } from "@/types/api";
+import type { ApiResponse } from "@/types/api";
 
-import {
+import type {
   BusinessVerificationRequest,
   BusinessVerification,
   BVNDetails,
@@ -11,6 +11,8 @@ import {
   MerchantKycRequest,
   UploadDocumentResponse,
   VerifyBVNRequest,
+  KycTier,
+  KycRequirement,
 } from "@/types/kyc";
 
 export const kycService = {
@@ -94,6 +96,37 @@ export const kycService = {
       {
         params: {
           merchantId,
+        },
+      }
+    );
+
+    return data;
+  },
+
+  /**
+   * ---------------------------------------------------------------------------
+   * Get KYC Tiers
+   * ---------------------------------------------------------------------------
+   */
+  async getKycTiers() {
+    const { data } = await authClient.get<ApiResponse<KycTier[]>>(
+      API_ENDPOINTS.kyc.tiers
+    );
+
+    return data;
+  },
+
+  /**
+   * ---------------------------------------------------------------------------
+   * Get KYC Requirements
+   * ---------------------------------------------------------------------------
+   */
+  async getKycRequirements(kycTierId: number) {
+    const { data } = await authClient.get<ApiResponse<KycRequirement[]>>(
+      API_ENDPOINTS.kyc.requirements,
+      {
+        params: {
+          KycTierId: kycTierId,
         },
       }
     );

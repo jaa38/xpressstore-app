@@ -27,10 +27,6 @@ import type { CreateProductRequest } from "@/types/product";
 
 import type { ProductImageDto } from "@/types/product";
 
-import type { ProductVariationDto } from "@/types/product";
-
-import type { ProductOptionDto } from "@/types/product";
-
 import { ROUTES } from "@/navigation/routes";
 
 import type { Currency } from "@/types/currency";
@@ -38,6 +34,8 @@ import type { Currency } from "@/types/currency";
 import { useState } from "react";
 
 import { useToast } from "@/hooks/useToast";
+
+import { buildVariantPayload } from "@/utils/products/buildProductPayload";
 
 function editInfo() {
   router.replace(ROUTES.ADD_PRODUCT_INFO);
@@ -102,6 +100,11 @@ export default function ReviewScreen() {
        * ------------------------------------------------------------
        */
 
+      const variantPayload = buildVariantPayload(
+        product.variants,
+        product.variantsEnabled
+      );
+
       const payload: CreateProductRequest = {
         id: 0,
 
@@ -121,23 +124,13 @@ export default function ReviewScreen() {
 
         minOrderQty: "",
 
-        hasVariants: product.variantsEnabled && product.variants.length > 0,
-
         images: uploadedImages,
 
         categoryIds: product.category ? [Number(product.category)] : [],
 
-        variations: product.variants.map<ProductVariationDto>((variant) => ({
-          name: variant.name,
-          options: variant.options,
-        })),
-
-        options: product.variants.map<ProductOptionDto>((variant) => ({
-          name: variant.name,
-          values: variant.options,
-        })),
-
         publishNow: product.productStatus === "active",
+
+        ...variantPayload,
       };
 
       /**
@@ -162,12 +155,9 @@ export default function ReviewScreen() {
 
       resetProduct();
 
-      router.replace({
-        pathname: ROUTES.PRODUCTS,
-        params: {
-          refresh: Date.now().toString(),
-        },
-      });
+      resetProduct();
+
+      router.replace(ROUTES.PRODUCTS);
     } catch (error) {
       console.error("CREATE PRODUCT ERROR", error);
 

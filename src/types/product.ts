@@ -158,7 +158,7 @@ export interface MerchantProduct {
 
   productImages: ProductImageDto[];
 
-  productCategories: unknown[];
+  productCategories: ProductCategoryDto[];
 
   variations: ProductVariationDto[];
 }
@@ -198,6 +198,8 @@ export interface ProductCategoryDto {
   description: string;
 
   isActive: boolean;
+
+  slug?: string;
 }
 
 export interface CreateProductCategoryRequest {

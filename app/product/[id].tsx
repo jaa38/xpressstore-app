@@ -60,6 +60,8 @@ import type { Currency } from "@/types/currency";
 
 import { Card } from "@/components/ui/Card";
 
+import { buildVariantPayload } from "@/utils/products/buildProductPayload";
+
 export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams<{
     id: string;
@@ -354,6 +356,11 @@ export default function ProductDetailsScreen() {
     }
   }
 
+  const variantPayload = buildVariantPayload(
+    product?.variations ?? [],
+    (product?.variations.length ?? 0) > 0
+  );
+  
   async function handleUpdateProduct(data: EditProductForm) {
     try {
       setSaving(true);
@@ -437,17 +444,13 @@ export default function ProductDetailsScreen() {
 
         minOrderQty: data.minOrderQty.trim(),
 
-        hasVariants: (product?.variations.length ?? 0) > 0,
-
         images,
 
         categoryIds: data.category ? [Number(data.category)] : [],
 
-        variations: product?.variations ?? [],
-
-        options: [],
-
         publishNow: data.visible,
+
+        ...variantPayload,
       };
 
       await updateProductMutation.mutateAsync({

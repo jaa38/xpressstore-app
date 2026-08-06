@@ -22,6 +22,8 @@ export const API_ENDPOINTS = {
     updateBusinessDetails: "/StoreFront/UpdateMerchantBusinessDetails",
 
     updateBusinessType: "/StoreFront/UpdateMerchantBusinessType",
+
+    verifyPasswordResetOtp: "/api/v2/Account/VerifyForgetPasswordOTP",
   },
 
   /**
@@ -143,13 +145,30 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   paymentPages: {
+    /**
+     * CRUD
+     */
     list: "/PaymentPages/GetPaymentPages",
+
+    details: (id: number) => `/PaymentPages/GetPaymentPageById/${id}`,
 
     create: "/PaymentPages/CreatePaymentPage",
 
     update: "/PaymentPages/UpdatePaymentPage",
 
-    delete: (id: string) => `/PaymentPages/DeletePaymentPage/${id}`,
+    delete: (id: number) => `/PaymentPages/DeletePaymentPage/${id}`,
+
+    /**
+     * Validation
+     */
+    validateReference: (reference: string) =>
+      `/PaymentPages/ValidatePaymentReference/${reference}`,
+
+    /**
+     * Transactions
+     */
+    transactions: (paymentPageId: number) =>
+      `/PaymentPages/GetPaymentPageTransactions/${paymentPageId}`,
   },
 
   /**

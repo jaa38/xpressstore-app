@@ -1,7 +1,6 @@
 import { router, useFocusEffect } from "expo-router";
 import {
   View,
-  Image,
   Switch,
   FlatList,
   ActivityIndicator,
@@ -21,7 +20,7 @@ import { radius, spacing, theme } from "@/theme";
 import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { ROUTES, getProductDetailsRoute } from "@/navigation/routes";
+import { ROUTES } from "@/navigation/routes";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -39,6 +38,8 @@ import { useToggleProductStatus } from "@/hooks/products/useToggleProductStatus"
 
 import type { MerchantProduct } from "@/types/product";
 import { Currency } from "@/types/currency";
+
+import { useToast } from "@/hooks/useToast";
 
 function RightActions({ onDelete }: { onDelete: () => void }) {
   return (
@@ -68,14 +69,18 @@ function ProductCard({
   onToggle,
   onDelete,
   onEdit,
+  deleting,
 }: {
   product: MerchantProduct;
   onToggle: (productId: number, value: boolean) => void;
   onDelete: (productId: number) => void;
+  deleting: boolean;
+  toggling: boolean;
   onEdit: (productId: number) => void;
 }) {
   return (
     <Swipeable
+      enabled={!deleting}
       renderRightActions={() => (
         <RightActions onDelete={() => onDelete(product.id)} />
       )}
@@ -136,7 +141,11 @@ function ProductCard({
             paddingVertical: spacing.xs,
           }}
         >
-          <Pressable onPress={() => onEdit(product.id)} hitSlop={12}>
+          <Pressable
+            disabled={deleting || toggling}
+            onPress={() => onEdit(product.id)}
+            hitSlop={12}
+          >
             <Ionicons
               name="create-outline"
               size={24}
@@ -145,6 +154,7 @@ function ProductCard({
           </Pressable>
 
           <Switch
+            disabled={deleting}
             value={product.isActive}
             onValueChange={(value) => onToggle(product.id, value)}
           />
@@ -166,6 +176,8 @@ export default function ProductScreen() {
   const deleteProductMutation = useDeleteProduct();
 
   const toggleStatusMutation = useToggleProductStatus();
+
+  const { showToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -234,34 +246,61 @@ export default function ProductScreen() {
         productId,
         status: value,
       });
+
+      showToast({
+        type: "success",
+        title: "Product Updated",
+        message: value ? "Product is now active." : "Product has been hidden.",
+      });
     } catch (error) {
       console.log("UPDATE STATUS ERROR", error);
+
+      showToast({
+        type: "error",
+        title: "Update Failed",
+        message: "Unable to update product status.",
+      });
     }
   }
 
   async function handleDelete(productId: number) {
-    Alert.alert("Delete Product", "This product will be permanently removed.", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteProductMutation.mutateAsync(productId);
-          } catch (error) {
-            console.log("DELETE ERROR", error);
+    if (deleteProductMutation.isPending) {
+      return;
+    }
 
-            Alert.alert(
-              "Delete Failed",
-              "Unable to delete this product. Please try again."
-            );
-          }
+    Alert.alert(
+      "Delete Product",
+      "This product will be permanently removed and cannot be recovered.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
         },
-      },
-    ]);
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteProductMutation.mutateAsync(productId);
+
+              showToast({
+                type: "success",
+                title: "Product Deleted",
+                message: "The product has been removed successfully.",
+              });
+            } catch (error) {
+              console.log("DELETE ERROR", error);
+
+              showToast({
+                type: "error",
+                title: "Delete Failed",
+                message: "Unable to delete this product. Please try again.",
+              });
+            }
+          },
+        },
+      ]
+    );
   }
 
   function handleEdit(productId: number) {
@@ -539,6 +578,8 @@ export default function ProductScreen() {
                 renderItem={({ item }) => (
                   <ProductCard
                     product={item}
+                    deleting={deleteProductMutation.isPending}
+                    toggling={toggleStatusMutation.isPending}
                     onToggle={toggleProduct}
                     onDelete={handleDelete}
                     onEdit={handleEdit}

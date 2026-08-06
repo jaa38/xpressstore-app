@@ -82,7 +82,7 @@ export interface RegisterRequest {
 
 /**
  * -----------------------------------------------------------------------------
- * Verify Email
+ * Email Verification
  * -----------------------------------------------------------------------------
  */
 
@@ -98,9 +98,13 @@ export interface VerifyEmailOtpResponse {
   data: AuthUser;
 }
 
+export interface ResendOtpRequest {
+  email: string;
+}
+
 /**
  * -----------------------------------------------------------------------------
- * Forgot Password
+ * Password Recovery
  * -----------------------------------------------------------------------------
  */
 
@@ -108,11 +112,19 @@ export interface ForgotPasswordRequest {
   email: string;
 }
 
-/**
- * -----------------------------------------------------------------------------
- * Update Password
- * -----------------------------------------------------------------------------
- */
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface VerifyPasswordResetOtpRequest {
+  email: string;
+
+  otp: string;
+}
+
+export interface VerifyPasswordResetOtpResponse {
+  message: string;
+}
 
 export interface UpdatePasswordRequest {
   email: string;
@@ -150,16 +162,6 @@ export interface UpdateBusinessDetailsRequest {
   businessEmail: string;
 
   businessPhoneNumber: string;
-}
-
-export interface VerifyEmailOtpRequest {
-  email: string;
-
-  otp: string;
-}
-
-export interface ResendOtpRequest {
-  email: string;
 }
 
 /**

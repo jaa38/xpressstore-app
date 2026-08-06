@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createCategory } from "@/services/category/category-service";
 
+import { queryKeys } from "@/lib/queryKeys";
+
 export function useCreateCategory() {
   const queryClient = useQueryClient();
 
@@ -10,7 +12,7 @@ export function useCreateCategory() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["categories"],
+        queryKey: queryKeys.productCategories,
       });
     },
   });

@@ -26,7 +26,11 @@ import { ROUTES } from "@/navigation/routes";
 
 import { useLocalSearchParams } from "expo-router";
 
-import { verifyPasswordResetOtp } from "@/features/auth/api/password-recovery-api";
+import { useVerifyPasswordResetOtp } from "@/hooks/auth/useVerifyPasswordResetOtp";
+
+import { useToast } from "@/hooks/useToast";
+
+import { getApiErrorMessage } from "@/api/errors";
 
 const verifyOtpSchema = z.object({
   otp: z.string().length(8, "Verification code must be 8 digits"),
@@ -35,7 +39,9 @@ const verifyOtpSchema = z.object({
 type VerifyOtpSchema = z.infer<typeof verifyOtpSchema>;
 
 export default function VerifyOtpScreen() {
-  const [isLoading, setIsLoading] = useState(false);
+  const verifyOtpMutation = useVerifyPasswordResetOtp();
+
+  const { showToast } = useToast();
 
   const [secondsRemaining, setSecondsRemaining] = useState(600);
 
@@ -83,30 +89,29 @@ export default function VerifyOtpScreen() {
 
   async function onSubmit(data: VerifyOtpSchema) {
     try {
-      setIsLoading(true);
+      await verifyOtpMutation.mutateAsync({
+        email,
+        otp: data.otp,
+      });
 
-      const response = await verifyPasswordResetOtp(email, data.otp);
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      /**
-       * TODO:
-       * Verify OTP API
-       */
+      showToast({
+        type: "success",
+        title: "Code Verified",
+        message: "Create your new password.",
+      });
 
       router.replace({
         pathname: ROUTES.NEW_PASSWORD,
-
         params: {
           email,
         },
       });
     } catch (error) {
-      console.log("Verify OTP Error:", error);
-    } finally {
-      setIsLoading(false);
+      showToast({
+        type: "error",
+        title: "Verification Failed",
+        message: getApiErrorMessage(error),
+      });
     }
   }
 
@@ -287,10 +292,12 @@ export default function VerifyOtpScreen() {
             }}
           >
             <Button
-              title={isLoading ? "Verifying..." : "Verify Code"}
+              title={
+                verifyOtpMutation.isPending ? "Verifying..." : "Verify Code"
+              }
               variant="primary"
               size="large"
-              disabled={!isValid || isLoading}
+              disabled={!isValid || verifyOtpMutation.isPending}
               onPress={handleSubmit(onSubmit)}
             />
           </View>

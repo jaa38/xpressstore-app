@@ -11,9 +11,15 @@ import {
   LoginResponse,
   RegisterRequest,
   VerifyEmailOtpRequest,
+  VerifyPasswordResetOtpRequest,
 } from "@/types/auth";
 
 import { encodeLoginRequest } from "./authEncoder";
+
+import {
+  forgotPassword,
+  verifyPasswordResetOtp,
+} from "@/api/auth/password-recovery-api";
 
 export const authService = {
   /**
@@ -84,18 +90,17 @@ export const authService = {
    * Forgot Password
    * ---------------------------------------------------------------------------
    */
-  async forgotPassword(payload: ForgotPasswordRequest) {
-    const { data } = await authClient.post<ApiResponse<void>>(
-      API_ENDPOINTS.auth.forgotPassword,
-      null,
-      {
-        params: {
-          EmailAddress: payload.email,
-        },
-      }
-    );
+  forgotPassword(payload: ForgotPasswordRequest) {
+    return forgotPassword(payload);
+  },
 
-    return data;
+  /**
+   * ---------------------------------------------------------------------------
+   * Verify Password Reset OTP
+   * ---------------------------------------------------------------------------
+   */
+  verifyPasswordResetOtp(payload: VerifyPasswordResetOtpRequest) {
+    return verifyPasswordResetOtp(payload);
   },
 
   /**

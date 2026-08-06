@@ -26,6 +26,9 @@ import { useForgotPassword } from "@/hooks/auth/useForgotPassword";
 
 import { getApiErrorMessage } from "@/api/errors";
 
+import { useToast } from "@/hooks/useToast";
+
+const { showToast } = useToast();
 const forgotPasswordSchema = z.object({
   email: z.email("Please enter a valid email address"),
 });
@@ -53,10 +56,11 @@ export default function ForgotPasswordScreen() {
         email: data.email,
       });
 
-      Alert.alert(
-        "Reset Code Sent",
-        "We've sent an 8-digit verification code to your email."
-      );
+      showToast({
+        type: "success",
+        title: "Reset Code Sent",
+        message: "We've sent an 8-digit verification code to your email.",
+      });
 
       router.push({
         pathname: ROUTES.VERIFY_OTP,
@@ -65,7 +69,11 @@ export default function ForgotPasswordScreen() {
         },
       });
     } catch (error) {
-      Alert.alert("Unable to Send Reset Code", getApiErrorMessage(error));
+      showToast({
+        type: "error",
+        title: "Unable to Send Reset Code",
+        message: getApiErrorMessage(error),
+      });
     }
   }
 

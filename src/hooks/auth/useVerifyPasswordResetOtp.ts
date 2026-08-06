@@ -3,19 +3,19 @@ import { useMutation } from "@tanstack/react-query";
 import { authService } from "@/services/auth/authService";
 
 import type {
-  ForgotPasswordRequest,
-  ForgotPasswordResponse,
+  VerifyPasswordResetOtpRequest,
+  VerifyPasswordResetOtpResponse,
 } from "@/types/auth";
 
 import type { ApiResponse } from "@/types/api";
 
-export function useForgotPassword() {
+export function useVerifyPasswordResetOtp() {
   return useMutation<
-    ApiResponse<ForgotPasswordResponse>,
+    ApiResponse<VerifyPasswordResetOtpResponse>,
     Error,
-    ForgotPasswordRequest
+    VerifyPasswordResetOtpRequest
   >({
     mutationFn: (payload) =>
-      authService.forgotPassword(payload),
+      authService.verifyPasswordResetOtp(payload),
   });
 }

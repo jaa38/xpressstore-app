@@ -5,17 +5,17 @@ import {
 
 import { productService } from "@/services/products/productService";
 
+import { queryKeys } from "@/lib/queryKeys";
+
 export function useCreateProduct() {
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn:
-      productService.createProduct,
+    mutationFn: productService.createProduct,
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["products"],
+        queryKey: queryKeys.products,
       });
     },
   });

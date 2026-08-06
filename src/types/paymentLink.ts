@@ -7,55 +7,107 @@ export type PaymentLinkStatus =
   | "failed"
   | "inactive";
 
-export interface PaymentLink {
-  id: string;
+export type PaymentLinkType =
+  | "single"
+  | "multiple";
 
-  title: string;
+export interface PaymentLink {
+  id: number;
+
+  name: string;
+
   description: string;
 
-  url: string;
-
   amount: number;
+
   currency: Currency;
 
-  status: Exclude<PaymentLinkStatus, "all">;
+  pageType: PaymentLinkType;
 
-  expiry_date: string | null;
+  paymentLinkReference: string;
 
-  payment_type: "one-time" | "subscription";
+  paymentLink: string;
 
-  allow_multiple_payments: boolean;
+  isActive: boolean;
 
-  collect_customer_name: boolean;
+  isFixedAmount: boolean;
 
-  collect_customer_email: boolean;
+  redirectUrl?: string;
 
-  redirect_url: string;
+  isPhoneNumberRequired: boolean;
 
-  created_at: string;
-  updated_at: string;
+  isTestMode: boolean;
+
+  subAccountId?: number;
+
+  subAccountGroupId?: number;
+
+  extraFields?: string;
+
+  createdAt?: string;
+
+  updatedAt?: string;
 }
 
-export interface CreatePaymentLinkPayload {
-  title: string;
-  description: string;
+/**
+ * ---------------------------------------------------------------------------
+ * Create Payment Link
+ * ---------------------------------------------------------------------------
+ */
 
-  url: string;
+export interface CreatePaymentLinkRequest {
+  name: string;
+
+  description?: string;
 
   amount: number;
+
   currency: Currency;
 
-  status: Exclude<PaymentLinkStatus, "all">;
+  pageType: PaymentLinkType;
 
-  expiry_date: string | null;
+  paymentLinkReference: string;
 
-  payment_type: "one-time" | "subscription";
+  isFixedAmount: boolean;
 
-  allow_multiple_payments: boolean;
+  redirectUrl?: string;
 
-  collect_customer_name: boolean;
+  isPhoneNumberRequired: boolean;
 
-  collect_customer_email: boolean;
+  isTestMode: boolean;
 
-  redirect_url: string;
+  subAccountId?: number;
+
+  subAccountGroupId?: number;
+
+  extraFields?: string;
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Update Payment Link
+ * ---------------------------------------------------------------------------
+ */
+
+export interface UpdatePaymentLinkRequest
+  extends CreatePaymentLinkRequest {
+  id: number;
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Payment Link Transactions
+ * ---------------------------------------------------------------------------
+ */
+
+export interface PaymentLinkTransaction {
+  transactionId: string;
+
+  customerName: string;
+
+  amount: number;
+
+  paymentDate: string;
+
+  status: string;
 }

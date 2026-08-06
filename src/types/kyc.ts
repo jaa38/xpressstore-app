@@ -61,3 +61,29 @@ export interface MerchantKyc {
 
   updatedAt?: string;
 }
+
+export interface KycTier {
+  id: number;
+
+  name: string;
+
+  description?: string;
+
+  level?: number;
+
+  isActive?: boolean;
+}
+
+export interface KycRequirement {
+  id: number;
+
+  kycTierId: number;
+
+  documentType: string;
+
+  displayName: string;
+
+  description?: string;
+
+  required: boolean;
+}

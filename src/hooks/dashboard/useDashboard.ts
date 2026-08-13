@@ -14,6 +14,12 @@ export function useDashboard() {
   return {
     dashboard: query.data?.data,
 
+    summary: query.data?.data?.summary,
+
+    stats: query.data?.data?.stats,
+
+    recentTransactions: query.data?.data?.recentTransactions ?? [],
+
     ...query,
   };
 }

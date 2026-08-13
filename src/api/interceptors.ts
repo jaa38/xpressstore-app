@@ -15,18 +15,16 @@ import { getAccessToken, clearSession } from "@/storage/authStorage";
  * continue without an Authorization header.
  */
 async function attachAccessToken(config: InternalAxiosRequestConfig) {
-  const token = await getAccessToken();
+  /**
+   * Login requests do not require an existing JWT.
+   * The login endpoint is responsible for issuing
+   * the JWT after validating credentials.
+   */
+  if (config.url === "/StoreFront/Login") {
+    return config;
+  }
 
-  console.log("=================================");
-  console.log("AUTH INTERCEPTOR");
-  console.log("REQUEST:", config.url);
-  console.log("BASE URL:", config.baseURL);
-  console.log("HAS TOKEN:", Boolean(token));
-  console.log(
-    "TOKEN PREVIEW:",
-    token ? `${token.substring(0, 20)}...` : "NO TOKEN"
-  );
-  console.log("=================================");
+  const token = await getAccessToken();
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

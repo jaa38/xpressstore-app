@@ -1,19 +1,66 @@
-import type { Currency } from "@/types/currency";
+/**
+ * ============================================================================
+ * Dashboard API Models
+ * ============================================================================
+ *
+ * Source:
+ * storefrontDocumentation.txt
+ *
+ * Endpoint:
+ * GET /Store/dashboard
+ * ============================================================================
+ */
 
 export interface DashboardSummary {
-  todayRevenue: number;
-
   totalRevenue: number;
 
   totalTransactions: number;
 
-  pendingTransactions: number;
+  pendingSettlements: number;
 
-  successfulTransactions: number;
+  revenueChangeValue: number;
 
-  failedTransactions: number;
+  revenueTrend: string | null;
 
-  growth: number;
+  revenueChangePercent: number;
 
-  currency: Currency;
+  transactionsChangeValue: number;
+
+  transactionsTrend: string | null;
+
+  transactionsChangePercent: number;
+
+  settlementsChangeValue: number;
+
+  settlementsTrend: string | null;
+
+  settlementsChangePercent: number;
+}
+
+export interface DashboardStats {
+  orders: number;
+
+  productsSold: number;
+
+  newCustomers: number;
+}
+
+export interface DashboardRecentTransaction {
+  customerName: string | null;
+
+  transactionType: string | null;
+
+  amount: number;
+
+  transactionDate: string | null;
+
+  referenceNo: string | null;
+}
+
+export interface DashboardResponse {
+  summary: DashboardSummary;
+
+  stats: DashboardStats;
+
+  recentTransactions: DashboardRecentTransaction[] | null;
 }

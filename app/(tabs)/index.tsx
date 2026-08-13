@@ -53,25 +53,25 @@ export default function HomeScreen() {
 
   const recentTransactions = transactions.slice(0, 5);
 
-  const dashboardMetrics = useMemo(() => {
-    const paidTransactions = transactions.filter(
-      (transaction) => transaction.status === "paid"
-    );
+  // const dashboardMetrics = useMemo(() => {
+  //   const paidTransactions = transactions.filter(
+  //     (transaction) => transaction.status === "paid"
+  //   );
 
-    const pendingTransactions = transactions.filter(
-      (transaction) => transaction.status === "pending"
-    );
+  //   const pendingTransactions = transactions.filter(
+  //     (transaction) => transaction.status === "pending"
+  //   );
 
-    const failedTransactions = transactions.filter(
-      (transaction) => transaction.status === "failed"
-    );
+  //   const failedTransactions = transactions.filter(
+  //     (transaction) => transaction.status === "failed"
+  //   );
 
-    return {
-      paid: paidTransactions.length,
-      pending: pendingTransactions.length,
-      failed: failedTransactions.length,
-    };
-  }, [transactions]);
+  //   return {
+  //     paid: paidTransactions.length,
+  //     pending: pendingTransactions.length,
+  //     failed: failedTransactions.length,
+  //   };
+  // }, [transactions]);
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -181,25 +181,25 @@ export default function HomeScreen() {
 
           {dashboard && (
             <DashboardStatsCard
-              title="Today's Revenue"
-              amount={formatCurrency(dashboard.todayRevenue, {
-                currency: dashboard.currency,
+              title="Total Revenue"
+              amount={formatCurrency(dashboard.summary.totalRevenue, {
+                currency: "NGN",
               })}
-              trend={`${dashboard.growth}%`}
+              trend={`${dashboard.summary.revenueChangePercent}%`}
               metrics={[
                 {
-                  label: "Today",
-                  value: formatCurrency(dashboard.todayRevenue, {
-                    currency: dashboard.currency,
+                  label: "Revenue",
+                  value: formatCurrency(dashboard.summary.totalRevenue, {
+                    currency: "NGN",
                   }),
                 },
                 {
-                  label: "Successful",
-                  value: dashboard.successfulTransactions.toString(),
+                  label: "Transactions",
+                  value: dashboard.summary.totalTransactions.toString(),
                 },
                 {
                   label: "Pending",
-                  value: dashboard.pendingTransactions.toString(),
+                  value: dashboard.summary.pendingSettlements.toString(),
                 },
               ]}
             />

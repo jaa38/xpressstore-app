@@ -10,24 +10,47 @@ import {
   saveRefreshToken,
 } from "@/storage/authStorage";
 
-import { LoginRequest } from "@/types/auth";
+import type { LoginRequest } from "@/types/auth";
 
 export function useLogin() {
   return useMutation({
     mutationFn: async (payload: LoginRequest) => {
       /**
+       * -----------------------------------------------------------------------
        * Call Xpress Login API
+       * -----------------------------------------------------------------------
        */
       const response = await authService.login(payload);
 
       /**
-       * Convert API response into
-       * application session.
+       * -----------------------------------------------------------------------
+       * Validate API response
+       * -----------------------------------------------------------------------
+       *
+       * Xpress can return a failed response with:
+       *
+       * responseCode: "10"
+       * data: null
+       *
+       * Do not attempt to map a failed response into an authenticated session.
+       */
+      if (!response.data) {
+        throw new Error(
+          response.responseMessage || "Invalid email or password."
+        );
+      }
+
+      /**
+       * -----------------------------------------------------------------------
+       * Map successful API response
+       * -----------------------------------------------------------------------
        */
       const session = mapLoginResponse(response.data);
 
       /**
-       * Persist session.
+       * -----------------------------------------------------------------------
+       * Persist authentication session
+       * -----------------------------------------------------------------------
        */
       await saveAccessToken(session.accessToken);
 

@@ -27,6 +27,17 @@ export const authService = {
    * Login
    * ---------------------------------------------------------------------------
    */
+  // async login(payload: LoginRequest) {
+  //   const encodedPayload = encodeLoginRequest(payload);
+
+  //   const { data } = await authClient.post<ApiResponse<LoginResponse>>(
+  //     API_ENDPOINTS.auth.login,
+  //     encodedPayload
+  //   );
+
+  //   return data;
+  // },
+
   async login(payload: LoginRequest) {
     const encodedPayload = encodeLoginRequest(payload);
 
@@ -35,9 +46,13 @@ export const authService = {
       encodedPayload
     );
 
+    console.log("=================================");
+    console.log("XPRESS LOGIN RESPONSE");
+    console.log(JSON.stringify(data, null, 2));
+    console.log("=================================");
+
     return data;
   },
-
   /**
    * ---------------------------------------------------------------------------
    * Register

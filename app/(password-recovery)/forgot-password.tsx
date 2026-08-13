@@ -200,7 +200,7 @@ export default function ForgotPasswordScreen() {
             >
               <AppText variant="body" color="secondary">
                 Remember your password?{" "}
-                <AppText variant="body" color="brand">
+                <AppText variant="label" color="brand">
                   Sign in
                 </AppText>
               </AppText>

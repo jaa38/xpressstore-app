@@ -127,6 +127,12 @@ export interface CreateProductRequest {
 
 export interface UpdateProductRequest extends CreateProductRequest {}
 
+/**
+ * ============================================================================
+ * Merchant Product API DTO
+ * ============================================================================
+ */
+
 export interface MerchantProduct {
   id: number;
 
@@ -138,7 +144,7 @@ export interface MerchantProduct {
 
   unitPrice: number;
 
-  currency: string;
+  currency: Currency;
 
   inStock: boolean;
 
@@ -161,12 +167,6 @@ export interface MerchantProduct {
   productCategories: ProductCategoryDto[];
 
   variations: ProductVariationDto[];
-}
-
-export interface UploadProductImageResponse {
-  filename: string;
-
-  url: string;
 }
 
 /**

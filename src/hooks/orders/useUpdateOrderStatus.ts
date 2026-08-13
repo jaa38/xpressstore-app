@@ -1,101 +1,36 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import {
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+  updateOrderStatus,
+} from "@/services/order/order-service";
 
-import { Order } from "@/types/order";
+import { queryKeys } from "@/lib/queryKeys";
 
-interface UpdateOrderStatusRequest {
+import type { Order } from "@/types/order";
+
+interface UpdateOrderStatusVariables {
   orderId: string;
-  status: Order["status"];
-}
 
-interface UpdateContext {
-  previousOrders?: Order[];
+  status: Order["status"];
 }
 
 export function useUpdateOrderStatus() {
   const queryClient =
     useQueryClient();
 
-  return useMutation<
-    {
-      orderId: string;
-      status: Order["status"];
-    },
-    Error,
-    UpdateOrderStatusRequest,
-    UpdateContext
-  >({
-    mutationFn: async ({
+  return useMutation({
+    mutationFn: ({
       orderId,
       status,
-    }) => {
-      /**
-       * Replace with Supabase/API later.
-       */
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 600)
-      );
-
-      return {
+    }: UpdateOrderStatusVariables) =>
+      updateOrderStatus(
         orderId,
-        status,
-      };
-    },
+        status
+      ),
 
-    onMutate: async ({
-      orderId,
-      status,
-    }) => {
-      await queryClient.cancelQueries({
-        queryKey: ["orders"],
-      });
-
-      const previousOrders =
-        queryClient.getQueryData<
-          Order[]
-        >(["orders"]);
-
-      queryClient.setQueryData<Order[]>(
-        ["orders"],
-        (orders = []) =>
-          orders.map((order) =>
-            order.id === orderId
-              ? {
-                  ...order,
-                  status,
-                  updatedAt:
-                    new Date().toISOString(),
-                }
-              : order
-          )
-      );
-
-      return {
-        previousOrders,
-      };
-    },
-
-    onError: (
-      _error,
-      _variables,
-      context
-    ) => {
-      if (
-        context?.previousOrders
-      ) {
-        queryClient.setQueryData(
-          ["orders"],
-          context.previousOrders
-        );
-      }
-    },
-
-    onSettled: () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["orders"],
+        queryKey: queryKeys.orders,
       });
     },
   });

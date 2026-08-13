@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Currency } from "@/types/product";
+import type { Currency } from "@/types/currency";
 import { CURRENCIES } from "@/constants/currencies";
 
 import { View, Pressable, KeyboardTypeOptions } from "react-native";

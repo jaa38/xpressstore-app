@@ -35,6 +35,23 @@ interface PaymentLinkBottomSheetProps {
   onDeactivateLink?: (paymentLink: PaymentLink) => void;
 }
 
+/**
+ * ---------------------------------------------------------------------------
+ * Payment Link URL
+ * ---------------------------------------------------------------------------
+ *
+ * The Payment Pages API may return the generated payment link directly.
+ *
+ * If it does not, construct the public payment-page URL using the payment
+ * link reference.
+ */
+function getPaymentLinkUrl(link: PaymentLink) {
+  return (
+    link.paymentLink ||
+    `https://payx.press/${link.paymentLinkReference}`
+  );
+}
+
 export const PaymentLinkBottomSheet = forwardRef<
   BottomSheetModal,
   PaymentLinkBottomSheetProps
@@ -65,19 +82,30 @@ export const PaymentLinkBottomSheet = forwardRef<
   async function handleCopyLink() {
     if (!paymentLink) return;
 
-    await Clipboard.setStringAsync(paymentLink.url);
+    const paymentLinkUrl =
+      getPaymentLinkUrl(paymentLink);
 
-    Alert.alert("Link Copied", "Payment link copied to clipboard.");
+    await Clipboard.setStringAsync(
+      paymentLinkUrl
+    );
+
+    Alert.alert(
+      "Link Copied",
+      "Payment link copied to clipboard."
+    );
   }
 
   async function handleShareLink() {
     if (!paymentLink) return;
 
+    const paymentLinkUrl =
+      getPaymentLinkUrl(paymentLink);
+
     try {
       await Share.share({
-        title: paymentLink.title,
-        message: `${paymentLink.title}\n\n${paymentLink.url}`,
-        url: paymentLink.url,
+        title: paymentLink.name,
+        message: `${paymentLink.name}\n\n${paymentLinkUrl}`,
+        url: paymentLinkUrl,
       });
     } catch {
       Alert.alert(
@@ -113,21 +141,31 @@ export const PaymentLinkBottomSheet = forwardRef<
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
       backgroundStyle={{
-        backgroundColor: theme.background.surface,
-        borderTopLeftRadius: radius["2xl"],
-        borderTopRightRadius: radius["2xl"],
+        backgroundColor:
+          theme.background.surface,
+        borderTopLeftRadius:
+          radius["2xl"],
+        borderTopRightRadius:
+          radius["2xl"],
       }}
       handleIndicatorStyle={{
-        backgroundColor: theme.border.default,
+        backgroundColor:
+          theme.border.default,
       }}
     >
-      <BottomSheetHeader title="Payment Link" onClose={dismissSheet} />
+      <BottomSheetHeader
+        title="Payment Link"
+        onClose={dismissSheet}
+      />
 
       <BottomSheetScrollView
         contentContainerStyle={{
-          paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.lg,
-          paddingBottom: spacing["2xl"],
+          paddingHorizontal:
+            spacing.lg,
+          paddingVertical:
+            spacing.lg,
+          paddingBottom:
+            spacing["2xl"],
         }}
       >
         <BottomSheetSection title="Information">
@@ -136,9 +174,17 @@ export const PaymentLinkBottomSheet = forwardRef<
               gap: spacing.xs,
             }}
           >
-            <AppText variant="bodyBold">{paymentLink?.title}</AppText>
+            <AppText variant="bodyBold">
+              {paymentLink?.name}
+            </AppText>
 
-            <AppText color="secondary">{paymentLink?.url}</AppText>
+            <AppText color="secondary">
+              {paymentLink
+                ? getPaymentLinkUrl(
+                    paymentLink
+                  )
+                : undefined}
+            </AppText>
           </View>
         </BottomSheetSection>
 
@@ -178,4 +224,5 @@ export const PaymentLinkBottomSheet = forwardRef<
   );
 });
 
-PaymentLinkBottomSheet.displayName = "PaymentLinkBottomSheet";
+PaymentLinkBottomSheet.displayName =
+  "PaymentLinkBottomSheet";

@@ -1,17 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getProfile } from "@/services/profiles/profile-service";
+import { merchantService } from "@/services/merchant/merchantService";
 
 export function useProfile() {
   const query = useQuery({
     queryKey: ["profile"],
-    queryFn: getProfile,
+
+    queryFn: merchantService.getProfile,
   });
 
   return {
-    profile: query.data,
+    profile: query.data?.data,
+
     isLoading: query.isLoading,
+
     error: query.error,
+
     refetch: query.refetch,
   };
 }

@@ -47,7 +47,7 @@ import { OrderActionsBottomSheet } from "@/components/bottom-sheet/OrderActionsB
 export default function OrdersScreen() {
   const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
 
-  const { data: products = [] } = useProducts();
+  const { products } = useProducts();
 
   const [selectedFilter, setSelectedFilter] = useState<OrderFilter>("all");
 
@@ -385,10 +385,10 @@ export default function OrdersScreen() {
                       }}
                     >
                       {/* IMAGE */}
-
-                      <ProductImage image={product?.image ?? ""} />
+                      <ProductImage
+                        image={product?.productImages?.[0]?.url ?? ""}
+                      />
                       {/* ORDER INFO */}
-
                       <View
                         style={{
                           flex: 1,
@@ -434,9 +434,7 @@ export default function OrdersScreen() {
                           {totalItems === 1 ? "" : "s"} • {productSummary}
                         </AppText>
                       </View>
-
                       {/* PRICE */}
-
                       <View
                         style={{
                           alignItems: "flex-end",

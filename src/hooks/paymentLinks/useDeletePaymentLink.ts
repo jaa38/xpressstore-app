@@ -1,22 +1,24 @@
-import {
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
-import { paymentLinkService } from "@/services/payment-links/paymentLinkService";
-
-import { queryKeys } from "@/lib/queryKeys";
-
+/**
+ * ---------------------------------------------------------------------------
+ * Delete Payment Link
+ * ---------------------------------------------------------------------------
+ *
+ * The current Payment Pages backend documentation does not expose a
+ * Delete Payment Page endpoint.
+ *
+ * Therefore this mutation must not make an undocumented API request.
+ *
+ * Deactivation should be used instead when the backend supports changing
+ * the active state of a payment page.
+ */
 export function useDeletePaymentLink() {
-  const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: paymentLinkService.deletePaymentLink,
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.paymentLinks,
-      });
+    mutationFn: async (_paymentLinkId: number): Promise<void> => {
+      throw new Error(
+        "Deleting payment links is not currently supported by the Payment Pages API."
+      );
     },
   });
 }

@@ -1,5 +1,16 @@
 import type { Currency } from "@/types/currency";
 
+/**
+ * ---------------------------------------------------------------------------
+ * Payment Link Status
+ * ---------------------------------------------------------------------------
+ *
+ * The current Payment Pages API exposes `isActive`, but does not currently
+ * expose paid / failed / pending status directly on the payment page.
+ *
+ * These statuses are retained for the UI because transaction data will
+ * eventually be used to derive payment status.
+ */
 export type PaymentLinkStatus =
   | "all"
   | "paid"
@@ -7,10 +18,27 @@ export type PaymentLinkStatus =
   | "failed"
   | "inactive";
 
+/**
+ * ---------------------------------------------------------------------------
+ * Payment Page Type
+ * ---------------------------------------------------------------------------
+ *
+ * Current backend documentation:
+ *
+ * - single
+ * - donation
+ */
 export type PaymentLinkType =
   | "single"
-  | "multiple";
+  | "donation";
 
+/**
+ * ---------------------------------------------------------------------------
+ * Payment Link / Payment Page
+ * ---------------------------------------------------------------------------
+ *
+ * Represents the Payment Pages response returned by the backend.
+ */
 export interface PaymentLink {
   id: number;
 
@@ -26,7 +54,13 @@ export interface PaymentLink {
 
   paymentLinkReference: string;
 
-  paymentLink: string;
+  /**
+   * Generated payment page URL.
+   *
+   * The current backend response documentation does not explicitly guarantee
+   * this field, so it remains optional.
+   */
+  paymentLink?: string;
 
   isActive: boolean;
 
@@ -38,10 +72,16 @@ export interface PaymentLink {
 
   isTestMode: boolean;
 
-  subAccountId?: number;
+  /**
+   * The backend Payment Pages documentation describes these as strings.
+   */
+  subAccountId?: string;
 
-  subAccountGroupId?: number;
+  subAccountGroupId?: string;
 
+  /**
+   * JSON-encoded extra form fields.
+   */
   extraFields?: string;
 
   createdAt?: string;
@@ -51,16 +91,21 @@ export interface PaymentLink {
 
 /**
  * ---------------------------------------------------------------------------
- * Create Payment Link
+ * Create Payment Link Request
  * ---------------------------------------------------------------------------
+ *
+ * Matches:
+ *
+ * POST /PaymentPages/Add
+ *
+ * Only fields supported by the current backend contract belong here.
  */
-
 export interface CreatePaymentLinkRequest {
   name: string;
 
-  description?: string;
+  description: string;
 
-  amount: number;
+  amount?: number;
 
   currency: Currency;
 
@@ -68,27 +113,30 @@ export interface CreatePaymentLinkRequest {
 
   paymentLinkReference: string;
 
-  isFixedAmount: boolean;
+  isFixedAmount?: boolean;
 
   redirectUrl?: string;
 
-  isPhoneNumberRequired: boolean;
+  isPhoneNumberRequired?: boolean;
 
-  isTestMode: boolean;
+  isTestMode?: boolean;
 
-  subAccountId?: number;
+  subAccountId?: string;
 
-  subAccountGroupId?: number;
+  subAccountGroupId?: string;
 
   extraFields?: string;
 }
 
 /**
  * ---------------------------------------------------------------------------
- * Update Payment Link
+ * Update Payment Link Request
  * ---------------------------------------------------------------------------
+ *
+ * Matches:
+ *
+ * POST /PaymentPages/Update
  */
-
 export interface UpdatePaymentLinkRequest
   extends CreatePaymentLinkRequest {
   id: number;
@@ -98,16 +146,44 @@ export interface UpdatePaymentLinkRequest
  * ---------------------------------------------------------------------------
  * Payment Link Transactions
  * ---------------------------------------------------------------------------
+ *
+ * Matches:
+ *
+ * GET /PaymentPages/GetPaymentPageTransactions/{paymentPageId}
  */
-
 export interface PaymentLinkTransaction {
   transactionId: string;
 
-  customerName: string;
-
   amount: number;
 
-  paymentDate: string;
-
   status: string;
+
+  dateCreated: string;
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Future Payment Link UI Fields
+ * ---------------------------------------------------------------------------
+ *
+ * These fields are intentionally kept separate from the backend DTO.
+ *
+ * They are currently required by the Payment Link creation UI / wizard,
+ * but are not part of the current Payment Pages API contract.
+ *
+ * Do NOT add these to CreatePaymentLinkRequest or UpdatePaymentLinkRequest
+ * until the backend supports them.
+ */
+export interface FuturePaymentLinkFields {
+  expiryDate: Date | null;
+
+  paymentType:
+    | "one-time"
+    | "subscription";
+
+  allowMultiplePayments: boolean;
+
+  collectCustomerName: boolean;
+
+  collectCustomerEmail: boolean;
 }

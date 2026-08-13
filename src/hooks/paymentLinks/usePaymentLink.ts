@@ -24,28 +24,95 @@ export interface PaymentLinkDraft {
    * ---------------------------------------------------------------------------
    */
 
+  /**
+   * Future backend field.
+   *
+   * Retained in the creation UI/draft but is not currently sent to the
+   * Payment Pages API.
+   */
   expiryDate: Date | null;
 
+  /**
+   * Backend-supported Payment Page type.
+   *
+   * Current documented values:
+   *
+   * - single
+   * - donation
+   */
   pageType: PaymentLinkType;
 
+  /**
+   * Future backend field.
+   *
+   * Retained in the UI/draft but is not currently sent to the
+   * Payment Pages API.
+   */
+  paymentType:
+    | "one-time"
+    | "subscription";
+
+  /**
+   * Backend-supported field.
+   */
   isFixedAmount: boolean;
 
+  /**
+   * Future backend field.
+   *
+   * Retained in the creation UI/draft but is not currently sent to the
+   * Payment Pages API.
+   */
   allowMultiplePayments: boolean;
 
+  /**
+   * Future backend field.
+   *
+   * Retained in the creation UI/draft but is not currently sent to the
+   * Payment Pages API.
+   */
   collectCustomerName: boolean;
 
+  /**
+   * Future backend field.
+   *
+   * Retained in the creation UI/draft but is not currently sent to the
+   * Payment Pages API.
+   */
   collectCustomerEmail: boolean;
 
+  /**
+   * Backend-supported field.
+   */
   isPhoneNumberRequired: boolean;
 
+  /**
+   * Backend-supported field.
+   */
   isTestMode: boolean;
 
+  /**
+   * Backend-supported field.
+   */
   redirectUrl: string;
 
-  subAccountId?: number;
+  /**
+   * Backend-supported optional field.
+   *
+   * The Payment Pages API documents this as a string.
+   */
+  subAccountId?: string;
 
-  subAccountGroupId?: number;
+  /**
+   * Backend-supported optional field.
+   *
+   * The Payment Pages API documents this as a string.
+   */
+  subAccountGroupId?: string;
 
+  /**
+   * Backend-supported optional JSON-encoded extra fields.
+   */
   extraFields?: string;
 }
 
@@ -58,7 +125,9 @@ interface PaymentLinkState {
   /**
    * Merge new values into the current draft.
    */
-  updatePaymentLink: (data: Partial<PaymentLinkDraft>) => void;
+  updatePaymentLink: (
+    data: Partial<PaymentLinkDraft>
+  ) => void;
 
   /**
    * Reset the draft after successful creation.
@@ -69,7 +138,7 @@ interface PaymentLinkState {
 const initialState: PaymentLinkDraft = {
   /**
    * ---------------------------------------------------------------------------
-   * Step 1
+   * Step 1 - Information
    * ---------------------------------------------------------------------------
    */
 
@@ -83,48 +152,99 @@ const initialState: PaymentLinkDraft = {
 
   /**
    * ---------------------------------------------------------------------------
-   * Step 2
+   * Step 2 - Settings
    * ---------------------------------------------------------------------------
    */
 
+  /**
+   * Future backend field.
+   */
   expiryDate: null,
 
+  /**
+   * Backend-supported Payment Page type.
+   */
   pageType: "single",
 
+  /**
+   * Future backend field.
+   */
+  paymentType: "one-time",
+
+  /**
+   * Backend-supported fixed amount setting.
+   */
   isFixedAmount: true,
 
+  /**
+   * Future backend field.
+   */
   allowMultiplePayments: false,
 
+  /**
+   * Future backend field.
+   */
   collectCustomerName: false,
 
+  /**
+   * Future backend field.
+   */
   collectCustomerEmail: false,
 
+  /**
+   * Backend-supported phone collection setting.
+   */
   isPhoneNumberRequired: false,
 
+  /**
+   * Backend-supported test mode setting.
+   */
   isTestMode: false,
 
+  /**
+   * Backend-supported redirect URL.
+   */
   redirectUrl: "",
 
+  /**
+   * Backend-supported optional sub-account.
+   */
   subAccountId: undefined,
 
+  /**
+   * Backend-supported optional sub-account group.
+   */
   subAccountGroupId: undefined,
 
+  /**
+   * Backend-supported optional extra fields.
+   */
   extraFields: "",
 };
 
-export const usePaymentLink = create<PaymentLinkState>((set) => ({
-  paymentLink: initialState,
+export const usePaymentLink =
+  create<PaymentLinkState>((set) => ({
+    /**
+     * Current payment link draft.
+     */
+    paymentLink: initialState,
 
-  updatePaymentLink: (data) =>
-    set((state) => ({
-      paymentLink: {
-        ...state.paymentLink,
-        ...data,
-      },
-    })),
+    /**
+     * Merge new values into the existing draft.
+     */
+    updatePaymentLink: (data) =>
+      set((state) => ({
+        paymentLink: {
+          ...state.paymentLink,
+          ...data,
+        },
+      })),
 
-  resetPaymentLink: () =>
-    set({
-      paymentLink: initialState,
-    }),
-}));
+    /**
+     * Reset the draft after successful creation.
+     */
+    resetPaymentLink: () =>
+      set({
+        paymentLink: initialState,
+      }),
+  }));

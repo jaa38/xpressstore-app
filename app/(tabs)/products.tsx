@@ -70,6 +70,7 @@ function ProductCard({
   onDelete,
   onEdit,
   deleting,
+  toggling,
 }: {
   product: MerchantProduct;
   onToggle: (productId: number, value: boolean) => void;

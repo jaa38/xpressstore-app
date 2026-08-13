@@ -16,6 +16,7 @@ import { EditButton } from "@/components/product/EditButton";
 
 import { usePaymentLink } from "@/hooks/paymentLinks/usePaymentLink";
 import { useCreatePaymentLink } from "@/hooks/paymentLinks/useCreatePaymentLink";
+import { useValidatePaymentLinkReference } from "@/hooks/paymentLinks/useValidatePaymentLinkReference";
 
 import { ROUTES } from "@/navigation/routes";
 
@@ -30,37 +31,115 @@ function generateReference(name: string) {
       .trim()
       .toUpperCase()
       .replace(/[^A-Z0-9]/g, "")
-      .substring(0, 12) +
-    Date.now().toString().slice(-6)
+      .substring(0, 12) + Date.now().toString().slice(-6)
   );
 }
 
 export default function ReviewScreen() {
-  const { paymentLink, resetPaymentLink } =
-    usePaymentLink();
+  const { paymentLink, resetPaymentLink } = usePaymentLink();
 
-  const createPaymentLinkMutation =
-    useCreatePaymentLink();
+  const createPaymentLinkMutation = useCreatePaymentLink();
+
+  const validatePaymentLinkReferenceMutation =
+    useValidatePaymentLinkReference();
 
   function editInformation() {
-    router.replace(
-      ROUTES.ADD_PAYMENT_LINK_INFORMATION
-    );
+    router.replace(ROUTES.ADD_PAYMENT_LINK_INFORMATION);
   }
 
   function editSettings() {
-    router.replace(
-      ROUTES.ADD_PAYMENT_LINK_SETTINGS
-    );
+    router.replace(ROUTES.ADD_PAYMENT_LINK_SETTINGS);
   }
 
-  function createPaymentLink() {
-    createPaymentLinkMutation.mutate(
-      {
+  /**
+   * ---------------------------------------------------------------------------
+   * Create Payment Link
+   * ---------------------------------------------------------------------------
+   *
+   * Before creating the payment page, the generated payment-page reference
+   * is validated against the backend.
+   *
+   * Flow:
+   *
+   * 1. Generate a payment-page reference.
+   * 2. Validate the reference.
+   * 3. Stop if the reference is unavailable.
+   * 4. Create the payment page if the reference is available.
+   *
+   * Only fields documented by the current Payment Pages API are sent to the
+   * create endpoint.
+   *
+   * Current backend endpoints:
+   *
+   * GET  /PaymentPages/ValidatePaymentPageLinkRefernce/{reference}
+   * POST /PaymentPages/Add
+   *
+   * Future UI-only fields such as:
+   *
+   * - expiryDate
+   * - paymentType
+   * - allowMultiplePayments
+   * - collectCustomerName
+   * - collectCustomerEmail
+   *
+   * remain in the payment-link draft and are displayed in the UI, but are
+   * intentionally NOT included in the create request until the backend
+   * contract supports them.
+   */
+  async function createPaymentLink() {
+    if (
+      createPaymentLinkMutation.isPending ||
+      validatePaymentLinkReferenceMutation.isPending
+    ) {
+      return;
+    }
+
+    const paymentLinkReference = generateReference(paymentLink.linkName);
+
+    /**
+     * -------------------------------------------------------------------------
+     * Validate reference
+     * -------------------------------------------------------------------------
+     */
+    let validationResponse;
+
+    try {
+      validationResponse =
+        await validatePaymentLinkReferenceMutation.mutateAsync(
+          paymentLinkReference
+        );
+    } catch (error) {
+      console.error(error);
+
+      Alert.alert(
+        "Unable to Validate Payment Link",
+        error instanceof Error
+          ? error.message
+          : "Unable to validate the payment link reference."
+      );
+
+      return;
+    }
+
+    if (!validationResponse.data?.isAvailable) {
+      Alert.alert(
+        "Payment Link Reference Unavailable",
+        "The generated payment link reference is already in use. Please try again."
+      );
+
+      return;
+    }
+
+    /**
+     * -------------------------------------------------------------------------
+     * Create payment link
+     * -------------------------------------------------------------------------
+     */
+    try {
+      await createPaymentLinkMutation.mutateAsync({
         name: paymentLink.linkName,
 
-        description:
-          paymentLink.description || undefined,
+        description: paymentLink.description,
 
         amount: Number(paymentLink.amount),
 
@@ -68,61 +147,46 @@ export default function ReviewScreen() {
 
         pageType: paymentLink.pageType,
 
-        paymentLinkReference:
-          generateReference(
-            paymentLink.linkName
-          ),
+        paymentLinkReference,
 
-        isFixedAmount:
-          paymentLink.isFixedAmount,
+        isFixedAmount: paymentLink.isFixedAmount,
 
-        redirectUrl:
-          paymentLink.redirectUrl || undefined,
+        redirectUrl: paymentLink.redirectUrl || undefined,
 
-        isPhoneNumberRequired:
-          paymentLink.isPhoneNumberRequired,
+        isPhoneNumberRequired: paymentLink.isPhoneNumberRequired,
 
         isTestMode: paymentLink.isTestMode,
 
-        subAccountId:
-          paymentLink.subAccountId,
+        subAccountId: paymentLink.subAccountId,
 
-        subAccountGroupId:
-          paymentLink.subAccountGroupId,
+        subAccountGroupId: paymentLink.subAccountGroupId,
 
-        extraFields:
-          paymentLink.extraFields || undefined,
-      },
-      {
-        onSuccess() {
-          resetPaymentLink();
+        extraFields: paymentLink.extraFields || undefined,
+      });
 
-          router.replace(
-            ROUTES.PAYMENT_LINKS
-          );
-        },
+      resetPaymentLink();
 
-        onError(error) {
-          console.error(error);
+      router.replace(ROUTES.PAYMENT_LINKS);
+    } catch (error) {
+      console.error(error);
 
-          Alert.alert(
-            "Unable to Create Payment Link",
-            error instanceof Error
-              ? error.message
-              : "Something went wrong."
-          );
-        },
-      }
-    );
+      Alert.alert(
+        "Unable to Create Payment Link",
+        error instanceof Error ? error.message : "Something went wrong."
+      );
+    }
   }
+
+  const isCreating =
+    createPaymentLinkMutation.isPending ||
+    validatePaymentLinkReferenceMutation.isPending;
 
   return (
     <SafeAreaView
       edges={["top"]}
       style={{
         flex: 1,
-        backgroundColor:
-          theme.background.primary,
+        backgroundColor: theme.background.primary,
       }}
     >
       <AddPaymentLinkHeader
@@ -138,8 +202,7 @@ export default function ReviewScreen() {
       <View
         style={{
           flex: 1,
-          backgroundColor:
-            theme.background.primary,
+          backgroundColor: theme.background.primary,
         }}
       >
         <ScrollView
@@ -150,7 +213,9 @@ export default function ReviewScreen() {
           }}
         >
           <Card>
-            {/* Summary */}
+            {/* -----------------------------------------------------------------
+                Summary
+            ----------------------------------------------------------------- */}
 
             <View
               style={{
@@ -165,16 +230,13 @@ export default function ReviewScreen() {
                   borderRadius: 36,
                   justifyContent: "center",
                   alignItems: "center",
-                  backgroundColor:
-                    theme.icon.branding.background,
+                  backgroundColor: theme.icon.branding.background,
                 }}
               >
                 <Ionicons
                   name="link-outline"
                   size={32}
-                  color={
-                    theme.icon.branding.icon
-                  }
+                  color={theme.icon.branding.icon}
                 />
               </View>
 
@@ -184,29 +246,16 @@ export default function ReviewScreen() {
                   textAlign: "center",
                 }}
               >
-                {paymentLink.linkName ||
-                  "Untitled Payment Link"}
+                {paymentLink.linkName || "Untitled Payment Link"}
               </AppText>
 
-              <AppText
-                variant="h2"
-                color="link"
-              >
-                {formatCurrency(
-                  Number(
-                    paymentLink.amount || 0
-                  ),
-                  {
-                    currency:
-                      paymentLink.currency,
-                  }
-                )}
+              <AppText variant="h2" color="link">
+                {formatCurrency(Number(paymentLink.amount || 0), {
+                  currency: paymentLink.currency,
+                })}
               </AppText>
 
-              <AppText
-                variant="body"
-                color="secondary"
-              >
+              <AppText variant="body" color="secondary">
                 Payment Link
               </AppText>
             </View>
@@ -217,23 +266,20 @@ export default function ReviewScreen() {
               }}
             />
 
-            {/* Settings */}
+            {/* -----------------------------------------------------------------
+                Settings
+            ----------------------------------------------------------------- */}
 
             <View
               style={{
                 flexDirection: "row",
-                justifyContent:
-                  "space-between",
+                justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
-              <AppText variant="bodyLargeBold">
-                Settings
-              </AppText>
+              <AppText variant="bodyLargeBold">Settings</AppText>
 
-              <EditButton
-                onPress={editSettings}
-              />
+              <EditButton onPress={editSettings} />
             </View>
 
             <View
@@ -246,9 +292,7 @@ export default function ReviewScreen() {
                 label="Expiry Date"
                 value={
                   paymentLink.expiryDate
-                    ? formatDate(
-                        paymentLink.expiryDate
-                      )
+                    ? formatDate(paymentLink.expiryDate)
                     : "-"
                 }
               />
@@ -256,45 +300,63 @@ export default function ReviewScreen() {
               <ReviewRow
                 label="Page Type"
                 value={
-                  paymentLink.pageType ===
-                  "single"
+                  paymentLink.pageType === "single"
                     ? "Single Payment"
-                    : "Multiple Payment"
+                    : "Donation"
                 }
               />
 
               <ReviewRow
                 label="Fixed Amount"
-                value={
-                  paymentLink.isFixedAmount
-                    ? "Enabled"
-                    : "Disabled"
-                }
+                value={paymentLink.isFixedAmount ? "Enabled" : "Disabled"}
               />
 
               <ReviewRow
                 label="Collect Phone"
                 value={
-                  paymentLink.isPhoneNumberRequired
-                    ? "Enabled"
-                    : "Disabled"
+                  paymentLink.isPhoneNumberRequired ? "Enabled" : "Disabled"
                 }
               />
 
               <ReviewRow
                 label="Test Mode"
-                value={
-                  paymentLink.isTestMode
-                    ? "Enabled"
-                    : "Disabled"
-                }
+                value={paymentLink.isTestMode ? "Enabled" : "Disabled"}
               />
 
               <ReviewRow
                 label="Redirect URL"
+                value={paymentLink.redirectUrl || "-"}
+              />
+
+              {/* -----------------------------------------------------------------
+                  Future backend fields
+              ----------------------------------------------------------------- */}
+
+              <ReviewRow
+                label="Payment Type"
                 value={
-                  paymentLink.redirectUrl ||
-                  "-"
+                  paymentLink.paymentType === "one-time"
+                    ? "One-time Payment"
+                    : "Subscription Payment"
+                }
+              />
+
+              <ReviewRow
+                label="Multiple Payments"
+                value={
+                  paymentLink.allowMultiplePayments ? "Enabled" : "Disabled"
+                }
+              />
+
+              <ReviewRow
+                label="Collect Customer Name"
+                value={paymentLink.collectCustomerName ? "Enabled" : "Disabled"}
+              />
+
+              <ReviewRow
+                label="Collect Customer Email"
+                value={
+                  paymentLink.collectCustomerEmail ? "Enabled" : "Disabled"
                 }
               />
             </View>
@@ -305,23 +367,20 @@ export default function ReviewScreen() {
               }}
             />
 
-            {/* Payment Information */}
+            {/* -----------------------------------------------------------------
+                Payment Information
+            ----------------------------------------------------------------- */}
 
             <View
               style={{
                 flexDirection: "row",
-                justifyContent:
-                  "space-between",
+                justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
-              <AppText variant="bodyLargeBold">
-                Payment Information
-              </AppText>
+              <AppText variant="bodyLargeBold">Payment Information</AppText>
 
-              <EditButton
-                onPress={editInformation}
-              />
+              <EditButton onPress={editInformation} />
             </View>
 
             <View
@@ -330,37 +389,20 @@ export default function ReviewScreen() {
                 gap: spacing.sm,
               }}
             >
-              <ReviewRow
-                label="Name"
-                value={
-                  paymentLink.linkName || "-"
-                }
-              />
+              <ReviewRow label="Name" value={paymentLink.linkName || "-"} />
 
               <ReviewRow
                 label="Amount"
-                value={formatCurrency(
-                  Number(
-                    paymentLink.amount || 0
-                  ),
-                  {
-                    currency:
-                      paymentLink.currency,
-                  }
-                )}
+                value={formatCurrency(Number(paymentLink.amount || 0), {
+                  currency: paymentLink.currency,
+                })}
               />
 
-              <ReviewRow
-                label="Currency"
-                value={paymentLink.currency}
-              />
+              <ReviewRow label="Currency" value={paymentLink.currency} />
 
               <ReviewRow
                 label="Description"
-                value={
-                  paymentLink.description ||
-                  "-"
-                }
+                value={paymentLink.description || "-"}
               />
             </View>
           </Card>
@@ -370,7 +412,8 @@ export default function ReviewScreen() {
 
         <AddPaymentLinkFooter
           primaryLabel={
-            createPaymentLinkMutation.isPending
+            createPaymentLinkMutation.isPending ||
+            validatePaymentLinkReferenceMutation.isPending
               ? "Creating..."
               : "Create Payment Link"
           }
@@ -383,27 +426,26 @@ export default function ReviewScreen() {
   );
 }
 
+/**
+ * ---------------------------------------------------------------------------
+ * Review Row
+ * ---------------------------------------------------------------------------
+ */
+
 interface ReviewRowProps {
   label: string;
   value: string;
 }
 
-function ReviewRow({
-  label,
-  value,
-}: ReviewRowProps) {
+function ReviewRow({ label, value }: ReviewRowProps) {
   return (
     <View
       style={{
         flexDirection: "row",
-        justifyContent:
-          "space-between",
+        justifyContent: "space-between",
       }}
     >
-      <AppText
-        variant="body"
-        color="secondary"
-      >
+      <AppText variant="body" color="secondary">
         {label}
       </AppText>
 

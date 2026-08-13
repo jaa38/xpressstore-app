@@ -1,255 +1,552 @@
+import { apiClient } from "@/api/client";
+import { graphqlRequest } from "@/api/graphql-client";
+import { API_ENDPOINTS } from "@/api/endpoints";
+
+import type { ApiResponse } from "@/types/api";
 import type { Order } from "@/types/order";
-import { supabase } from "../supabase/client";
+import type { Currency } from "@/types/currency";
+/**
+ * ---------------------------------------------------------------------------
+ * GraphQL DTOs
+ * ---------------------------------------------------------------------------
+ *
+ * These types represent the fields documented by the XpressStore
+ * storeTransactions GraphQL query.
+ */
 
-// -----------------------------------------------------------------------------
-// Supabase Implementation
-// -----------------------------------------------------------------------------
+interface StoreTransactionProductDto {
+  id: number;
 
-// export async function getOrders(): Promise<Order[]> {
-//   const { data, error } = await supabase
-//     .from("orders")
-//     .select("*")
-//     .order("created_at", { ascending: false });
+  productName: string;
 
-//   if (error) {
-//     throw error;
-//   }
+  quantity: number;
 
-//   return data as Order[];
-// }
+  amount: number;
 
-// -----------------------------------------------------------------------------
-// Mock Implementation
-// -----------------------------------------------------------------------------
+  isLiked: boolean;
+
+  rating: number;
+
+  comment: string;
+}
+
+interface StoreTransactionDiscountDto {
+  code: string;
+
+  discountAmount: number;
+}
+
+interface StoreTransactionDeliveryDto {
+  customerAddress: string;
+
+  deliveryFee: number;
+
+  region: string;
+}
+
+interface StoreTransactionDto {
+  id: number;
+
+  firstName: string;
+
+  lastName: string;
+
+  email: string;
+
+  phoneNumber: string;
+
+  customerAddress: string;
+
+  city: string;
+
+  currency: string;
+
+  country: string;
+
+  deliveryNotes: string;
+
+  isBeneficiary: boolean;
+
+  totalAmount: number;
+
+  dateCreated: string;
+
+  storeName: string;
+
+  dateUpdated: string;
+
+  isDelivered: boolean;
+
+  isSuccessful: boolean;
+
+  transactionId: string;
+
+  status: string;
+
+  paymentResponseMessage: string;
+
+  productDescription: string;
+
+  paymentDate: string;
+
+  paymentReference: string;
+
+  metaData: string | null;
+
+  merchantId: string;
+
+  discount: StoreTransactionDiscountDto | null;
+
+  deliveryDetails: StoreTransactionDeliveryDto | null;
+
+  productPurchased: StoreTransactionProductDto[];
+}
+
+interface StoreTransactionsResult {
+  storeTransactions: {
+    items: StoreTransactionDto[];
+
+    totalCount: number;
+
+    pageNumber: number;
+
+    pageSize: number;
+  };
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * GraphQL Query
+ * ---------------------------------------------------------------------------
+ *
+ * Source:
+ * 11_graphql.md
+ *
+ * storeTransactions returns paginated store orders.
+ */
+
+const STORE_TRANSACTIONS_QUERY = `
+  query StoreTransactions(
+    $page: Int!
+    $limit: Int!
+    $filter: TransactionFilterInput!
+  ) {
+    storeTransactions(
+      page: $page
+      limit: $limit
+      filter: $filter
+    ) {
+      items {
+        id
+        firstName
+        lastName
+        email
+        phoneNumber
+        customerAddress
+        city
+        currency
+        country
+        deliveryNotes
+        isBeneficiary
+        totalAmount
+        dateCreated
+        storeName
+        dateUpdated
+        isDelivered
+        isSuccessful
+        transactionId
+        status
+        paymentResponseMessage
+        productDescription
+        paymentDate
+        paymentReference
+        metaData
+        merchantId
+
+        discount {
+          code
+          discountAmount
+        }
+
+        deliveryDetails {
+          customerAddress
+          deliveryFee
+          region
+        }
+
+        productPurchased {
+          id
+          productName
+          quantity
+          amount
+          isLiked
+          rating
+          comment
+        }
+      }
+
+      totalCount
+      pageNumber
+      pageSize
+    }
+  }
+`;
+
+/**
+ * ---------------------------------------------------------------------------
+ * GraphQL Filter
+ * ---------------------------------------------------------------------------
+ */
+
+interface StoreTransactionFilter {
+  customerEmail: string | null;
+
+  reference: string | null;
+
+  transactionId: string | null;
+
+  startDate: string | null;
+
+  endDate: string | null;
+
+  status: string | null;
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Order Status Mapper
+ * ---------------------------------------------------------------------------
+ *
+ * The GraphQL response exposes:
+ *
+ * - isSuccessful
+ * - isDelivered
+ * - status
+ *
+ * The application currently uses:
+ *
+ * - paid
+ * - delivered
+ * - failed
+ * - returned
+ *
+ * Delivery takes precedence because the API exposes isDelivered directly.
+ */
+
+function mapOrderStatus(transaction: StoreTransactionDto): Order["status"] {
+  if (transaction.isDelivered) {
+    return "delivered";
+  }
+
+  const status = transaction.status?.trim().toLowerCase() ?? "";
+
+  if (status.includes("return")) {
+    return "returned";
+  }
+
+  if (
+    status.includes("fail") ||
+    status.includes("declin") ||
+    status.includes("abandon")
+  ) {
+    return "failed";
+  }
+
+  if (transaction.isSuccessful) {
+    return "paid";
+  }
+
+  return "failed";
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Payment Channel Mapper
+ * ---------------------------------------------------------------------------
+ *
+ * The documented storeTransactions GraphQL response does not expose a
+ * dedicated paymentChannel/paymentType field.
+ *
+ * We therefore try to extract it from metaData when the backend provides it.
+ *
+ * If no usable value is available, the application falls back to "card"
+ * because the existing Order model requires a paymentChannel.
+ *
+ * This fallback should be revisited if the backend exposes a dedicated
+ * payment method field.
+ */
+
+function mapPaymentChannel(
+  transaction: StoreTransactionDto
+): Order["paymentChannel"] {
+  if (!transaction.metaData) {
+    return "card";
+  }
+
+  try {
+    const metadata =
+      typeof transaction.metaData === "string"
+        ? JSON.parse(transaction.metaData)
+        : transaction.metaData;
+
+    const value =
+      metadata?.paymentChannel ??
+      metadata?.paymentMethod ??
+      metadata?.paymentType;
+
+    if (
+      value === "card" ||
+      value === "bank" ||
+      value === "bankTransfer" ||
+      value === "nqr" ||
+      value === "ussd" ||
+      value === "wallet"
+    ) {
+      return value;
+    }
+  } catch {
+    // Metadata is optional and may not contain valid JSON.
+  }
+
+  return "card";
+}
+
+
+
+/**
+ * ---------------------------------------------------------------------------
+ * Order Mapper
+ * ---------------------------------------------------------------------------
+ */
+
+function mapOrder(transaction: StoreTransactionDto): Order {
+  const customerName = [transaction.firstName, transaction.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  const items =
+    transaction.productPurchased?.map((product) => ({
+      productId: String(product.id),
+
+      productName: product.productName,
+
+      quantity: Number(product.quantity),
+
+      unitPrice: Number(product.amount),
+
+      subtotal: Number(product.amount) * Number(product.quantity),
+
+      currency: mapCurrency(transaction.currency),
+    })) ?? [];
+
+  const deliveryAddress = transaction.deliveryDetails;
+
+  return {
+    id: transaction.transactionId,
+
+    reference: transaction.paymentReference || transaction.transactionId,
+
+    customerName: customerName || "Unknown Customer",
+
+    customerPhone: transaction.phoneNumber ?? "",
+
+    customerEmail: transaction.email ?? "",
+
+    deliveryAddress: {
+      street:
+        deliveryAddress?.customerAddress ?? transaction.customerAddress ?? "",
+
+      city: transaction.city ?? "",
+
+      state: deliveryAddress?.region ?? "",
+
+      country: transaction.country ?? "",
+    },
+
+    items,
+
+    total: Number(transaction.totalAmount),
+
+    currency: mapCurrency(transaction.currency),
+
+    paymentChannel: mapPaymentChannel(transaction),
+
+    status: mapOrderStatus(transaction),
+
+    statusHistory: [],
+
+    createdAt: transaction.dateCreated,
+
+    updatedAt: transaction.dateUpdated || transaction.dateCreated,
+  };
+}
+
+function mapCurrency(value: string): Currency {
+  switch (value?.toUpperCase()) {
+    case "NGN":
+      return "NGN";
+
+    case "USD":
+      return "USD";
+
+    case "GBP":
+      return "GBP";
+
+    case "EUR":
+      return "EUR";
+
+    default:
+      return "NGN";
+  }
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Get Orders
+ * ---------------------------------------------------------------------------
+ *
+ * GraphQL:
+ *
+ * storeTransactions
+ *
+ * The API documentation demonstrates:
+ *
+ * page: 1
+ * limit: 20
+ */
 
 export async function getOrders(): Promise<Order[]> {
-  const orders: Order[] = [
-    {
-      id: "1",
+  const filter: StoreTransactionFilter = {
+    customerEmail: null,
 
-      reference: "XP-12345",
+    reference: null,
 
-      customerName: "Nancy Drew",
+    transactionId: null,
 
-      customerPhone: "+1 555-0101",
+    startDate: null,
 
-      customerEmail: "nancy@example.com",
+    endDate: null,
 
-      deliveryAddress: {
-        street: "12 Admiralty Way",
-        city: "Lekki Phase 1",
-        state: "Lagos",
-        country: "Nigeria",
-      },
+    status: null,
+  };
 
-      items: [
-        {
-          productId: "product-1",
-          productName: "Ankara Tote Bag",
-          quantity: 2,
-          unitPrice: 10,
-          subtotal: 20,
-          currency: "USD",
-        },
-      ],
+  const response = await graphqlRequest<StoreTransactionsResult>({
+    query: STORE_TRANSACTIONS_QUERY,
 
-      total: 20,
+    variables: {
+      page: 1,
 
-      currency: "USD",
+      limit: 20,
 
-      paymentChannel: "card",
-
-      status: "paid",
-
-      statusHistory: [
-        {
-          id: "history-1-1",
-          status: "paid",
-          createdAt: "2026-07-17T10:24:00Z",
-          updatedBy: "System",
-          note: "Payment received successfully.",
-        },
-      ],
-
-      createdAt: "2026-07-17T10:24:00Z",
-
-      updatedAt: "2026-07-17T10:24:00Z",
+      filter,
     },
+  });
 
-    {
-      id: "2",
+  return response.storeTransactions.items.map(mapOrder);
+}
 
-      reference: "XP-12346",
+/**
+ * ---------------------------------------------------------------------------
+ * Get Order By ID
+ * ---------------------------------------------------------------------------
+ *
+ * Uses the transactionId filter documented by the
+ * XpressStore GraphQL API.
+ */
 
-      customerName: "John Smith",
+export async function getOrderById(id: string): Promise<Order> {
+  const filter: StoreTransactionFilter = {
+    customerEmail: null,
 
-      customerPhone: "+1 555-0102",
+    reference: null,
 
-      customerEmail: "john@example.com",
+    transactionId: id,
 
-      deliveryAddress: {
-        street: "45 Allen Avenue",
-        city: "Ikeja",
-        state: "Lagos",
-        country: "Nigeria",
-      },
+    startDate: null,
 
-      items: [
-        {
-          productId: "product-2",
-          productName: "Sneakers",
-          quantity: 1,
-          unitPrice: 45,
-          subtotal: 45,
-          currency: "USD",
-        },
-      ],
+    endDate: null,
 
-      total: 45,
+    status: null,
+  };
 
-      currency: "USD",
+  const response = await graphqlRequest<StoreTransactionsResult>({
+    query: STORE_TRANSACTIONS_QUERY,
 
-      paymentChannel: "bankTransfer",
+    variables: {
+      page: 1,
 
-      status: "returned",
+      limit: 1,
 
-      statusHistory: [
-        {
-          id: "history-2-1",
-          status: "paid",
-          createdAt: "2026-07-17T09:40:00Z",
-          updatedBy: "System",
-          note: "Payment completed.",
-        },
-        {
-          id: "history-2-2",
-          status: "returned",
-          createdAt: "2026-07-18T11:10:00Z",
-          updatedBy: "Merchant",
-          note: "Customer returned the order.",
-        },
-      ],
-
-      createdAt: "2026-07-17T09:40:00Z",
-
-      updatedAt: "2026-07-18T11:10:00Z",
+      filter,
     },
+  });
 
-    {
-      id: "3",
+  const transaction = response.storeTransactions.items[0];
 
-      reference: "XP-12347",
+  if (!transaction) {
+    throw new Error("Order not found.");
+  }
 
-      customerName: "Sarah Johnson",
+  return mapOrder(transaction);
+}
 
-      customerPhone: "+1 555-0103",
+/**
+ * ---------------------------------------------------------------------------
+ * Update Order Delivery
+ * ---------------------------------------------------------------------------
+ *
+ * REST:
+ *
+ * POST /Store/ToggleDelivery
+ *
+ * IsDelivery=true
+ *     -> delivered
+ *
+ * IsDelivery=false
+ *     -> undelivered
+ *
+ * TransactionId
+ *     -> store transaction ID
+ */
 
-      customerEmail: "sarah@example.com",
+export async function updateOrderDelivery(
+  transactionId: string,
+  isDelivery: boolean
+): Promise<void> {
+  await apiClient.post<ApiResponse<null>>(
+    API_ENDPOINTS.store.toggleDelivery(transactionId, isDelivery)
+  );
+}
 
-      deliveryAddress: {
-        street: "18 Herbert Macaulay Way",
-        city: "Yaba",
-        state: "Lagos",
-        country: "Nigeria",
-      },
+/**
+ * ---------------------------------------------------------------------------
+ * Update Order Status
+ * ---------------------------------------------------------------------------
+ *
+ * The documented API currently provides a delivery
+ * toggle for store orders.
+ *
+ * Therefore:
+ *
+ * delivered -> ToggleDelivery(true)
+ *
+ * Other statuses are not changed through this function
+ * because the documented API does not provide a matching
+ * endpoint for them.
+ */
 
-      items: [
-        {
-          productId: "product-3",
-          productName: "Backpack",
-          quantity: 3,
-          unitPrice: 6,
-          subtotal: 18,
-          currency: "USD",
-        },
-      ],
+export async function updateOrderStatus(
+  orderId: string,
+  status: Order["status"]
+): Promise<void> {
+  if (status === "delivered") {
+    await updateOrderDelivery(orderId, true);
 
-      total: 18,
+    return;
+  }
 
-      currency: "USD",
-
-      paymentChannel: "bank",
-
-      status: "failed",
-
-      statusHistory: [
-        {
-          id: "history-3-1",
-          status: "failed",
-          createdAt: "2026-07-16T17:08:00Z",
-          updatedBy: "System",
-          note: "Payment authorization failed.",
-        },
-      ],
-
-      createdAt: "2026-07-16T17:05:00Z",
-
-      updatedAt: "2026-07-16T17:08:00Z",
-    },
-
-    {
-      id: "4",
-
-      reference: "XP-12348",
-
-      customerName: "Michael Brown",
-
-      customerPhone: "+1 555-0104",
-
-      customerEmail: "michael@example.com",
-
-      deliveryAddress: {
-        street: "8 Gana Street",
-        city: "Maitama",
-        state: "FCT Abuja",
-        country: "Nigeria",
-      },
-
-      items: [
-        {
-          productId: "product-4",
-          productName: "Office Chair",
-          quantity: 5,
-          unitPrice: 12,
-          subtotal: 60,
-          currency: "USD",
-        },
-      ],
-
-      total: 60,
-
-      currency: "USD",
-
-      paymentChannel: "nqr",
-
-      status: "delivered",
-
-      statusHistory: [
-        {
-          id: "history-4-1",
-          status: "paid",
-          createdAt: "2026-07-16T14:30:00Z",
-          updatedBy: "System",
-          note: "Payment completed.",
-        },
-        {
-          id: "history-4-2",
-          status: "delivered",
-          createdAt: "2026-07-17T09:00:00Z",
-          updatedBy: "Delivery Agent",
-          note: "Order delivered successfully.",
-        },
-      ],
-
-      createdAt: "2026-07-16T14:30:00Z",
-
-      updatedAt: "2026-07-17T09:00:00Z",
-    },
-  ];
-
-  return [...orders].sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() -
-      new Date(a.createdAt).getTime()
+  throw new Error(
+    `The Xpress API does not currently document an endpoint for changing an order to "${status}".`
   );
 }

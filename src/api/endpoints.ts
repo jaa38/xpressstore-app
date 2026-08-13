@@ -141,31 +141,75 @@ export const API_ENDPOINTS = {
 
   /**
    * ---------------------------------------------------------------------------
-   * Payment Pages
+   * Payment Pages / Payment Links
+   * ---------------------------------------------------------------------------
+   *
+   * Backend documentation:
+   * 09_payment_pages.md
+   *
+   * Payment Pages use the API Gateway Base URL.
+   *
+   * Base URL:
+   * https://api.myxpresspay.com/api/
    * ---------------------------------------------------------------------------
    */
   paymentPages: {
     /**
-     * CRUD
+     * -------------------------------------------------------------------------
+     * Get All Payment Pages
+     * -------------------------------------------------------------------------
+     *
+     * GET /PaymentPages/GetAllPages
      */
-    list: "/PaymentPages/GetPaymentPages",
-
-    details: (id: number) => `/PaymentPages/GetPaymentPageById/${id}`,
-
-    create: "/PaymentPages/CreatePaymentPage",
-
-    update: "/PaymentPages/UpdatePaymentPage",
-
-    delete: (id: number) => `/PaymentPages/DeletePaymentPage/${id}`,
+    list: "/PaymentPages/GetAllPages",
 
     /**
-     * Validation
+     * -------------------------------------------------------------------------
+     * Get Payment Page By Reference
+     * -------------------------------------------------------------------------
+     *
+     * GET /PaymentPages/GetAllPages/{merchantId}/{reference}
+     */
+    byReference: (merchantId: string, reference: string) =>
+      `/PaymentPages/GetAllPages/${merchantId}/${reference}`,
+
+    /**
+     * -------------------------------------------------------------------------
+     * Add Payment Page
+     * -------------------------------------------------------------------------
+     *
+     * POST /PaymentPages/Add
+     */
+    create: "/PaymentPages/Add",
+
+    /**
+     * -------------------------------------------------------------------------
+     * Update Payment Page
+     * -------------------------------------------------------------------------
+     *
+     * POST /PaymentPages/Update
+     */
+    update: "/PaymentPages/Update",
+
+    /**
+     * -------------------------------------------------------------------------
+     * Validate Payment Page Reference
+     * -------------------------------------------------------------------------
+     *
+     * GET /PaymentPages/ValidatePaymentPageLinkRefernce/{reference}
+     *
+     * "Refernce" is intentionally preserved because this is the
+     * endpoint spelling documented by the backend.
      */
     validateReference: (reference: string) =>
-      `/PaymentPages/ValidatePaymentReference/${reference}`,
+      `/PaymentPages/ValidatePaymentPageLinkRefernce/${reference}`,
 
     /**
-     * Transactions
+     * -------------------------------------------------------------------------
+     * Payment Page Transactions
+     * -------------------------------------------------------------------------
+     *
+     * GET /PaymentPages/GetPaymentPageTransactions/{paymentPageId}
      */
     transactions: (paymentPageId: number) =>
       `/PaymentPages/GetPaymentPageTransactions/${paymentPageId}`,
@@ -191,6 +235,11 @@ export const API_ENDPOINTS = {
     registerPushNotification: "/Merchants/RegisterPushNotification",
   },
 
+  /**
+   * ---------------------------------------------------------------------------
+   * Lookup
+   * ---------------------------------------------------------------------------
+   */
   lookup: {
     /**
      * Business Categories
@@ -214,6 +263,11 @@ export const API_ENDPOINTS = {
       `/Industry/GetIndustryCategories?IndustryId=${industryId}`,
   },
 
+  /**
+   * ---------------------------------------------------------------------------
+   * Store
+   * ---------------------------------------------------------------------------
+   */
   store: {
     getStores: "/Store/GetStores",
 
@@ -246,6 +300,22 @@ export const API_ENDPOINTS = {
 
   /**
    * ---------------------------------------------------------------------------
+   * Customers
+   * ---------------------------------------------------------------------------
+   */
+  customers: {
+    getAll: "/Invoices/GetCustomer",
+
+    create: "/Invoices/CreateCustomer",
+
+    update: "/Invoices/UpdateCustomer",
+
+    blacklist: (customerId: number, isBlackListed: boolean) =>
+      `/Invoices/BlackListCustomer/${customerId}?IsBlackListed=${isBlackListed}`,
+  },
+
+  /**
+   * ---------------------------------------------------------------------------
    * GraphQL
    * ---------------------------------------------------------------------------
    */
@@ -258,4 +328,5 @@ export const API_ENDPOINTS = {
 
     paymentSummary: "transactionSummarry",
   },
+  
 } as const;

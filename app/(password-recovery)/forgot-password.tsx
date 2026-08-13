@@ -28,7 +28,6 @@ import { getApiErrorMessage } from "@/api/errors";
 
 import { useToast } from "@/hooks/useToast";
 
-const { showToast } = useToast();
 const forgotPasswordSchema = z.object({
   email: z.email("Please enter a valid email address"),
 });
@@ -36,13 +35,17 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordScreen() {
+  const { showToast } = useToast();
+
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
   } = useForm<ForgotPasswordSchema>({
     resolver: zodResolver(forgotPasswordSchema),
+
     mode: "onChange",
+
     defaultValues: {
       email: "",
     },
@@ -58,12 +61,15 @@ export default function ForgotPasswordScreen() {
 
       showToast({
         type: "success",
+
         title: "Reset Code Sent",
+
         message: "We've sent an 8-digit verification code to your email.",
       });
 
       router.push({
         pathname: ROUTES.VERIFY_OTP,
+
         params: {
           email: data.email,
         },
@@ -71,7 +77,9 @@ export default function ForgotPasswordScreen() {
     } catch (error) {
       showToast({
         type: "error",
+
         title: "Unable to Send Reset Code",
+
         message: getApiErrorMessage(error),
       });
     }
@@ -81,6 +89,7 @@ export default function ForgotPasswordScreen() {
     <SafeAreaView
       style={{
         flex: 1,
+
         backgroundColor: theme.background.primary,
       }}
     >
@@ -89,12 +98,14 @@ export default function ForgotPasswordScreen() {
       <View
         style={{
           flex: 1,
+
           paddingHorizontal: spacing.lg,
         }}
       >
         <View
           style={{
             flex: 1,
+
             justifyContent: "space-between",
           }}
         >
@@ -103,6 +114,7 @@ export default function ForgotPasswordScreen() {
           <View
             style={{
               marginTop: spacing.lg,
+
               gap: spacing.lg,
             }}
           >
@@ -112,7 +124,9 @@ export default function ForgotPasswordScreen() {
               onPress={() => router.back()}
               style={{
                 width: 44,
+
                 height: 44,
+
                 justifyContent: "center",
               }}
             >
@@ -179,12 +193,16 @@ export default function ForgotPasswordScreen() {
             <Pressable
               onPress={() => router.replace(ROUTES.LOGIN)}
               style={{
+                marginTop: spacing.md,
+
                 alignItems: "center",
-                marginTop: spacing.lg,
               }}
             >
-              <AppText variant="label" color="link">
-                Back to Login
+              <AppText variant="body" color="secondary">
+                Remember your password?{" "}
+                <AppText variant="body" color="brand">
+                  Sign in
+                </AppText>
               </AppText>
             </Pressable>
           </View>

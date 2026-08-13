@@ -53,7 +53,6 @@ export const queryKeys = {
    * Dashboard
    * ---------------------------------------------------------------------------
    */
-
   dashboard: ["dashboard"] as const,
 
   /**
@@ -61,7 +60,6 @@ export const queryKeys = {
    * Stores
    * ---------------------------------------------------------------------------
    */
-
   stores: ["stores"] as const,
 
   store: (storeId: number) => [...queryKeys.stores, storeId] as const,
@@ -71,6 +69,7 @@ export const queryKeys = {
    * Shipping Regions
    * ---------------------------------------------------------------------------
    */
-
   shippingRegions: ["shipping-regions"] as const,
+
+  orders: ["orders"] as const,
 };

@@ -4,11 +4,11 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { Card } from "@/components/ui/Card";
 import { AppText } from "@/components/ui/AppText";
-import { ProductImage } from "@/components/ui/ProductImage";
 
 import { spacing, radius, theme } from "@/theme";
 
 import { formatCurrency } from "@/utils/formatCurrency";
+import { formatDate } from "@/utils/formatDate";
 
 import type { PaymentLink } from "@/types/paymentLink";
 
@@ -20,9 +20,15 @@ interface PaymentLinkCardProps {
 
   badgeText: string;
 
-  badgeTextColor: "success" | "warning" | "error" | "secondary";
+  badgeTextColor:
+    | "success"
+    | "warning"
+    | "error"
+    | "secondary";
 
-  onMorePress?: (link: PaymentLink) => void;
+  onMorePress?: (
+    link: PaymentLink
+  ) => void;
 }
 
 export function PaymentLinkCard({
@@ -46,29 +52,68 @@ export function PaymentLinkCard({
         <View
           style={{
             flex: 1,
+
             flexDirection: "row",
+
             alignItems: "center",
+
             gap: spacing.md,
           }}
         >
-          <ProductImage image={link.image} size={64} />
+          {/* Payment Link Icon */}
+
+          <View
+            style={{
+              width: 64,
+              height: 64,
+
+              borderRadius: radius.md,
+
+              justifyContent: "center",
+              alignItems: "center",
+
+              backgroundColor:
+                theme.icon.branding.background,
+            }}
+          >
+            <Ionicons
+              name="link-outline"
+              size={28}
+              color={theme.icon.branding.icon}
+            />
+          </View>
 
           <View
             style={{
               flex: 1,
+
               gap: spacing.xs,
             }}
           >
-            <AppText variant="bodyBold" numberOfLines={1}>
-              {link.title}
+            <AppText
+              variant="bodyBold"
+              numberOfLines={1}
+            >
+              {link.name}
             </AppText>
 
-            <AppText variant="bodySmall" color="secondary" numberOfLines={1}>
-              {link.url}
+            <AppText
+              variant="bodySmall"
+              color="secondary"
+              numberOfLines={1}
+            >
+              {link.paymentLink}
             </AppText>
 
-            <AppText variant="caption" color="muted">
-              {link.createdAt}
+            <AppText
+              variant="caption"
+              color="muted"
+            >
+              {link.createdAt
+                ? formatDate(
+                    new Date(link.createdAt)
+                  )
+                : "-"}
             </AppText>
           </View>
         </View>
@@ -78,38 +123,50 @@ export function PaymentLinkCard({
         <View
           style={{
             alignItems: "flex-end",
-            // justifyContent: "space-between",
+
             alignSelf: "stretch",
-            minWidth: 88,
+
+            minWidth: 90,
+
             gap: spacing.xs,
           }}
         >
           <AppText variant="bodyLargeBold">
             {formatCurrency(link.amount, {
               currency: link.currency,
-              showDecimals: link.amount % 1 !== 0,
             })}
           </AppText>
 
           <View
             style={{
               paddingHorizontal: spacing.sm,
+
               paddingVertical: spacing.xs,
 
               borderRadius: radius.full,
 
               backgroundColor: badgeBackground,
 
-              borderWidth: badgeBorderColor ? 1 : 0,
+              borderWidth:
+                badgeBorderColor ? 1 : 0,
+
               borderColor: badgeBorderColor,
             }}
           >
-            <AppText variant="caption" color={badgeTextColor}>
+            <AppText
+              variant="caption"
+              color={badgeTextColor}
+            >
               {badgeText}
             </AppText>
           </View>
 
-          <Pressable hitSlop={10} onPress={() => onMorePress?.(link)}>
+          <Pressable
+            hitSlop={10}
+            onPress={() =>
+              onMorePress?.(link)
+            }
+          >
             <Ionicons
               name="ellipsis-horizontal"
               size={20}

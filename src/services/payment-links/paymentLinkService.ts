@@ -3,7 +3,6 @@ import {
   getPaymentLink,
   createPaymentLink,
   updatePaymentLink,
-  deletePaymentLink,
   validatePaymentLinkReference,
   getPaymentLinkTransactions,
 } from "@/api/payment-links/payment-links-api";
@@ -16,8 +15,12 @@ import type {
 export const paymentLinkService = {
   /**
    * ---------------------------------------------------------------------------
-   * Get Payment Links
+   * Get All Payment Links
    * ---------------------------------------------------------------------------
+   *
+   * GET /PaymentPages/GetAllPages
+   *
+   * Returns all payment pages created by the authenticated merchant.
    */
   getPaymentLinks() {
     return getPaymentLinks();
@@ -25,17 +28,32 @@ export const paymentLinkService = {
 
   /**
    * ---------------------------------------------------------------------------
-   * Get Payment Link
+   * Get Payment Link By Reference
    * ---------------------------------------------------------------------------
+   *
+   * GET /PaymentPages/GetAllPages/{merchantId}/{reference}
+   *
+   * Retrieves a payment page using the merchant ID and payment page
+   * reference.
    */
-  getPaymentLink(id: number) {
-    return getPaymentLink(id);
+  getPaymentLink(
+    merchantId: string,
+    reference: string
+  ) {
+    return getPaymentLink(
+      merchantId,
+      reference
+    );
   },
 
   /**
    * ---------------------------------------------------------------------------
    * Create Payment Link
    * ---------------------------------------------------------------------------
+   *
+   * POST /PaymentPages/Add
+   *
+   * Creates a new payment page.
    */
   createPaymentLink(
     payload: CreatePaymentLinkRequest
@@ -47,6 +65,13 @@ export const paymentLinkService = {
    * ---------------------------------------------------------------------------
    * Update Payment Link
    * ---------------------------------------------------------------------------
+   *
+   * POST /PaymentPages/Update
+   *
+   * Updates an existing payment page.
+   *
+   * The backend expects the same fields as Add Payment Page with the
+   * payment page `id` included.
    */
   updatePaymentLink(
     payload: UpdatePaymentLinkRequest
@@ -56,32 +81,35 @@ export const paymentLinkService = {
 
   /**
    * ---------------------------------------------------------------------------
-   * Delete Payment Link
-   * ---------------------------------------------------------------------------
-   */
-  deletePaymentLink(id: number) {
-    return deletePaymentLink(id);
-  },
-
-  /**
-   * ---------------------------------------------------------------------------
    * Validate Payment Link Reference
    * ---------------------------------------------------------------------------
+   *
+   * GET /PaymentPages/ValidatePaymentPageLinkRefernce/{reference}
+   *
+   * Checks whether a payment page reference is already in use.
    */
   validatePaymentLinkReference(
     reference: string
   ) {
-    return validatePaymentLinkReference(reference);
+    return validatePaymentLinkReference(
+      reference
+    );
   },
 
   /**
    * ---------------------------------------------------------------------------
    * Payment Link Transactions
    * ---------------------------------------------------------------------------
+   *
+   * GET /PaymentPages/GetPaymentPageTransactions/{paymentPageId}
+   *
+   * Returns transactions made through a specific payment page.
    */
   getPaymentLinkTransactions(
     paymentPageId: number
   ) {
-    return getPaymentLinkTransactions(paymentPageId);
+    return getPaymentLinkTransactions(
+      paymentPageId
+    );
   },
 };

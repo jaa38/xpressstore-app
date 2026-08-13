@@ -32,8 +32,20 @@ import { usePaymentLink } from "@/hooks/paymentLinks/usePaymentLink";
 
 import { spacing, theme } from "@/theme";
 
-import type { PaymentLinkType } from "@/types/paymentLink";
+import type {
+  PaymentLinkType,
+} from "@/types/paymentLink";
 
+/**
+ * ---------------------------------------------------------------------------
+ * Payment Page Type
+ * ---------------------------------------------------------------------------
+ *
+ * These values are supported by the current Payment Pages backend contract.
+ *
+ * - single
+ * - donation
+ */
 const pageTypeOptions: {
   label: string;
   value: PaymentLinkType;
@@ -43,61 +55,143 @@ const pageTypeOptions: {
     value: "single",
   },
   {
-    label: "Multiple Payments",
-    value: "multiple",
+    label: "Donation",
+    value: "donation",
+  },
+];
+
+/**
+ * ---------------------------------------------------------------------------
+ * Payment Type
+ * ---------------------------------------------------------------------------
+ *
+ * Future backend field.
+ *
+ * This remains in the UI and Zustand draft but is NOT sent to the current
+ * Payment Pages API.
+ */
+type FuturePaymentType =
+  | "one-time"
+  | "subscription";
+
+const paymentTypeOptions: {
+  label: string;
+  value: FuturePaymentType;
+}[] = [
+  {
+    label: "One-time Payment",
+    value: "one-time",
+  },
+  {
+    label: "Subscription Payment",
+    value: "subscription",
   },
 ];
 
 export default function PaymentLinkSettingsScreen() {
-  const { paymentLink, updatePaymentLink } = usePaymentLink();
+  const {
+    paymentLink,
+    updatePaymentLink,
+  } = usePaymentLink();
 
   const {
     control,
     handleSubmit,
     getValues,
   } = useForm<PaymentLinkSettingsForm>({
-    resolver: zodResolver(paymentLinkSettingsSchema),
+    resolver: zodResolver(
+      paymentLinkSettingsSchema
+    ),
 
     defaultValues: {
-      expiryDate: paymentLink.expiryDate,
+      /**
+       * Future backend field.
+       */
+      expiryDate:
+        paymentLink.expiryDate,
 
-      pageType: paymentLink.pageType,
+      /**
+       * Backend-supported field.
+       */
+      pageType:
+        paymentLink.pageType,
 
-      isFixedAmount: paymentLink.isFixedAmount,
+      /**
+       * Future backend field.
+       */
+      paymentType:
+        paymentLink.paymentType,
 
+      /**
+       * Backend-supported field.
+       */
+      isFixedAmount:
+        paymentLink.isFixedAmount,
+
+      /**
+       * Future backend field.
+       */
       allowMultiplePayments:
         paymentLink.allowMultiplePayments,
 
+      /**
+       * Future backend field.
+       */
       collectCustomerName:
         paymentLink.collectCustomerName,
 
+      /**
+       * Future backend field.
+       */
       collectCustomerEmail:
         paymentLink.collectCustomerEmail,
 
+      /**
+       * Backend-supported field.
+       */
       isPhoneNumberRequired:
         paymentLink.isPhoneNumberRequired,
 
-      isTestMode: paymentLink.isTestMode,
+      /**
+       * Backend-supported field.
+       */
+      isTestMode:
+        paymentLink.isTestMode,
 
-      redirectUrl: paymentLink.redirectUrl,
+      /**
+       * Backend-supported field.
+       */
+      redirectUrl:
+        paymentLink.redirectUrl,
 
-      subAccountId: paymentLink.subAccountId,
+      /**
+       * Backend-supported optional fields.
+       */
+      subAccountId:
+        paymentLink.subAccountId,
 
       subAccountGroupId:
         paymentLink.subAccountGroupId,
 
-      extraFields: paymentLink.extraFields,
+      extraFields:
+        paymentLink.extraFields,
     },
   });
 
-  function onSubmit(data: PaymentLinkSettingsForm) {
+  function onSubmit(
+    data: PaymentLinkSettingsForm
+  ) {
     updatePaymentLink(data);
 
-    router.push(ROUTES.ADD_PAYMENT_LINK_REVIEW);
+    router.push(
+      ROUTES.ADD_PAYMENT_LINK_REVIEW
+    );
   }
 
   function handleBack() {
-    updatePaymentLink(getValues());
+    updatePaymentLink(
+      getValues()
+    );
 
     router.back();
   }
@@ -106,7 +200,8 @@ export default function PaymentLinkSettingsScreen() {
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: theme.background.primary,
+        backgroundColor:
+          theme.background.primary,
       }}
       edges={["top"]}
     >
@@ -121,7 +216,9 @@ export default function PaymentLinkSettingsScreen() {
       <Divider />
 
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={{
+          flex: 1,
+        }}
         behavior={
           Platform.OS === "ios"
             ? "padding"
@@ -129,7 +226,9 @@ export default function PaymentLinkSettingsScreen() {
         }
       >
         <ScrollView
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={
+            false
+          }
           contentContainerStyle={{
             padding: spacing.lg,
             gap: spacing.xl,
@@ -142,23 +241,46 @@ export default function PaymentLinkSettingsScreen() {
               lineHeight: 22,
             }}
           >
-            Configure how customers can use this payment
-            link.
+            Configure how customers can use
+            this payment link.
           </AppText>
+
+          {/* -----------------------------------------------------------------
+              Expiry Date
+              Future backend field - UI retained
+          ----------------------------------------------------------------- */}
 
           <Controller
             control={control}
             name="expiryDate"
-            render={({ field, fieldState }) => (
+            render={({
+              field,
+              fieldState,
+            }) => (
               <DatePicker
                 label="Expiry Date"
-                value={field.value ?? undefined}
-                minimumDate={new Date()}
-                error={fieldState.error?.message}
-                onChange={field.onChange}
+                value={
+                  field.value ??
+                  undefined
+                }
+                minimumDate={
+                  new Date()
+                }
+                error={
+                  fieldState.error
+                    ?.message
+                }
+                onChange={
+                  field.onChange
+                }
               />
             )}
           />
+
+          {/* -----------------------------------------------------------------
+              Payment Page Type
+              Backend-supported field
+          ----------------------------------------------------------------- */}
 
           <Controller
             control={control}
@@ -177,13 +299,60 @@ export default function PaymentLinkSettingsScreen() {
                 </AppText>
 
                 <RadioGroup
-                  value={field.value}
-                  options={pageTypeOptions}
-                  onChange={field.onChange}
+                  value={
+                    field.value
+                  }
+                  options={
+                    pageTypeOptions
+                  }
+                  onChange={
+                    field.onChange
+                  }
                 />
               </View>
             )}
           />
+
+          {/* -----------------------------------------------------------------
+              Payment Type
+              Future backend field - UI retained
+          ----------------------------------------------------------------- */}
+
+          <Controller
+            control={control}
+            name="paymentType"
+            render={({ field }) => (
+              <View
+                style={{
+                  gap: spacing.sm,
+                }}
+              >
+                <AppText
+                  variant="caption"
+                  color="secondary"
+                >
+                  Payment Type
+                </AppText>
+
+                <RadioGroup
+                  value={
+                    field.value
+                  }
+                  options={
+                    paymentTypeOptions
+                  }
+                  onChange={
+                    field.onChange
+                  }
+                />
+              </View>
+            )}
+          />
+
+          {/* -----------------------------------------------------------------
+              Fixed Amount
+              Backend-supported field
+          ----------------------------------------------------------------- */}
 
           <Controller
             control={control}
@@ -192,11 +361,20 @@ export default function PaymentLinkSettingsScreen() {
               <Switch
                 label="Fixed Amount"
                 description="Customers cannot edit the payment amount."
-                value={field.value}
-                onValueChange={field.onChange}
+                value={
+                  field.value
+                }
+                onValueChange={
+                  field.onChange
+                }
               />
             )}
           />
+
+          {/* -----------------------------------------------------------------
+              Allow Multiple Payments
+              Future backend field - UI retained
+          ----------------------------------------------------------------- */}
 
           <Controller
             control={control}
@@ -205,11 +383,20 @@ export default function PaymentLinkSettingsScreen() {
               <Switch
                 label="Allow Multiple Payments"
                 description="Customers can reuse this payment link."
-                value={field.value}
-                onValueChange={field.onChange}
+                value={
+                  field.value
+                }
+                onValueChange={
+                  field.onChange
+                }
               />
             )}
           />
+
+          {/* -----------------------------------------------------------------
+              Collect Customer Name
+              Future backend field - UI retained
+          ----------------------------------------------------------------- */}
 
           <Controller
             control={control}
@@ -218,11 +405,20 @@ export default function PaymentLinkSettingsScreen() {
               <Switch
                 label="Collect Customer Name"
                 description="Request the customer's name during payment."
-                value={field.value}
-                onValueChange={field.onChange}
+                value={
+                  field.value
+                }
+                onValueChange={
+                  field.onChange
+                }
               />
             )}
           />
+
+          {/* -----------------------------------------------------------------
+              Collect Customer Email
+              Future backend field - UI retained
+          ----------------------------------------------------------------- */}
 
           <Controller
             control={control}
@@ -231,11 +427,20 @@ export default function PaymentLinkSettingsScreen() {
               <Switch
                 label="Collect Customer Email"
                 description="Request the customer's email during payment."
-                value={field.value}
-                onValueChange={field.onChange}
+                value={
+                  field.value
+                }
+                onValueChange={
+                  field.onChange
+                }
               />
             )}
           />
+
+          {/* -----------------------------------------------------------------
+              Collect Phone Number
+              Backend-supported field
+          ----------------------------------------------------------------- */}
 
           <Controller
             control={control}
@@ -244,11 +449,20 @@ export default function PaymentLinkSettingsScreen() {
               <Switch
                 label="Collect Phone Number"
                 description="Require customers to provide their phone number."
-                value={field.value}
-                onValueChange={field.onChange}
+                value={
+                  field.value
+                }
+                onValueChange={
+                  field.onChange
+                }
               />
             )}
           />
+
+          {/* -----------------------------------------------------------------
+              Test Mode
+              Backend-supported field
+          ----------------------------------------------------------------- */}
 
           <Controller
             control={control}
@@ -257,24 +471,43 @@ export default function PaymentLinkSettingsScreen() {
               <Switch
                 label="Test Mode"
                 description="Use this payment page for testing only."
-                value={field.value}
-                onValueChange={field.onChange}
+                value={
+                  field.value
+                }
+                onValueChange={
+                  field.onChange
+                }
               />
             )}
           />
 
+          {/* -----------------------------------------------------------------
+              Redirect URL
+              Backend-supported field
+          ----------------------------------------------------------------- */}
+
           <Controller
             control={control}
             name="redirectUrl"
-            render={({ field, fieldState }) => (
+            render={({
+              field,
+              fieldState,
+            }) => (
               <Input
                 label="Redirect URL (Optional)"
                 placeholder="https://example.com"
-                value={field.value}
-                onChangeText={field.onChange}
+                value={
+                  field.value
+                }
+                onChangeText={
+                  field.onChange
+                }
                 autoCapitalize="none"
                 keyboardType="url"
-                error={fieldState.error?.message}
+                error={
+                  fieldState.error
+                    ?.message
+                }
               />
             )}
           />
@@ -286,8 +519,12 @@ export default function PaymentLinkSettingsScreen() {
       <AddPaymentLinkFooter
         primaryLabel="Next"
         secondaryLabel="Back"
-        onPrimary={handleSubmit(onSubmit)}
-        onSecondary={handleBack}
+        onPrimary={handleSubmit(
+          onSubmit
+        )}
+        onSecondary={
+          handleBack
+        }
       />
     </SafeAreaView>
   );

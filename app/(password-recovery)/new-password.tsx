@@ -273,10 +273,12 @@ export default function NewPasswordScreen() {
             }}
           >
             <Button
-              title={isLoading ? "Updating..." : "Reset Password"}
+              title={
+                changePassword.isPending ? "Updating..." : "Reset Password"
+              }
               variant="primary"
               size="large"
-              disabled={!isValid || isLoading}
+              disabled={!isValid || changePassword.isPending}
               onPress={handleSubmit(onSubmit)}
             />
           </View>

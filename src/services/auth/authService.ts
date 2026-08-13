@@ -41,6 +41,15 @@ export const authService = {
   async login(payload: LoginRequest) {
     const encodedPayload = encodeLoginRequest(payload);
 
+    console.log("=================================");
+    console.log("XPRESS LOGIN REQUEST");
+    console.log("EMAIL:", encodedPayload.email);
+    console.log(
+      "PASSWORD ENCODED:",
+      encodedPayload.password.substring(0, 10) + "..."
+    );
+    console.log("=================================");
+
     const { data } = await authClient.post<ApiResponse<LoginResponse>>(
       API_ENDPOINTS.auth.login,
       encodedPayload

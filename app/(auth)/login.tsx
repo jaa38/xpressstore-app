@@ -16,10 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useAuth } from "@/providers/AuthProvider";
 
-import {
-  LoginSchema,
-  loginSchema,
-} from "@/schemas/login-schema";
+import { LoginSchema, loginSchema } from "@/schemas/login-schema";
 
 import { authenticateWithBiometrics } from "@/services/biometrics";
 
@@ -106,10 +103,7 @@ export default function LoginScreen() {
       const user = await getCurrentUser<AuthUser>();
 
       if (!user) {
-        Alert.alert(
-          "Unable to restore session",
-          "Please sign in again."
-        );
+        Alert.alert("Unable to restore session", "Please sign in again.");
 
         return;
       }
@@ -142,9 +136,9 @@ export default function LoginScreen() {
        * Replace these with a real XpressStore test account if one has been
        * provided by the backend/API team.
        */
-      email: "test@xpressstore.com",
+      email: "",
 
-      password: "Test@1234",
+      password: "",
     },
   });
 
@@ -162,10 +156,7 @@ export default function LoginScreen() {
 
       router.replace(ROUTES.TABS);
     } catch (error) {
-      Alert.alert(
-        "Login Failed",
-        getApiErrorMessage(error)
-      );
+      Alert.alert("Login Failed", getApiErrorMessage(error));
     }
   }
 
@@ -210,17 +201,11 @@ export default function LoginScreen() {
                   gap: spacing.xs,
                 }}
               >
-                <AppText
-                  variant="h1"
-                  color="heading"
-                >
+                <AppText variant="h1" color="heading">
                   Welcome Back
                 </AppText>
 
-                <AppText
-                  variant="body"
-                  color="secondary"
-                >
+                <AppText variant="body" color="secondary">
                   Sign in to manage your store.
                 </AppText>
               </View>
@@ -235,8 +220,7 @@ export default function LoginScreen() {
 
                       borderRadius: 16,
 
-                      backgroundColor:
-                        theme.background.brand,
+                      backgroundColor: theme.background.brand,
 
                       gap: spacing.md,
 
@@ -249,11 +233,7 @@ export default function LoginScreen() {
                       color={theme.icon.success.icon}
                     />
 
-                    <AppText
-                      variant="body"
-                      color="strong"
-                      align="center"
-                    >
+                    <AppText variant="body" color="strong" align="center">
                       Continue securely with Face ID
                     </AppText>
 
@@ -297,15 +277,11 @@ export default function LoginScreen() {
 
                         height: 1,
 
-                        backgroundColor:
-                          theme.divider.default,
+                        backgroundColor: theme.divider.default,
                       }}
                     />
 
-                    <AppText
-                      variant="caption"
-                      color="muted"
-                    >
+                    <AppText variant="caption" color="muted">
                       OR
                     </AppText>
 
@@ -315,8 +291,7 @@ export default function LoginScreen() {
 
                         height: 1,
 
-                        backgroundColor:
-                          theme.divider.default,
+                        backgroundColor: theme.divider.default,
                       }}
                     />
                   </View>
@@ -328,12 +303,7 @@ export default function LoginScreen() {
               <Controller
                 control={control}
                 name="email"
-                render={({
-                  field: {
-                    value,
-                    onChange,
-                  },
-                }) => (
+                render={({ field: { value, onChange } }) => (
                   <Input
                     label="Email Address"
                     placeholder="Enter your email"
@@ -351,12 +321,7 @@ export default function LoginScreen() {
               <Controller
                 control={control}
                 name="password"
-                render={({
-                  field: {
-                    value,
-                    onChange,
-                  },
-                }) => (
+                render={({ field: { value, onChange } }) => (
                   <View>
                     <Input
                       label="Password"
@@ -367,33 +332,21 @@ export default function LoginScreen() {
                       error={errors.password?.message}
                       rightIcon={
                         <Pressable
-                          onPress={() =>
-                            setShowPassword(
-                              !showPassword
-                            )
-                          }
+                          onPress={() => setShowPassword(!showPassword)}
                         >
                           <Ionicons
                             name={
-                              showPassword
-                                ? "eye-off-outline"
-                                : "eye-outline"
+                              showPassword ? "eye-off-outline" : "eye-outline"
                             }
                             size={20}
-                            color={
-                              theme.icon.default.icon
-                            }
+                            color={theme.icon.default.icon}
                           />
                         </Pressable>
                       }
                     />
 
                     <Pressable
-                      onPress={() =>
-                        router.push(
-                          ROUTES.FORGOT_PASSWORD
-                        )
-                      }
+                      onPress={() => router.push(ROUTES.FORGOT_PASSWORD)}
                       style={{
                         alignSelf: "flex-end",
 
@@ -424,17 +377,10 @@ export default function LoginScreen() {
             }}
           >
             <Button
-              title={
-                loginMutation.isPending
-                  ? "Signing In..."
-                  : "Log In"
-              }
+              title={loginMutation.isPending ? "Signing In..." : "Log In"}
               variant="primary"
               size="large"
-              disabled={
-                !isValid ||
-                loginMutation.isPending
-              }
+              disabled={!isValid || loginMutation.isPending}
               onPress={handleSubmit(onSubmit)}
             />
 
@@ -451,22 +397,13 @@ export default function LoginScreen() {
                 marginTop: spacing.lg,
               }}
             >
-              <AppText
-                variant="bodySmall"
-                color="muted"
-              >
+              <AppText variant="bodySmall" color="muted">
                 Don't have an account?
               </AppText>
 
-              <Link
-                href={ROUTES.SIGNUP}
-                asChild
-              >
+              <Link href={ROUTES.SIGNUP} asChild>
                 <Pressable>
-                  <AppText
-                    variant="label"
-                    color="link"
-                  >
+                  <AppText variant="label" color="link">
                     Sign Up
                   </AppText>
                 </Pressable>

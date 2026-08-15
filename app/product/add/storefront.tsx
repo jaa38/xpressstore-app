@@ -35,7 +35,7 @@ import {
 
 import { useStores } from "@/hooks/store/useStores";
 
-import { useProduct } from "@/store/product/useProduct";
+import { useProductDraftStore } from "@/store/product/productDraftStore";
 
 type ShippingClass = (typeof SHIPPING_CLASSES)[number];
 
@@ -44,7 +44,7 @@ export default function StorefrontScreen() {
 
   const { stores, isLoading: storesLoading } = useStores();
 
-  const { product, updateProduct } = useProduct();
+  const { product, updateProduct } = useProductDraftStore();
 
   const {
     control,

@@ -7,6 +7,8 @@ import {
 
 import type { Transaction } from "@/types/transaction";
 
+import { queryWithCache } from "@/database/query";
+
 export interface TransactionsQueryResult {
   transactions: Transaction[];
 
@@ -17,36 +19,38 @@ export interface TransactionsQueryResult {
   pageSize: number;
 }
 
+const TRANSACTIONS_CACHE_MAX_AGE = 1000 * 60 * 30;
+
 export function useTransactions(
   page = 1,
   limit = 20,
   filter: Partial<TransactionFilter> = {}
 ) {
+  const queryKey = ["transactions", page, limit, filter] as const;
+
   return useQuery<TransactionsQueryResult, Error>({
-    queryKey: [
-      "transactions",
-      page,
-      limit,
-      filter,
-    ],
+    queryKey,
 
-    queryFn: async () => {
-      const response = await getTransactionsPage(
-        page,
-        limit,
-        filter
-      );
+    queryFn: () =>
+      queryWithCache(
+        queryKey,
+        async () => {
+          const response = await getTransactionsPage(page, limit, filter);
 
-      return {
-        transactions: response.transactions,
+          return {
+            transactions: response.transactions,
 
-        totalCount: response.totalCount,
+            totalCount: response.totalCount,
 
-        pageNumber: response.pageNumber,
+            pageNumber: response.pageNumber,
 
-        pageSize: response.pageSize,
-      };
-    },
+            pageSize: response.pageSize,
+          };
+        },
+        {
+          maxAge: TRANSACTIONS_CACHE_MAX_AGE,
+        }
+      ),
 
     placeholderData: (previousData) => previousData,
   });

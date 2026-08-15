@@ -36,14 +36,14 @@ import {
   ProductInfoForm,
 } from "@/schemas/productInfoSchema";
 
-import { useProduct } from "@/store/product/useProduct";
+import { useProductDraftStore } from "@/store/product/productDraftStore";
 
 import { useCategories } from "@/hooks/categories/useCategories";
 import { useCreateCategory } from "@/hooks/categories/useCreateCategory";
 import { useToast } from "@/hooks/useToast";
 
 export default function InfoScreen() {
-  const { product, updateProduct } = useProduct();
+  const { product, updateProduct } = useProductDraftStore();
 
   const {
     control,

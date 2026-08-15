@@ -9,11 +9,8 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { registerInterceptors } from "@/api/interceptors";
 
 import { AppProvider } from "@/providers/app-provider";
-import { AuthProvider } from "@/providers/AuthProvider";
-import { QueryProvider } from "@/providers/query-provider";
 import { ToastProvider } from "@/providers/toast-provider";
 
-import { ProductProvider } from "@/store/product/ProductProvider";
 
 /**
  * Register Axios interceptors once.
@@ -29,19 +26,13 @@ export default function RootLayout() {
     >
       <BottomSheetModalProvider>
         <AppProvider>
-          <AuthProvider>
-            <QueryProvider>
-              <ToastProvider>
-                <ProductProvider>
-                  <Stack
-                    screenOptions={{
-                      headerShown: false,
-                    }}
-                  />
-                </ProductProvider>
-              </ToastProvider>
-            </QueryProvider>
-          </AuthProvider>
+          <ToastProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+              />
+          </ToastProvider>
         </AppProvider>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

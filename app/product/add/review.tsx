@@ -13,7 +13,7 @@ import { AddProductHeader } from "@/components/product/AddProductHeader";
 import { AddProductFooter } from "@/components/product/AddProductFooter";
 import { Card } from "@/components/ui/Card";
 
-import { useProduct } from "@/store/product/useProduct";
+import { useProductDraftStore } from "@/store/product/productDraftStore";
 
 import { EditButton } from "@/components/product/EditButton";
 
@@ -56,8 +56,7 @@ function editStorefront() {
 }
 
 export default function ReviewScreen() {
-  const { product, resetProduct } = useProduct();
-
+  const { product, resetProduct } = useProductDraftStore();
   const createProductMutation = useCreateProduct();
 
   const addProductToStoreMutation = useAddProductToStore();

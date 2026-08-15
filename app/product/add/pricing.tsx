@@ -30,10 +30,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { pricingSchema, PricingFormData } from "@/schemas/pricingSchema";
 
-import { useProduct } from "@/store/product/useProduct";
+import { useProductDraftStore } from "@/store/product/productDraftStore";
 
 export default function PricingScreen() {
-  const { product, updateProduct } = useProduct();
+  const { product, updateProduct } = useProductDraftStore();
 
   const {
     control,

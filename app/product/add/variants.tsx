@@ -29,10 +29,10 @@ import { variantSchema, type VariantFormData } from "@/schemas/variantSchema";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { useProduct } from "@/store/product/useProduct";
+import { useProductDraftStore } from "@/store/product/productDraftStore";
 
 export default function VariantsScreen() {
-  const { product, updateProduct } = useProduct();
+  const { product, updateProduct } = useProductDraftStore();
 
   const {
     control,

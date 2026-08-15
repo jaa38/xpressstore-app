@@ -88,5 +88,13 @@ export const queryKeys = {
    */
   orders: ["orders"] as const,
 
+  /**
+   * ---------------------------------------------------------------------------
+   * Orders - SQLite Cache Pages
+   * ---------------------------------------------------------------------------
+   */
+  ordersPage: (page: number, pageSize: number) =>
+    [...queryKeys.orders, "page", page, pageSize] as const,
+
   order: (id: string) => [...queryKeys.orders, id] as const,
 };

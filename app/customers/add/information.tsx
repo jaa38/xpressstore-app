@@ -28,7 +28,6 @@ import {
   type CustomerInformationForm,
 } from "@/schemas/customerInformationSchema";
 
-import { countryOptions } from "@/constants/address/countries";
 
 const customerTypeOptions: DropdownOption<
   "individual" | "business"

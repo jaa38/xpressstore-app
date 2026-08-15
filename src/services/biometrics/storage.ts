@@ -1,28 +1,17 @@
-import {
-  getItem,
-  removeItem,
-  setItem,
-} from "@/storage/storage";
+import { getItem, removeItem, setItem } from "@/storage/storage";
 
-import { STORAGE_KEYS } from "@/constants/storageKeys";
+import { StorageKeys } from "@/services/storage/secure-storage";
 
 export async function enableBiometrics() {
-  await setItem(
-    STORAGE_KEYS.BIOMETRICS_ENABLED,
-    "true"
-  );
+  await setItem(StorageKeys.BIOMETRICS_ENABLED, "true");
 }
 
 export async function disableBiometrics() {
-  await removeItem(
-    STORAGE_KEYS.BIOMETRICS_ENABLED
-  );
+  await removeItem(StorageKeys.BIOMETRICS_ENABLED);
 }
 
 export async function isBiometricsEnabled() {
-  const value = await getItem(
-    STORAGE_KEYS.BIOMETRICS_ENABLED
-  );
+  const value = await getItem(StorageKeys.BIOMETRICS_ENABLED);
 
   return value === "true";
 }

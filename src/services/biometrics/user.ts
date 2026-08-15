@@ -1,28 +1,15 @@
-import {
-  getItem,
-  removeItem,
-  setItem,
-} from "@/storage/storage";
+import { getItem, removeItem, setItem } from "@/storage/storage";
 
-import { STORAGE_KEYS } from "@/constants/storageKeys";
+import { StorageKeys } from "@/services/storage/secure-storage";
 
-export async function saveBiometricEmail(
-  email: string
-) {
-  await setItem(
-    STORAGE_KEYS.BIOMETRIC_EMAIL,
-    email
-  );
+export async function saveBiometricEmail(email: string) {
+  await setItem(StorageKeys.BIOMETRIC_EMAIL, email);
 }
 
 export async function getBiometricEmail() {
-  return getItem(
-    STORAGE_KEYS.BIOMETRIC_EMAIL
-  );
+  return getItem(StorageKeys.BIOMETRIC_EMAIL);
 }
 
 export async function clearBiometricEmail() {
-  await removeItem(
-    STORAGE_KEYS.BIOMETRIC_EMAIL
-  );
+  await removeItem(StorageKeys.BIOMETRIC_EMAIL);
 }

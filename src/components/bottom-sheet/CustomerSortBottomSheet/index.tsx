@@ -92,7 +92,12 @@ export const CustomerSortBottomSheet = forwardRef<
       <BottomSheetFooter>
         <Pressable
           onPress={() => {
-            setDraftSort("firstNameAsc");
+            const defaultSort: CustomerSort = "firstNameAsc";
+
+            setDraftSort(defaultSort);
+            onApply(defaultSort);
+
+            bottomSheetRef.current?.dismiss();
           }}
           style={{
             flex: 1,

@@ -1,4 +1,10 @@
-import { View, Pressable, FlatList, RefreshControl } from "react-native";
+import {
+  View,
+  Pressable,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
+} from "react-native";
 
 import { useMemo, useRef, useState } from "react";
 
@@ -45,7 +51,19 @@ import { Order } from "@/types/order";
 import { OrderActionsBottomSheet } from "@/components/bottom-sheet/OrderActionsBottomSheet";
 
 export default function OrdersScreen() {
-  const { data: orders = [], isLoading, isRefetching, refetch } = useOrders();
+  const {
+    data,
+    isLoading,
+    isRefetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = useOrders();
+
+  const orders = useMemo(() => {
+    return data?.pages.flatMap((page) => page.orders) ?? [];
+  }, [data]);
 
   const { products } = useProducts();
 
@@ -303,7 +321,24 @@ export default function OrdersScreen() {
                   colors={[theme.text.brand]}
                 />
               }
-              keyExtractor={(item) => item.id}
+              onEndReached={() => {
+                if (hasNextPage && !isFetchingNextPage) {
+                  fetchNextPage();
+                }
+              }}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                isFetchingNextPage ? (
+                  <View
+                    style={{
+                      paddingVertical: spacing.lg,
+                      alignItems: "center",
+                    }}
+                  >
+                    <ActivityIndicator color={theme.text.brand} />
+                  </View>
+                ) : null
+              }
               ListEmptyComponent={
                 <View
                   style={{
@@ -343,6 +378,7 @@ export default function OrdersScreen() {
                 gap: spacing.md,
                 paddingBottom: spacing.lg,
               }}
+              keyExtractor={(item) => item.id}
               renderItem={({ item: order }) => {
                 const status =
                   order.status !== "paid" ? ORDER_STATUS[order.status] : null;
@@ -384,11 +420,10 @@ export default function OrdersScreen() {
                         gap: spacing.md,
                       }}
                     >
-                      {/* IMAGE */}
                       <ProductImage
                         image={product?.productImages?.[0]?.url ?? ""}
                       />
-                      {/* ORDER INFO */}
+
                       <View
                         style={{
                           flex: 1,
@@ -434,7 +469,7 @@ export default function OrdersScreen() {
                           {totalItems === 1 ? "" : "s"} • {productSummary}
                         </AppText>
                       </View>
-                      {/* PRICE */}
+
                       <View
                         style={{
                           alignItems: "flex-end",

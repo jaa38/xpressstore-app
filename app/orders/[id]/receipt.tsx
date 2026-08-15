@@ -34,7 +34,9 @@ export default function OrderReceiptScreen() {
     id: string;
   }>();
 
-  const { data: orders = [] } = useOrders();
+  const { data } = useOrders();
+
+  const orders = data?.pages.flatMap((page) => page.orders) ?? [];
 
   const order = orders.find((item) => item.id === id);
 

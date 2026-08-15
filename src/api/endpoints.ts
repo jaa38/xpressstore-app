@@ -88,7 +88,7 @@ export const API_ENDPOINTS = {
 
     product: (productId: number) => `/Product/GetProductById/${productId}`,
 
-    byStore: (storeId: number) => `/Product/GetProductsByStore/${storeId}`,
+    byStore: (storeId: number) => `/Product/stores/${storeId}`,
 
     /**
      * CRUD
@@ -108,7 +108,7 @@ export const API_ENDPOINTS = {
     /**
      * Images
      */
-    uploadImage: "/FileUploader/UploadProductImage",
+    uploadImage: "/Product/UploadProductImages",
 
     /**
      * Store Assignment
@@ -328,5 +328,4 @@ export const API_ENDPOINTS = {
 
     paymentSummary: "transactionSummarry",
   },
-  
 } as const;

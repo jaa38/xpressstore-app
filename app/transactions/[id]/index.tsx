@@ -8,7 +8,7 @@ import { AppText } from "@/components/ui/AppText";
 
 import { spacing, theme } from "@/theme";
 
-import { useTransactions } from "@/hooks/transactions/useTransactions";
+import { useTransaction } from "@/hooks/transactions/useTransaction";
 
 import { TransactionSummarySection } from "@/components/transactions/TransactionSummarySection";
 import { CustomerInformationSection } from "@/components/transactions/CustomerInformationSection";
@@ -24,12 +24,12 @@ export default function TransactionDetailsScreen() {
     id: string;
   }>();
 
-  const { data: transactions = [] } =
-    useTransactions();
-
-  const transaction = transactions.find(
-    (item) => item.id === id
-  );
+  const {
+    data: transaction,
+    isLoading,
+    isError,
+    error,
+  } = useTransaction(id);
 
   async function handleShareReceipt() {
     if (!transaction) return;
@@ -50,8 +50,7 @@ export default function TransactionDetailsScreen() {
     if (!transaction) return;
 
     try {
-      const path =
-        await downloadReceipt(transaction);
+      const path = await downloadReceipt(transaction);
 
       Alert.alert(
         "Receipt Saved",
@@ -67,15 +66,43 @@ export default function TransactionDetailsScreen() {
     }
   }
 
-  if (!transaction) {
+  if (isLoading) {
     return (
       <SafeAreaView
         style={{
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor:
-            theme.background.primary,
+          backgroundColor: theme.background.primary,
+        }}
+      >
+        <Ionicons
+          name="receipt-outline"
+          size={48}
+          color={theme.icon.branding.icon}
+        />
+
+        <AppText
+          variant="body"
+          color="secondary"
+          style={{
+            marginTop: spacing.md,
+          }}
+        >
+          Loading transaction...
+        </AppText>
+      </SafeAreaView>
+    );
+  }
+
+  if (isError || !transaction) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.background.primary,
         }}
       >
         <Ionicons
@@ -102,8 +129,9 @@ export default function TransactionDetailsScreen() {
             paddingHorizontal: spacing.xl,
           }}
         >
-          The requested transaction could not be
-          found.
+          {error instanceof Error
+            ? error.message
+            : "The requested transaction could not be found."}
         </AppText>
       </SafeAreaView>
     );
@@ -113,8 +141,7 @@ export default function TransactionDetailsScreen() {
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor:
-          theme.background.primary,
+        backgroundColor: theme.background.primary,
       }}
     >
       <StatusBar style="auto" />

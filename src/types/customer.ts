@@ -12,6 +12,17 @@ export interface Customer {
   phone: string;
   email: string;
 
+  /**
+   * Returned directly by the Xpress Customer API.
+   */
+  isBlackListed: boolean;
+
+  /**
+   * UI/application fields.
+   *
+   * These are not currently returned by the documented
+   * Xpress Customer API.
+   */
   customerType: "individual" | "business";
 
   country: string;
@@ -19,6 +30,10 @@ export interface Customer {
   city: string;
   street: string;
 
+  /**
+   * The documented customer endpoint does not currently
+   * return order count or total customer spending.
+   */
   orders: number;
   spent: number;
 
@@ -30,19 +45,22 @@ export interface CustomerDraft {
   name: string;
   phone: string;
   email: string;
+
   customerType: "individual" | "business";
 
   address: CustomerAddress;
 }
 
-export type CreateCustomerPayload = Omit<
+export type CreateCustomerPayload = Pick<
   Customer,
-  | "id"
-  | "orders"
-  | "spent"
-  | "created_at"
-  | "updated_at"
+  | "name"
+  | "phone"
+  | "email"
+  | "customerType"
+  | "country"
+  | "state"
+  | "city"
+  | "street"
 >;
 
-export type UpdateCustomerPayload =
-  Partial<CreateCustomerPayload>;
+export type UpdateCustomerPayload = Partial<CreateCustomerPayload>;

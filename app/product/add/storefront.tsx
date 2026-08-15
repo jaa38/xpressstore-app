@@ -33,12 +33,16 @@ import {
   SHIPPING_CLASSES,
 } from "@/schemas/storefrontSchema";
 
+import { useStores } from "@/hooks/store/useStores";
+
 import { useProduct } from "@/store/product/useProduct";
 
 type ShippingClass = (typeof SHIPPING_CLASSES)[number];
 
 export default function StorefrontScreen() {
   // const [video, setVideo] = useState(false);
+
+  const { stores, isLoading: storesLoading } = useStores();
 
   const { product, updateProduct } = useProduct();
 
@@ -66,6 +70,8 @@ export default function StorefrontScreen() {
 
   const images = watch("images");
   const shippingClass = watch("shippingClass");
+
+  const selectedStoreIds = product.storeIds;
 
   const MAX_IMAGES = 5;
 
@@ -140,6 +146,18 @@ export default function StorefrontScreen() {
     });
 
     router.push(ROUTES.ADD_PRODUCT_REVIEW);
+  }
+
+  function toggleStore(storeId: number) {
+    const isSelected = product.storeIds.includes(storeId);
+
+    const updatedStoreIds = isSelected
+      ? product.storeIds.filter((id) => id !== storeId)
+      : [...product.storeIds, storeId];
+
+    updateProduct({
+      storeIds: updatedStoreIds,
+    });
   }
 
   return (
@@ -220,6 +238,104 @@ export default function StorefrontScreen() {
                   />
                 </View>
               </Card>
+            </View>
+
+            <View
+              style={{
+                marginTop: spacing.lg,
+                gap: spacing.md,
+              }}
+            >
+              <View
+                style={{
+                  gap: spacing.xs,
+                }}
+              >
+                <AppText variant="h3" color="primary">
+                  Store Availability
+                </AppText>
+
+                <AppText color="secondary">
+                  Choose which stores should sell this product.
+                </AppText>
+              </View>
+
+              {storesLoading ? (
+                <Card>
+                  <AppText color="secondary">Loading stores...</AppText>
+                </Card>
+              ) : stores.filter((store) => store.isActive).length === 0 ? (
+                <Card>
+                  <AppText variant="bodyLargeBold">No active stores</AppText>
+
+                  <AppText
+                    variant="body"
+                    color="secondary"
+                    style={{
+                      marginTop: spacing.xs,
+                    }}
+                  >
+                    Create or activate a store before assigning this product.
+                  </AppText>
+                </Card>
+              ) : (
+                <View
+                  style={{
+                    gap: spacing.sm,
+                  }}
+                >
+                  {stores
+                    .filter((store) => store.isActive)
+                    .map((store) => {
+                      const selected = selectedStoreIds.includes(store.storeId);
+
+                      return (
+                        <Pressable
+                          key={store.storeId}
+                          onPress={() => toggleStore(store.storeId)}
+                        >
+                          <Card>
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: spacing.md,
+                              }}
+                            >
+                              <View
+                                style={{
+                                  flex: 1,
+                                }}
+                              >
+                                <AppText variant="bodyLargeBold">
+                                  {store.storeName}
+                                </AppText>
+
+                                <AppText variant="bodySmall" color="secondary">
+                                  {store.storeReference}
+                                </AppText>
+                              </View>
+
+                              <Ionicons
+                                name={
+                                  selected
+                                    ? "checkmark-circle"
+                                    : "ellipse-outline"
+                                }
+                                size={24}
+                                color={
+                                  selected
+                                    ? theme.icon.success.icon
+                                    : theme.icon.default.icon
+                                }
+                              />
+                            </View>
+                          </Card>
+                        </Pressable>
+                      );
+                    })}
+                </View>
+              )}
             </View>
 
             <View style={{ marginTop: spacing.lg, gap: spacing.md }}>

@@ -8,10 +8,20 @@ export const queryKeys = {
 
   /**
    * ---------------------------------------------------------------------------
+   * Payment Link Transactions
+   * ---------------------------------------------------------------------------
+   */
+  paymentLinkTransactions: (paymentPageId: number) =>
+    ["payment-link-transactions", paymentPageId] as const,
+
+  /**
+   * ---------------------------------------------------------------------------
    * Customers
    * ---------------------------------------------------------------------------
    */
   customers: ["customers"] as const,
+
+  customer: (id: string) => [...queryKeys.customers, id] as const,
 
   /**
    * ---------------------------------------------------------------------------
@@ -71,5 +81,12 @@ export const queryKeys = {
    */
   shippingRegions: ["shipping-regions"] as const,
 
+  /**
+   * ---------------------------------------------------------------------------
+   * Orders
+   * ---------------------------------------------------------------------------
+   */
   orders: ["orders"] as const,
+
+  order: (id: string) => [...queryKeys.orders, id] as const,
 };

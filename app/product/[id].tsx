@@ -71,7 +71,11 @@ export default function ProductDetailsScreen() {
 
   const { product, isLoading: loading } = useProduct(Number(id));
 
-  const { data: categories = [] } = useCategories();
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    isError: categoriesError,
+  } = useCategories();
 
   // const [visible, setVisible] = useState(false);
 
@@ -360,7 +364,7 @@ export default function ProductDetailsScreen() {
     product?.variations ?? [],
     (product?.variations.length ?? 0) > 0
   );
-  
+
   async function handleUpdateProduct(data: EditProductForm) {
     try {
       setSaving(true);
@@ -399,7 +403,7 @@ export default function ProductDetailsScreen() {
 
           const response = await uploadImagesMutation.mutateAsync(formData);
 
-          uploadedImages.push(response.data);
+          uploadedImages.push(...response.data);
         }
 
         /**
@@ -776,9 +780,17 @@ export default function ProductDetailsScreen() {
                 label="Category"
                 required
                 value={value}
-                error={error?.message}
+                error={
+                  error?.message ??
+                  (categoriesError ? "Unable to load categories." : undefined)
+                }
+                disabled={categoriesLoading}
                 options={categories}
-                placeholder="Select category"
+                placeholder={
+                  categoriesLoading
+                    ? "Loading categories..."
+                    : "Select category"
+                }
                 onSelect={onChange}
               />
             )}
@@ -800,6 +812,8 @@ export default function ProductDetailsScreen() {
               title="Add Category"
               variant="tertiary"
               onPress={handleCreateCategory}
+              loading={createCategoryMutation.isPending}
+              disabled={!newCategory.trim()}
             />
           </View>
 

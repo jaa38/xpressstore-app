@@ -42,8 +42,6 @@ import { useCategories } from "@/hooks/categories/useCategories";
 import { useCreateCategory } from "@/hooks/categories/useCreateCategory";
 import { useToast } from "@/hooks/useToast";
 
-import { useUploadProductImage } from "@/hooks/products/useUploadProductImage";
-
 export default function InfoScreen() {
   const { product, updateProduct } = useProduct();
 
@@ -69,13 +67,15 @@ export default function InfoScreen() {
 
   const [newCategory, setNewCategory] = useState("");
 
-  const { data: categories = [] } = useCategories();
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    isError: categoriesError,
+  } = useCategories();
 
   const createCategoryMutation = useCreateCategory();
 
   const { showToast } = useToast();
-
-  const uploadImageMutation = useUploadProductImage();
 
   const [galleryImages, setGalleryImages] = useState<string[]>(
     product.image ? [product.image] : []
@@ -185,43 +185,17 @@ export default function InfoScreen() {
     }
   }
 
-  async function handleNext(data: ProductInfoForm) {
-    try {
-      let image = data.image;
+  function handleNext(data: ProductInfoForm) {
+    updateProduct({
+      productName: data.productName,
+      description: data.description,
+      category: data.category,
+      brand: data.brand,
+      sku: data.sku,
+      image: data.image,
+    });
 
-      if (image && !image.startsWith("http")) {
-        const formData = new FormData();
-
-        formData.append("file", {
-          uri: image,
-          name: `product-${Date.now()}.jpg`,
-          type: "image/jpeg",
-        } as any);
-
-        const response = await uploadImageMutation.mutateAsync(formData);
-
-        image = response.data.url;
-      }
-
-      updateProduct({
-        productName: data.productName,
-        description: data.description,
-        category: data.category,
-        brand: data.brand,
-        sku: data.sku,
-        image,
-      });
-
-      router.push(ROUTES.ADD_PRODUCT_PRICING);
-    } catch (error) {
-      console.log("UPLOAD IMAGE ERROR", error);
-
-      showToast({
-        type: "error",
-        title: "Image Upload Failed",
-        message: "Please try again.",
-      });
-    }
+    router.push(ROUTES.ADD_PRODUCT_PRICING);
   }
 
   return (
@@ -369,9 +343,19 @@ export default function InfoScreen() {
                     label="Category"
                     required
                     value={value}
-                    error={error?.message}
+                    error={
+                      error?.message ??
+                      (categoriesError
+                        ? "Unable to load categories."
+                        : undefined)
+                    }
+                    disabled={categoriesLoading}
                     options={categories}
-                    placeholder="Select category"
+                    placeholder={
+                      categoriesLoading
+                        ? "Loading categories..."
+                        : "Select category"
+                    }
                     onSelect={onChange}
                   />
                 )}
@@ -393,6 +377,8 @@ export default function InfoScreen() {
                 <Button
                   title="Add Category"
                   variant="tertiary"
+                  loading={createCategoryMutation.isPending}
+                  disabled={!newCategory.trim()}
                   onPress={handleCreateCategory}
                 />
               </View>

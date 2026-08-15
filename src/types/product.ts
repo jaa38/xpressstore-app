@@ -54,6 +54,8 @@ export interface ProductDraft {
 
   visible: boolean;
 
+  storeIds: number[];
+
   shippingClass: ShippingClass;
 
   deliveryNotes: string;
@@ -123,6 +125,24 @@ export interface CreateProductRequest {
   options: ProductOptionDto[];
 
   publishNow: boolean;
+}
+
+export interface CreatedProduct {
+  id: number;
+
+  productReference: string;
+
+  productName: string;
+
+  productUrl: string;
+
+  currency: string;
+
+  unitPrice: number;
+
+  inStock: boolean;
+
+  isActive: boolean;
 }
 
 export interface UpdateProductRequest extends CreateProductRequest {}

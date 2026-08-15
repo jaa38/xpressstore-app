@@ -4,6 +4,7 @@ import {
   clearSession,
   getAccessToken,
   getCurrentUser,
+  saveAccessToken
 } from "@/storage/authStorage";
 
 import { AuthUser } from "@/types/auth";
@@ -11,6 +12,8 @@ import { AuthUser } from "@/types/auth";
 import { authenticateWithBiometrics } from "@/services/biometrics";
 
 import { isBiometricsEnabled } from "@/services/biometrics/storage";
+
+import { DEV_SESSION } from "@/config/dev-session.local";
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -52,6 +55,20 @@ export function AuthProvider({ children }: Props) {
 
   async function bootstrap() {
     try {
+      /**
+       * -----------------------------------------------------------------------
+       * Development API Session
+       * -----------------------------------------------------------------------
+       *
+       * The backend team has supplied a temporary JWT for API integration
+       * testing while the StoreFront login credentials are unavailable.
+       *
+       * This token is stored locally and is never committed to Git.
+       */
+      if (__DEV__ && DEV_SESSION.accessToken) {
+        await saveAccessToken(DEV_SESSION.accessToken);
+      }
+
       const token = await getAccessToken();
 
       if (!token) {

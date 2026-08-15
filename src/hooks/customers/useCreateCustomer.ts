@@ -5,7 +5,10 @@ import {
 
 import { queryKeys } from "@/lib/queryKeys";
 
-import { createCustomer } from "@/services/customer/customer-service";
+import {
+  createCustomer,
+  getCustomers,
+} from "@/services/customer/customer-service";
 
 export function useCreateCustomer() {
   const queryClient = useQueryClient();
@@ -13,8 +16,12 @@ export function useCreateCustomer() {
   return useMutation({
     mutationFn: createCustomer,
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.customers,
+      });
+
+      await queryClient.refetchQueries({
         queryKey: queryKeys.customers,
       });
     },

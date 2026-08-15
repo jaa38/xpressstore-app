@@ -16,9 +16,7 @@ export async function getCategories(): Promise<DropdownOption[]> {
   );
 }
 
-export async function createCategory(
-  name: string
-): Promise<DropdownOption> {
+export async function createCategory(name: string): Promise<DropdownOption> {
   const response = await productService.createCategory({
     name: name.trim(),
   });
@@ -27,4 +25,24 @@ export async function createCategory(
     label: response.data.name,
     value: String(response.data.id),
   };
+}
+
+export async function updateCategory(
+  categoryId: number,
+  name: string,
+  description?: string
+): Promise<DropdownOption> {
+  const response = await productService.updateCategory(categoryId, {
+    name: name.trim(),
+    description,
+  });
+
+  return {
+    label: response.data.name,
+    value: String(response.data.id),
+  };
+}
+
+export async function deleteCategory(categoryId: number): Promise<void> {
+  await productService.deleteCategory(categoryId);
 }

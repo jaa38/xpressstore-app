@@ -48,8 +48,10 @@ export default function HomeScreen() {
     isLoading: dashboardLoading,
   } = useDashboard();
 
-  const { data: transactions = [], refetch: refetchTransactions } =
+  const { data: transactionsData, refetch: refetchTransactions } =
     useTransactions();
+
+  const transactions = transactionsData?.transactions ?? [];
 
   const recentTransactions = transactions.slice(0, 5);
 

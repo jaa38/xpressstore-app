@@ -1,21 +1,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/lib/queryKeys";
-import { updateCustomer } from "@/services/customer/customer-service";
 
-import type { UpdateCustomerPayload } from "@/types/customer";
+import { blacklistCustomer } from "@/services/customer/customer-service";
 
-export function useUpdateCustomer() {
+interface BlacklistCustomerVariables {
+  id: string;
+  isBlackListed: boolean;
+}
+
+export function useBlacklistCustomer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      customer,
-    }: {
-      id: string;
-      customer: UpdateCustomerPayload;
-    }) => updateCustomer(id, customer),
+    mutationFn: ({ id, isBlackListed }: BlacklistCustomerVariables) =>
+      blacklistCustomer(id, isBlackListed),
 
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

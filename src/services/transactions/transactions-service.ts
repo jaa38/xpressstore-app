@@ -1,119 +1,445 @@
-import { Transaction } from "@/types/transaction";
+import { graphqlRequest } from "@/api/graphql-client";
+
+import type { Currency } from "@/types/currency";
+import type { Transaction } from "@/types/transaction";
+
+/**
+ * ---------------------------------------------------------------------------
+ * GraphQL DTO
+ * ---------------------------------------------------------------------------
+ *
+ * Matches the documented `transactions` GraphQL query in:
+ *
+ * docs/api/11_graphql.md
+ *
+ * This is the general payment transaction API.
+ *
+ * It is intentionally separate from the storeTransactions DTO used by
+ * order-service.ts.
+ */
+
+interface TransactionDto {
+  id: number;
+
+  transactionReference: string;
+
+  firstname: string;
+
+  lastname: string;
+
+  amount: number;
+
+  paymentType: string;
+
+  email: string;
+
+  pageName: string;
+
+  pageType: string;
+
+  currency: string;
+
+  transactionId: string;
+
+  xpressReference: string;
+
+  providerReference: string;
+
+  phoneNumber: string;
+
+  narration: string;
+
+  cardBin: string;
+
+  brand: string;
+
+  cardType: string;
+
+  processor: string;
+
+  merchantId: string;
+
+  paymentResponseCode: string;
+
+  paymentResponseMessage: string;
+
+  dateCreated: string;
+
+  dateModified: string;
+
+  transType: string;
+
+  cardPan: string;
+
+  metaData: string | null;
+
+  productDescription: string;
+
+  merchantName: string;
+
+  transactionNumber: string;
+
+  transactionDate: string;
+}
+
+interface TransactionsResult {
+  transactions: {
+    items: TransactionDto[];
+
+    totalCount: number;
+
+    pageNumber: number;
+
+    pageSize: number;
+  };
+}
+
+export interface TransactionsPage {
+  transactions: Transaction[];
+
+  totalCount: number;
+
+  pageNumber: number;
+
+  pageSize: number;
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * GraphQL Query
+ * ---------------------------------------------------------------------------
+ *
+ * Source:
+ * docs/api/11_graphql.md
+ */
+
+const TRANSACTIONS_QUERY = `
+  query GetTransactions(
+    $page: Int!
+    $limit: Int!
+    $filter: TransactionFilterInput!
+  ) {
+    transactions(
+      page: $page
+      limit: $limit
+      filter: $filter
+    ) {
+      items {
+        id
+        transactionReference
+        firstname
+        lastname
+        amount
+        paymentType
+        email
+        pageName
+        pageType
+        currency
+        transactionId
+        xpressReference
+        providerReference
+        phoneNumber
+        narration
+        cardBin
+        brand
+        cardType
+        processor
+        merchantId
+        paymentResponseCode
+        paymentResponseMessage
+        dateCreated
+        dateModified
+        transType
+        cardPan
+        metaData
+        productDescription
+        merchantName
+        transactionNumber
+        transactionDate
+      }
+
+      totalCount
+      pageNumber
+      pageSize
+    }
+  }
+`;
+
+/**
+ * ---------------------------------------------------------------------------
+ * GraphQL Filter
+ * ---------------------------------------------------------------------------
+ */
+
+export interface TransactionsQueryFilters {
+  customerEmail?: string | null;
+
+  reference?: string | null;
+
+  transactionId?: string | null;
+
+  startDate?: string | null;
+
+  endDate?: string | null;
+
+  cardBrand?: string | null;
+
+  paymentMethod?: string | null;
+
+  status?: string | null;
+}
+
+export interface TransactionFilter {
+  customerEmail: string | null;
+
+  reference: string | null;
+
+  transactionId: string | null;
+
+  startDate: string | null;
+
+  endDate: string | null;
+
+  cardBrand: string | null;
+
+  paymentMethod: string | null;
+
+  status: string | null;
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Status Mapper
+ * ---------------------------------------------------------------------------
+ *
+ * The general transactions query does not document a dedicated status field.
+ *
+ * The available response fields include:
+ *
+ * - paymentResponseCode
+ * - paymentResponseMessage
+ *
+ * Therefore we should not invent a backend status mapping beyond what the
+ * documented response supports.
+ *
+ * Xpress uses response code `00` for successful responses elsewhere in the
+ * documented API.
+ *
+ * Non-successful responses are treated as failed.
+ */
+
+function mapTransactionStatus(
+  transaction: TransactionDto
+): Transaction["status"] {
+  const responseCode = transaction.paymentResponseCode?.trim().toLowerCase();
+
+  if (responseCode === "00") {
+    return "paid";
+  }
+
+  return "failed";
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Payment Channel Mapper
+ * ---------------------------------------------------------------------------
+ *
+ * The documented general transaction response exposes `paymentType`.
+ *
+ * Transaction UI channels:
+ *
+ * - bank
+ * - card
+ * - qr
+ * - transfer
+ * - ussd
+ */
+
+function mapPaymentChannel(paymentType: string): Transaction["channel"] {
+  const value = paymentType?.trim().toLowerCase();
+
+  switch (value) {
+    case "bank":
+    case "bank account":
+    case "account":
+      return "bank";
+
+    case "transfer":
+    case "bank transfer":
+      return "transfer";
+
+    case "qr":
+    case "nqr":
+      return "qr";
+
+    case "ussd":
+      return "ussd";
+
+    case "card":
+    case "debit card":
+    case "credit card":
+    default:
+      return "card";
+  }
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Currency Mapper
+ * ---------------------------------------------------------------------------
+ */
+
+function mapCurrency(value: string): Currency {
+  switch (value?.trim().toUpperCase()) {
+    case "NGN":
+      return "NGN";
+
+    case "USD":
+      return "USD";
+
+    case "GBP":
+      return "GBP";
+
+    case "EUR":
+      return "EUR";
+
+    default:
+      return "NGN";
+  }
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Transaction Mapper
+ * ---------------------------------------------------------------------------
+ */
+
+function mapTransaction(transaction: TransactionDto): Transaction {
+  const customerName = [transaction.firstname, transaction.lastname]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  return {
+    id: transaction.transactionId || String(transaction.id),
+
+    customer: customerName || transaction.email || "Unknown Customer",
+
+    type:
+      transaction.transType?.trim().toLowerCase() === "debit"
+        ? "debit"
+        : "credit",
+
+    status: mapTransactionStatus(transaction),
+
+    channel: mapPaymentChannel(transaction.paymentType),
+
+    amount: Number(transaction.amount),
+
+    currency: mapCurrency(transaction.currency),
+
+    reference:
+      transaction.transactionReference ||
+      transaction.xpressReference ||
+      transaction.transactionNumber ||
+      transaction.transactionId,
+
+    createdAt: transaction.transactionDate || transaction.dateCreated,
+  };
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Get Transactions Page
+ * ---------------------------------------------------------------------------
+ */
+
+export async function getTransactionsPage(
+  page = 1,
+  limit = 20,
+  filter: Partial<TransactionFilter> = {}
+): Promise<TransactionsPage> {
+  const requestFilter: TransactionFilter = {
+    customerEmail: filter.customerEmail ?? null,
+
+    reference: filter.reference ?? null,
+
+    transactionId: filter.transactionId ?? null,
+
+    startDate: filter.startDate ?? null,
+
+    endDate: filter.endDate ?? null,
+
+    cardBrand: filter.cardBrand ?? null,
+
+    paymentMethod: filter.paymentMethod ?? null,
+
+    status: filter.status ?? null,
+  };
+
+  const response = await graphqlRequest<TransactionsResult>({
+    query: TRANSACTIONS_QUERY,
+
+    variables: {
+      page,
+
+      limit,
+
+      filter: requestFilter,
+    },
+  });
+
+  return {
+    transactions: response.transactions.items.map(mapTransaction),
+
+    totalCount: response.transactions.totalCount,
+
+    pageNumber: response.transactions.pageNumber,
+
+    pageSize: response.transactions.pageSize,
+  };
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Get Transaction By ID
+ * ---------------------------------------------------------------------------
+ *
+ * Uses the documented GraphQL `transactionId` filter to retrieve a single
+ * transaction.
+ *
+ * This is preferable to searching the currently loaded transaction page
+ * because the requested transaction may not exist on the first page.
+ */
+
+export async function getTransactionById(
+  transactionId: string
+): Promise<Transaction> {
+  const response = await getTransactionsPage(1, 1, {
+    transactionId,
+  });
+
+  const transaction = response.transactions[0];
+
+  if (!transaction) {
+    throw new Error("Transaction not found.");
+  }
+
+  return transaction;
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Get Transactions
+ * ---------------------------------------------------------------------------
+ *
+ * Backwards-compatible array API used by the current
+ * Transactions hook.
+ */
 
 export async function getTransactions(): Promise<Transaction[]> {
-  // Simulate API latency
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  const response = await getTransactionsPage(1, 20);
 
-  return [
-    {
-      id: "TXN-100001",
-      customer: "John Smith",
-      type: "credit",
-      status: "paid",
-      channel: "card",
-      amount: 1000000,
-      currency: "NGN",
-      reference: "XP-293AA",
-      createdAt: "2026-08-01T12:30:00+01:00",
-    },
-    {
-      id: "TXN-100002",
-      customer: "Mary Johnson",
-      type: "credit",
-      status: "pending",
-      channel: "bank",
-      amount: 250000,
-      currency: "NGN",
-      reference: "XP-847BB",
-      createdAt: "2026-08-01T11:05:00+01:00",
-    },
-    {
-      id: "TXN-100003",
-      customer: "David Wilson",
-      type: "debit",
-      status: "failed",
-      channel: "transfer",
-      amount: 75000,
-      currency: "NGN",
-      reference: "XP-991CC",
-      createdAt: "2026-08-01T09:42:00+01:00",
-    },
-    {
-      id: "TXN-100004",
-      customer: "Sarah Brown",
-      type: "credit",
-      status: "paid",
-      channel: "qr",
-      amount: 500000,
-      currency: "NGN",
-      reference: "XP-552DD",
-      createdAt: "2026-08-01T08:15:00+01:00",
-    },
-    {
-      id: "TXN-100005",
-      customer: "Michael Davis",
-      type: "credit",
-      status: "pending",
-      channel: "ussd",
-      amount: 180000,
-      currency: "NGN",
-      reference: "XP-672EE",
-      createdAt: "2026-07-31T18:20:00+01:00",
-    },
-    {
-      id: "TXN-100006",
-      customer: "Olivia Martinez",
-      type: "credit",
-      status: "paid",
-      channel: "card",
-      amount: 420000,
-      currency: "NGN",
-      reference: "XP-761FF",
-      createdAt: "2026-07-31T16:10:00+01:00",
-    },
-    {
-      id: "TXN-100007",
-      customer: "Daniel Thompson",
-      type: "debit",
-      status: "failed",
-      channel: "transfer",
-      amount: 125000,
-      currency: "NGN",
-      reference: "XP-428GG",
-      createdAt: "2026-07-31T14:36:00+01:00",
-    },
-    {
-      id: "TXN-100008",
-      customer: "Sophia Anderson",
-      type: "credit",
-      status: "paid",
-      channel: "bank",
-      amount: 890000,
-      currency: "NGN",
-      reference: "XP-116HH",
-      createdAt: "2026-07-31T10:12:00+01:00",
-    },
-    {
-      id: "TXN-100009",
-      customer: "James Taylor",
-      type: "credit",
-      status: "pending",
-      channel: "qr",
-      amount: 56000,
-      currency: "NGN",
-      reference: "XP-912JJ",
-      createdAt: "2026-07-21T20:45:00+01:00",
-    },
-    {
-      id: "TXN-100010",
-      customer: "Emma White",
-      type: "debit",
-      status: "paid",
-      channel: "card",
-      amount: 340000,
-      currency: "NGN",
-      reference: "XP-304KK",
-      createdAt: "2026-07-21T15:18:00+01:00",
-    },
-  ];
+  return response.transactions;
 }

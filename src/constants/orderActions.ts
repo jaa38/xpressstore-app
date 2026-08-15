@@ -7,44 +7,27 @@ export interface OrderAction {
   destructive?: boolean;
 }
 
-export const ORDER_ACTIONS: Record<
-  OrderStatus,
-  OrderAction[]
-> = {
+/**
+ * Order actions currently supported by the XpressStore API.
+ *
+ * The documented Store API exposes ToggleDelivery, which allows
+ * a paid order to be marked as delivered.
+ *
+ * Returned orders and payment retries are not currently backed
+ * by documented endpoints, so they are intentionally excluded.
+ */
+export const ORDER_ACTIONS: Record<OrderStatus, OrderAction[]> = {
   paid: [
     {
       status: "delivered",
       label: "Mark as Delivered",
-      description:
-        "Confirm the customer has received the order.",
-    },
-    {
-      status: "returned",
-      label: "Mark as Returned",
-      description:
-        "Record that the order was returned.",
-      destructive: true,
+      description: "Confirm the customer has received the order.",
     },
   ],
 
-  delivered: [
-    {
-      status: "returned",
-      label: "Mark as Returned",
-      description:
-        "Record that the delivered order was returned.",
-      destructive: true,
-    },
-  ],
+  delivered: [],
 
   returned: [],
 
-  failed: [
-    {
-      status: "paid",
-      label: "Retry Payment",
-      description:
-        "Attempt payment again after resolving the issue.",
-    },
-  ],
+  failed: [],
 };

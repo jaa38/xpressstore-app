@@ -36,6 +36,8 @@ const INITIAL_PRODUCT: ProductDraft = {
 
   visible: true,
 
+  storeIds: [],
+
   dimensions: {
     weight: "",
     length: "",

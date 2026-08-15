@@ -1,8 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import {
-  updateOrderStatus,
-} from "@/services/order/order-service";
+import { updateOrderStatus } from "@/services/order/order-service";
 
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -15,18 +13,11 @@ interface UpdateOrderStatusVariables {
 }
 
 export function useUpdateOrderStatus() {
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      orderId,
-      status,
-    }: UpdateOrderStatusVariables) =>
-      updateOrderStatus(
-        orderId,
-        status
-      ),
+    mutationFn: ({ orderId, status }: UpdateOrderStatusVariables) =>
+      updateOrderStatus(orderId, status),
 
     onSuccess: () => {
       queryClient.invalidateQueries({

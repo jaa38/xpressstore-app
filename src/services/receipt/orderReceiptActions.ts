@@ -1,12 +1,11 @@
 import * as Sharing from "expo-sharing";
-import * as FileSystem from "expo-file-system";
+import * as Print from "expo-print";
 
 import { Order } from "@/types/order";
 
 import { generateReceipt } from "./generateReceipt";
 import { receiptFromOrder } from "./receiptFromOrder";
-
-import * as Print from "expo-print";
+import { saveReceiptPdf } from "./receiptStorage";
 
 export async function shareOrderReceipt(order: Order) {
   const receipt = receiptFromOrder(order);
@@ -16,7 +15,9 @@ export async function shareOrderReceipt(order: Order) {
   const available = await Sharing.isAvailableAsync();
 
   if (!available) {
-    throw new Error("Sharing is not available on this device.");
+    throw new Error(
+      "Sharing is not available on this device."
+    );
   }
 
   await Sharing.shareAsync(generatedReceipt.uri, {
@@ -26,30 +27,17 @@ export async function shareOrderReceipt(order: Order) {
   });
 }
 
-export async function downloadOrderReceipt(order: Order) {
+export async function downloadOrderReceipt(
+  order: Order
+): Promise<string> {
   const receipt = receiptFromOrder(order);
 
   const generatedReceipt = await generateReceipt(receipt);
 
-  const fileName = `Order-${order.reference}.pdf`;
-
-  const directory = new FileSystem.Directory(
-    FileSystem.Paths.document,
-    "Receipts"
+  return saveReceiptPdf(
+    generatedReceipt.uri,
+    `Order-${order.reference}.pdf`
   );
-
-  if (!directory.exists) {
-    directory.create();
-  }
-
-  const destination = new FileSystem.File(directory, fileName);
-
-  await FileSystem.copyAsync({
-    from: generatedReceipt.uri,
-    to: destination.uri,
-  });
-
-  return destination.uri;
 }
 
 export async function printOrderReceipt(order: Order) {

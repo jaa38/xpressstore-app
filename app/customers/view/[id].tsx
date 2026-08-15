@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/Button";
 import { spacing, radius, theme } from "@/theme";
 
 import { useCustomerById } from "@/hooks/customers/useCustomerById";
+import { useBlacklistCustomer } from "@/hooks/customers/useBlacklistCustomer";
 
 import { countryOptions } from "@/constants/address/countries";
 
@@ -41,9 +42,19 @@ export default function CustomerDetailsScreen() {
 
   const { data: customer, isLoading } = useCustomerById(id);
 
+  const blacklistCustomerMutation = useBlacklistCustomer();
+
+  const isUpdatingBlacklist = blacklistCustomerMutation.isPending;
+
   const countryLabel =
     countryOptions.find((country) => country.value === customer?.country)
       ?.label ?? customer?.country;
+
+  /**
+   * ---------------------------------------------------------------------------
+   * Contact Actions
+   * ---------------------------------------------------------------------------
+   */
 
   async function handleCall(phone: string) {
     const url = `tel:${phone}`;
@@ -56,7 +67,9 @@ export default function CustomerDetailsScreen() {
   }
 
   async function handleWhatsApp(phone: string) {
-    const url = `https://wa.me/${phone.replace(/\D/g, "")}`;
+    const cleanPhone = phone.replace(/\D/g, "");
+
+    const url = `https://wa.me/${cleanPhone}`;
 
     if (await Linking.canOpenURL(url)) {
       await Linking.openURL(url);
@@ -66,7 +79,9 @@ export default function CustomerDetailsScreen() {
   }
 
   async function handleEmail(email: string) {
-    if (!email) return;
+    if (!email) {
+      return;
+    }
 
     const url = `mailto:${email}`;
 
@@ -94,6 +109,72 @@ export default function CustomerDetailsScreen() {
     });
   }
 
+  /**
+   * ---------------------------------------------------------------------------
+   * Blacklist Customer
+   * ---------------------------------------------------------------------------
+   */
+
+  function handleBlacklistToggle() {
+    if (!customer || isUpdatingBlacklist) {
+      return;
+    }
+
+    const nextStatus = !customer.isBlackListed;
+
+    Alert.alert(
+      nextStatus ? "Blacklist Customer" : "Remove from Blacklist",
+      nextStatus
+        ? `Are you sure you want to blacklist "${customer.name}"?`
+        : `Are you sure you want to remove "${customer.name}" from the blacklist?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: nextStatus ? "Blacklist" : "Remove",
+          style: nextStatus ? "destructive" : "default",
+          onPress: async () => {
+            try {
+              await blacklistCustomerMutation.mutateAsync({
+                id: customer.id,
+                isBlackListed: nextStatus,
+              });
+
+              showToast({
+                type: "success",
+                title: nextStatus
+                  ? "Customer Blacklisted"
+                  : "Customer Unblacklisted",
+                message: nextStatus
+                  ? `"${customer.name}" has been blacklisted.`
+                  : `"${customer.name}" has been removed from the blacklist.`,
+              });
+            } catch (error) {
+              console.error(error);
+
+              showToast({
+                type: "error",
+                title: "Update Failed",
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : "Unable to update customer blacklist status.",
+              });
+            }
+          },
+        },
+      ]
+    );
+  }
+
+  /**
+   * ---------------------------------------------------------------------------
+   * Loading State
+   * ---------------------------------------------------------------------------
+   */
+
   if (isLoading) {
     return (
       <SafeAreaView
@@ -117,6 +198,12 @@ export default function CustomerDetailsScreen() {
     );
   }
 
+  /**
+   * ---------------------------------------------------------------------------
+   * Customer Not Found
+   * ---------------------------------------------------------------------------
+   */
+
   if (!customer) {
     return (
       <SafeAreaView
@@ -139,6 +226,12 @@ export default function CustomerDetailsScreen() {
       </SafeAreaView>
     );
   }
+
+  /**
+   * ---------------------------------------------------------------------------
+   * Customer Initials
+   * ---------------------------------------------------------------------------
+   */
 
   const initials = customer.name
     .split(" ")
@@ -168,7 +261,10 @@ export default function CustomerDetailsScreen() {
           paddingBottom: spacing["2xl"],
         }}
       >
+        {/* ------------------------------------------------------------------ */}
         {/* Customer Profile */}
+        {/* ------------------------------------------------------------------ */}
+
         <Card>
           <View
             style={{
@@ -206,6 +302,8 @@ export default function CustomerDetailsScreen() {
               {customer.name}
             </AppText>
 
+            {/* Customer Type */}
+
             <View
               style={{
                 marginTop: spacing.sm,
@@ -231,16 +329,41 @@ export default function CustomerDetailsScreen() {
                 {customer.customerType}
               </AppText>
             </View>
+
+            {/* Blacklist Status */}
+
+            {customer.isBlackListed && (
+              <View
+                style={{
+                  marginTop: spacing.sm,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: spacing.xs,
+                  borderRadius: radius.full,
+                  backgroundColor: theme.state.error.background,
+                }}
+              >
+                <AppText variant="caption" color="error">
+                  Blacklisted
+                </AppText>
+              </View>
+            )}
           </View>
         </Card>
 
+        {/* ------------------------------------------------------------------ */}
         {/* Contact Information */}
+        {/* ------------------------------------------------------------------ */}
 
         <View>
           <AppText variant="h3">Contact Information</AppText>
 
-          <Card style={{ marginTop: spacing.sm }}>
+          <Card
+            style={{
+              marginTop: spacing.sm,
+            }}
+          >
             {/* Phone */}
+
             <View
               style={{
                 flexDirection: "row",
@@ -248,7 +371,6 @@ export default function CustomerDetailsScreen() {
                 gap: spacing.md,
               }}
             >
-              {/* Icon */}
               <View
                 style={{
                   width: 44,
@@ -266,7 +388,6 @@ export default function CustomerDetailsScreen() {
                 />
               </View>
 
-              {/* Content */}
               <View
                 style={{
                   flex: 1,
@@ -284,7 +405,6 @@ export default function CustomerDetailsScreen() {
                 </AppText>
               </View>
 
-              {/* Copy */}
               <Pressable
                 onPress={() => handleCopy(customer.phone, "Phone Number")}
                 hitSlop={10}
@@ -312,6 +432,7 @@ export default function CustomerDetailsScreen() {
             />
 
             {/* Email */}
+
             <View
               style={{
                 flexDirection: "row",
@@ -319,7 +440,6 @@ export default function CustomerDetailsScreen() {
                 gap: spacing.md,
               }}
             >
-              {/* Icon */}
               <View
                 style={{
                   width: 44,
@@ -337,7 +457,6 @@ export default function CustomerDetailsScreen() {
                 />
               </View>
 
-              {/* Content */}
               <View
                 style={{
                   flex: 1,
@@ -359,7 +478,6 @@ export default function CustomerDetailsScreen() {
                 </AppText>
               </View>
 
-              {/* Copy */}
               {!!customer.email && (
                 <Pressable
                   onPress={() => handleCopy(customer.email, "Email Address")}
@@ -384,11 +502,18 @@ export default function CustomerDetailsScreen() {
           </Card>
         </View>
 
+        {/* ------------------------------------------------------------------ */}
         {/* Customer Summary */}
+        {/* ------------------------------------------------------------------ */}
 
         <View>
           <AppText variant="h3">Customer Summary</AppText>
-          <Card style={{ marginTop: spacing.sm }}>
+
+          <Card
+            style={{
+              marginTop: spacing.sm,
+            }}
+          >
             <View
               style={{
                 flexDirection: "row",
@@ -449,12 +574,21 @@ export default function CustomerDetailsScreen() {
             </View>
           </Card>
         </View>
+
+        {/* ------------------------------------------------------------------ */}
         {/* Address Information */}
+        {/* ------------------------------------------------------------------ */}
 
         <View>
           <AppText variant="h3">Address Information</AppText>
-          <Card style={{ marginTop: spacing.sm }}>
+
+          <Card
+            style={{
+              marginTop: spacing.sm,
+            }}
+          >
             {/* Country */}
+
             <View
               style={{
                 flexDirection: "row",
@@ -485,6 +619,7 @@ export default function CustomerDetailsScreen() {
                 <AppText variant="caption" color="secondary">
                   Country
                 </AppText>
+
                 <AppText variant="bodyBold">{countryLabel || "—"}</AppText>
               </View>
             </View>
@@ -496,6 +631,7 @@ export default function CustomerDetailsScreen() {
             />
 
             {/* State */}
+
             <View
               style={{
                 flexDirection: "row",
@@ -538,6 +674,7 @@ export default function CustomerDetailsScreen() {
             />
 
             {/* City */}
+
             <View
               style={{
                 flexDirection: "row",
@@ -580,6 +717,7 @@ export default function CustomerDetailsScreen() {
             />
 
             {/* Street */}
+
             <View
               style={{
                 flexDirection: "row",
@@ -616,7 +754,10 @@ export default function CustomerDetailsScreen() {
             </View>
           </Card>
         </View>
+
+        {/* ------------------------------------------------------------------ */}
         {/* Quick Actions */}
+        {/* ------------------------------------------------------------------ */}
 
         <View
           style={{
@@ -657,6 +798,37 @@ export default function CustomerDetailsScreen() {
             onPress={() => handleWhatsApp(customer.phone)}
           />
         </View>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Blacklist Action */}
+        {/* ------------------------------------------------------------------ */}
+
+        <Button
+          title={
+            isUpdatingBlacklist
+              ? "Updating..."
+              : customer.isBlackListed
+                ? "Remove from Blacklist"
+                : "Blacklist Customer"
+          }
+          variant={customer.isBlackListed ? "secondary" : "tertiaryDestructive"}
+          loading={isUpdatingBlacklist}
+          disabled={isUpdatingBlacklist}
+          leftIcon={
+            <Ionicons
+              name={
+                customer.isBlackListed ? "person-remove-outline" : "ban-outline"
+              }
+              size={20}
+              color={
+                customer.isBlackListed
+                  ? theme.action.secondary.text
+                  : theme.action.tertiaryDestructive.text
+              }
+            />
+          }
+          onPress={handleBlacklistToggle}
+        />
       </ScrollView>
     </SafeAreaView>
   );

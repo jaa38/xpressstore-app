@@ -60,9 +60,7 @@ interface CreateCustomerResponse {
 function splitCustomerName(name: string | undefined) {
   const normalizedName = name?.trim() ?? "";
 
-  const parts = normalizedName
-    .split(/\s+/)
-    .filter(Boolean);
+  const parts = normalizedName.split(/\s+/).filter(Boolean);
 
   const firstName = parts.shift() ?? "";
 
@@ -107,16 +105,8 @@ function requireCustomerField(
  * API. Those fields are therefore given safe defaults rather than inventing
  * values from another data source.
  */
-function mapCustomer(
-  row: CustomerApiDto
-): Customer {
-  const name = [
-    row.firstName,
-    row.lastName,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+function mapCustomer(row: CustomerApiDto): Customer {
+  const name = [row.firstName, row.lastName].filter(Boolean).join(" ").trim();
 
   return {
     id: String(row.id),
@@ -128,8 +118,12 @@ function mapCustomer(
     email: row.email ?? "",
 
     /**
+     * Returned directly by the Xpress Customer API.
+     */
+    isBlackListed: row.isBlackListed,
+
+    /**
      * The current customer API does not expose customerType.
-     * Keep the existing UI contract with a safe default.
      */
     customerType: "individual",
 
@@ -167,10 +161,9 @@ function mapCustomer(
  * GET /Invoices/GetCustomer
  */
 export async function getCustomers(): Promise<Customer[]> {
-  const response =
-    await apiClient.get<ApiResponse<CustomerApiDto[]>>(
-      API_ENDPOINTS.customers.getAll
-    );
+  const response = await apiClient.get<ApiResponse<CustomerApiDto[]>>(
+    API_ENDPOINTS.customers.getAll
+  );
 
   return (response.data.data ?? []).map(mapCustomer);
 }
@@ -187,14 +180,10 @@ export async function getCustomers(): Promise<Customer[]> {
  * Therefore we retrieve the customer collection and locate the requested
  * customer locally.
  */
-export async function getCustomerById(
-  id: string
-): Promise<Customer> {
+export async function getCustomerById(id: string): Promise<Customer> {
   const customers = await getCustomers();
 
-  const customer = customers.find(
-    (item) => item.id === String(id)
-  );
+  const customer = customers.find((item) => item.id === String(id));
 
   if (!customer) {
     throw new Error("Customer not found.");
@@ -222,50 +211,31 @@ export async function getCustomerById(
 export async function createCustomer(
   customer: CreateCustomerPayload
 ): Promise<Customer> {
-  const name = requireCustomerField(
-    customer.name,
-    "Customer name"
+  const name = requireCustomerField(customer.name, "Customer name");
+
+  const phone = requireCustomerField(customer.phone, "Phone number");
+
+  const email = customer.email?.trim() ?? "";
+
+  const { firstName, lastName } = splitCustomerName(name);
+
+  const response = await apiClient.post<ApiResponse<CreateCustomerResponse>>(
+    API_ENDPOINTS.customers.create,
+    {
+      firstName,
+
+      lastName,
+
+      email,
+
+      phoneNumber: phone,
+    }
   );
 
-  const phone = requireCustomerField(
-    customer.phone,
-    "Phone number"
-  );
+  const customerId = response.data.data?.id;
 
-  const email =
-    customer.email?.trim() ?? "";
-
-  const {
-    firstName,
-    lastName,
-  } = splitCustomerName(name);
-
-  const response =
-    await apiClient.post<
-      ApiResponse<CreateCustomerResponse>
-    >(
-      API_ENDPOINTS.customers.create,
-      {
-        firstName,
-
-        lastName,
-
-        email,
-
-        phoneNumber: phone,
-      }
-    );
-
-  const customerId =
-    response.data.data?.id;
-
-  if (
-    customerId === undefined ||
-    customerId === null
-  ) {
-    throw new Error(
-      "Customer was created but no customer ID was returned."
-    );
+  if (customerId === undefined || customerId === null) {
+    throw new Error("Customer was created but no customer ID was returned.");
   }
 
   /**
@@ -281,21 +251,17 @@ export async function createCustomer(
 
     email,
 
-    customerType:
-      customer.customerType ??
-      "individual",
+    customerType: customer.customerType ?? "individual",
 
-    country:
-      customer.country ?? "",
+    country: customer.country ?? "",
 
-    state:
-      customer.state ?? "",
+    state: customer.state ?? "",
 
-    city:
-      customer.city ?? "",
+    city: customer.city ?? "",
 
-    street:
-      customer.street ?? "",
+    street: customer.street ?? "",
+
+    isBlackListed: false,
 
     orders: 0,
 
@@ -328,43 +294,33 @@ export async function updateCustomer(
   id: string,
   customer: UpdateCustomerPayload
 ): Promise<Customer> {
-  const name = requireCustomerField(
-    customer.name,
-    "Customer name"
-  );
+  const name = requireCustomerField(customer.name, "Customer name");
 
-  const phone = requireCustomerField(
-    customer.phone,
-    "Phone number"
-  );
+  const phone = requireCustomerField(customer.phone, "Phone number");
 
-  const email =
-    customer.email?.trim() ?? "";
+  const email = customer.email?.trim() ?? "";
 
-  const {
+  const { firstName, lastName } = splitCustomerName(name);
+
+  await apiClient.post<ApiResponse<null>>(API_ENDPOINTS.customers.update, {
+    id: Number(id),
+
     firstName,
+
     lastName,
-  } = splitCustomerName(name);
 
-  await apiClient.post<ApiResponse<null>>(
-    API_ENDPOINTS.customers.update,
-    {
-      id: Number(id),
+    email,
 
-      firstName,
-
-      lastName,
-
-      email,
-
-      phoneNumber: phone,
-    }
-  );
+    phoneNumber: phone,
+  });
 
   /**
    * The UpdateCustomer API returns null data, so return the
    * application model using the values supplied by the UI.
    */
+
+  const existingCustomer = await getCustomerById(id);
+
   return {
     id: String(id),
 
@@ -374,29 +330,25 @@ export async function updateCustomer(
 
     email,
 
-    customerType:
-      customer.customerType ??
-      "individual",
+    customerType: customer.customerType ?? existingCustomer.customerType,
 
-    country:
-      customer.country ?? "",
+    country: customer.country ?? existingCustomer.country,
 
-    state:
-      customer.state ?? "",
+    state: customer.state ?? existingCustomer.state,
 
-    city:
-      customer.city ?? "",
+    city: customer.city ?? existingCustomer.city,
 
-    street:
-      customer.street ?? "",
+    street: customer.street ?? existingCustomer.street,
 
-    orders: 0,
+    isBlackListed: existingCustomer.isBlackListed,
 
-    spent: 0,
+    orders: existingCustomer.orders,
 
-    created_at: "",
+    spent: existingCustomer.spent,
 
-    updated_at: "",
+    created_at: existingCustomer.created_at,
+
+    updated_at: existingCustomer.updated_at,
   };
 }
 
@@ -415,10 +367,7 @@ export async function blacklistCustomer(
   isBlackListed: boolean
 ): Promise<void> {
   await apiClient.post<ApiResponse<null>>(
-    API_ENDPOINTS.customers.blacklist(
-      Number(id),
-      isBlackListed
-    )
+    API_ENDPOINTS.customers.blacklist(Number(id), isBlackListed)
   );
 }
 
@@ -434,11 +383,6 @@ export async function blacklistCustomer(
  *
  * The closest supported backend operation is blacklistCustomer().
  */
-export async function deleteCustomer(
-  id: string
-): Promise<void> {
-  await blacklistCustomer(
-    id,
-    true
-  );
+export async function deleteCustomer(id: string): Promise<void> {
+  await blacklistCustomer(id, true);
 }

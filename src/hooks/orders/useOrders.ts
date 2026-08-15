@@ -1,13 +1,29 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { getOrders } from "@/services/order/order-service";
+import { getOrdersPage } from "@/services/order/order-service";
 
 import { queryKeys } from "@/lib/queryKeys";
 
+const ORDERS_PAGE_SIZE = 20;
+
 export function useOrders() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: queryKeys.orders,
 
-    queryFn: getOrders,
+    initialPageParam: 1,
+
+    queryFn: ({ pageParam }) =>
+      getOrdersPage(pageParam, ORDERS_PAGE_SIZE),
+
+    getNextPageParam: (lastPage) => {
+      const loadedCount =
+        lastPage.pageNumber * lastPage.pageSize;
+
+      if (loadedCount >= lastPage.totalCount) {
+        return undefined;
+      }
+
+      return lastPage.pageNumber + 1;
+    },
   });
 }

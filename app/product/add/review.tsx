@@ -37,6 +37,8 @@ import { useToast } from "@/hooks/useToast";
 
 import { buildVariantPayload } from "@/utils/products/buildProductPayload";
 
+import { useAddProductToStore } from "@/hooks/products/useAddProductToStore";
+
 function editInfo() {
   router.replace(ROUTES.ADD_PRODUCT_INFO);
 }
@@ -58,6 +60,8 @@ export default function ReviewScreen() {
 
   const createProductMutation = useCreateProduct();
 
+  const addProductToStoreMutation = useAddProductToStore();
+
   const uploadImagesMutation = useUploadProductImage();
 
   const { showToast } = useToast();
@@ -77,10 +81,12 @@ export default function ReviewScreen() {
       const uploadedImages: ProductImageDto[] = [];
 
       const imagesToUpload = [product.image, ...product.images].filter(
-        (image): image is string => Boolean(image)
+        (image): image is string => Boolean(image) && !image.startsWith("http")
       );
 
-      for (const imageUri of imagesToUpload) {
+      const uniqueImages = [...new Set(imagesToUpload)];
+
+      for (const imageUri of uniqueImages) {
         const formData = new FormData();
 
         formData.append("file", {
@@ -91,7 +97,7 @@ export default function ReviewScreen() {
 
         const response = await uploadImagesMutation.mutateAsync(formData);
 
-        uploadedImages.push(response.data);
+        uploadedImages.push(...response.data);
       }
 
       /**
@@ -139,7 +145,29 @@ export default function ReviewScreen() {
        * ------------------------------------------------------------
        */
 
-      await createProductMutation.mutateAsync(payload);
+      const createdProduct = await createProductMutation.mutateAsync(payload);
+
+      if (product.storeIds.length > 0) {
+        try {
+          await addProductToStoreMutation.mutateAsync({
+            productId: createdProduct.data.id,
+            storeIds: product.storeIds,
+          });
+        } catch (error) {
+          console.error("ASSIGN PRODUCT TO STORES ERROR", error);
+
+          showToast({
+            type: "error",
+            title: "Product Created",
+            message:
+              "The product was created, but it could not be assigned to the selected stores.",
+          });
+
+          router.replace(ROUTES.PRODUCTS);
+
+          return;
+        }
+      }
 
       /**
        * ------------------------------------------------------------
@@ -152,8 +180,6 @@ export default function ReviewScreen() {
         title: "Product Created",
         message: "Your product has been published successfully.",
       });
-
-      resetProduct();
 
       resetProduct();
 

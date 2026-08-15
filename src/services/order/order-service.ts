@@ -114,6 +114,16 @@ interface StoreTransactionsResult {
   };
 }
 
+export interface OrdersPage {
+  orders: Order[];
+
+  totalCount: number;
+
+  pageNumber: number;
+
+  pageSize: number;
+}
+
 /**
  * ---------------------------------------------------------------------------
  * GraphQL Query
@@ -208,6 +218,10 @@ interface StoreTransactionFilter {
   startDate: string | null;
 
   endDate: string | null;
+
+  cardBrand: string | null;
+
+  paymentMethod: string | null;
 
   status: string | null;
 }
@@ -310,8 +324,6 @@ function mapPaymentChannel(
 
   return "card";
 }
-
-
 
 /**
  * ---------------------------------------------------------------------------
@@ -416,7 +428,27 @@ function mapCurrency(value: string): Currency {
  * limit: 20
  */
 
-export async function getOrders(): Promise<Order[]> {
+/**
+ * ---------------------------------------------------------------------------
+ * Get Orders Page
+ * ---------------------------------------------------------------------------
+ *
+ * GraphQL:
+ *
+ * storeTransactions
+ *
+ * The API supports pagination through:
+ *
+ * page
+ * limit
+ *
+ * The response includes:
+ *
+ * totalCount
+ * pageNumber
+ * pageSize
+ */
+export async function getOrdersPage(page = 1, limit = 20): Promise<OrdersPage> {
   const filter: StoreTransactionFilter = {
     customerEmail: null,
 
@@ -428,6 +460,10 @@ export async function getOrders(): Promise<Order[]> {
 
     endDate: null,
 
+    cardBrand: null,
+
+    paymentMethod: null,
+
     status: null,
   };
 
@@ -435,15 +471,23 @@ export async function getOrders(): Promise<Order[]> {
     query: STORE_TRANSACTIONS_QUERY,
 
     variables: {
-      page: 1,
+      page,
 
-      limit: 20,
+      limit,
 
       filter,
     },
   });
 
-  return response.storeTransactions.items.map(mapOrder);
+  return {
+    orders: response.storeTransactions.items.map(mapOrder),
+
+    totalCount: response.storeTransactions.totalCount,
+
+    pageNumber: response.storeTransactions.pageNumber,
+
+    pageSize: response.storeTransactions.pageSize,
+  };
 }
 
 /**
@@ -466,6 +510,10 @@ export async function getOrderById(id: string): Promise<Order> {
     startDate: null,
 
     endDate: null,
+
+    cardBrand: null,
+
+    paymentMethod: null,
 
     status: null,
   };

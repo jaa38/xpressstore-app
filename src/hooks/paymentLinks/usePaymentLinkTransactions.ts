@@ -8,7 +8,10 @@ export function usePaymentLinkTransactions(
   paymentPageId: number | null
 ) {
   return useQuery({
-    queryKey: ["payment-link-transactions", paymentPageId],
+    queryKey:
+      paymentPageId !== null
+        ? queryKeys.paymentLinkTransactions(paymentPageId)
+        : ["payment-link-transactions", "disabled"],
 
     queryFn: () =>
       paymentLinkService.getPaymentLinkTransactions(paymentPageId!),

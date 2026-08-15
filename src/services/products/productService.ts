@@ -10,6 +10,7 @@ import {
   ProductCategoryDto,
   ProductImageDto,
   UpdateProductRequest,
+  CreatedProduct,
 } from "@/types/product";
 
 export const productService = {
@@ -48,7 +49,7 @@ export const productService = {
    * ---------------------------------------------------------------------------
    */
   async createProduct(payload: CreateProductRequest) {
-    const { data } = await authClient.post<ApiResponse<void>>(
+    const { data } = await authClient.post<ApiResponse<CreatedProduct>>(
       API_ENDPOINTS.products.create,
       payload
     );
@@ -69,7 +70,7 @@ export const productService = {
   },
 
   async deleteProduct(productId: number) {
-    const { data } = await authClient.delete<ApiResponse<void>>(
+    const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.products.delete(productId)
     );
 
@@ -95,7 +96,7 @@ export const productService = {
    * ---------------------------------------------------------------------------
    */
   async uploadProductImage(formData: FormData) {
-    const { data } = await authClient.post<ApiResponse<ProductImageDto>>(
+    const { data } = await authClient.post<ApiResponse<ProductImageDto[]>>(
       API_ENDPOINTS.products.uploadImage,
       formData,
       {
@@ -139,6 +140,29 @@ export const productService = {
     const { data } = await authClient.post<ApiResponse<ProductCategoryDto>>(
       API_ENDPOINTS.products.createCategory,
       payload
+    );
+
+    return data;
+  },
+
+  async updateCategory(
+    categoryId: number,
+    payload: CreateProductCategoryRequest
+  ) {
+    const { data } = await authClient.post<ApiResponse<ProductCategoryDto>>(
+      API_ENDPOINTS.products.updateCategory,
+      {
+        ...payload,
+        id: categoryId,
+      }
+    );
+
+    return data;
+  },
+
+  async deleteCategory(categoryId: number) {
+    const { data } = await authClient.post<ApiResponse<void>>(
+      API_ENDPOINTS.products.deleteCategory(categoryId)
     );
 
     return data;

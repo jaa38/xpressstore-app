@@ -2,9 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 
 import { storeService } from "@/services/store/storeService";
 
+import { queryKeys } from "@/lib/queryKeys";
+
 export function useStores() {
   const query = useQuery({
-    queryKey: ["stores"],
+    queryKey: queryKeys.stores,
 
     queryFn: storeService.getStores,
   });

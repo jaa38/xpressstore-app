@@ -32,47 +32,34 @@ import { formatCurrency } from "@/utils/formatCurrency";
 import type {
   PaymentLink,
   PaymentLinkStatus,
+  PaymentLinkTransaction,
 } from "@/types/paymentLink";
 
 import { ROUTES } from "@/navigation/routes";
 
 import { usePaymentLinks } from "@/hooks/paymentLinks/usePaymentLinks";
+
+import { usePaymentLinkTransactionMap } from "@/hooks/paymentLinks/usePaymentLinkTransactionMap";
+
+import { getPaymentLinkTransactionStatus } from "@/utils/paymentLinks/getPaymentLinkTransactionStatus";
+
 import { PaymentLinkCard } from "@/components/payment-links/PaymentLinkCard";
 
 function getPaymentLinkStatus(
-  link: PaymentLink
+  link: PaymentLink,
+  transactionsByPaymentLinkId: Map<number, PaymentLinkTransaction[]>
 ): PaymentLinkStatus {
-  if (!link.isActive) {
-    return "inactive";
-  }
+  const transactions = transactionsByPaymentLinkId.get(link.id) ?? [];
 
-  /**
-   * -------------------------------------------------------------------------
-   * Current backend limitation
-   * -------------------------------------------------------------------------
-   *
-   * The current Payment Pages API exposes `isActive`, but does not expose
-   * paid / failed / pending payment-link status directly.
-   *
-   * Active payment links are therefore represented as `pending` in the
-   * current UI.
-   *
-   * Paid / failed states remain in the UI model because transaction data
-   * will eventually be used to derive those states.
-   */
-  return "pending";
+  return getPaymentLinkTransactionStatus(link, transactions);
 }
 
 function getPaymentLinkUrl(link: PaymentLink) {
-  return (
-    link.paymentLink ||
-    `https://payx.press/${link.paymentLinkReference}`
-  );
+  return link.paymentLink || `https://payx.press/${link.paymentLinkReference}`;
 }
 
 export default function PaymentLinksScreen() {
-  const [searchQuery, setSearchQuery] =
-    useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const {
     data: paymentLinks = [],
@@ -81,14 +68,19 @@ export default function PaymentLinksScreen() {
     refetch,
   } = usePaymentLinks();
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const {
+    transactionsByPaymentLinkId,
+    isLoading: transactionsLoading,
+    hasError: transactionsError,
+    refetch: refetchTransactions,
+  } = usePaymentLinkTransactionMap(paymentLinks);
+
+  const [refreshing, setRefreshing] = useState(false);
 
   const [selectedStatus, setSelectedStatus] =
     useState<PaymentLinkStatus>("all");
 
-  const paymentLinkBottomSheetRef =
-    useRef<BottomSheetModal>(null);
+  const paymentLinkBottomSheetRef = useRef<BottomSheetModal>(null);
 
   const [selectedPaymentLink, setSelectedPaymentLink] =
     useState<PaymentLink | null>(null);
@@ -102,7 +94,7 @@ export default function PaymentLinksScreen() {
     setRefreshing(true);
 
     try {
-      await refetch();
+      await Promise.all([refetch(), refetchTransactions()]);
     } finally {
       setRefreshing(false);
     }
@@ -115,37 +107,21 @@ export default function PaymentLinksScreen() {
    */
   const filteredLinks = useMemo(() => {
     return paymentLinks.filter((link) => {
-      const status = getPaymentLinkStatus(link);
+      const status = getPaymentLinkStatus(link, transactionsByPaymentLinkId);
 
       const matchesStatus =
-        selectedStatus === "all" ||
-        status === selectedStatus;
+        selectedStatus === "all" || status === selectedStatus;
 
-      const query = searchQuery
-        .trim()
-        .toLowerCase();
+      const query = searchQuery.trim().toLowerCase();
 
       const matchesSearch =
-        link.name
-          .toLowerCase()
-          .includes(query) ||
-        getPaymentLinkUrl(link)
-          .toLowerCase()
-          .includes(query) ||
-        link.paymentLinkReference
-          .toLowerCase()
-          .includes(query);
+        link.name.toLowerCase().includes(query) ||
+        getPaymentLinkUrl(link).toLowerCase().includes(query) ||
+        link.paymentLinkReference.toLowerCase().includes(query);
 
-      return (
-        matchesStatus &&
-        matchesSearch
-      );
+      return matchesStatus && matchesSearch;
     });
-  }, [
-    paymentLinks,
-    selectedStatus,
-    searchQuery,
-  ]);
+  }, [paymentLinks, selectedStatus, searchQuery, transactionsByPaymentLinkId]);
 
   /**
    * -------------------------------------------------------------------------
@@ -155,100 +131,100 @@ export default function PaymentLinksScreen() {
   const summaryLinks = filteredLinks;
 
   const totalAmount = useMemo(
-    () =>
-      summaryLinks.reduce(
-        (total, link) =>
-          total + link.amount,
-        0
-      ),
+    () => summaryLinks.reduce((total, link) => total + link.amount, 0),
     [summaryLinks]
   );
 
-  const totalLinks =
-    summaryLinks.length;
+  const totalLinks = summaryLinks.length;
 
   const summaryTitle = {
     all: "Payment Link Value",
-
-    pending: "Active Links",
-
+    active: "Active Links",
     paid: "Paid Links",
-
+    pending: "Pending Links",
     failed: "Failed Links",
-
     inactive: "Inactive Links",
   }[selectedStatus];
 
   const summaryStatus = {
     all: "All",
-
-    pending: "Active",
-
+    active: "Active",
     paid: "Paid",
-
+    pending: "Pending",
     failed: "Failed",
-
     inactive: "Inactive",
   }[selectedStatus];
 
-  const summaryStatusColors: Record<
-    PaymentLinkStatus,
-    Color
-  > = {
+  const summaryStatusColors: Record<PaymentLinkStatus, Color> = {
     all: "strong",
-
-    pending: "warning",
-
+    active: "success",
     paid: "success",
-
+    pending: "warning",
     failed: "error",
-
     inactive: "secondary",
   };
 
-  const summaryStatusColor =
-    summaryStatusColors[
-      selectedStatus
-    ];
+  const summaryStatusColor = summaryStatusColors[selectedStatus];
 
-  const summaryCurrency =
-    summaryLinks[0]?.currency ??
-    "NGN";
+  const summaryCurrency = summaryLinks[0]?.currency ?? "NGN";
 
-  const summaryAmount =
-    formatCurrency(
-      totalAmount,
-      {
-        currency:
-          summaryCurrency,
+  const summaryAmount = formatCurrency(totalAmount, {
+    currency: summaryCurrency,
 
-        showDecimals:
-          totalAmount % 1 !== 0,
-      }
-    );
+    showDecimals: totalAmount % 1 !== 0,
+  });
 
   /**
    * -------------------------------------------------------------------------
    * Status Sections
    * -------------------------------------------------------------------------
    *
-   * Only statuses currently derivable from the Payment Pages API are rendered
-   * as actual sections.
+   * Active / inactive are derived directly from the Payment Page `isActive`
+   * field.
    *
-   * `paid` and `failed` remain available as UI filter states for future
-   * transaction integration.
+   * Paid / pending / failed will be derived from Payment Page transaction
+   * data in the next phase.
    */
+
   const statusSections = [
     {
-      status: "pending" as const,
+      status: "active" as const,
 
       badgeText: "Active",
 
-      badgeBackground:
-        theme.badge.success.background,
+      badgeBackground: theme.badge.success.background,
 
-      badgeTextColor:
-        "success" as const,
+      badgeTextColor: "success" as const,
+    },
+
+    {
+      status: "paid" as const,
+
+      badgeText: "Paid",
+
+      badgeBackground: theme.badge.success.background,
+
+      badgeTextColor: "success" as const,
+    },
+
+    {
+      status: "pending" as const,
+
+      badgeText: "Pending",
+
+      badgeBackground: theme.badge.warning.background,
+
+      badgeTextColor: "warning" as const,
+    },
+
+    {
+      status: "failed" as const,
+
+      badgeText: "Failed",
+
+      badgeBackground: theme.badge.error.background,
+
+      badgeTextColor: "error" as const,
     },
 
     {
@@ -256,14 +232,11 @@ export default function PaymentLinksScreen() {
 
       badgeText: "Inactive",
 
-      badgeBackground:
-        theme.background.subtle,
+      badgeBackground: theme.background.subtle,
 
-      badgeBorderColor:
-        theme.border.default,
+      badgeBorderColor: theme.border.default,
 
-      badgeTextColor:
-        "secondary" as const,
+      badgeTextColor: "secondary" as const,
     },
   ];
 
@@ -283,9 +256,7 @@ export default function PaymentLinksScreen() {
    * The UI can retain the functionality for future backend support, but for
    * now it explains the limitation to the user.
    */
-  function handleDeactivate(
-    paymentLink: PaymentLink
-  ) {
+  function handleDeactivate(paymentLink: PaymentLink) {
     Alert.alert(
       "Deactivate Payment Link",
       `"${paymentLink.name}" cannot be deactivated yet because the documented Payment Pages API does not currently expose a deactivate endpoint.`,
@@ -309,19 +280,14 @@ export default function PaymentLinksScreen() {
         style={{
           flex: 1,
 
-          justifyContent:
-            "center",
+          justifyContent: "center",
 
-          alignItems:
-            "center",
+          alignItems: "center",
 
-          backgroundColor:
-            theme.background.primary,
+          backgroundColor: theme.background.primary,
         }}
       >
-        <AppText>
-          Loading payment links...
-        </AppText>
+        <AppText>Loading payment links...</AppText>
       </SafeAreaView>
     );
   }
@@ -336,15 +302,9 @@ export default function PaymentLinksScreen() {
       <SafeAreaView
         style={{
           flex: 1,
-
-          justifyContent:
-            "center",
-
-          alignItems:
-            "center",
-
-          backgroundColor:
-            theme.background.primary,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.background.primary,
         }}
       >
         <Ionicons
@@ -356,8 +316,7 @@ export default function PaymentLinksScreen() {
         <AppText
           variant="bodyLargeBold"
           style={{
-            marginTop:
-              spacing.md,
+            marginTop: spacing.md,
           }}
         >
           Unable to load payment links
@@ -368,25 +327,23 @@ export default function PaymentLinksScreen() {
             refetch();
           }}
           style={{
-            marginTop:
-              spacing.md,
+            marginTop: spacing.md,
           }}
         >
-          <AppText color="link">
-            Try Again
-          </AppText>
+          <AppText color="link">Try Again</AppText>
         </Pressable>
       </SafeAreaView>
     );
   }
+
+  const showTransactionError = transactionsError;
 
   return (
     <SafeAreaView
       style={{
         flex: 1,
 
-        backgroundColor:
-          theme.background.primary,
+        backgroundColor: theme.background.primary,
       }}
     >
       <StatusBar style="auto" />
@@ -395,16 +352,14 @@ export default function PaymentLinksScreen() {
         style={{
           flex: 1,
 
-          paddingHorizontal:
-            spacing.lg,
+          paddingHorizontal: spacing.lg,
         }}
       >
         <View
           style={{
             flex: 1,
 
-            justifyContent:
-              "space-between",
+            justifyContent: "space-between",
           }}
         >
           {/* -----------------------------------------------------------------
@@ -413,11 +368,9 @@ export default function PaymentLinksScreen() {
 
           <View
             style={{
-              flexDirection:
-                "row",
+              flexDirection: "row",
 
-              alignItems:
-                "center",
+              alignItems: "center",
 
               gap: spacing.md,
             }}
@@ -425,27 +378,21 @@ export default function PaymentLinksScreen() {
             {/* Back Button */}
 
             <Pressable
-              onPress={() =>
-                router.back()
-              }
+              onPress={() => router.back()}
               style={{
                 width: 44,
 
                 height: 44,
 
-                justifyContent:
-                  "center",
+                justifyContent: "center",
 
-                alignItems:
-                  "center",
+                alignItems: "center",
               }}
             >
               <Ionicons
                 name="chevron-back"
                 size={24}
-                color={
-                  theme.text.primary
-                }
+                color={theme.text.primary}
               />
             </Pressable>
 
@@ -458,19 +405,12 @@ export default function PaymentLinksScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">
-                Payment Link
-              </AppText>
+              <AppText variant="h1">Payment Link</AppText>
 
-              <AppText
-                variant="body"
-                color="secondary"
-              >
-                {filteredLinks.length ===
-                0
+              <AppText variant="body" color="secondary">
+                {filteredLinks.length === 0
                   ? "No payment links"
-                  : filteredLinks.length ===
-                      1
+                  : filteredLinks.length === 1
                     ? "1 payment link"
                     : `${filteredLinks.length} payment links`}
               </AppText>
@@ -479,37 +419,25 @@ export default function PaymentLinksScreen() {
             {/* Add Button */}
 
             <Pressable
-              onPress={() =>
-                router.push(
-                  ROUTES.ADD_PAYMENT_LINK_INFORMATION
-                )
-              }
+              onPress={() => router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION)}
               style={{
                 width: 44,
 
                 height: 44,
 
-                borderRadius:
-                  radius.full,
+                borderRadius: radius.full,
 
-                justifyContent:
-                  "center",
+                justifyContent: "center",
 
-                alignItems:
-                  "center",
+                alignItems: "center",
 
-                backgroundColor:
-                  theme.action.primary
-                    .background,
+                backgroundColor: theme.action.primary.background,
               }}
             >
               <Ionicons
                 name="add"
                 size={24}
-                color={
-                  theme.action.primary
-                    .text
-                }
+                color={theme.action.primary.text}
               />
             </Pressable>
           </View>
@@ -528,17 +456,14 @@ export default function PaymentLinksScreen() {
             <Card
               variant="active"
               style={{
-                marginTop:
-                  spacing.md,
+                marginTop: spacing.md,
               }}
             >
               <View
                 style={{
-                  flexDirection:
-                    "row",
+                  flexDirection: "row",
 
-                  alignItems:
-                    "center",
+                  alignItems: "center",
                 }}
               >
                 {/* Left Section */}
@@ -547,11 +472,9 @@ export default function PaymentLinksScreen() {
                   style={{
                     flex: 1,
 
-                    flexDirection:
-                      "row",
+                    flexDirection: "row",
 
-                    alignItems:
-                      "center",
+                    alignItems: "center",
 
                     gap: spacing.md,
                   }}
@@ -564,29 +487,19 @@ export default function PaymentLinksScreen() {
 
                       height: 56,
 
-                      borderRadius:
-                        radius.full,
+                      borderRadius: radius.full,
 
-                      justifyContent:
-                        "center",
+                      justifyContent: "center",
 
-                      alignItems:
-                        "center",
+                      alignItems: "center",
 
-                      backgroundColor:
-                        theme.icon
-                          .branding
-                          .background,
+                      backgroundColor: theme.icon.branding.background,
                     }}
                   >
                     <Ionicons
                       name="link-outline"
                       size={28}
-                      color={
-                        theme.icon
-                          .branding
-                          .icon
-                      }
+                      color={theme.icon.branding.icon}
                     />
                   </View>
 
@@ -597,20 +510,11 @@ export default function PaymentLinksScreen() {
                       gap: spacing.xs,
                     }}
                   >
-                    <AppText
-                      variant="bodySmallBold"
-                      color="muted"
-                    >
-                      {
-                        summaryTitle
-                      }
+                    <AppText variant="bodySmallBold" color="muted">
+                      {summaryTitle}
                     </AppText>
 
-                    <AppText variant="h1">
-                      {
-                        summaryAmount
-                      }
-                    </AppText>
+                    <AppText variant="h1">{summaryAmount}</AppText>
                   </View>
                 </View>
 
@@ -620,15 +524,11 @@ export default function PaymentLinksScreen() {
                   style={{
                     width: 1,
 
-                    alignSelf:
-                      "stretch",
+                    alignSelf: "stretch",
 
-                    marginHorizontal:
-                      spacing.md,
+                    marginHorizontal: spacing.md,
 
-                    backgroundColor:
-                      theme.divider
-                        .strong,
+                    backgroundColor: theme.divider.strong,
                   }}
                 />
 
@@ -636,37 +536,23 @@ export default function PaymentLinksScreen() {
 
                 <View
                   style={{
-                    alignItems:
-                      "center",
+                    alignItems: "center",
 
-                    justifyContent:
-                      "center",
+                    justifyContent: "center",
 
                     minWidth: 72,
 
                     gap: spacing.xs,
                   }}
                 >
-                  <AppText
-                    variant="bodySmallBold"
-                    color="muted"
-                  >
+                  <AppText variant="bodySmallBold" color="muted">
                     Links
                   </AppText>
 
-                  <AppText variant="h2">
-                    {totalLinks}
-                  </AppText>
+                  <AppText variant="h2">{totalLinks}</AppText>
 
-                  <AppText
-                    variant="caption"
-                    color={
-                      summaryStatusColor
-                    }
-                  >
-                    {
-                      summaryStatus
-                    }
+                  <AppText variant="caption" color={summaryStatusColor}>
+                    {summaryStatus}
                   </AppText>
                 </View>
               </View>
@@ -674,110 +560,105 @@ export default function PaymentLinksScreen() {
 
             {/* Search */}
 
+            {/* Search */}
+
             <View
               style={{
-                marginTop:
-                  spacing.md,
+                marginTop: spacing.md,
               }}
             >
               <SearchBar
-                value={
-                  searchQuery
-                }
-                onChangeText={
-                  setSearchQuery
-                }
+                value={searchQuery}
+                onChangeText={setSearchQuery}
                 placeholder="Search payment links"
               />
             </View>
+
+            {/* Transaction Error */}
+
+            {showTransactionError && (
+              <Card
+                style={{
+                  marginTop: spacing.md,
+                  borderWidth: 1,
+                  borderColor: theme.border.error,
+                  backgroundColor: theme.background.surface,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: spacing.sm,
+                  }}
+                >
+                  <Ionicons
+                    name="warning-outline"
+                    size={20}
+                    color={theme.text.error}
+                  />
+
+                  <View
+                    style={{
+                      flex: 1,
+                    }}
+                  >
+                    <AppText variant="bodySmallBold" color="error">
+                      Some payment activity could not be loaded
+                    </AppText>
+
+                    <AppText
+                      variant="caption"
+                      color="secondary"
+                      style={{
+                        marginTop: spacing.xs,
+                      }}
+                    >
+                      Payment link statuses may be incomplete. Pull down to try
+                      again.
+                    </AppText>
+                  </View>
+                </View>
+              </Card>
+            )}
 
             {/* Status Filters */}
 
             <View
               style={{
-                marginTop:
-                  spacing.md,
-
-                flexDirection:
-                  "row",
-
-                justifyContent:
-                  "space-between",
+                marginTop: spacing.md,
+                flexDirection: "row",
+                justifyContent: "space-between",
               }}
             >
               <UICard
                 title="All"
-                variant={
-                  selectedStatus ===
-                  "all"
-                    ? "active"
-                    : "default"
-                }
-                onPress={() =>
-                  setSelectedStatus(
-                    "all"
-                  )
-                }
+                variant={selectedStatus === "all" ? "active" : "default"}
+                onPress={() => setSelectedStatus("all")}
               />
 
               <UICard
                 title="Active"
-                variant={
-                  selectedStatus ===
-                  "pending"
-                    ? "active"
-                    : "default"
-                }
-                onPress={() =>
-                  setSelectedStatus(
-                    "pending"
-                  )
-                }
+                variant={selectedStatus === "active" ? "active" : "default"}
+                onPress={() => setSelectedStatus("active")}
               />
 
               <UICard
                 title="Paid"
-                variant={
-                  selectedStatus ===
-                  "paid"
-                    ? "active"
-                    : "default"
-                }
-                onPress={() =>
-                  setSelectedStatus(
-                    "paid"
-                  )
-                }
+                variant={selectedStatus === "paid" ? "active" : "default"}
+                onPress={() => setSelectedStatus("paid")}
               />
 
               <UICard
                 title="Failed"
-                variant={
-                  selectedStatus ===
-                  "failed"
-                    ? "active"
-                    : "default"
-                }
-                onPress={() =>
-                  setSelectedStatus(
-                    "failed"
-                  )
-                }
+                variant={selectedStatus === "failed" ? "active" : "default"}
+                onPress={() => setSelectedStatus("failed")}
               />
 
               <UICard
                 title="Inactive"
-                variant={
-                  selectedStatus ===
-                  "inactive"
-                    ? "active"
-                    : "default"
-                }
-                onPress={() =>
-                  setSelectedStatus(
-                    "inactive"
-                  )
-                }
+                variant={selectedStatus === "inactive" ? "active" : "default"}
+                onPress={() => setSelectedStatus("inactive")}
               />
             </View>
 
@@ -787,34 +668,18 @@ export default function PaymentLinksScreen() {
               style={{
                 flex: 1,
               }}
-              showsVerticalScrollIndicator={
-                false
-              }
+              showsVerticalScrollIndicator={false}
               contentContainerStyle={{
-                paddingTop:
-                  spacing.md,
+                paddingTop: spacing.md,
 
-                paddingBottom:
-                  spacing["2xl"],
+                paddingBottom: spacing["2xl"],
               }}
               refreshControl={
                 <RefreshControl
-                  refreshing={
-                    refreshing
-                  }
-                  onRefresh={
-                    onRefresh
-                  }
-                  tintColor={
-                    theme.action
-                      .primary
-                      .background
-                  }
-                  colors={[
-                    theme.action
-                      .primary
-                      .background,
-                  ]}
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor={theme.action.primary.background}
+                  colors={[theme.action.primary.background]}
                 />
               }
             >
@@ -823,52 +688,39 @@ export default function PaymentLinksScreen() {
                   gap: spacing.md,
                 }}
               >
-                {filteredLinks.length ===
-                0 ? (
+                {filteredLinks.length === 0 ? (
                   <Card
                     style={{
-                      marginTop:
-                        spacing.xs,
+                      marginTop: spacing.xs,
 
-                      alignItems:
-                        "center",
+                      alignItems: "center",
                     }}
                   >
                     <Ionicons
                       name="link-outline"
                       size={48}
-                      color={
-                        theme.text
-                          .muted
-                      }
+                      color={theme.text.muted}
                     />
 
                     <AppText
                       variant="bodyLargeBold"
                       style={{
-                        marginTop:
-                          spacing.md,
+                        marginTop: spacing.md,
                       }}
                     >
-                      No payment links
-                      found
+                      No payment links found
                     </AppText>
 
                     <AppText
                       variant="body"
                       color="secondary"
                       style={{
-                        textAlign:
-                          "center",
+                        textAlign: "center",
 
-                        marginTop:
-                          spacing.sm,
+                        marginTop: spacing.sm,
                       }}
                     >
-                      Create your
-                      first payment
-                      link to start
-                      collecting
+                      Create your first payment link to start collecting
                       payments.
                     </AppText>
                   </Card>
@@ -878,63 +730,35 @@ export default function PaymentLinksScreen() {
                       gap: spacing.md,
                     }}
                   >
-                    {statusSections.map(
-                      (
-                        section
-                      ) => {
-                        const links =
-                          filteredLinks.filter(
-                            (link) =>
-                              getPaymentLinkStatus(
-                                link
-                              ) ===
-                              section.status
-                          );
+                    {statusSections.map((section) => {
+                      const links = filteredLinks.filter(
+                        (link) =>
+                          getPaymentLinkStatus(
+                            link,
+                            transactionsByPaymentLinkId
+                          ) === section.status
+                      );
 
-                        if (
-                          links.length ===
-                          0
-                        ) {
-                          return null;
-                        }
-
-                        return links.map(
-                          (
-                            link
-                          ) => (
-                            <PaymentLinkCard
-                              key={
-                                link.id
-                              }
-                              link={
-                                link
-                              }
-                              badgeBackground={
-                                section.badgeBackground
-                              }
-                              badgeBorderColor={
-                                section.badgeBorderColor
-                              }
-                              badgeText={
-                                section.badgeText
-                              }
-                              badgeTextColor={
-                                section.badgeTextColor
-                              }
-                              onMorePress={(
-                                selectedLink
-                              ) => {
-                                setSelectedPaymentLink(
-                                  selectedLink
-                                );
-
-                                paymentLinkBottomSheetRef.current?.present();
-                              }}
-                            />
-                          )
-                        );
+                      if (links.length === 0) {
+                        return null;
                       }
-                    )}
+
+                      return links.map((link) => (
+                        <PaymentLinkCard
+                          key={link.id}
+                          link={link}
+                          badgeBackground={section.badgeBackground}
+                          badgeBorderColor={section.badgeBorderColor}
+                          badgeText={section.badgeText}
+                          badgeTextColor={section.badgeTextColor}
+                          onMorePress={(selectedLink) => {
+                            setSelectedPaymentLink(selectedLink);
+
+                            paymentLinkBottomSheetRef.current?.present();
+                          }}
+                        />
+                      ));
+                    })}
                   </View>
                 )}
               </View>
@@ -948,33 +772,20 @@ export default function PaymentLinksScreen() {
       --------------------------------------------------------------------- */}
 
       <PaymentLinkBottomSheet
-        ref={
-          paymentLinkBottomSheetRef
-        }
-        paymentLink={
-          selectedPaymentLink
-        }
-        onViewQRCode={(
-          paymentLink
-        ) => {
+        ref={paymentLinkBottomSheetRef}
+        paymentLink={selectedPaymentLink}
+        onViewQRCode={(paymentLink) => {
           router.push({
-            pathname:
-              ROUTES.PAYMENT_LINK_QR_CODE,
+            pathname: ROUTES.PAYMENT_LINK_QR_CODE,
 
             params: {
-              title:
-                paymentLink.name,
+              title: paymentLink.name,
 
-              url:
-                getPaymentLinkUrl(
-                  paymentLink
-                ),
+              url: getPaymentLinkUrl(paymentLink),
             },
           });
         }}
-        onDeactivateLink={
-          handleDeactivate
-        }
+        onDeactivateLink={handleDeactivate}
       />
     </SafeAreaView>
   );

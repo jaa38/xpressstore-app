@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Local development authentication session
+src/config/dev-session.local.ts

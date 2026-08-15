@@ -1,7 +1,4 @@
-import {
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -13,9 +10,13 @@ export function useDeleteCustomer() {
   return useMutation({
     mutationFn: deleteCustomer,
 
-    onSuccess: () => {
+    onSuccess: (_, customerId) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.customers,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.customer(customerId),
       });
     },
   });

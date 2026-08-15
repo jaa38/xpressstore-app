@@ -75,10 +75,8 @@ export function UpdateOrderStatusBottomSheet({
                     {
                       text: "Continue",
                       style: action.destructive ? "destructive" : "default",
-                      onPress: async () => {
-                        await onUpdateStatus(action.status);
-
-                        onClose();
+                      onPress: () => {
+                        void onUpdateStatus(action.status);
                       },
                     },
                   ]);

@@ -13,10 +13,11 @@ import type { Currency } from "@/types/currency";
  */
 export type PaymentLinkStatus =
   | "all"
+  | "active"
+  | "inactive"
   | "paid"
   | "pending"
-  | "failed"
-  | "inactive";
+  | "failed";
 
 /**
  * ---------------------------------------------------------------------------

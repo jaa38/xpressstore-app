@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Alert, Pressable, ScrollView, View } from "react-native";
 
@@ -14,7 +14,8 @@ import { AppText } from "@/components/ui/AppText";
 
 import { spacing, theme } from "@/theme";
 
-import { useOrders } from "@/hooks/orders/useOrders";
+import { useOrder } from "@/hooks/orders/useOrder";
+
 import { useUpdateOrderStatus } from "@/hooks/orders/useUpdateOrderStatus";
 
 import { Order } from "@/types/order";
@@ -35,26 +36,29 @@ export default function OrderDetailsScreen() {
     id: string;
   }>();
 
-  const { data: orders = [] } = useOrders();
-
-  const foundOrder = orders.find((item) => item.id === id);
-
-  const [currentOrder, setCurrentOrder] = useState<Order | null>(
-    foundOrder ?? null
-  );
+  const { data: currentOrder, isLoading, isError, error } = useOrder(id);
 
   const [statusBottomSheetVisible, setStatusBottomSheetVisible] =
     useState(false);
 
   const updateStatus = useUpdateOrderStatus();
 
-  useEffect(() => {
-    if (foundOrder) {
-      setCurrentOrder(foundOrder);
-    }
-  }, [foundOrder]);
+  if (isLoading) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.background.primary,
+        }}
+      >
+        <AppText variant="body">Loading order...</AppText>
+      </SafeAreaView>
+    );
+  }
 
-  if (!currentOrder) {
+  if (isError || !currentOrder) {
     return (
       <SafeAreaView
         style={{
@@ -88,7 +92,9 @@ export default function OrderDetailsScreen() {
             paddingHorizontal: spacing.xl,
           }}
         >
-          The requested order could not be found.
+          {error instanceof Error
+            ? error.message
+            : "The requested order could not be found."}
         </AppText>
       </SafeAreaView>
     );
@@ -101,18 +107,6 @@ export default function OrderDetailsScreen() {
       await updateStatus.mutateAsync({
         orderId: order.id,
         status,
-      });
-
-      setCurrentOrder((previous) => {
-        if (!previous) {
-          return previous;
-        }
-
-        return {
-          ...previous,
-          status,
-          updatedAt: new Date().toISOString(),
-        };
       });
 
       setStatusBottomSheetVisible(false);

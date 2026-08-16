@@ -5,6 +5,8 @@ import { API_ENDPOINTS } from "@/api/endpoints";
 import type { ApiResponse } from "@/types/api";
 import type { Order } from "@/types/order";
 import type { Currency } from "@/types/currency";
+
+import { orderRepository } from "@/repositories/orders/sqliteOrderRepository";
 /**
  * ---------------------------------------------------------------------------
  * GraphQL DTOs
@@ -467,27 +469,68 @@ export async function getOrdersPage(page = 1, limit = 20): Promise<OrdersPage> {
     status: null,
   };
 
-  const response = await graphqlRequest<StoreTransactionsResult>({
-    query: STORE_TRANSACTIONS_QUERY,
+  try {
+    const response = await graphqlRequest<StoreTransactionsResult>({
+      query: STORE_TRANSACTIONS_QUERY,
 
-    variables: {
-      page,
+      variables: {
+        page,
 
-      limit,
+        limit,
 
-      filter,
-    },
-  });
+        filter,
+      },
+    });
 
-  return {
-    orders: response.storeTransactions.items.map(mapOrder),
+    const orders = response.storeTransactions.items.map(mapOrder);
 
-    totalCount: response.storeTransactions.totalCount,
+    /**
+     * Persist the latest server response locally.
+     */
+    await orderRepository.saveOrders(orders);
 
-    pageNumber: response.storeTransactions.pageNumber,
+    return {
+      orders,
 
-    pageSize: response.storeTransactions.pageSize,
-  };
+      totalCount: response.storeTransactions.totalCount,
+
+      pageNumber: response.storeTransactions.pageNumber,
+
+      pageSize: response.storeTransactions.pageSize,
+    };
+  } catch (error) {
+    /**
+     * -----------------------------------------------------------------------
+     * Offline fallback
+     * -----------------------------------------------------------------------
+     *
+     * If the API is unavailable, use the locally persisted orders.
+     *
+     * The repository returns orders sorted newest-first, so we can reproduce
+     * the server-side pagination locally.
+     */
+    const cachedOrders = await orderRepository.getOrders();
+
+    if (cachedOrders.length === 0) {
+      throw error;
+    }
+
+    const startIndex = (page - 1) * limit;
+
+    const endIndex = startIndex + limit;
+
+    const orders = cachedOrders.slice(startIndex, endIndex);
+
+    return {
+      orders,
+
+      totalCount: cachedOrders.length,
+
+      pageNumber: page,
+
+      pageSize: limit,
+    };
+  }
 }
 
 /**
@@ -518,25 +561,47 @@ export async function getOrderById(id: string): Promise<Order> {
     status: null,
   };
 
-  const response = await graphqlRequest<StoreTransactionsResult>({
-    query: STORE_TRANSACTIONS_QUERY,
+  try {
+    const response = await graphqlRequest<StoreTransactionsResult>({
+      query: STORE_TRANSACTIONS_QUERY,
 
-    variables: {
-      page: 1,
+      variables: {
+        page: 1,
 
-      limit: 1,
+        limit: 1,
 
-      filter,
-    },
-  });
+        filter,
+      },
+    });
 
-  const transaction = response.storeTransactions.items[0];
+    const transaction = response.storeTransactions.items[0];
 
-  if (!transaction) {
-    throw new Error("Order not found.");
+    if (!transaction) {
+      throw new Error("Order not found.");
+    }
+
+    const order = mapOrder(transaction);
+
+    /**
+     * Persist the latest server response locally.
+     */
+    await orderRepository.saveOrder(order);
+
+    return order;
+  } catch (error) {
+    /**
+     * -----------------------------------------------------------------------
+     * Offline fallback
+     * -----------------------------------------------------------------------
+     */
+    const cachedOrder = await orderRepository.getOrderById(id);
+
+    if (!cachedOrder) {
+      throw error;
+    }
+
+    return cachedOrder;
   }
-
-  return mapOrder(transaction);
 }
 
 /**
@@ -565,6 +630,31 @@ export async function updateOrderDelivery(
   await apiClient.post<ApiResponse<null>>(
     API_ENDPOINTS.store.toggleDelivery(transactionId, isDelivery)
   );
+
+  /**
+   * -------------------------------------------------------------------------
+   * Keep the local order cache consistent with the server.
+   * -------------------------------------------------------------------------
+   *
+   * The documented Store API only exposes the delivery toggle. It does not
+   * return the updated order, so we update the locally persisted order using
+   * the requested delivery state.
+   */
+  const cachedOrder = await orderRepository.getOrderById(transactionId);
+
+  if (!cachedOrder) {
+    return;
+  }
+
+  const updatedOrder: Order = {
+    ...cachedOrder,
+
+    status: isDelivery ? "delivered" : cachedOrder.status,
+
+    updatedAt: new Date().toISOString(),
+  };
+
+  await orderRepository.saveOrder(updatedOrder);
 }
 
 /**

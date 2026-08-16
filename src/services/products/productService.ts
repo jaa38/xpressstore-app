@@ -3,6 +3,8 @@ import { API_ENDPOINTS } from "@/api/endpoints";
 
 import { ApiResponse } from "@/types/api";
 
+import { productRepository } from "@/repositories/products/sqliteProductRepository";
+
 import {
   CreateProductRequest,
   CreateProductCategoryRequest,
@@ -20,19 +22,53 @@ export const productService = {
    * ---------------------------------------------------------------------------
    */
   async getMerchantProducts() {
-    const { data } = await authClient.get<ApiResponse<MerchantProduct[]>>(
-      API_ENDPOINTS.products.merchant
-    );
+    try {
+      const { data } = await authClient.get<ApiResponse<MerchantProduct[]>>(
+        API_ENDPOINTS.products.merchant
+      );
 
-    return data;
+      await productRepository.saveMerchantProducts(data.data ?? []);
+
+      return data;
+    } catch (error) {
+      const products = await productRepository.getProducts();
+
+      if (products.length === 0) {
+        throw error;
+      }
+
+      return {
+        responseCode: "LOCAL_CACHE",
+        responseMessage: "Products loaded from local storage.",
+        data: products,
+      } satisfies ApiResponse<MerchantProduct[]>;
+    }
   },
 
   async getProduct(productId: number) {
-    const { data } = await authClient.get<ApiResponse<MerchantProduct>>(
-      API_ENDPOINTS.products.product(productId)
-    );
+    try {
+      const { data } = await authClient.get<ApiResponse<MerchantProduct>>(
+        API_ENDPOINTS.products.product(productId)
+      );
 
-    return data;
+      if (data.data) {
+        await productRepository.saveProduct(data.data);
+      }
+
+      return data;
+    } catch (error) {
+      const product = await productRepository.getProductById(String(productId));
+
+      if (!product) {
+        throw error;
+      }
+
+      return {
+        responseCode: "LOCAL_CACHE",
+        responseMessage: "Product loaded from local storage.",
+        data: product,
+      } satisfies ApiResponse<MerchantProduct>;
+    }
   },
 
   async getProductsByStore(storeId: number) {
@@ -73,6 +109,8 @@ export const productService = {
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.products.delete(productId)
     );
+
+    await productRepository.deleteProduct(String(productId));
 
     return data;
   },

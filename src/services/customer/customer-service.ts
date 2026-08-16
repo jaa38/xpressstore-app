@@ -2,6 +2,8 @@ import { apiClient } from "@/api/client";
 
 import { API_ENDPOINTS } from "@/api/endpoints";
 
+import { customerRepository } from "@/repositories/customers/sqliteCustomerRepository";
+
 import type { ApiResponse } from "@/types/api";
 
 import type {
@@ -159,13 +161,44 @@ function mapCustomer(row: CustomerApiDto): Customer {
  * ---------------------------------------------------------------------------
  *
  * GET /Invoices/GetCustomer
+ *
+ * Online:
+ *   API -> map -> SQLite -> return
+ *
+ * Offline:
+ *   SQLite -> return
  */
 export async function getCustomers(): Promise<Customer[]> {
-  const response = await apiClient.get<ApiResponse<CustomerApiDto[]>>(
-    API_ENDPOINTS.customers.getAll
-  );
+  try {
+    const response = await apiClient.get<ApiResponse<CustomerApiDto[]>>(
+      API_ENDPOINTS.customers.getAll
+    );
 
-  return (response.data.data ?? []).map(mapCustomer);
+    const customers = (response.data.data ?? []).map(mapCustomer);
+
+    /**
+     * Persist the latest successful server response locally.
+     */
+    await customerRepository.saveCustomers(customers);
+
+    return customers;
+  } catch (error) {
+    console.warn(
+      "Failed to fetch customers from API. Using local SQLite data.",
+      error
+    );
+
+    const cachedCustomers = await customerRepository.getCustomers();
+
+    /**
+     * Do not hide the original API error when there is no local data.
+     */
+    if (cachedCustomers.length === 0) {
+      throw error;
+    }
+
+    return cachedCustomers;
+  }
 }
 
 /**
@@ -179,17 +212,47 @@ export async function getCustomers(): Promise<Customer[]> {
  *
  * Therefore we retrieve the customer collection and locate the requested
  * customer locally.
+ *
+ * Online:
+ *   API -> map -> SQLite -> find -> return
+ *
+ * Offline:
+ *   SQLite -> find -> return
  */
 export async function getCustomerById(id: string): Promise<Customer> {
-  const customers = await getCustomers();
+  try {
+    const response = await apiClient.get<ApiResponse<CustomerApiDto[]>>(
+      API_ENDPOINTS.customers.getAll
+    );
 
-  const customer = customers.find((item) => item.id === String(id));
+    const customers = (response.data.data ?? []).map(mapCustomer);
 
-  if (!customer) {
-    throw new Error("Customer not found.");
+    /**
+     * Persist the complete successful API response locally.
+     */
+    await customerRepository.saveCustomers(customers);
+
+    const customer = customers.find((item) => item.id === String(id));
+
+    if (!customer) {
+      throw new Error("Customer not found.");
+    }
+
+    return customer;
+  } catch (error) {
+    console.warn(
+      `Failed to fetch customer ${id} from API. Using local SQLite data.`,
+      error
+    );
+
+    const cachedCustomer = await customerRepository.getCustomerById(String(id));
+
+    if (!cachedCustomer) {
+      throw error;
+    }
+
+    return cachedCustomer;
   }
-
-  return customer;
 }
 
 /**
@@ -207,6 +270,9 @@ export async function getCustomerById(id: string): Promise<Customer> {
  *   email,
  *   phoneNumber
  * }
+ *
+ * The API does not return the complete Customer object, so the application
+ * model is constructed from the submitted values and the returned ID.
  */
 export async function createCustomer(
   customer: CreateCustomerPayload
@@ -238,11 +304,7 @@ export async function createCustomer(
     throw new Error("Customer was created but no customer ID was returned.");
   }
 
-  /**
-   * Return the application Customer model so the existing
-   * React Query hooks and screens continue to work.
-   */
-  return {
+  const createdCustomer: Customer = {
     id: String(customerId),
 
     name,
@@ -271,6 +333,13 @@ export async function createCustomer(
 
     updated_at: "",
   };
+
+  /**
+   * Persist the newly created customer locally.
+   */
+  await customerRepository.saveCustomer(createdCustomer);
+
+  return createdCustomer;
 }
 
 /**
@@ -289,6 +358,11 @@ export async function createCustomer(
  *   email,
  *   phoneNumber
  * }
+ *
+ * The UpdateCustomer API returns null data.
+ *
+ * We therefore preserve application-only fields from the existing local
+ * customer where available.
  */
 export async function updateCustomer(
   id: string,
@@ -315,13 +389,11 @@ export async function updateCustomer(
   });
 
   /**
-   * The UpdateCustomer API returns null data, so return the
-   * application model using the values supplied by the UI.
+   * Read the existing local record so application-only fields are preserved.
    */
+  const existingCustomer = await customerRepository.getCustomerById(id);
 
-  const existingCustomer = await getCustomerById(id);
-
-  return {
+  const updatedCustomer: Customer = {
     id: String(id),
 
     name,
@@ -330,26 +402,34 @@ export async function updateCustomer(
 
     email,
 
-    customerType: customer.customerType ?? existingCustomer.customerType,
+    customerType:
+      customer.customerType ?? existingCustomer?.customerType ?? "individual",
 
-    country: customer.country ?? existingCustomer.country,
+    country: customer.country ?? existingCustomer?.country ?? "",
 
-    state: customer.state ?? existingCustomer.state,
+    state: customer.state ?? existingCustomer?.state ?? "",
 
-    city: customer.city ?? existingCustomer.city,
+    city: customer.city ?? existingCustomer?.city ?? "",
 
-    street: customer.street ?? existingCustomer.street,
+    street: customer.street ?? existingCustomer?.street ?? "",
 
-    isBlackListed: existingCustomer.isBlackListed,
+    isBlackListed: existingCustomer?.isBlackListed ?? false,
 
-    orders: existingCustomer.orders,
+    orders: existingCustomer?.orders ?? 0,
 
-    spent: existingCustomer.spent,
+    spent: existingCustomer?.spent ?? 0,
 
-    created_at: existingCustomer.created_at,
+    created_at: existingCustomer?.created_at ?? "",
 
-    updated_at: existingCustomer.updated_at,
+    updated_at: existingCustomer?.updated_at ?? "",
   };
+
+  /**
+   * Persist the successful update locally.
+   */
+  await customerRepository.saveCustomer(updatedCustomer);
+
+  return updatedCustomer;
 }
 
 /**
@@ -369,6 +449,19 @@ export async function blacklistCustomer(
   await apiClient.post<ApiResponse<null>>(
     API_ENDPOINTS.customers.blacklist(Number(id), isBlackListed)
   );
+
+  /**
+   * Update the local copy after the API confirms success.
+   */
+  const existingCustomer = await customerRepository.getCustomerById(id);
+
+  if (existingCustomer) {
+    await customerRepository.saveCustomer({
+      ...existingCustomer,
+      isBlackListed,
+      updated_at: new Date().toISOString(),
+    });
+  }
 }
 
 /**

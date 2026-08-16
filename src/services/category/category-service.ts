@@ -1,19 +1,40 @@
 import { productService } from "@/services/products/productService";
 
+import { categoryRepository } from "@/repositories/categories/sqliteCategoryRepository";
+
 import type { DropdownOption } from "@/components/ui/Dropdown";
 
 export async function getCategories(): Promise<DropdownOption[]> {
-  const response = await productService.getCategories();
+  try {
+    const response = await productService.getCategories();
 
-  return (
-    response.data
-      ?.filter((category) => category.isActive)
+    const categories = response.data ?? [];
+
+    await categoryRepository.saveCategories(categories);
+
+    return categories
+      .filter((category) => category.isActive)
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((category) => ({
         label: category.name,
         value: String(category.id),
-      })) ?? []
-  );
+      }));
+  } catch (error) {
+    console.warn(
+      "Failed to fetch categories from API. Using local SQLite data.",
+      error
+    );
+
+    const categories = await categoryRepository.getCategories();
+
+    return categories
+      .filter((category) => category.isActive)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((category) => ({
+        label: category.name,
+        value: String(category.id),
+      }));
+  }
 }
 
 export async function createCategory(name: string): Promise<DropdownOption> {
@@ -21,9 +42,13 @@ export async function createCategory(name: string): Promise<DropdownOption> {
     name: name.trim(),
   });
 
+  const category = response.data;
+
+  await categoryRepository.saveCategory(category);
+
   return {
-    label: response.data.name,
-    value: String(response.data.id),
+    label: category.name,
+    value: String(category.id),
   };
 }
 
@@ -37,12 +62,18 @@ export async function updateCategory(
     description,
   });
 
+  const category = response.data;
+
+  await categoryRepository.saveCategory(category);
+
   return {
-    label: response.data.name,
-    value: String(response.data.id),
+    label: category.name,
+    value: String(category.id),
   };
 }
 
 export async function deleteCategory(categoryId: number): Promise<void> {
   await productService.deleteCategory(categoryId);
+
+  await categoryRepository.deleteCategory(categoryId);
 }

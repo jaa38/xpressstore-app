@@ -1,12 +1,14 @@
 import { graphqlRequest } from "@/api/graphql-client";
 
+import { transactionRepository } from "@/repositories/transactions/sqliteTransactionRepository";
+
 import type { Currency } from "@/types/currency";
 import type { Transaction } from "@/types/transaction";
 
 /**
- * ---------------------------------------------------------------------------
+ * ============================================================================
  * GraphQL DTO
- * ---------------------------------------------------------------------------
+ * ============================================================================
  *
  * Matches the documented `transactions` GraphQL query in:
  *
@@ -105,9 +107,9 @@ export interface TransactionsPage {
 }
 
 /**
- * ---------------------------------------------------------------------------
+ * ============================================================================
  * GraphQL Query
- * ---------------------------------------------------------------------------
+ * ============================================================================
  *
  * Source:
  * docs/api/11_graphql.md
@@ -166,9 +168,9 @@ const TRANSACTIONS_QUERY = `
 `;
 
 /**
- * ---------------------------------------------------------------------------
+ * ============================================================================
  * GraphQL Filter
- * ---------------------------------------------------------------------------
+ * ============================================================================
  */
 
 export interface TransactionsQueryFilters {
@@ -208,9 +210,9 @@ export interface TransactionFilter {
 }
 
 /**
- * ---------------------------------------------------------------------------
+ * ============================================================================
  * Status Mapper
- * ---------------------------------------------------------------------------
+ * ============================================================================
  *
  * The general transactions query does not document a dedicated status field.
  *
@@ -241,9 +243,9 @@ function mapTransactionStatus(
 }
 
 /**
- * ---------------------------------------------------------------------------
+ * ============================================================================
  * Payment Channel Mapper
- * ---------------------------------------------------------------------------
+ * ============================================================================
  *
  * The documented general transaction response exposes `paymentType`.
  *
@@ -285,9 +287,9 @@ function mapPaymentChannel(paymentType: string): Transaction["channel"] {
 }
 
 /**
- * ---------------------------------------------------------------------------
+ * ============================================================================
  * Currency Mapper
- * ---------------------------------------------------------------------------
+ * ============================================================================
  */
 
 function mapCurrency(value: string): Currency {
@@ -310,9 +312,9 @@ function mapCurrency(value: string): Currency {
 }
 
 /**
- * ---------------------------------------------------------------------------
+ * ============================================================================
  * Transaction Mapper
- * ---------------------------------------------------------------------------
+ * ============================================================================
  */
 
 function mapTransaction(transaction: TransactionDto): Transaction {
@@ -350,17 +352,15 @@ function mapTransaction(transaction: TransactionDto): Transaction {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Get Transactions Page
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * Request Filter Mapper
+ * ============================================================================
  */
 
-export async function getTransactionsPage(
-  page = 1,
-  limit = 20,
-  filter: Partial<TransactionFilter> = {}
-): Promise<TransactionsPage> {
-  const requestFilter: TransactionFilter = {
+function buildTransactionFilter(
+  filter: Partial<TransactionFilter>
+): TransactionFilter {
+  return {
     customerEmail: filter.customerEmail ?? null,
 
     reference: filter.reference ?? null,
@@ -377,65 +377,220 @@ export async function getTransactionsPage(
 
     status: filter.status ?? null,
   };
+}
 
-  const response = await graphqlRequest<TransactionsResult>({
-    query: TRANSACTIONS_QUERY,
+/**
+ * ============================================================================
+ * Offline Pagination
+ * ============================================================================
+ *
+ * The transaction repository currently exposes all locally stored
+ * transactions but does not expose a paginated/filtering query.
+ *
+ * Therefore the service applies pagination to the locally persisted
+ * transactions when the network request fails.
+ *
+ * This keeps the repository contract simple and avoids inventing
+ * unsupported repository behaviour.
+ */
 
-    variables: {
-      page,
+function paginateTransactions(
+  transactions: Transaction[],
+  page: number,
+  limit: number
+): TransactionsPage {
+  const safePage = Math.max(1, page);
 
-      limit,
+  const safeLimit = Math.max(1, limit);
 
-      filter: requestFilter,
-    },
-  });
+  const startIndex = (safePage - 1) * safeLimit;
+
+  const endIndex = startIndex + safeLimit;
+
+  const paginatedTransactions = transactions.slice(startIndex, endIndex);
+
+  const totalCount = transactions.length;
+
+  const totalPages = totalCount === 0 ? 0 : Math.ceil(totalCount / safeLimit);
 
   return {
-    transactions: response.transactions.items.map(mapTransaction),
+    transactions: paginatedTransactions,
 
-    totalCount: response.transactions.totalCount,
+    totalCount,
 
-    pageNumber: response.transactions.pageNumber,
+    pageNumber: safePage,
 
-    pageSize: response.transactions.pageSize,
+    pageSize: safeLimit,
   };
 }
 
 /**
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * Get Transactions Page
+ * ============================================================================
+ */
+
+export async function getTransactionsPage(
+  page = 1,
+  limit = 20,
+  filter: Partial<TransactionFilter> = {}
+): Promise<TransactionsPage> {
+  const requestFilter = buildTransactionFilter(filter);
+
+  try {
+    /**
+     * ------------------------------------------------------------------------
+     * Online
+     * ------------------------------------------------------------------------
+     */
+
+    const response = await graphqlRequest<TransactionsResult>({
+      query: TRANSACTIONS_QUERY,
+
+      variables: {
+        page,
+
+        limit,
+
+        filter: requestFilter,
+      },
+    });
+
+    const transactions = response.transactions.items.map(mapTransaction);
+
+    /**
+     * ------------------------------------------------------------------------
+     * Persist successful API response
+     * ------------------------------------------------------------------------
+     *
+     * Only successfully mapped transactions are persisted.
+     *
+     * The repository performs an upsert, so existing transactions are updated
+     * without creating duplicates.
+     */
+
+    await transactionRepository.saveTransactions(transactions);
+
+    return {
+      transactions,
+
+      totalCount: response.transactions.totalCount,
+
+      pageNumber: response.transactions.pageNumber,
+
+      pageSize: response.transactions.pageSize,
+    };
+  } catch (error) {
+    /**
+     * ------------------------------------------------------------------------
+     * Offline fallback
+     * ------------------------------------------------------------------------
+     *
+     * If the network request fails, use the locally persisted transactions.
+     */
+
+    console.warn(
+      "Failed to fetch transactions from API. Using local SQLite data.",
+      error
+    );
+
+    const cachedTransactions = await transactionRepository.getTransactions();
+
+    if (cachedTransactions.length === 0) {
+      throw error;
+    }
+
+    /**
+     * --------------------------------------------------------------
+     * Apply local pagination.
+     * --------------------------------------------------------------
+     *
+     * The current repository does not support filtering, so we preserve
+     * the repository contract and paginate the locally available records.
+     *
+     * If filtering requirements for offline mode are introduced later,
+     * filtering can be added to the repository/service explicitly.
+     */
+
+    return paginateTransactions(cachedTransactions, page, limit);
+  }
+}
+
+/**
+ * ============================================================================
  * Get Transaction By ID
- * ---------------------------------------------------------------------------
+ * ============================================================================
  *
  * Uses the documented GraphQL `transactionId` filter to retrieve a single
  * transaction.
  *
- * This is preferable to searching the currently loaded transaction page
- * because the requested transaction may not exist on the first page.
+ * The latest successful response is persisted locally.
+ *
+ * If the API request fails, the locally persisted transaction is returned.
  */
 
 export async function getTransactionById(
   transactionId: string
 ): Promise<Transaction> {
-  const response = await getTransactionsPage(1, 1, {
-    transactionId,
-  });
+  try {
+    const response = await graphqlRequest<TransactionsResult>({
+      query: TRANSACTIONS_QUERY,
 
-  const transaction = response.transactions[0];
+      variables: {
+        page: 1,
 
-  if (!transaction) {
-    throw new Error("Transaction not found.");
+        limit: 1,
+
+        filter: buildTransactionFilter({
+          transactionId,
+        }),
+      },
+    });
+
+    const transactionDto = response.transactions.items[0];
+
+    if (!transactionDto) {
+      throw new Error("Transaction not found.");
+    }
+
+    const transaction = mapTransaction(transactionDto);
+
+    /**
+     * Persist the latest server response
+     * locally for future offline access.
+     */
+
+    await transactionRepository.saveTransaction(transaction);
+
+    return transaction;
+  } catch (error) {
+    /**
+     * ------------------------------------------------------------------------
+     * Offline fallback
+     * ------------------------------------------------------------------------
+     */
+
+    const cachedTransaction =
+      await transactionRepository.getTransactionById(transactionId);
+
+    if (!cachedTransaction) {
+      throw error;
+    }
+
+    console.warn(
+      "Using cached transaction because the network request failed."
+    );
+
+    return cachedTransaction;
   }
-
-  return transaction;
 }
 
 /**
- * ---------------------------------------------------------------------------
+ * ============================================================================
  * Get Transactions
- * ---------------------------------------------------------------------------
+ * ============================================================================
  *
- * Backwards-compatible array API used by the current
- * Transactions hook.
+ * Backwards-compatible array API used by the current Transactions hook.
  */
 
 export async function getTransactions(): Promise<Transaction[]> {

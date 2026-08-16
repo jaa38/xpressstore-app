@@ -3,6 +3,8 @@ import { API_ENDPOINTS } from "@/api/endpoints";
 
 import { ApiResponse } from "@/types/api";
 
+import { storeRepository } from "@/repositories/stores/sqliteStoreRepository";
+
 import {
   Store,
   StoreSummary,
@@ -21,11 +23,29 @@ export const storeService = {
    * ---------------------------------------------------------------------------
    */
   async getStores() {
-    const { data } = await authClient.get<ApiResponse<Store[]>>(
-      API_ENDPOINTS.store.getStores
-    );
+    try {
+      const { data } = await authClient.get<ApiResponse<Store[]>>(
+        API_ENDPOINTS.store.getStores
+      );
 
-    return data;
+      const stores = data.data ?? [];
+
+      await storeRepository.saveStores(stores);
+
+      return data;
+    } catch (error) {
+      const stores = await storeRepository.getStores();
+
+      if (stores.length === 0) {
+        throw error;
+      }
+
+      return {
+        data: stores,
+        responseCode: "00",
+        responseMessage: "Using locally cached store data.",
+      } satisfies ApiResponse<Store[]>;
+    }
   },
 
   /**
@@ -34,11 +54,37 @@ export const storeService = {
    * ---------------------------------------------------------------------------
    */
   async getStore(storeId: number) {
-    const { data } = await authClient.get<ApiResponse<StoreSummary>>(
-      API_ENDPOINTS.store.getStore(storeId)
-    );
+    try {
+      const { data } = await authClient.get<ApiResponse<StoreSummary>>(
+        API_ENDPOINTS.store.getStore(storeId)
+      );
 
-    return data;
+      return data;
+    } catch (error) {
+      const store = await storeRepository.getStoreById(storeId);
+
+      if (!store) {
+        throw error;
+      }
+
+      const summary: StoreSummary = {
+        storeId: store.storeId,
+
+        storeName: store.storeName,
+
+        storeReference: store.storeReference,
+
+        currency: store.currency,
+
+        isActive: store.isActive,
+      };
+
+      return {
+        data: summary,
+        responseCode: "00",
+        responseMessage: "Using locally cached store data.",
+      } satisfies ApiResponse<StoreSummary>;
+    }
   },
 
   /**
@@ -79,6 +125,8 @@ export const storeService = {
       API_ENDPOINTS.store.deleteStore(storeId)
     );
 
+    await storeRepository.deleteStore(storeId);
+
     return data;
   },
 
@@ -114,11 +162,29 @@ export const storeService = {
    * ---------------------------------------------------------------------------
    */
   async getShippingRegions() {
-    const { data } = await authClient.get<ApiResponse<ShippingRegion[]>>(
-      API_ENDPOINTS.store.getShippingRegions
-    );
+    try {
+      const { data } = await authClient.get<ApiResponse<ShippingRegion[]>>(
+        API_ENDPOINTS.store.getShippingRegions
+      );
 
-    return data;
+      const regions = data.data ?? [];
+
+      await storeRepository.saveShippingRegions(regions);
+
+      return data;
+    } catch (error) {
+      const regions = await storeRepository.getShippingRegions();
+
+      if (regions.length === 0) {
+        throw error;
+      }
+
+      return {
+        data: regions,
+        responseCode: "00",
+        responseMessage: "Using locally cached shipping region data.",
+      } satisfies ApiResponse<ShippingRegion[]>;
+    }
   },
 
   /**

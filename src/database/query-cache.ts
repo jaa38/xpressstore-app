@@ -1,7 +1,4 @@
-import type { SQLiteDatabase } from "expo-sqlite";
-
 import { getDatabase } from "./database";
-import { runMigrations } from "./migrations";
 
 interface QueryCacheRow {
   query_key: string;
@@ -9,27 +6,12 @@ interface QueryCacheRow {
   updated_at: number;
 }
 
-let initializedDatabase: Promise<SQLiteDatabase> | null = null;
-
 /**
  * Returns an initialized database.
  *
  * Migrations are guaranteed to run before the database
  * is used by the cache layer.
  */
-async function getInitializedDatabase(): Promise<SQLiteDatabase> {
-  if (!initializedDatabase) {
-    initializedDatabase = (async () => {
-      const database = await getDatabase();
-
-      await runMigrations(database);
-
-      return database;
-    })();
-  }
-
-  return initializedDatabase;
-}
 
 /**
  * Converts a TanStack Query key into a stable string.
@@ -51,7 +33,7 @@ export interface CachedQuery<T> {
 export async function getCachedQuery<T>(
   queryKey: readonly unknown[]
 ): Promise<CachedQuery<T> | null> {
-  const database = await getInitializedDatabase();
+  const database = await getDatabase();
 
   const serializedKey = serializeQueryKey(queryKey);
 
@@ -93,7 +75,7 @@ export async function setCachedQuery<T>(
   queryKey: readonly unknown[],
   data: T
 ): Promise<void> {
-  const database = await getInitializedDatabase();
+  const database = await getDatabase();
 
   const serializedKey = serializeQueryKey(queryKey);
 
@@ -127,7 +109,7 @@ export async function setCachedQuery<T>(
 export async function removeCachedQuery(
   queryKey: readonly unknown[]
 ): Promise<void> {
-  const database = await getInitializedDatabase();
+  const database = await getDatabase();
 
   const serializedKey = serializeQueryKey(queryKey);
 
@@ -144,7 +126,7 @@ export async function removeCachedQuery(
  * Removes every cached query.
  */
 export async function clearQueryCache(): Promise<void> {
-  const database = await getInitializedDatabase();
+  const database = await getDatabase();
 
   await database.runAsync(`
     DELETE FROM query_cache

@@ -7,12 +7,10 @@
     "orientation": "portrait",
     "icon": "./assets/appIcon/appIcon.png",
     "userInterfaceStyle": "light",
-
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.xpressstore.app"
+      "bundleIdentifier": "com.xpressstore.app",      "icon": "./assets/appIcon/appIcon.png"
     },
-
     "android": {
       "package": "com.xpressstore.app",
       "adaptiveIcon": {
@@ -21,11 +19,9 @@
       },
       "predictiveBackGestureEnabled": false
     },
-
     "web": {
       "favicon": "./assets/favicon.png"
     },
-
     "plugins": [
       "expo-router",
       "expo-status-bar",

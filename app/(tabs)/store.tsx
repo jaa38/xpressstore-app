@@ -221,7 +221,7 @@ export default function StoreScreen() {
             <UICard
               title={store?.isActive ? "Live" : "Offline"}
               variant={store?.isActive ? "active" : "status"}
-            />{" "}
+            />
           </View>
 
           <View
@@ -340,7 +340,7 @@ export default function StoreScreen() {
             <SettingsRow
               title="Products in Store"
               subtitle={`${totalProducts} products`}
-            />{" "}
+            />
           </Card>
         </View>
       </ScrollView>

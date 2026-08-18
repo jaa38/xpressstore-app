@@ -23,8 +23,18 @@ export default function IndexScreen() {
   async function bootstrap() {
     const onboarded = await isOnboardingComplete();
 
+
+    // Default
+
+    // if (!onboarded) {
+    //   router.replace(ROUTES.WELCOME);
+    //   return;
+    // }
+
+    // Test Home Page
+
     if (!onboarded) {
-      router.replace(ROUTES.WELCOME);
+      router.replace(ROUTES.HOME);
       return;
     }
 

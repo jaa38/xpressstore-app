@@ -46,10 +46,7 @@ interface PaymentLinkBottomSheetProps {
  * link reference.
  */
 function getPaymentLinkUrl(link: PaymentLink) {
-  return (
-    link.paymentLink ||
-    `https://payx.press/${link.paymentLinkReference}`
-  );
+  return link.paymentLink || `https://payx.press/${link.paymentLinkReference}`;
 }
 
 export const PaymentLinkBottomSheet = forwardRef<
@@ -82,24 +79,17 @@ export const PaymentLinkBottomSheet = forwardRef<
   async function handleCopyLink() {
     if (!paymentLink) return;
 
-    const paymentLinkUrl =
-      getPaymentLinkUrl(paymentLink);
+    const paymentLinkUrl = getPaymentLinkUrl(paymentLink);
 
-    await Clipboard.setStringAsync(
-      paymentLinkUrl
-    );
+    await Clipboard.setStringAsync(paymentLinkUrl);
 
-    Alert.alert(
-      "Link Copied",
-      "Payment link copied to clipboard."
-    );
+    Alert.alert("Link Copied", "Payment link copied to clipboard.");
   }
 
   async function handleShareLink() {
     if (!paymentLink) return;
 
-    const paymentLinkUrl =
-      getPaymentLinkUrl(paymentLink);
+    const paymentLinkUrl = getPaymentLinkUrl(paymentLink);
 
     try {
       await Share.share({
@@ -141,31 +131,21 @@ export const PaymentLinkBottomSheet = forwardRef<
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
       backgroundStyle={{
-        backgroundColor:
-          theme.background.surface,
-        borderTopLeftRadius:
-          radius["2xl"],
-        borderTopRightRadius:
-          radius["2xl"],
+        backgroundColor: theme.background.surface,
+        borderTopLeftRadius: radius["2xl"],
+        borderTopRightRadius: radius["2xl"],
       }}
       handleIndicatorStyle={{
-        backgroundColor:
-          theme.border.default,
+        backgroundColor: theme.border.default,
       }}
     >
-      <BottomSheetHeader
-        title="Payment Link"
-        onClose={dismissSheet}
-      />
+      <BottomSheetHeader title="Payment Link" onClose={dismissSheet} />
 
       <BottomSheetScrollView
         contentContainerStyle={{
-          paddingHorizontal:
-            spacing.lg,
-          paddingVertical:
-            spacing.lg,
-          paddingBottom:
-            spacing["2xl"],
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.lg,
+          paddingBottom: spacing["2xl"],
         }}
       >
         <BottomSheetSection title="Information">
@@ -174,16 +154,10 @@ export const PaymentLinkBottomSheet = forwardRef<
               gap: spacing.xs,
             }}
           >
-            <AppText variant="bodyBold">
-              {paymentLink?.name}
-            </AppText>
+            <AppText variant="bodyBold">{paymentLink?.name}</AppText>
 
             <AppText color="secondary">
-              {paymentLink
-                ? getPaymentLinkUrl(
-                    paymentLink
-                  )
-                : undefined}
+              {paymentLink ? getPaymentLinkUrl(paymentLink) : undefined}
             </AppText>
           </View>
         </BottomSheetSection>
@@ -224,5 +198,4 @@ export const PaymentLinkBottomSheet = forwardRef<
   );
 });
 
-PaymentLinkBottomSheet.displayName =
-  "PaymentLinkBottomSheet";
+PaymentLinkBottomSheet.displayName = "PaymentLinkBottomSheet";

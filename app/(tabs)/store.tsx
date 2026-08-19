@@ -1,9 +1,12 @@
 import {
-  View,
   Pressable,
-  ScrollView,
-  Share,
+  View,
+  Image,
+  Platform,
+  ToastAndroid,
   Alert,
+  Share,
+  ScrollView,
   RefreshControl,
 } from "react-native";
 
@@ -13,337 +16,1007 @@ import { StatusBar } from "expo-status-bar";
 
 import { Ionicons } from "@expo/vector-icons";
 
+import { router } from "expo-router";
+
+import { getStoreDetailsRoute } from "@/navigation/routes";
+
 import { AppText } from "@/components/ui/AppText";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-
-import { spacing, theme, radius } from "@/theme";
-import { UICard } from "@/components/ui/UICard";
-
-import * as Clipboard from "expo-clipboard";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { FilterButton } from "@/components/ui/FilterButton";
 import { Divider } from "@/components/ui/Divider";
 
-import { useStores } from "@/hooks/store/useStores";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
 
-import { formatCurrency } from "@/utils/formatCurrency";
+import { spacing, theme, radius } from "@/theme";
 
 import { useState } from "react";
 
-function SettingsRow({
-  title,
-  subtitle,
-  onPress,
-}: {
-  title: string;
-  subtitle: string;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingVertical: spacing.md,
-        }}
-      >
-        <View
-          style={{
-            flex: 1,
-            gap: spacing.xs,
-          }}
-        >
-          <AppText variant="bodyBold">{title}</AppText>
+import * as Clipboard from "expo-clipboard";
 
-          <AppText variant="bodySmall" color="secondary">
-            {subtitle}
-          </AppText>
-        </View>
-
-        <Ionicons
-          name="chevron-forward"
-          size={20}
-          color={theme.icon.default.icon}
-        />
-      </View>
-    </Pressable>
-  );
+interface Store {
+  storeId: number;
+  storeName: string;
+  storeLink: string;
+  isActive: boolean;
 }
 
+type StoreFilter =
+  | "all"
+  | "active"
+  | "inactive";
+
+const stores: Store[] = [
+  {
+    storeId: 1,
+    storeName: "My Fashion Store",
+    storeLink:
+      "https://storelink.myxpresspay.com/store/my-fashion-store",
+    isActive: true,
+  },
+  {
+    storeId: 2,
+    storeName: "Tech Store",
+    storeLink:
+      "https://storelink.myxpresspay.com/store/tech-store",
+    isActive: false,
+  },
+  {
+    storeId: 3,
+    storeName: "Home Essentials",
+    storeLink:
+      "https://storelink.myxpresspay.com/store/home-essentials",
+    isActive: true,
+  },
+];
+
 export default function StoreScreen() {
-  const { stores, isLoading, refetch } = useStores();
+  /*
+   * --------------------------------------------------------------------------
+   * STORE SUMMARY
+   * --------------------------------------------------------------------------
+   */
 
-  const store = stores[0];
+  const totalStores = stores.length;
 
-  const storeUrl = store?.storeLink ?? "";
+  const activeStores = stores.filter(
+    (store) => store.isActive
+  ).length;
 
-  const totalProducts = store?.products?.length ?? 0;
+  const inactiveStores = stores.filter(
+    (store) => !store.isActive
+  ).length;
 
-  const [refreshing, setRefreshing] = useState(false);
+  /*
+   * --------------------------------------------------------------------------
+   * SEARCH
+   * --------------------------------------------------------------------------
+   */
 
-  async function onRefresh() {
-    setRefreshing(true);
+  const [searchQuery, setSearchQuery] =
+    useState("");
 
-    try {
-      await refetch();
-    } finally {
-      setRefreshing(false);
+  /*
+   * --------------------------------------------------------------------------
+   * FILTER
+   * --------------------------------------------------------------------------
+   */
+
+  const [filterVisible, setFilterVisible] =
+    useState(false);
+
+  const [selectedFilter, setSelectedFilter] =
+    useState<StoreFilter>("all");
+
+  /*
+   * --------------------------------------------------------------------------
+   * REFRESH
+   * --------------------------------------------------------------------------
+   */
+
+  const [refreshing, setRefreshing] =
+    useState(false);
+
+  /*
+   * --------------------------------------------------------------------------
+   * SORT STORES
+   * --------------------------------------------------------------------------
+   *
+   * Always display stores alphabetically by name.
+   */
+
+  const sortedStores = [...stores].sort(
+    (a, b) =>
+      a.storeName.localeCompare(
+        b.storeName
+      )
+  );
+
+  /*
+   * --------------------------------------------------------------------------
+   * SEARCH + FILTER
+   * --------------------------------------------------------------------------
+   */
+
+  const filteredStores =
+    sortedStores.filter((store) => {
+      const query =
+        searchQuery.trim().toLowerCase();
+
+      const matchesSearch =
+        !query ||
+        store.storeName
+          .toLowerCase()
+          .includes(query) ||
+        store.storeLink
+          .toLowerCase()
+          .includes(query);
+
+      const matchesFilter =
+        selectedFilter === "all" ||
+        (selectedFilter === "active" &&
+          store.isActive) ||
+        (selectedFilter === "inactive" &&
+          !store.isActive);
+
+      return (
+        matchesSearch &&
+        matchesFilter
+      );
+    });
+
+  /*
+   * --------------------------------------------------------------------------
+   * COPY STORE LINK
+   * --------------------------------------------------------------------------
+   */
+
+  const handleCopyLink = async (
+    storeLink: string
+  ) => {
+    await Clipboard.setStringAsync(
+      storeLink
+    );
+
+    if (Platform.OS === "android") {
+      ToastAndroid.show(
+        "Link copied",
+        ToastAndroid.SHORT
+      );
+    } else {
+      Alert.alert(
+        "Link copied",
+        "The store link has been copied to your clipboard."
+      );
     }
-  }
+  };
 
-  async function handleCopyLink() {
-    if (!storeUrl) {
-      Alert.alert("Store URL", "No store URL available.");
+  /*
+   * --------------------------------------------------------------------------
+   * SHARE STORE LINK
+   * --------------------------------------------------------------------------
+   */
 
-      return;
-    }
-
-    await Clipboard.setStringAsync(storeUrl);
-
-    Alert.alert("Copied", "Store link copied to clipboard.");
-  }
-
-  async function handleShareLink() {
-    if (!storeUrl) {
-      Alert.alert("Store URL", "No store URL available.");
-
+  const handleShareLink = async (
+    storeLink: string
+  ) => {
+    if (!storeLink) {
       return;
     }
 
     try {
       await Share.share({
-        message: storeUrl,
+        message: storeLink,
       });
     } catch (error) {
-      console.log(error);
+      console.log(
+        "Error sharing store link:",
+        error
+      );
     }
-  }
+  };
+
+  /*
+   * --------------------------------------------------------------------------
+   * REFRESH STORE LIST
+   * --------------------------------------------------------------------------
+   *
+   * Replace the temporary timeout with refetch()
+   * once the stores API is connected.
+   */
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+
+    try {
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1000)
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  /*
+   * --------------------------------------------------------------------------
+   * FILTER LABEL
+   * --------------------------------------------------------------------------
+   */
+
+  const filterLabel =
+    selectedFilter === "active"
+      ? "Active"
+      : selectedFilter === "inactive"
+      ? "Inactive"
+      : "All Stores";
 
   return (
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: theme.background.primary,
+        backgroundColor:
+          theme.background.primary,
       }}
     >
       <StatusBar style="auto" />
 
-      <ScrollView
+      <View
         style={{
           flex: 1,
-        }}
-        contentContainerStyle={{
           paddingHorizontal: spacing.lg,
-          paddingBottom: spacing.xl,
         }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={theme.icon.branding.icon}
-            colors={[theme.icon.branding.icon]}
-            progressBackgroundColor={theme.background.surface}
-          />
-        }
       >
-        {/* HEADER */}
-
         <View
           style={{
-            gap: spacing.xs,
-            // marginTop: spacing.md,
+            flex: 1,
           }}
         >
-          <AppText variant="h1">Storefront</AppText>
+          {/* ---------------------------------------------------------------- */}
+          {/* HEADER */}
+          {/* ---------------------------------------------------------------- */}
 
-          <AppText variant="body" color="secondary">
-            Manage your shop & share with customers
-          </AppText>
-        </View>
-
-        {/* STORE URL */}
-
-        <Card
-          style={{
-            marginTop: spacing.lg,
-          }}
-        >
           <View
             style={{
               flexDirection: "row",
-              justifyContent: "space-evenly",
-              gap: spacing.lg,
-            }}
-          >
-            <View style={{ flexDirection: "column", alignItems: "center" }}>
-              <AppText variant="bodySmall" color="primary">
-                Total Products
-              </AppText>
-              <AppText variant="h3" color="strong">
-                {isLoading ? "--" : totalProducts}
-              </AppText>
-            </View>
-
-            <View style={{ flexDirection: "column", alignItems: "center" }}>
-              <AppText variant="bodySmall" color="primary">
-                Inventory Value
-              </AppText>
-              <AppText variant="h3" color="strong">
-                ₦1,582,500
-              </AppText>
-            </View>
-          </View>
-        </Card>
-
-        {/* STORE STATUS */}
-
-        <Card
-          style={{
-            marginTop: spacing.md,
-            backgroundColor: theme.background.brand,
-
-            gap: spacing.md,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-
-              justifyContent: "space-between",
-
               alignItems: "center",
+              gap: spacing.md,
             }}
           >
-            <AppText variant="bodyBold">
-              {isLoading ? "Loading..." : (store?.storeName ?? "Unnamed Store")}
-            </AppText>
-            <UICard
-              title={store?.isActive ? "Live" : "Offline"}
-              variant={store?.isActive ? "active" : "status"}
-            />
-          </View>
+            {/* TITLE */}
 
-          <View
-            style={{
-              flexDirection: "row",
-
-              alignItems: "center",
-
-              paddingHorizontal: spacing.md,
-              paddingVertical: spacing.md,
-
-              backgroundColor: theme.background.primary,
-
-              borderRadius: radius.md,
-
-              borderWidth: 1,
-
-              borderColor: theme.border.default,
-            }}
-          >
-            <AppText
-              variant="body"
-              color="secondary"
-              numberOfLines={1}
+            <View
               style={{
                 flex: 1,
+                gap: spacing.xs,
               }}
             >
-              {storeUrl}
-            </AppText>
+              <AppText variant="h1">
+                Storefront
+              </AppText>
 
-            <View
-              style={{
-                flexDirection: "row",
-
-                gap: spacing.sm,
-
-                marginLeft: spacing.sm,
-              }}
-            >
-              <Pressable onPress={handleCopyLink}>
-                <Ionicons
-                  name="copy-outline"
-                  size={20}
-                  color={theme.icon.default.icon}
-                />
-              </Pressable>
-
-              <Pressable onPress={handleShareLink}>
-                <Ionicons
-                  name="share-social-outline"
-                  size={20}
-                  color={theme.icon.default.icon}
-                />
-              </Pressable>
+              <AppText
+                variant="body"
+                color="secondary"
+              >
+                Create and manage your online
+                storefronts
+              </AppText>
             </View>
+
+            {/* ADD STORE */}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Create Store"
+              onPress={() => {
+                // Add Create Store route here
+              }}
+              style={({ pressed }) => ({
+                width: 44,
+                height: 44,
+                borderRadius: radius.full,
+
+                justifyContent: "center",
+                alignItems: "center",
+
+                backgroundColor: pressed
+                  ? theme.action.primary.pressed
+                  : theme.action.primary
+                      .background,
+              })}
+            >
+              <Ionicons
+                name="add"
+                size={24}
+                color={
+                  theme.action.primary.text
+                }
+              />
+            </Pressable>
           </View>
-        </Card>
 
-        {/* Preview Store */}
+          {/* ---------------------------------------------------------------- */}
+          {/* CONTENT */}
+          {/* ---------------------------------------------------------------- */}
 
-        <View
-          style={{
-            marginTop: spacing.lg,
-          }}
-        >
-          <Card
+          <View
             style={{
               flex: 1,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <View style={{ flexDirection: "column", gap: spacing.xs }}>
-                <AppText variant="bodyBold" color="primary">
-                  Preview Store
-                </AppText>
-                <AppText variant="bodySmall" color="secondary">
-                  See what customers see
-                </AppText>
-              </View>
-              <Ionicons name="share-outline" size={24} />
-            </View>
-          </Card>
-        </View>
-
-        {/* CUSTOMISE */}
-
-        <View
-          style={{
-            marginTop: spacing.lg,
-          }}
-        >
-          <AppText variant="h3">Customise</AppText>
-
-          <Card
-            style={{
-              paddingVertical: 0,
               marginTop: spacing.md,
             }}
           >
-            <SettingsRow
-              title="Store Name & Info"
-              subtitle={store?.storeName ?? "No Store"}
-            />
-            <Divider />
-            <SettingsRow title="Theme" subtitle="Forest Green" />
-            <Divider />
-            <SettingsRow title="Layout" subtitle="Grid view" />
-            <Divider />
-            <SettingsRow
-              title="Products in Store"
-              subtitle={`${totalProducts} products`}
-            />
-          </Card>
+            {/* ---------------------------------------------------------------- */}
+            {/* STORE SUMMARY */}
+            {/* ---------------------------------------------------------------- */}
+
+            <Card>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent:
+                    "space-evenly",
+                  gap: spacing.lg,
+                }}
+              >
+                {/* TOTAL */}
+
+                <View
+                  style={{
+                    alignItems: "center",
+                  }}
+                >
+                  <AppText
+                    variant="bodySmall"
+                    color="primary"
+                  >
+                    Total Stores
+                  </AppText>
+
+                  <AppText
+                    variant="h3"
+                    color="strong"
+                  >
+                    {totalStores}
+                  </AppText>
+                </View>
+
+                {/* ACTIVE */}
+
+                <View
+                  style={{
+                    alignItems: "center",
+                  }}
+                >
+                  <AppText
+                    variant="bodySmall"
+                    color="primary"
+                  >
+                    Active Stores
+                  </AppText>
+
+                  <AppText
+                    variant="h3"
+                    color="success"
+                  >
+                    {activeStores}
+                  </AppText>
+                </View>
+
+                {/* INACTIVE */}
+
+                <View
+                  style={{
+                    alignItems: "center",
+                  }}
+                >
+                  <AppText
+                    variant="bodySmall"
+                    color="primary"
+                  >
+                    Inactive Stores
+                  </AppText>
+
+                  <AppText
+                    variant="h3"
+                    color="error"
+                  >
+                    {inactiveStores}
+                  </AppText>
+                </View>
+              </View>
+            </Card>
+
+            {/* ---------------------------------------------------------------- */}
+            {/* SEARCH + FILTER */}
+            {/* ---------------------------------------------------------------- */}
+
+            <View
+              style={{
+                marginTop: spacing.md,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.sm,
+              }}
+            >
+              {/* SEARCH */}
+
+              <View
+                style={{
+                  flex: 1,
+                }}
+              >
+                <SearchBar
+                  value={searchQuery}
+                  onChangeText={
+                    setSearchQuery
+                  }
+                  placeholder="Search stores"
+                />
+              </View>
+
+              {/* FILTER */}
+
+              <FilterButton
+                active={
+                  selectedFilter !== "all"
+                }
+                onPress={() =>
+                  setFilterVisible(true)
+                }
+              />
+            </View>
+
+            {/* ---------------------------------------------------------------- */}
+            {/* ACTIVE FILTER INDICATOR */}
+            {/* ---------------------------------------------------------------- */}
+
+            {selectedFilter !== "all" && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent:
+                    "space-between",
+                  marginTop: spacing.sm,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: spacing.xs,
+                  }}
+                >
+                  <AppText
+                    variant="bodySmall"
+                    color="secondary"
+                  >
+                    Filter:
+                  </AppText>
+
+                  <AppText
+                    variant="bodySmallBold"
+                    color="brand"
+                  >
+                    {filterLabel}
+                  </AppText>
+                </View>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear store filter"
+                  hitSlop={8}
+                  onPress={() =>
+                    setSelectedFilter(
+                      "all"
+                    )
+                  }
+                >
+                  <AppText
+                    variant="bodySmall"
+                    color="link"
+                  >
+                    Clear
+                  </AppText>
+                </Pressable>
+              </View>
+            )}
+
+            {/* ---------------------------------------------------------------- */}
+            {/* STORE LIST */}
+            {/* ---------------------------------------------------------------- */}
+
+            <ScrollView
+              showsVerticalScrollIndicator={
+                false
+              }
+              contentContainerStyle={{
+                paddingTop: spacing.lg,
+                paddingBottom:
+                  spacing.xl,
+                gap: spacing.md,
+              }}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor={
+                    theme.icon.branding.icon
+                  }
+                  colors={[
+                    theme.icon.branding.icon,
+                  ]}
+                  progressBackgroundColor={
+                    theme.background
+                      .surface
+                  }
+                />
+              }
+            >
+              {filteredStores.length >
+              0 ? (
+                filteredStores.map(
+                  (store) => (
+                    <Card
+                      key={store.storeId}
+                      style={{
+                        padding: 12,
+                      }}
+                    >
+                      {/* STORE CONTENT */}
+
+                      <View
+                        style={{
+                          flexDirection:
+                            "row",
+                          alignItems:
+                            "center",
+                          gap: 12,
+                        }}
+                      >
+                        {/* STORE IMAGE */}
+
+                        <Image
+                          source={require("../../assets/images/default-storefront.png.png")}
+                          style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 8,
+                          }}
+                          resizeMode="cover"
+                        />
+
+                        {/* STORE DETAILS */}
+
+                        <View
+                          style={{
+                            flex: 1,
+                            gap: 4,
+                          }}
+                        >
+                          {/* STORE NAME */}
+
+                          <AppText
+                            variant="bodyBold"
+                            color="primary"
+                            numberOfLines={
+                              1
+                            }
+                          >
+                            {
+                              store.storeName
+                            }
+                          </AppText>
+
+                          {/* STORE LINK */}
+
+                          <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel={`Copy ${store.storeName} link`}
+                            onPress={() =>
+                              handleCopyLink(
+                                store.storeLink
+                              )
+                            }
+                            style={({
+                              pressed,
+                            }) => ({
+                              opacity:
+                                pressed
+                                  ? 0.6
+                                  : 1,
+                            })}
+                          >
+                            <AppText
+                              variant="bodySmall"
+                              color="link"
+                              numberOfLines={
+                                1
+                              }
+                            >
+                              {
+                                store.storeLink
+                              }
+                            </AppText>
+                          </Pressable>
+
+                          {/* STATUS */}
+
+                          <View
+                            style={{
+                              alignSelf:
+                                "flex-start",
+
+                              paddingHorizontal:
+                                8,
+                              paddingVertical: 3,
+
+                              borderRadius:
+                                radius.full,
+
+                              backgroundColor:
+                                store.isActive
+                                  ? theme
+                                      .badge
+                                      .success
+                                      .background
+                                  : theme
+                                      .badge
+                                      .error
+                                      .background,
+                            }}
+                          >
+                            <AppText
+                              variant="bodySmall"
+                              color={
+                                store.isActive
+                                  ? "success"
+                                  : "error"
+                              }
+                            >
+                              {store.isActive
+                                ? "Active"
+                                : "Inactive"}
+                            </AppText>
+                          </View>
+                        </View>
+
+                        {/* SHARE */}
+
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={`Share ${store.storeName}`}
+                          hitSlop={10}
+                          onPress={() =>
+                            handleShareLink(
+                              store.storeLink
+                            )
+                          }
+                          style={({
+                            pressed,
+                          }) => ({
+                            opacity:
+                              pressed
+                                ? 0.6
+                                : 1,
+                          })}
+                        >
+                          <Ionicons
+                            name="share-outline"
+                            size={24}
+                            color={
+                              theme.icon
+                                .default
+                                .icon
+                            }
+                          />
+                        </Pressable>
+                      </View>
+
+                      {/* DIVIDER */}
+
+                      <Divider
+                        style={{
+                          marginVertical:
+                            spacing.md,
+                        }}
+                      />
+
+                      {/* STORE INFO */}
+
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`View ${store.storeName} information`}
+                        onPress={() =>
+                          router.push(
+                            getStoreDetailsRoute(
+                              store.storeId
+                            )
+                          )
+                        }
+                        style={({
+                          pressed,
+                        }) => ({
+                          flexDirection:
+                            "row",
+
+                          justifyContent:
+                            "space-between",
+
+                          alignItems:
+                            "center",
+
+                          opacity:
+                            pressed
+                              ? 0.6
+                              : 1,
+                        })}
+                      >
+                        <AppText
+                          variant="bodySmall"
+                          color="muted"
+                        >
+                          Store Info
+                        </AppText>
+
+                        <Ionicons
+                          name="chevron-forward"
+                          size={18}
+                          color={
+                            theme.icon
+                              .default
+                              .icon
+                          }
+                        />
+                      </Pressable>
+                    </Card>
+                  )
+                )
+              ) : (
+                /* ------------------------------------------------------------ */
+                /* EMPTY SEARCH / FILTER STATE */
+                /* ------------------------------------------------------------ */
+
+                <View
+                  style={{
+                    alignItems: "center",
+                    paddingVertical:
+                      spacing.xl,
+                    paddingHorizontal:
+                      spacing.lg,
+                  }}
+                >
+                  <Ionicons
+                    name="search-outline"
+                    size={32}
+                    color={
+                      theme.icon.default
+                        .icon
+                    }
+                  />
+
+                  <AppText
+                    variant="bodyBold"
+                    color="primary"
+                    style={{
+                      marginTop:
+                        spacing.sm,
+                    }}
+                  >
+                    No stores found
+                  </AppText>
+
+                  <AppText
+                    variant="bodySmall"
+                    color="secondary"
+                    align="center"
+                    style={{
+                      marginTop:
+                        spacing.xs,
+                    }}
+                  >
+                    Try changing your search
+                    or filter.
+                  </AppText>
+                </View>
+              )}
+            </ScrollView>
+          </View>
         </View>
-      </ScrollView>
+      </View>
+
+      {/* -------------------------------------------------------------------- */}
+      {/* FILTER BOTTOM SHEET */}
+      {/* -------------------------------------------------------------------- */}
+
+      <BottomSheet
+        visible={filterVisible}
+        title="Filter Stores"
+        onClose={() =>
+          setFilterVisible(false)
+        }
+      >
+        <BottomSheetSection title="Store Status">
+          {/* ALL STORES */}
+
+          <Pressable
+            accessibilityRole="radio"
+            accessibilityState={{
+              selected:
+                selectedFilter === "all",
+            }}
+            onPress={() => {
+              setSelectedFilter("all");
+              setFilterVisible(false);
+            }}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent:
+                "space-between",
+
+              paddingVertical:
+                spacing.md,
+
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.md,
+              }}
+            >
+              <Ionicons
+                name="storefront-outline"
+                size={22}
+                color={
+                  theme.icon.default.icon
+                }
+              />
+
+              <AppText variant="body">
+                All Stores
+              </AppText>
+            </View>
+
+            {selectedFilter ===
+              "all" && (
+              <Ionicons
+                name="checkmark-circle"
+                size={22}
+                color={
+                  theme.icon.active.icon
+                }
+              />
+            )}
+          </Pressable>
+
+          <Divider />
+
+          {/* ACTIVE */}
+
+          <Pressable
+            accessibilityRole="radio"
+            accessibilityState={{
+              selected:
+                selectedFilter ===
+                "active",
+            }}
+            onPress={() => {
+              setSelectedFilter(
+                "active"
+              );
+              setFilterVisible(false);
+            }}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent:
+                "space-between",
+
+              paddingVertical:
+                spacing.md,
+
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.md,
+              }}
+            >
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={22}
+                color={
+                  theme.icon.success.icon
+                }
+              />
+
+              <AppText variant="body">
+                Active
+              </AppText>
+            </View>
+
+            {selectedFilter ===
+              "active" && (
+              <Ionicons
+                name="checkmark-circle"
+                size={22}
+                color={
+                  theme.icon.active.icon
+                }
+              />
+            )}
+          </Pressable>
+
+          <Divider />
+
+          {/* INACTIVE */}
+
+          <Pressable
+            accessibilityRole="radio"
+            accessibilityState={{
+              selected:
+                selectedFilter ===
+                "inactive",
+            }}
+            onPress={() => {
+              setSelectedFilter(
+                "inactive"
+              );
+              setFilterVisible(false);
+            }}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent:
+                "space-between",
+
+              paddingVertical:
+                spacing.md,
+
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.md,
+              }}
+            >
+              <Ionicons
+                name="close-circle-outline"
+                size={22}
+                color={
+                  theme.icon.error.icon
+                }
+              />
+
+              <AppText variant="body">
+                Inactive
+              </AppText>
+            </View>
+
+            {selectedFilter ===
+              "inactive" && (
+              <Ionicons
+                name="checkmark-circle"
+                size={22}
+                color={
+                  theme.icon.active.icon
+                }
+              />
+            )}
+          </Pressable>
+        </BottomSheetSection>
+      </BottomSheet>
     </SafeAreaView>
   );
 }

@@ -54,6 +54,8 @@ export const ROUTES = {
 
   STORE: "/(tabs)/store",
 
+  STORE_DETAILS: "/stores/view/[id]",
+
   ORDERS: "/(tabs)/orders",
 
   ORDER_DETAILS: "/orders/[id]",
@@ -146,3 +148,6 @@ export const getTransactionDetailsRoute = (id: string) =>
   `/transactions/${id}` as const;
 
 export const getOrderDetailsRoute = (id: string) => `/orders/${id}` as const;
+
+export const getStoreDetailsRoute = (id: number | string) =>
+  `/stores/view/${id}` as const;

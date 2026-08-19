@@ -507,24 +507,6 @@ export default function ProductScreen() {
           >
             {/* Back Button */}
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-              onPress={() => router.back()}
-              style={{
-                width: 44,
-                height: 44,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={24}
-                color={theme.text.primary}
-              />
-            </Pressable>
-
             {/* Title */}
 
             <View

@@ -334,7 +334,7 @@ export default function StorefrontView() {
                   See what customers see
                 </AppText>
               </View>
-              <Ionicons name="share-outline" size={24} />
+              <Ionicons name="globe-outline" size={24} />
             </View>
           </Card>
         </View>

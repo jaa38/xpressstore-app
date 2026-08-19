@@ -74,6 +74,9 @@ export const ROUTES = {
   // Create Store - Step 3
   ADD_STORE_SETTINGS: "/stores/add/settings",
 
+  // Step 4
+  ADD_STORE_REVIEW: "/stores/add/review",
+
   /**
    * ORDERS
    */
@@ -180,8 +183,7 @@ export const ROUTES = {
 /**
  * Product Details
  */
-export const getProductDetailsRoute = (id: string) =>
-  `/product/${id}` as const;
+export const getProductDetailsRoute = (id: string) => `/product/${id}` as const;
 
 /**
  * Customer Details
@@ -198,12 +200,10 @@ export const getTransactionDetailsRoute = (id: string) =>
 /**
  * Order Details
  */
-export const getOrderDetailsRoute = (id: string) =>
-  `/orders/${id}` as const;
+export const getOrderDetailsRoute = (id: string) => `/orders/${id}` as const;
 
 /**
  * Store Details
  */
-export const getStoreDetailsRoute = (
-  id: number | string
-) => `/stores/view/${id}` as const;
+export const getStoreDetailsRoute = (id: number | string) =>
+  `/stores/view/${id}` as const;

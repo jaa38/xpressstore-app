@@ -8,57 +8,44 @@ import {
 
 import { useMemo, useRef, useState } from "react";
 
-import type { OrderFilter } from "@/types/order-filter";
-
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { StatusBar } from "expo-status-bar";
 
-import { AppText } from "@/components/ui/AppText";
-
-import { SearchBar } from "@/components/ui/SearchBar";
-
-import { UICard } from "@/components/ui/UICard";
-
-import { spacing, theme, radius } from "@/theme";
-
-import { Card } from "@/components/ui/Card";
-
 import { Ionicons } from "@expo/vector-icons";
-
-import { PAYMENT_CHANNELS } from "@/constants/paymentChannels";
-
-import { formatCurrency } from "@/utils/formatCurrency";
-
-import { ORDER_STATUS } from "@/constants/orderStatus";
-
-import { useOrders } from "@/hooks/orders/useOrders";
-
-import { formatOrderDate } from "@/utils/formatOrderDate";
-
-import { FilterButton } from "@/components/ui/FilterButton";
-
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
-
-import { FilterBottomSheet } from "@/components/bottom-sheet/FilterBottomSheet";
-
-import type { OrderFilters } from "@/types/orderFilters";
-
-import { defaultOrderFilters } from "@/constants/defaultOrderFilters";
-
-import { ProductImage } from "@/components/ui/ProductImage";
-
-import { useProducts } from "@/hooks/products/useProducts";
-
-import { Order } from "@/types/order";
-
-import { OrderActionsBottomSheet } from "@/components/bottom-sheet/OrderActionsBottomSheet";
-
-import { ROUTES } from "@/navigation/routes";
 
 import { router } from "expo-router";
 
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+
+import { AppText } from "@/components/ui/AppText";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { UICard } from "@/components/ui/UICard";
+import { Card } from "@/components/ui/Card";
+import { FilterButton } from "@/components/ui/FilterButton";
+import { ProductImage } from "@/components/ui/ProductImage";
 import { Button } from "@/components/ui/Button";
+
+import { FilterBottomSheet } from "@/components/bottom-sheet/FilterBottomSheet";
+import { OrderActionsBottomSheet } from "@/components/bottom-sheet/OrderActionsBottomSheet";
+
+import type { OrderFilter } from "@/types/order-filter";
+import type { OrderFilters } from "@/types/orderFilters";
+import type { Order } from "@/types/order";
+
+import { defaultOrderFilters } from "@/constants/defaultOrderFilters";
+import { PAYMENT_CHANNELS } from "@/constants/paymentChannels";
+import { ORDER_STATUS } from "@/constants/orderStatus";
+
+import { useOrders } from "@/hooks/orders/useOrders";
+import { useProducts } from "@/hooks/products/useProducts";
+
+import { formatCurrency } from "@/utils/formatCurrency";
+import { formatOrderDate } from "@/utils/formatOrderDate";
+
+import { ROUTES } from "@/navigation/routes";
+
+import { spacing, theme, radius } from "@/theme";
 
 export default function OrdersScreen() {
   /**
@@ -96,21 +83,36 @@ export default function OrdersScreen() {
    * -------------------------------------------------------------------------
    */
 
-  const [selectedFilter, setSelectedFilter] = useState<OrderFilter>("all");
+  const [selectedFilter, setSelectedFilter] =
+    useState<OrderFilter>("all");
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] =
+    useState("");
 
   const [draftFilters, setDraftFilters] =
-    useState<OrderFilters>(defaultOrderFilters);
+    useState<OrderFilters>(
+      defaultOrderFilters
+    );
 
   const [appliedFilters, setAppliedFilters] =
-    useState<OrderFilters>(defaultOrderFilters);
+    useState<OrderFilters>(
+      defaultOrderFilters
+    );
 
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] =
+    useState<Order | null>(null);
 
-  const [actionsVisible, setActionsVisible] = useState(false);
+  /**
+   * -------------------------------------------------------------------------
+   * BOTTOM SHEET REFS
+   * -------------------------------------------------------------------------
+   */
 
-  const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const filterBottomSheetRef =
+    useRef<BottomSheetModal>(null);
+
+  const orderActionsBottomSheetRef =
+    useRef<BottomSheetModal>(null);
 
   /**
    * -------------------------------------------------------------------------
@@ -119,7 +121,8 @@ export default function OrdersScreen() {
    */
 
   const hasActiveFilters = useMemo(() => {
-    const hasStatusFilter = selectedFilter !== "all";
+    const hasStatusFilter =
+      selectedFilter !== "all";
 
     const hasAmountFilter =
       appliedFilters.amount.min !== undefined ||
@@ -129,9 +132,15 @@ export default function OrdersScreen() {
       appliedFilters.date.start !== undefined ||
       appliedFilters.date.end !== undefined;
 
-    const hasSortFilter = appliedFilters.sort !== "mostRecent";
+    const hasSortFilter =
+      appliedFilters.sort !== "mostRecent";
 
-    return hasStatusFilter || hasAmountFilter || hasDateFilter || hasSortFilter;
+    return (
+      hasStatusFilter ||
+      hasAmountFilter ||
+      hasDateFilter ||
+      hasSortFilter
+    );
   }, [selectedFilter, appliedFilters]);
 
   /**
@@ -143,58 +152,105 @@ export default function OrdersScreen() {
   const filteredOrders = useMemo(() => {
     const filtered = orders.filter((order) => {
       const matchesStatus =
-        selectedFilter === "all" || order.status === selectedFilter;
+        selectedFilter === "all" ||
+        order.status === selectedFilter;
 
-      const query = searchQuery.trim().toLowerCase();
+      const query =
+        searchQuery.trim().toLowerCase();
 
       const matchesSearch =
         query === "" ||
-        order.reference.toLowerCase().includes(query) ||
-        order.customerName.toLowerCase().includes(query) ||
+        order.reference
+          .toLowerCase()
+          .includes(query) ||
+        order.customerName
+          .toLowerCase()
+          .includes(query) ||
         order.items.some((item) =>
-          item.productName.toLowerCase().includes(query)
+          item.productName
+            .toLowerCase()
+            .includes(query)
         );
 
       const matchesAmount =
-        (appliedFilters.amount.min === undefined ||
-          order.total >= appliedFilters.amount.min) &&
-        (appliedFilters.amount.max === undefined ||
-          order.total <= appliedFilters.amount.max);
+        (
+          appliedFilters.amount.min ===
+            undefined ||
+          order.total >=
+            appliedFilters.amount.min
+        ) &&
+        (
+          appliedFilters.amount.max ===
+            undefined ||
+          order.total <=
+            appliedFilters.amount.max
+        );
 
-      const orderDate = new Date(order.createdAt);
+      const orderDate =
+        new Date(order.createdAt);
 
-      const startDate = appliedFilters.date.start;
+      const startDate =
+        appliedFilters.date.start;
 
-      const endDate = appliedFilters.date.end
-        ? new Date(appliedFilters.date.end)
-        : undefined;
+      const endDate =
+        appliedFilters.date.end
+          ? new Date(
+              appliedFilters.date.end
+            )
+          : undefined;
 
       if (endDate) {
-        endDate.setHours(23, 59, 59, 999);
+        endDate.setHours(
+          23,
+          59,
+          59,
+          999
+        );
       }
 
       const matchesDate =
-        (!startDate || orderDate >= startDate) &&
-        (!endDate || orderDate <= endDate);
+        (!startDate ||
+          orderDate >= startDate) &&
+        (!endDate ||
+          orderDate <= endDate);
 
-      return matchesStatus && matchesSearch && matchesAmount && matchesDate;
+      return (
+        matchesStatus &&
+        matchesSearch &&
+        matchesAmount &&
+        matchesDate
+      );
     });
 
     switch (appliedFilters.sort) {
       case "amountHighToLow":
-        return [...filtered].sort((a, b) => b.total - a.total);
+        return [...filtered].sort(
+          (a, b) => b.total - a.total
+        );
 
       case "amountLowToHigh":
-        return [...filtered].sort((a, b) => a.total - b.total);
+        return [...filtered].sort(
+          (a, b) => a.total - b.total
+        );
 
       case "mostRecent":
       default:
         return [...filtered].sort(
           (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            new Date(
+              b.createdAt
+            ).getTime() -
+            new Date(
+              a.createdAt
+            ).getTime()
         );
     }
-  }, [orders, selectedFilter, searchQuery, appliedFilters]);
+  }, [
+    orders,
+    selectedFilter,
+    searchQuery,
+    appliedFilters,
+  ]);
 
   /**
    * -------------------------------------------------------------------------
@@ -205,17 +261,32 @@ export default function OrdersScreen() {
   const ordersThisWeek = useMemo(() => {
     const now = new Date();
 
-    const startOfWeek = new Date(now);
+    const startOfWeek =
+      new Date(now);
 
-    const day = startOfWeek.getDay();
+    const day =
+      startOfWeek.getDay();
 
-    const diff = day === 0 ? -6 : 1 - day;
+    const diff =
+      day === 0 ? -6 : 1 - day;
 
-    startOfWeek.setDate(startOfWeek.getDate() + diff);
+    startOfWeek.setDate(
+      startOfWeek.getDate() + diff
+    );
 
-    startOfWeek.setHours(0, 0, 0, 0);
+    startOfWeek.setHours(
+      0,
+      0,
+      0,
+      0
+    );
 
-    return orders.filter((order) => new Date(order.createdAt) >= startOfWeek);
+    return orders.filter(
+      (order) =>
+        new Date(
+          order.createdAt
+        ) >= startOfWeek
+    );
   }, [orders]);
 
   /**
@@ -225,26 +296,18 @@ export default function OrdersScreen() {
    */
 
   const productsById = useMemo(() => {
-    return Object.fromEntries(products.map((product) => [product.id, product]));
+    return Object.fromEntries(
+      products.map((product) => [
+        product.id,
+        product,
+      ])
+    );
   }, [products]);
 
   /**
    * -------------------------------------------------------------------------
    * SCREEN STATES
    * -------------------------------------------------------------------------
-   *
-   * Architecture:
-   *
-   * 1. Initial loading
-   * 2. First-time user / no orders
-   * 3. Error after orders already exist
-   * 4. Search / filter empty
-   * 5. Orders list
-   *
-   * IMPORTANT:
-   *
-   * A backend error with zero known orders does not immediately expose
-   * a technical error to a brand-new merchant.
    */
 
   const isFirstTimeUser =
@@ -253,7 +316,10 @@ export default function OrdersScreen() {
     !hasActiveFilters &&
     searchQuery.trim() === "";
 
-  const showOrderError = !isLoading && !!error && orders.length > 0;
+  const showOrderError =
+    !isLoading &&
+    !!error &&
+    orders.length > 0;
 
   const hasNoResults =
     !isLoading &&
@@ -277,7 +343,7 @@ export default function OrdersScreen() {
 
   /**
    * -------------------------------------------------------------------------
-   * FILTER HANDLERS
+   * SEARCH / FILTER HANDLERS
    * -------------------------------------------------------------------------
    */
 
@@ -288,9 +354,13 @@ export default function OrdersScreen() {
   const clearFilters = () => {
     setSelectedFilter("all");
 
-    setAppliedFilters(defaultOrderFilters);
+    setAppliedFilters(
+      defaultOrderFilters
+    );
 
-    setDraftFilters(defaultOrderFilters);
+    setDraftFilters(
+      defaultOrderFilters
+    );
   };
 
   /**
@@ -314,7 +384,8 @@ export default function OrdersScreen() {
       <SafeAreaView
         style={{
           flex: 1,
-          backgroundColor: theme.background.primary,
+          backgroundColor:
+            theme.background.primary,
         }}
       >
         <StatusBar style="auto" />
@@ -322,7 +393,8 @@ export default function OrdersScreen() {
         <View
           style={{
             flex: 1,
-            paddingHorizontal: spacing.lg,
+            paddingHorizontal:
+              spacing.lg,
           }}
         >
           <View
@@ -330,9 +402,7 @@ export default function OrdersScreen() {
               flex: 1,
             }}
           >
-            {/* =============================================================
-                HEADER
-            ============================================================= */}
+            {/* HEADER */}
 
             <View
               style={{
@@ -346,183 +416,261 @@ export default function OrdersScreen() {
                   gap: spacing.xs,
                 }}
               >
-                <AppText variant="h1">Orders</AppText>
+                <AppText variant="h1">
+                  Orders
+                </AppText>
 
-                <AppText variant="body" color="secondary">
+                <AppText
+                  variant="body"
+                  color="secondary"
+                >
                   {headerSubtitle}
                 </AppText>
               </View>
             </View>
 
-            {/* =============================================================
-                SEARCH + FILTER
-            ============================================================= */}
+            {/* SEARCH + FILTER */}
 
-            {!isFirstTimeUser && !showOrderError && (
-              <View
-                style={{
-                  marginTop: spacing.md,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: spacing.md,
-                }}
-              >
+            {!isFirstTimeUser &&
+              !showOrderError && (
                 <View
                   style={{
-                    flex: 1,
+                    marginTop:
+                      spacing.md,
+                    flexDirection:
+                      "row",
+                    alignItems:
+                      "center",
+                    gap: spacing.md,
                   }}
                 >
-                  <SearchBar
-                    placeholder="Search orders"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
+                  <View
+                    style={{
+                      flex: 1,
+                    }}
+                  >
+                    <SearchBar
+                      placeholder="Search orders"
+                      value={
+                        searchQuery
+                      }
+                      onChangeText={
+                        setSearchQuery
+                      }
+                    />
+                  </View>
+
+                  <FilterButton
+                    active={
+                      hasActiveFilters
+                    }
+                    onPress={() => {
+                      setDraftFilters(
+                        appliedFilters
+                      );
+
+                      filterBottomSheetRef.current?.present();
+                    }}
                   />
                 </View>
+              )}
 
-                <FilterButton
-                  active={hasActiveFilters}
-                  onPress={() => {
-                    setDraftFilters(appliedFilters);
+            {/* STATUS FILTERS */}
 
-                    bottomSheetRef.current?.present();
+            {!isFirstTimeUser &&
+              !showOrderError && (
+                <View
+                  style={{
+                    flexDirection:
+                      "row",
+                    marginTop:
+                      spacing.md,
+                    gap: spacing.sm,
                   }}
-                />
-              </View>
-            )}
+                >
+                  <UICard
+                    title="All"
+                    variant={
+                      selectedFilter ===
+                      "all"
+                        ? "active"
+                        : "default"
+                    }
+                    onPress={() =>
+                      setSelectedFilter(
+                        "all"
+                      )
+                    }
+                  />
 
-            {/* =============================================================
-                STATUS FILTERS
-            ============================================================= */}
+                  <UICard
+                    title="Paid"
+                    variant={
+                      selectedFilter ===
+                      "paid"
+                        ? "active"
+                        : "default"
+                    }
+                    onPress={() =>
+                      setSelectedFilter(
+                        "paid"
+                      )
+                    }
+                  />
 
-            {!isFirstTimeUser && !showOrderError && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  marginTop: spacing.md,
-                  gap: spacing.sm,
-                }}
-              >
-                <UICard
-                  title="All"
-                  variant={selectedFilter === "all" ? "active" : "default"}
-                  onPress={() => setSelectedFilter("all")}
-                />
+                  <UICard
+                    title="Delivered"
+                    variant={
+                      selectedFilter ===
+                      "delivered"
+                        ? "active"
+                        : "default"
+                    }
+                    onPress={() =>
+                      setSelectedFilter(
+                        "delivered"
+                      )
+                    }
+                  />
 
-                <UICard
-                  title="Paid"
-                  variant={selectedFilter === "paid" ? "active" : "default"}
-                  onPress={() => setSelectedFilter("paid")}
-                />
+                  <UICard
+                    title="Returned"
+                    variant={
+                      selectedFilter ===
+                      "returned"
+                        ? "active"
+                        : "default"
+                    }
+                    onPress={() =>
+                      setSelectedFilter(
+                        "returned"
+                      )
+                    }
+                  />
 
-                <UICard
-                  title="Delivered"
-                  variant={
-                    selectedFilter === "delivered" ? "active" : "default"
-                  }
-                  onPress={() => setSelectedFilter("delivered")}
-                />
+                  <UICard
+                    title="Failed"
+                    variant={
+                      selectedFilter ===
+                      "failed"
+                        ? "active"
+                        : "default"
+                    }
+                    onPress={() =>
+                      setSelectedFilter(
+                        "failed"
+                      )
+                    }
+                  />
+                </View>
+              )}
 
-                <UICard
-                  title="Returned"
-                  variant={selectedFilter === "returned" ? "active" : "default"}
-                  onPress={() => setSelectedFilter("returned")}
-                />
-
-                <UICard
-                  title="Failed"
-                  variant={selectedFilter === "failed" ? "active" : "default"}
-                  onPress={() => setSelectedFilter("failed")}
-                />
-              </View>
-            )}
-
-            {/* =============================================================
-                CONTENT
-            ============================================================= */}
+            {/* CONTENT */}
 
             <View
               style={{
                 flex: 1,
-                marginTop: spacing.md,
+                marginTop:
+                  spacing.md,
               }}
             >
-              {/* ===========================================================
-                  INITIAL LOADING
-              =========================================================== */}
-
               {isLoading ? (
                 <View
                   style={{
                     flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingVertical: spacing["3xl"],
+                    justifyContent:
+                      "center",
+                    alignItems:
+                      "center",
+                    paddingVertical:
+                      spacing["3xl"],
                   }}
                 >
                   <ActivityIndicator
                     size="large"
-                    color={theme.icon.branding.icon}
+                    color={
+                      theme.icon
+                        .branding
+                        .icon
+                    }
                   />
 
                   <AppText
                     color="secondary"
                     style={{
-                      marginTop: spacing.md,
+                      marginTop:
+                        spacing.md,
                     }}
                   >
                     Loading orders...
                   </AppText>
                 </View>
               ) : showOrderError ? (
-                /* =========================================================
-                   ERROR
-                ========================================================= */
-
                 <View
                   style={{
                     flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingVertical: spacing["3xl"],
+                    justifyContent:
+                      "center",
+                    alignItems:
+                      "center",
+                    paddingVertical:
+                      spacing["3xl"],
                   }}
                 >
                   <View
                     style={{
                       width: 56,
                       height: 56,
-                      borderRadius: radius.full,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: theme.background.error,
+                      borderRadius:
+                        radius.full,
+                      justifyContent:
+                        "center",
+                      alignItems:
+                        "center",
+                      backgroundColor:
+                        theme.background
+                          .error,
                     }}
                   >
                     <Ionicons
                       name="alert-circle-outline"
                       size={30}
-                      color={theme.icon.error.icon}
+                      color={
+                        theme.icon
+                          .error
+                          .icon
+                      }
                     />
                   </View>
 
                   <AppText
                     variant="bodyLargeBold"
                     style={{
-                      marginTop: spacing.md,
-                      textAlign: "center",
+                      marginTop:
+                        spacing.md,
+                      textAlign:
+                        "center",
                     }}
                   >
-                    Unable to load orders
+                    Unable to load
+                    orders
                   </AppText>
 
                   <AppText
                     variant="body"
                     color="secondary"
                     style={{
-                      marginTop: spacing.xs,
-                      textAlign: "center",
+                      marginTop:
+                        spacing.xs,
+                      textAlign:
+                        "center",
                       maxWidth: 320,
                     }}
                   >
-                    We couldn't load your orders. Please try again.
+                    We couldn't load
+                    your orders.
+                    Please try
+                    again.
                   </AppText>
 
                   <Pressable
@@ -532,99 +680,119 @@ export default function OrdersScreen() {
                       refetch();
                     }}
                     style={{
-                      marginTop: spacing.md,
-                      paddingVertical: spacing.xs,
-                      paddingHorizontal: spacing.sm,
+                      marginTop:
+                        spacing.md,
+                      paddingVertical:
+                        spacing.xs,
+                      paddingHorizontal:
+                        spacing.sm,
                     }}
                   >
-                    <AppText color="link">Try Again</AppText>
+                    <AppText color="link">
+                      Try Again
+                    </AppText>
                   </Pressable>
                 </View>
               ) : isFirstTimeUser ? (
-                /* =========================================================
-                   FIRST-TIME USER
-                ========================================================= */
-
                 <Card
                   style={{
-                    alignItems: "center",
-                    paddingVertical: spacing.xl,
-                    paddingHorizontal: spacing.lg,
+                    alignItems:
+                      "center",
+                    paddingVertical:
+                      spacing.xl,
+                    paddingHorizontal:
+                      spacing.lg,
                   }}
                 >
-                  {/* ICON */}
-
                   <View
                     style={{
                       width: 64,
                       height: 64,
-                      borderRadius: radius.full,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: theme.icon.branding.background,
+                      borderRadius:
+                        radius.full,
+                      alignItems:
+                        "center",
+                      justifyContent:
+                        "center",
+                      backgroundColor:
+                        theme.icon
+                          .branding
+                          .background,
                     }}
                   >
                     <Ionicons
                       name="receipt-outline"
                       size={32}
-                      color={theme.icon.branding.icon}
+                      color={
+                        theme.icon
+                          .branding
+                          .icon
+                      }
                     />
                   </View>
-
-                  {/* TITLE */}
 
                   <AppText
                     variant="bodyLargeBold"
                     style={{
-                      marginTop: spacing.md,
-                      textAlign: "center",
+                      marginTop:
+                        spacing.md,
+                      textAlign:
+                        "center",
                     }}
                   >
                     No orders yet
                   </AppText>
 
-                  {/* DESCRIPTION */}
-
                   <AppText
                     variant="body"
                     color="secondary"
                     style={{
-                      marginTop: spacing.xs,
-                      textAlign: "center",
+                      marginTop:
+                        spacing.xs,
+                      textAlign:
+                        "center",
                       maxWidth: 320,
                     }}
                   >
-                    Orders will appear here when customers make purchases
-                    through your store.
+                    Orders will
+                    appear here
+                    when customers
+                    make purchases
+                    through your
+                    store.
                   </AppText>
-
-                  {/* CTA */}
 
                   <Button
                     title="Add Product"
                     variant="primary"
                     style={{
-                      marginTop: spacing.lg,
+                      marginTop:
+                        spacing.lg,
                     }}
-                    onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
+                    onPress={() =>
+                      router.push(
+                        ROUTES.ADD_PRODUCT_INFO
+                      )
+                    }
                   />
 
                   <AppText
                     variant="caption"
                     color="muted"
                     style={{
-                      marginTop: spacing.sm,
-                      textAlign: "center",
+                      marginTop:
+                        spacing.sm,
+                      textAlign:
+                        "center",
                     }}
                   >
-                    Add products to your store to start accepting orders.
+                    Add products to
+                    your store to
+                    start accepting
+                    orders.
                   </AppText>
                 </Card>
               ) : hasNoResults ? (
-                /* =========================================================
-                   SEARCH / FILTER EMPTY
-                ========================================================= */
-
                 <View
                   style={{
                     flex: 1,
@@ -632,34 +800,50 @@ export default function OrdersScreen() {
                 >
                   <Card
                     style={{
-                      marginTop: spacing.md,
-                      paddingVertical: spacing.xl,
-                      paddingHorizontal: spacing.lg,
-                      alignItems: "center",
+                      marginTop:
+                        spacing.md,
+                      paddingVertical:
+                        spacing.xl,
+                      paddingHorizontal:
+                        spacing.lg,
+                      alignItems:
+                        "center",
                     }}
                   >
                     <View
                       style={{
                         width: 56,
                         height: 56,
-                        borderRadius: radius.full,
-                        backgroundColor: theme.icon.default.background,
-                        alignItems: "center",
-                        justifyContent: "center",
+                        borderRadius:
+                          radius.full,
+                        backgroundColor:
+                          theme.icon
+                            .default
+                            .background,
+                        alignItems:
+                          "center",
+                        justifyContent:
+                          "center",
                       }}
                     >
                       <Ionicons
                         name="search-outline"
                         size={28}
-                        color={theme.icon.default.icon}
+                        color={
+                          theme.icon
+                            .default
+                            .icon
+                        }
                       />
                     </View>
 
                     <AppText
                       variant="bodyLargeBold"
                       style={{
-                        marginTop: spacing.md,
-                        textAlign: "center",
+                        marginTop:
+                          spacing.md,
+                        textAlign:
+                          "center",
                       }}
                     >
                       No orders found
@@ -669,131 +853,216 @@ export default function OrdersScreen() {
                       variant="body"
                       color="secondary"
                       style={{
-                        marginTop: spacing.xs,
-                        textAlign: "center",
+                        marginTop:
+                          spacing.xs,
+                        textAlign:
+                          "center",
                       }}
                     >
-                      Try searching with a different order reference, customer
-                      or product.
+                      Try searching
+                      with a
+                      different order
+                      reference,
+                      customer or
+                      product.
                     </AppText>
 
-                    {searchQuery.trim() !== "" && (
+                    {searchQuery.trim() !==
+                      "" && (
                       <Pressable
                         accessibilityRole="button"
                         accessibilityLabel="Clear search"
-                        onPress={clearSearch}
+                        onPress={
+                          clearSearch
+                        }
                         style={{
-                          marginTop: spacing.md,
+                          marginTop:
+                            spacing.md,
                         }}
                       >
-                        <AppText color="link">Clear Search</AppText>
+                        <AppText color="link">
+                          Clear Search
+                        </AppText>
                       </Pressable>
                     )}
 
-                    {hasActiveFilters && searchQuery.trim() === "" && (
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Clear filters"
-                        onPress={clearFilters}
-                        style={{
-                          marginTop: spacing.md,
-                        }}
-                      >
-                        <AppText color="link">Clear Filters</AppText>
-                      </Pressable>
-                    )}
+                    {hasActiveFilters &&
+                      searchQuery.trim() ===
+                        "" && (
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Clear filters"
+                          onPress={
+                            clearFilters
+                          }
+                          style={{
+                            marginTop:
+                              spacing.md,
+                          }}
+                        >
+                          <AppText color="link">
+                            Clear Filters
+                          </AppText>
+                        </Pressable>
+                      )}
                   </Card>
                 </View>
               ) : (
-                /* =========================================================
-                   ORDER LIST
-                ========================================================= */
-
                 <FlatList
                   style={{
                     flex: 1,
                   }}
-                  data={filteredOrders}
-                  showsVerticalScrollIndicator={false}
+                  data={
+                    filteredOrders
+                  }
+                  showsVerticalScrollIndicator={
+                    false
+                  }
                   keyboardShouldPersistTaps="handled"
                   refreshControl={
                     <RefreshControl
-                      refreshing={isRefetching}
-                      onRefresh={onRefresh}
-                      tintColor={theme.icon.branding.icon}
-                      colors={[theme.icon.branding.icon]}
-                      progressBackgroundColor={theme.background.surface}
+                      refreshing={
+                        isRefetching
+                      }
+                      onRefresh={
+                        onRefresh
+                      }
+                      tintColor={
+                        theme.icon
+                          .branding
+                          .icon
+                      }
+                      colors={[
+                        theme.icon
+                          .branding
+                          .icon,
+                      ]}
+                      progressBackgroundColor={
+                        theme
+                          .background
+                          .surface
+                      }
                     />
                   }
                   onEndReached={() => {
-                    if (hasNextPage && !isFetchingNextPage) {
+                    if (
+                      hasNextPage &&
+                      !isFetchingNextPage
+                    ) {
                       fetchNextPage();
                     }
                   }}
-                  onEndReachedThreshold={0.5}
+                  onEndReachedThreshold={
+                    0.5
+                  }
                   ListFooterComponent={
                     isFetchingNextPage ? (
                       <View
                         style={{
-                          paddingVertical: spacing.lg,
-                          alignItems: "center",
+                          paddingVertical:
+                            spacing.lg,
+                          alignItems:
+                            "center",
                         }}
                       >
-                        <ActivityIndicator color={theme.icon.branding.icon} />
+                        <ActivityIndicator
+                          color={
+                            theme
+                              .icon
+                              .branding
+                              .icon
+                          }
+                        />
                       </View>
                     ) : null
                   }
                   contentContainerStyle={{
-                    paddingTop: spacing.md,
+                    paddingTop:
+                      spacing.md,
                     gap: spacing.md,
-                    paddingBottom: spacing.lg,
+                    paddingBottom:
+                      spacing.lg,
                   }}
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item: order }) => {
+                  keyExtractor={(item) =>
+                    item.id
+                  }
+                  renderItem={({
+                    item: order,
+                  }) => {
                     const status =
-                      order.status !== "paid"
-                        ? ORDER_STATUS[order.status]
+                      order.status !==
+                      "paid"
+                        ? ORDER_STATUS[
+                            order.status
+                          ]
                         : null;
 
-                    const firstItem = order.items[0];
+                    const firstItem =
+                      order.items[0];
 
-                    const totalItems = order.items.reduce(
-                      (total, item) => total + item.quantity,
-                      0
-                    );
+                    const totalItems =
+                      order.items.reduce(
+                        (
+                          total,
+                          item
+                        ) =>
+                          total +
+                          item.quantity,
+                        0
+                      );
 
-                    const product = firstItem
-                      ? productsById[firstItem.productId]
-                      : undefined;
+                    const product =
+                      firstItem
+                        ? productsById[
+                            firstItem
+                              .productId
+                          ]
+                        : undefined;
 
-                    const productSummary = (() => {
-                      if (!firstItem) {
-                        return "Unknown Product";
-                      }
+                    const productSummary =
+                      (() => {
+                        if (
+                          !firstItem
+                        ) {
+                          return "Unknown Product";
+                        }
 
-                      const firstProductName =
-                        product?.productName ?? firstItem.productName;
+                        const firstProductName =
+                          product?.productName ??
+                          firstItem.productName;
 
-                      const additionalProducts = order.items.length - 1;
+                        const additionalProducts =
+                          order.items
+                            .length -
+                          1;
 
-                      if (additionalProducts <= 0) {
-                        return firstProductName;
-                      }
+                        if (
+                          additionalProducts <=
+                          0
+                        ) {
+                          return firstProductName;
+                        }
 
-                      return `${firstProductName} +${additionalProducts} more`;
-                    })();
+                        return `${firstProductName} +${additionalProducts} more`;
+                      })();
 
                     return (
                       <Card>
                         <View
                           style={{
-                            flexDirection: "row",
-                            alignItems: "center",
+                            flexDirection:
+                              "row",
+                            alignItems:
+                              "center",
                             gap: spacing.md,
                           }}
                         >
                           <ProductImage
-                            image={product?.productImages?.[0]?.url ?? ""}
+                            image={
+                              product
+                                ?.productImages?.[0]
+                                ?.url ?? ""
+                            }
                           />
 
                           <View
@@ -804,84 +1073,139 @@ export default function OrdersScreen() {
                           >
                             <View
                               style={{
-                                flexDirection: "row",
-                                alignItems: "center",
+                                flexDirection:
+                                  "row",
+                                alignItems:
+                                  "center",
                                 gap: spacing.xs,
                               }}
                             >
-                              <AppText variant="bodySmall" color="secondary">
-                                {order.reference}
+                              <AppText
+                                variant="bodySmall"
+                                color="secondary"
+                              >
+                                {
+                                  order.reference
+                                }
                               </AppText>
 
                               <Ionicons
                                 name={
-                                  order.status === "paid"
-                                    ? PAYMENT_CHANNELS[order.paymentChannel]
+                                  order.status ===
+                                  "paid"
+                                    ? PAYMENT_CHANNELS[
+                                        order
+                                          .paymentChannel
+                                      ]
                                         .icon
-                                    : status!.icon
+                                    : status!
+                                        .icon
                                 }
                                 size={16}
                                 color={
-                                  order.status === "paid"
-                                    ? theme.icon.success.icon
-                                    : status!.iconColor
+                                  order.status ===
+                                  "paid"
+                                    ? theme
+                                        .icon
+                                        .success
+                                        .icon
+                                    : status!
+                                        .iconColor
                                 }
                               />
                             </View>
 
                             <AppText variant="bodyLargeBold">
-                              {order.customerName}
+                              {
+                                order.customerName
+                              }
                             </AppText>
 
                             <AppText
                               variant="bodySmall"
                               color="secondary"
-                              numberOfLines={1}
+                              numberOfLines={
+                                1
+                              }
                             >
-                              {totalItems} item
-                              {totalItems === 1 ? "" : "s"} • {productSummary}
+                              {
+                                totalItems
+                              }{" "}
+                              item
+                              {totalItems ===
+                              1
+                                ? ""
+                                : "s"}{" "}
+                              •{" "}
+                              {
+                                productSummary
+                              }
                             </AppText>
                           </View>
 
                           <View
                             style={{
-                              alignItems: "flex-end",
-                              justifyContent: "space-between",
-                              alignSelf: "stretch",
+                              alignItems:
+                                "flex-end",
+                              justifyContent:
+                                "space-between",
+                              alignSelf:
+                                "stretch",
                             }}
                           >
-                            <AppText variant="bodySmall" color="secondary">
-                              {formatOrderDate(order.createdAt)}
+                            <AppText
+                              variant="bodySmall"
+                              color="secondary"
+                            >
+                              {formatOrderDate(
+                                order.createdAt
+                              )}
                             </AppText>
 
                             <AppText
                               variant="bodyLargeBold"
                               style={{
                                 color:
-                                  order.status === "paid"
-                                    ? theme.text.success
-                                    : status!.textColor,
+                                  order.status ===
+                                  "paid"
+                                    ? theme
+                                        .text
+                                        .success
+                                    : status!
+                                        .textColor,
                               }}
                             >
-                              {formatCurrency(order.total, {
-                                currency: order.currency,
-                              })}
+                              {formatCurrency(
+                                order.total,
+                                {
+                                  currency:
+                                    order.currency,
+                                }
+                              )}
                             </AppText>
 
                             <Pressable
-                              hitSlop={10}
+                              hitSlop={
+                                10
+                              }
                               accessibilityRole="button"
                               accessibilityLabel={`Actions for order ${order.reference}`}
                               onPress={() => {
-                                setSelectedOrder(order);
+                                setSelectedOrder(
+                                  order
+                                );
 
-                                setActionsVisible(true);
+                                orderActionsBottomSheetRef.current?.present();
                               }}
                             >
                               <Ionicons
                                 name="ellipsis-horizontal"
                                 size={20}
-                                color={theme.text.primary}
+                                color={
+                                  theme
+                                    .text
+                                    .primary
+                                }
                               />
                             </Pressable>
                           </View>
@@ -896,30 +1220,32 @@ export default function OrdersScreen() {
         </View>
       </SafeAreaView>
 
-      {/* ===============================================================
-          FILTER BOTTOM SHEET
-      =============================================================== */}
+      {/* FILTER */}
 
       <FilterBottomSheet
-        ref={bottomSheetRef}
-        draftFilters={draftFilters}
-        setDraftFilters={setDraftFilters}
+        ref={
+          filterBottomSheetRef
+        }
+        draftFilters={
+          draftFilters
+        }
+        setDraftFilters={
+          setDraftFilters
+        }
         onApply={(filters) => {
-          setAppliedFilters(filters);
+          setAppliedFilters(
+            filters
+          );
         }}
       />
 
-      {/* ===============================================================
-          ORDER ACTIONS
-      =============================================================== */}
+      {/* ORDER ACTIONS */}
 
       <OrderActionsBottomSheet
-        visible={actionsVisible}
+        ref={
+          orderActionsBottomSheetRef
+        }
         order={selectedOrder}
-        onClose={() => {
-          setActionsVisible(false);
-          setSelectedOrder(null);
-        }}
       />
     </>
   );

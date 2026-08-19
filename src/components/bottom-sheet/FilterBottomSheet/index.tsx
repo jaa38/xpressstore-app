@@ -19,6 +19,7 @@ import { AppText } from "@/components/ui/AppText";
 import { BottomSheetFooter } from "@/components/ui/BottomSheetFooter";
 import { BottomSheetHeader } from "@/components/ui/BottomSheetHeader";
 import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
+
 import { AmountRangeFilter } from "@/components/ui/AmountRangeFilter";
 import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 import { SortByFilter } from "@/components/ui/SortByFilter";
@@ -31,7 +32,9 @@ import type { OrderFilters } from "@/types/orderFilters";
 
 interface FilterBottomSheetProps {
   draftFilters: OrderFilters;
+
   setDraftFilters: React.Dispatch<React.SetStateAction<OrderFilters>>;
+
   onApply: (filters: OrderFilters) => void;
 }
 
@@ -43,6 +46,20 @@ export const FilterBottomSheet = forwardRef<
 
   const snapPoints = useMemo(() => ["85%"], []);
 
+  /**
+   * -----------------------------------------------------------------------
+   * EXPOSE BOTTOM SHEET REF
+   * -----------------------------------------------------------------------
+   */
+
+  useImperativeHandle(ref, () => bottomSheetRef.current!, []);
+
+  /**
+   * -----------------------------------------------------------------------
+   * BACKDROP
+   * -----------------------------------------------------------------------
+   */
+
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
@@ -52,14 +69,42 @@ export const FilterBottomSheet = forwardRef<
         pressBehavior="close"
         opacity={0.4}
         enableTouchThrough={false}
-        accessibilityRole="button"
-        accessibilityLabel="Dismiss filter panel"
       />
     ),
     []
   );
 
-  useImperativeHandle(ref, () => bottomSheetRef.current!, []);
+  /**
+   * -----------------------------------------------------------------------
+   * CLOSE
+   * -----------------------------------------------------------------------
+   */
+
+  const dismissSheet = () => {
+    bottomSheetRef.current?.dismiss();
+  };
+
+  /**
+   * -----------------------------------------------------------------------
+   * RESET
+   * -----------------------------------------------------------------------
+   */
+
+  const handleReset = () => {
+    setDraftFilters(defaultOrderFilters);
+  };
+
+  /**
+   * -----------------------------------------------------------------------
+   * APPLY
+   * -----------------------------------------------------------------------
+   */
+
+  const handleApply = () => {
+    onApply(draftFilters);
+
+    dismissSheet();
+  };
 
   return (
     <BottomSheetModal
@@ -72,26 +117,35 @@ export const FilterBottomSheet = forwardRef<
       keyboardBlurBehavior="restore"
       backgroundStyle={{
         backgroundColor: theme.background.surface,
+
         borderTopLeftRadius: radius["2xl"],
+
         borderTopRightRadius: radius["2xl"],
       }}
       handleIndicatorStyle={{
         backgroundColor: theme.border.default,
       }}
     >
-      <BottomSheetHeader
-        title="Filter & Sort"
-        onClose={() => bottomSheetRef.current?.dismiss()}
-      />
+      {/* HEADER */}
+
+      <BottomSheetHeader title="Filter & Sort" onClose={dismissSheet} />
+
+      {/* CONTENT */}
 
       <BottomSheetScrollView
         nestedScrollEnabled
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
           paddingHorizontal: spacing.lg,
+
           paddingVertical: spacing.lg,
+
           paddingBottom: spacing.xl,
         }}
       >
+        {/* AMOUNT RANGE */}
+
         <BottomSheetSection title="Amount Range">
           <AmountRangeFilter
             min={draftFilters.amount.min ?? 0}
@@ -99,6 +153,7 @@ export const FilterBottomSheet = forwardRef<
             onValueChange={(min, max) =>
               setDraftFilters((previous) => ({
                 ...previous,
+
                 amount: {
                   min,
                   max,
@@ -108,17 +163,22 @@ export const FilterBottomSheet = forwardRef<
           />
         </BottomSheetSection>
 
+        {/* DATE */}
+
         <BottomSheetSection title="Date">
           <DateRangeFilter
             value={draftFilters.date}
             onChange={(date) =>
               setDraftFilters((previous) => ({
                 ...previous,
+
                 date,
               }))
             }
           />
         </BottomSheetSection>
+
+        {/* SORT */}
 
         <BottomSheetSection title="Sort By">
           <SortByFilter
@@ -126,6 +186,7 @@ export const FilterBottomSheet = forwardRef<
             onChange={(sort) =>
               setDraftFilters((previous) => ({
                 ...previous,
+
                 sort,
               }))
             }
@@ -133,37 +194,63 @@ export const FilterBottomSheet = forwardRef<
         </BottomSheetSection>
       </BottomSheetScrollView>
 
+      {/* FOOTER */}
+
       <BottomSheetFooter>
+        {/* RESET */}
+
         <Pressable
-          onPress={() => {
-            setDraftFilters(defaultOrderFilters);
-          }}
-          style={{
+          accessibilityRole="button"
+          accessibilityLabel="Reset filters"
+          onPress={handleReset}
+          style={({ pressed }) => ({
             flex: 1,
+
             height: 48,
+
             justifyContent: "center",
+
             alignItems: "center",
+
             borderRadius: radius.lg,
+
             borderWidth: 1,
+
             borderColor: theme.border.default,
-          }}
+
+            backgroundColor: pressed
+              ? theme.background.subtle
+              : theme.background.surface,
+
+            opacity: pressed ? 0.8 : 1,
+          })}
         >
           <AppText variant="button">Reset</AppText>
         </Pressable>
 
+        {/* APPLY */}
+
         <Pressable
-          onPress={() => {
-            onApply(draftFilters);
-            bottomSheetRef.current?.dismiss();
-          }}
-          style={{
+          accessibilityRole="button"
+          accessibilityLabel="Apply filters"
+          onPress={handleApply}
+          style={({ pressed }) => ({
             flex: 1,
+
             height: 48,
+
             justifyContent: "center",
+
             alignItems: "center",
+
             borderRadius: radius.lg,
-            backgroundColor: theme.button.primary.background,
-          }}
+
+            backgroundColor: pressed
+              ? theme.button.primary.pressed
+              : theme.button.primary.background,
+
+            opacity: pressed ? 0.9 : 1,
+          })}
         >
           <AppText variant="button" color="inverse">
             Apply

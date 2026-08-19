@@ -18,6 +18,8 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { router } from "expo-router";
 
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+
 import { getStoreDetailsRoute } from "@/navigation/routes";
 
 import { AppText } from "@/components/ui/AppText";
@@ -26,12 +28,14 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { FilterButton } from "@/components/ui/FilterButton";
 import { Divider } from "@/components/ui/Divider";
 
-import { BottomSheet } from "@/components/ui/BottomSheet";
-import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
+import {
+  StoreFrontBottomSheet,
+  StoreFilter,
+} from "@/components/bottom-sheet/StoreFrontBottomSheet";
 
 import { spacing, theme, radius } from "@/theme";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import * as Clipboard from "expo-clipboard";
 
@@ -42,31 +46,23 @@ interface Store {
   isActive: boolean;
 }
 
-type StoreFilter =
-  | "all"
-  | "active"
-  | "inactive";
-
 const stores: Store[] = [
   {
     storeId: 1,
     storeName: "My Fashion Store",
-    storeLink:
-      "https://storelink.myxpresspay.com/store/my-fashion-store",
+    storeLink: "https://storelink.myxpresspay.com/store/my-fashion-store",
     isActive: true,
   },
   {
     storeId: 2,
     storeName: "Tech Store",
-    storeLink:
-      "https://storelink.myxpresspay.com/store/tech-store",
+    storeLink: "https://storelink.myxpresspay.com/store/tech-store",
     isActive: false,
   },
   {
     storeId: 3,
     storeName: "Home Essentials",
-    storeLink:
-      "https://storelink.myxpresspay.com/store/home-essentials",
+    storeLink: "https://storelink.myxpresspay.com/store/home-essentials",
     isActive: true,
   },
 ];
@@ -74,19 +70,15 @@ const stores: Store[] = [
 export default function StoreScreen() {
   /*
    * --------------------------------------------------------------------------
-   * STORE SUMMARY
+   * SUMMARY
    * --------------------------------------------------------------------------
    */
 
   const totalStores = stores.length;
 
-  const activeStores = stores.filter(
-    (store) => store.isActive
-  ).length;
+  const activeStores = stores.filter((store) => store.isActive).length;
 
-  const inactiveStores = stores.filter(
-    (store) => !store.isActive
-  ).length;
+  const inactiveStores = stores.filter((store) => !store.isActive).length;
 
   /*
    * --------------------------------------------------------------------------
@@ -94,8 +86,7 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const [searchQuery, setSearchQuery] =
-    useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   /*
    * --------------------------------------------------------------------------
@@ -103,11 +94,7 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const [filterVisible, setFilterVisible] =
-    useState(false);
-
-  const [selectedFilter, setSelectedFilter] =
-    useState<StoreFilter>("all");
+  const [selectedFilter, setSelectedFilter] = useState<StoreFilter>("all");
 
   /*
    * --------------------------------------------------------------------------
@@ -115,22 +102,27 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  /*
+   * --------------------------------------------------------------------------
+   * BOTTOM SHEET
+   * --------------------------------------------------------------------------
+   */
+
+  const storeFrontBottomSheetRef = useRef<BottomSheetModal>(null);
 
   /*
    * --------------------------------------------------------------------------
    * SORT STORES
    * --------------------------------------------------------------------------
    *
-   * Always display stores alphabetically by name.
+   * Always display stores alphabetically
+   * by store name.
    */
 
-  const sortedStores = [...stores].sort(
-    (a, b) =>
-      a.storeName.localeCompare(
-        b.storeName
-      )
+  const sortedStores = [...stores].sort((a, b) =>
+    a.storeName.localeCompare(b.storeName)
   );
 
   /*
@@ -139,32 +131,21 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const filteredStores =
-    sortedStores.filter((store) => {
-      const query =
-        searchQuery.trim().toLowerCase();
+  const filteredStores = sortedStores.filter((store) => {
+    const query = searchQuery.trim().toLowerCase();
 
-      const matchesSearch =
-        !query ||
-        store.storeName
-          .toLowerCase()
-          .includes(query) ||
-        store.storeLink
-          .toLowerCase()
-          .includes(query);
+    const matchesSearch =
+      !query ||
+      store.storeName.toLowerCase().includes(query) ||
+      store.storeLink.toLowerCase().includes(query);
 
-      const matchesFilter =
-        selectedFilter === "all" ||
-        (selectedFilter === "active" &&
-          store.isActive) ||
-        (selectedFilter === "inactive" &&
-          !store.isActive);
+    const matchesFilter =
+      selectedFilter === "all" ||
+      (selectedFilter === "active" && store.isActive) ||
+      (selectedFilter === "inactive" && !store.isActive);
 
-      return (
-        matchesSearch &&
-        matchesFilter
-      );
-    });
+    return matchesSearch && matchesFilter;
+  });
 
   /*
    * --------------------------------------------------------------------------
@@ -172,18 +153,11 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const handleCopyLink = async (
-    storeLink: string
-  ) => {
-    await Clipboard.setStringAsync(
-      storeLink
-    );
+  const handleCopyLink = async (storeLink: string) => {
+    await Clipboard.setStringAsync(storeLink);
 
     if (Platform.OS === "android") {
-      ToastAndroid.show(
-        "Link copied",
-        ToastAndroid.SHORT
-      );
+      ToastAndroid.show("Link copied", ToastAndroid.SHORT);
     } else {
       Alert.alert(
         "Link copied",
@@ -198,9 +172,7 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const handleShareLink = async (
-    storeLink: string
-  ) => {
+  const handleShareLink = async (storeLink: string) => {
     if (!storeLink) {
       return;
     }
@@ -210,29 +182,24 @@ export default function StoreScreen() {
         message: storeLink,
       });
     } catch (error) {
-      console.log(
-        "Error sharing store link:",
-        error
-      );
+      console.log("Error sharing store link:", error);
     }
   };
 
   /*
    * --------------------------------------------------------------------------
-   * REFRESH STORE LIST
+   * REFRESH
    * --------------------------------------------------------------------------
    *
-   * Replace the temporary timeout with refetch()
-   * once the stores API is connected.
+   * Replace the timeout with your API refetch
+   * when the stores API is connected.
    */
 
   const onRefresh = async () => {
     setRefreshing(true);
 
     try {
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000)
-      );
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     } finally {
       setRefreshing(false);
     }
@@ -248,15 +215,14 @@ export default function StoreScreen() {
     selectedFilter === "active"
       ? "Active"
       : selectedFilter === "inactive"
-      ? "Inactive"
-      : "All Stores";
+        ? "Inactive"
+        : "All Stores";
 
   return (
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor:
-          theme.background.primary,
+        backgroundColor: theme.background.primary,
       }}
     >
       <StatusBar style="auto" />
@@ -272,9 +238,9 @@ export default function StoreScreen() {
             flex: 1,
           }}
         >
-          {/* ---------------------------------------------------------------- */}
+          {/* ================================================================= */}
           {/* HEADER */}
-          {/* ---------------------------------------------------------------- */}
+          {/* ================================================================= */}
 
           <View
             style={{
@@ -291,16 +257,10 @@ export default function StoreScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">
-                Storefront
-              </AppText>
+              <AppText variant="h1">Storefront</AppText>
 
-              <AppText
-                variant="body"
-                color="secondary"
-              >
-                Create and manage your online
-                storefronts
+              <AppText variant="body" color="secondary">
+                Create and manage your online storefronts
               </AppText>
             </View>
 
@@ -322,23 +282,20 @@ export default function StoreScreen() {
 
                 backgroundColor: pressed
                   ? theme.action.primary.pressed
-                  : theme.action.primary
-                      .background,
+                  : theme.action.primary.background,
               })}
             >
               <Ionicons
                 name="add"
                 size={24}
-                color={
-                  theme.action.primary.text
-                }
+                color={theme.action.primary.text}
               />
             </Pressable>
           </View>
 
-          {/* ---------------------------------------------------------------- */}
+          {/* ================================================================= */}
           {/* CONTENT */}
-          {/* ---------------------------------------------------------------- */}
+          {/* ================================================================= */}
 
           <View
             style={{
@@ -346,16 +303,15 @@ export default function StoreScreen() {
               marginTop: spacing.md,
             }}
           >
-            {/* ---------------------------------------------------------------- */}
+            {/* ================================================================= */}
             {/* STORE SUMMARY */}
-            {/* ---------------------------------------------------------------- */}
+            {/* ================================================================= */}
 
             <Card>
               <View
                 style={{
                   flexDirection: "row",
-                  justifyContent:
-                    "space-evenly",
+                  justifyContent: "space-evenly",
                   gap: spacing.lg,
                 }}
               >
@@ -366,17 +322,11 @@ export default function StoreScreen() {
                     alignItems: "center",
                   }}
                 >
-                  <AppText
-                    variant="bodySmall"
-                    color="primary"
-                  >
+                  <AppText variant="bodySmall" color="primary">
                     Total Stores
                   </AppText>
 
-                  <AppText
-                    variant="h3"
-                    color="strong"
-                  >
+                  <AppText variant="h3" color="strong">
                     {totalStores}
                   </AppText>
                 </View>
@@ -388,17 +338,11 @@ export default function StoreScreen() {
                     alignItems: "center",
                   }}
                 >
-                  <AppText
-                    variant="bodySmall"
-                    color="primary"
-                  >
+                  <AppText variant="bodySmall" color="primary">
                     Active Stores
                   </AppText>
 
-                  <AppText
-                    variant="h3"
-                    color="success"
-                  >
+                  <AppText variant="h3" color="success">
                     {activeStores}
                   </AppText>
                 </View>
@@ -410,26 +354,20 @@ export default function StoreScreen() {
                     alignItems: "center",
                   }}
                 >
-                  <AppText
-                    variant="bodySmall"
-                    color="primary"
-                  >
+                  <AppText variant="bodySmall" color="primary">
                     Inactive Stores
                   </AppText>
 
-                  <AppText
-                    variant="h3"
-                    color="error"
-                  >
+                  <AppText variant="h3" color="error">
                     {inactiveStores}
                   </AppText>
                 </View>
               </View>
             </Card>
 
-            {/* ---------------------------------------------------------------- */}
+            {/* ================================================================= */}
             {/* SEARCH + FILTER */}
-            {/* ---------------------------------------------------------------- */}
+            {/* ================================================================= */}
 
             <View
               style={{
@@ -448,9 +386,7 @@ export default function StoreScreen() {
               >
                 <SearchBar
                   value={searchQuery}
-                  onChangeText={
-                    setSearchQuery
-                  }
+                  onChangeText={setSearchQuery}
                   placeholder="Search stores"
                 />
               </View>
@@ -458,26 +394,22 @@ export default function StoreScreen() {
               {/* FILTER */}
 
               <FilterButton
-                active={
-                  selectedFilter !== "all"
-                }
-                onPress={() =>
-                  setFilterVisible(true)
-                }
+                active={selectedFilter !== "all"}
+                onPress={() => storeFrontBottomSheetRef.current?.present()}
               />
             </View>
 
-            {/* ---------------------------------------------------------------- */}
-            {/* ACTIVE FILTER INDICATOR */}
-            {/* ---------------------------------------------------------------- */}
+            {/* ================================================================= */}
+            {/* ACTIVE FILTER */}
+            {/* ================================================================= */}
 
             {selectedFilter !== "all" && (
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  justifyContent:
-                    "space-between",
+                  justifyContent: "space-between",
+
                   marginTop: spacing.sm,
                 }}
               >
@@ -488,17 +420,11 @@ export default function StoreScreen() {
                     gap: spacing.xs,
                   }}
                 >
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
+                  <AppText variant="bodySmall" color="secondary">
                     Filter:
                   </AppText>
 
-                  <AppText
-                    variant="bodySmallBold"
-                    color="brand"
-                  >
+                  <AppText variant="bodySmallBold" color="brand">
                     {filterLabel}
                   </AppText>
                 </View>
@@ -507,301 +433,216 @@ export default function StoreScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Clear store filter"
                   hitSlop={8}
-                  onPress={() =>
-                    setSelectedFilter(
-                      "all"
-                    )
-                  }
+                  onPress={() => setSelectedFilter("all")}
                 >
-                  <AppText
-                    variant="bodySmall"
-                    color="link"
-                  >
+                  <AppText variant="bodySmall" color="link">
                     Clear
                   </AppText>
                 </Pressable>
               </View>
             )}
 
-            {/* ---------------------------------------------------------------- */}
+            {/* ================================================================= */}
             {/* STORE LIST */}
-            {/* ---------------------------------------------------------------- */}
+            {/* ================================================================= */}
 
             <ScrollView
-              showsVerticalScrollIndicator={
-                false
-              }
+              showsVerticalScrollIndicator={false}
               contentContainerStyle={{
                 paddingTop: spacing.lg,
-                paddingBottom:
-                  spacing.xl,
+                paddingBottom: spacing.xl,
+
                 gap: spacing.md,
               }}
               refreshControl={
                 <RefreshControl
                   refreshing={refreshing}
                   onRefresh={onRefresh}
-                  tintColor={
-                    theme.icon.branding.icon
-                  }
-                  colors={[
-                    theme.icon.branding.icon,
-                  ]}
-                  progressBackgroundColor={
-                    theme.background
-                      .surface
-                  }
+                  tintColor={theme.icon.branding.icon}
+                  colors={[theme.icon.branding.icon]}
+                  progressBackgroundColor={theme.background.surface}
                 />
               }
             >
-              {filteredStores.length >
-              0 ? (
-                filteredStores.map(
-                  (store) => (
-                    <Card
-                      key={store.storeId}
+              {filteredStores.length > 0 ? (
+                filteredStores.map((store) => (
+                  <Card
+                    key={store.storeId}
+                    style={{
+                      padding: 12,
+                    }}
+                  >
+                    {/* ===================================================== */}
+                    {/* STORE CONTENT */}
+                    {/* ===================================================== */}
+
+                    <View
                       style={{
-                        padding: 12,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 12,
                       }}
                     >
-                      {/* STORE CONTENT */}
+                      {/* STORE IMAGE */}
+
+                      <Image
+                        source={require("../../assets/images/default-storefront.png.png")}
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 8,
+                        }}
+                        resizeMode="cover"
+                      />
+
+                      {/* STORE DETAILS */}
 
                       <View
                         style={{
-                          flexDirection:
-                            "row",
-                          alignItems:
-                            "center",
-                          gap: 12,
+                          flex: 1,
+                          gap: 4,
                         }}
                       >
-                        {/* STORE IMAGE */}
+                        {/* STORE NAME */}
 
-                        <Image
-                          source={require("../../assets/images/default-storefront.png.png")}
-                          style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 8,
-                          }}
-                          resizeMode="cover"
-                        />
-
-                        {/* STORE DETAILS */}
-
-                        <View
-                          style={{
-                            flex: 1,
-                            gap: 4,
-                          }}
+                        <AppText
+                          variant="bodyBold"
+                          color="primary"
+                          numberOfLines={1}
                         >
-                          {/* STORE NAME */}
+                          {store.storeName}
+                        </AppText>
 
-                          <AppText
-                            variant="bodyBold"
-                            color="primary"
-                            numberOfLines={
-                              1
-                            }
-                          >
-                            {
-                              store.storeName
-                            }
-                          </AppText>
-
-                          {/* STORE LINK */}
-
-                          <Pressable
-                            accessibilityRole="button"
-                            accessibilityLabel={`Copy ${store.storeName} link`}
-                            onPress={() =>
-                              handleCopyLink(
-                                store.storeLink
-                              )
-                            }
-                            style={({
-                              pressed,
-                            }) => ({
-                              opacity:
-                                pressed
-                                  ? 0.6
-                                  : 1,
-                            })}
-                          >
-                            <AppText
-                              variant="bodySmall"
-                              color="link"
-                              numberOfLines={
-                                1
-                              }
-                            >
-                              {
-                                store.storeLink
-                              }
-                            </AppText>
-                          </Pressable>
-
-                          {/* STATUS */}
-
-                          <View
-                            style={{
-                              alignSelf:
-                                "flex-start",
-
-                              paddingHorizontal:
-                                8,
-                              paddingVertical: 3,
-
-                              borderRadius:
-                                radius.full,
-
-                              backgroundColor:
-                                store.isActive
-                                  ? theme
-                                      .badge
-                                      .success
-                                      .background
-                                  : theme
-                                      .badge
-                                      .error
-                                      .background,
-                            }}
-                          >
-                            <AppText
-                              variant="bodySmall"
-                              color={
-                                store.isActive
-                                  ? "success"
-                                  : "error"
-                              }
-                            >
-                              {store.isActive
-                                ? "Active"
-                                : "Inactive"}
-                            </AppText>
-                          </View>
-                        </View>
-
-                        {/* SHARE */}
+                        {/* STORE LINK */}
 
                         <Pressable
                           accessibilityRole="button"
-                          accessibilityLabel={`Share ${store.storeName}`}
-                          hitSlop={10}
-                          onPress={() =>
-                            handleShareLink(
-                              store.storeLink
-                            )
-                          }
-                          style={({
-                            pressed,
-                          }) => ({
-                            opacity:
-                              pressed
-                                ? 0.6
-                                : 1,
+                          accessibilityLabel={`Copy ${store.storeName} link`}
+                          onPress={() => handleCopyLink(store.storeLink)}
+                          style={({ pressed }) => ({
+                            opacity: pressed ? 0.6 : 1,
                           })}
                         >
-                          <Ionicons
-                            name="share-outline"
-                            size={24}
-                            color={
-                              theme.icon
-                                .default
-                                .icon
-                            }
-                          />
+                          <AppText
+                            variant="bodySmall"
+                            color="link"
+                            numberOfLines={1}
+                          >
+                            {store.storeLink}
+                          </AppText>
                         </Pressable>
+
+                        {/* STATUS */}
+
+                        <View
+                          style={{
+                            alignSelf: "flex-start",
+
+                            paddingHorizontal: 8,
+
+                            paddingVertical: 3,
+
+                            borderRadius: radius.full,
+
+                            backgroundColor: store.isActive
+                              ? theme.badge.success.background
+                              : theme.badge.error.background,
+                          }}
+                        >
+                          <AppText
+                            variant="bodySmall"
+                            color={store.isActive ? "success" : "error"}
+                          >
+                            {store.isActive ? "Active" : "Inactive"}
+                          </AppText>
+                        </View>
                       </View>
 
-                      {/* DIVIDER */}
-
-                      <Divider
-                        style={{
-                          marginVertical:
-                            spacing.md,
-                        }}
-                      />
-
-                      {/* STORE INFO */}
+                      {/* SHARE */}
 
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel={`View ${store.storeName} information`}
-                        onPress={() =>
-                          router.push(
-                            getStoreDetailsRoute(
-                              store.storeId
-                            )
-                          )
-                        }
-                        style={({
-                          pressed,
-                        }) => ({
-                          flexDirection:
-                            "row",
-
-                          justifyContent:
-                            "space-between",
-
-                          alignItems:
-                            "center",
-
-                          opacity:
-                            pressed
-                              ? 0.6
-                              : 1,
+                        accessibilityLabel={`Share ${store.storeName}`}
+                        hitSlop={10}
+                        onPress={() => handleShareLink(store.storeLink)}
+                        style={({ pressed }) => ({
+                          opacity: pressed ? 0.6 : 1,
                         })}
                       >
-                        <AppText
-                          variant="bodySmall"
-                          color="muted"
-                        >
-                          Store Info
-                        </AppText>
-
                         <Ionicons
-                          name="chevron-forward"
-                          size={18}
-                          color={
-                            theme.icon
-                              .default
-                              .icon
-                          }
+                          name="share-outline"
+                          size={24}
+                          color={theme.icon.default.icon}
                         />
                       </Pressable>
-                    </Card>
-                  )
-                )
+                    </View>
+
+                    {/* ===================================================== */}
+                    {/* DIVIDER */}
+                    {/* ===================================================== */}
+
+                    <Divider
+                      style={{
+                        marginVertical: spacing.md,
+                      }}
+                    />
+
+                    {/* ===================================================== */}
+                    {/* STORE INFO */}
+                    {/* ===================================================== */}
+
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`View ${store.storeName} information`}
+                      onPress={() =>
+                        router.push(getStoreDetailsRoute(store.storeId))
+                      }
+                      style={({ pressed }) => ({
+                        flexDirection: "row",
+
+                        justifyContent: "space-between",
+
+                        alignItems: "center",
+
+                        opacity: pressed ? 0.6 : 1,
+                      })}
+                    >
+                      <AppText variant="bodySmall" color="muted">
+                        Store Info
+                      </AppText>
+
+                      <Ionicons
+                        name="chevron-forward"
+                        size={18}
+                        color={theme.icon.default.icon}
+                      />
+                    </Pressable>
+                  </Card>
+                ))
               ) : (
-                /* ------------------------------------------------------------ */
-                /* EMPTY SEARCH / FILTER STATE */
-                /* ------------------------------------------------------------ */
+                /* =========================================================== */
+                /* EMPTY STATE */
+                /* =========================================================== */
 
                 <View
                   style={{
                     alignItems: "center",
-                    paddingVertical:
-                      spacing.xl,
-                    paddingHorizontal:
-                      spacing.lg,
+                    paddingVertical: spacing.xl,
+
+                    paddingHorizontal: spacing.lg,
                   }}
                 >
                   <Ionicons
                     name="search-outline"
                     size={32}
-                    color={
-                      theme.icon.default
-                        .icon
-                    }
+                    color={theme.icon.default.icon}
                   />
 
                   <AppText
                     variant="bodyBold"
                     color="primary"
                     style={{
-                      marginTop:
-                        spacing.sm,
+                      marginTop: spacing.sm,
                     }}
                   >
                     No stores found
@@ -812,12 +653,10 @@ export default function StoreScreen() {
                     color="secondary"
                     align="center"
                     style={{
-                      marginTop:
-                        spacing.xs,
+                      marginTop: spacing.xs,
                     }}
                   >
-                    Try changing your search
-                    or filter.
+                    Try changing your search or filter.
                   </AppText>
                 </View>
               )}
@@ -826,197 +665,15 @@ export default function StoreScreen() {
         </View>
       </View>
 
-      {/* -------------------------------------------------------------------- */}
-      {/* FILTER BOTTOM SHEET */}
-      {/* -------------------------------------------------------------------- */}
+      {/* ==================================================================== */}
+      {/* STOREFRONT FILTER BOTTOM SHEET */}
+      {/* ==================================================================== */}
 
-      <BottomSheet
-        visible={filterVisible}
-        title="Filter Stores"
-        onClose={() =>
-          setFilterVisible(false)
-        }
-      >
-        <BottomSheetSection title="Store Status">
-          {/* ALL STORES */}
-
-          <Pressable
-            accessibilityRole="radio"
-            accessibilityState={{
-              selected:
-                selectedFilter === "all",
-            }}
-            onPress={() => {
-              setSelectedFilter("all");
-              setFilterVisible(false);
-            }}
-            style={({ pressed }) => ({
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent:
-                "space-between",
-
-              paddingVertical:
-                spacing.md,
-
-              opacity: pressed ? 0.6 : 1,
-            })}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: spacing.md,
-              }}
-            >
-              <Ionicons
-                name="storefront-outline"
-                size={22}
-                color={
-                  theme.icon.default.icon
-                }
-              />
-
-              <AppText variant="body">
-                All Stores
-              </AppText>
-            </View>
-
-            {selectedFilter ===
-              "all" && (
-              <Ionicons
-                name="checkmark-circle"
-                size={22}
-                color={
-                  theme.icon.active.icon
-                }
-              />
-            )}
-          </Pressable>
-
-          <Divider />
-
-          {/* ACTIVE */}
-
-          <Pressable
-            accessibilityRole="radio"
-            accessibilityState={{
-              selected:
-                selectedFilter ===
-                "active",
-            }}
-            onPress={() => {
-              setSelectedFilter(
-                "active"
-              );
-              setFilterVisible(false);
-            }}
-            style={({ pressed }) => ({
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent:
-                "space-between",
-
-              paddingVertical:
-                spacing.md,
-
-              opacity: pressed ? 0.6 : 1,
-            })}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: spacing.md,
-              }}
-            >
-              <Ionicons
-                name="checkmark-circle-outline"
-                size={22}
-                color={
-                  theme.icon.success.icon
-                }
-              />
-
-              <AppText variant="body">
-                Active
-              </AppText>
-            </View>
-
-            {selectedFilter ===
-              "active" && (
-              <Ionicons
-                name="checkmark-circle"
-                size={22}
-                color={
-                  theme.icon.active.icon
-                }
-              />
-            )}
-          </Pressable>
-
-          <Divider />
-
-          {/* INACTIVE */}
-
-          <Pressable
-            accessibilityRole="radio"
-            accessibilityState={{
-              selected:
-                selectedFilter ===
-                "inactive",
-            }}
-            onPress={() => {
-              setSelectedFilter(
-                "inactive"
-              );
-              setFilterVisible(false);
-            }}
-            style={({ pressed }) => ({
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent:
-                "space-between",
-
-              paddingVertical:
-                spacing.md,
-
-              opacity: pressed ? 0.6 : 1,
-            })}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: spacing.md,
-              }}
-            >
-              <Ionicons
-                name="close-circle-outline"
-                size={22}
-                color={
-                  theme.icon.error.icon
-                }
-              />
-
-              <AppText variant="body">
-                Inactive
-              </AppText>
-            </View>
-
-            {selectedFilter ===
-              "inactive" && (
-              <Ionicons
-                name="checkmark-circle"
-                size={22}
-                color={
-                  theme.icon.active.icon
-                }
-              />
-            )}
-          </Pressable>
-        </BottomSheetSection>
-      </BottomSheet>
+      <StoreFrontBottomSheet
+        ref={storeFrontBottomSheetRef}
+        selectedFilter={selectedFilter}
+        onFilterChange={setSelectedFilter}
+      />
     </SafeAreaView>
   );
 }

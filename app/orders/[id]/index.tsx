@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import { Alert, Pressable, ScrollView, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -10,15 +15,16 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { router, useLocalSearchParams } from "expo-router";
 
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+
 import { AppText } from "@/components/ui/AppText";
 
 import { spacing, theme } from "@/theme";
 
 import { useOrder } from "@/hooks/orders/useOrder";
-
 import { useUpdateOrderStatus } from "@/hooks/orders/useUpdateOrderStatus";
 
-import { Order } from "@/types/order";
+import type { Order } from "@/types/order";
 
 import { OrderSummarySection } from "@/components/orders/OrderSummarySection";
 import { OrderStatusCard } from "@/components/orders/OrderStatusCard";
@@ -32,52 +38,89 @@ import { OrderStatusHistorySection } from "@/components/orders/OrderStatusHistor
 import { UpdateOrderStatusBottomSheet } from "@/components/bottom-sheet/UpdateOrderStatusBottomSheet";
 
 export default function OrderDetailsScreen() {
-  const { id } = useLocalSearchParams<{
-    id: string;
-  }>();
+  const { id } =
+    useLocalSearchParams<{
+      id: string;
+    }>();
 
-  const { data: currentOrder, isLoading, isError, error } = useOrder(id);
+  const {
+    data: currentOrder,
+    isLoading,
+    isError,
+    error,
+  } = useOrder(id);
 
-  const [statusBottomSheetVisible, setStatusBottomSheetVisible] =
-    useState(false);
+  const updateStatus =
+    useUpdateOrderStatus();
 
-  const updateStatus = useUpdateOrderStatus();
+  /**
+   * -------------------------------------------------------------------------
+   * BOTTOM SHEET REF
+   * -------------------------------------------------------------------------
+   */
+
+  const statusBottomSheetRef =
+    useRef<BottomSheetModal>(null);
+
+  /**
+   * -------------------------------------------------------------------------
+   * LOADING
+   * -------------------------------------------------------------------------
+   */
 
   if (isLoading) {
     return (
       <SafeAreaView
         style={{
           flex: 1,
-          justifyContent: "center",
+          justifyContent:
+            "center",
           alignItems: "center",
-          backgroundColor: theme.background.primary,
+          backgroundColor:
+            theme.background.primary,
         }}
       >
-        <AppText variant="body">Loading order...</AppText>
+        <AppText variant="body">
+          Loading order...
+        </AppText>
       </SafeAreaView>
     );
   }
 
-  if (isError || !currentOrder) {
+  /**
+   * -------------------------------------------------------------------------
+   * ERROR
+   * -------------------------------------------------------------------------
+   */
+
+  if (
+    isError ||
+    !currentOrder
+  ) {
     return (
       <SafeAreaView
         style={{
           flex: 1,
-          justifyContent: "center",
+          justifyContent:
+            "center",
           alignItems: "center",
-          backgroundColor: theme.background.primary,
+          backgroundColor:
+            theme.background.primary,
         }}
       >
         <Ionicons
           name="receipt-outline"
           size={60}
-          color={theme.icon.default.icon}
+          color={
+            theme.icon.default.icon
+          }
         />
 
         <AppText
           variant="h2"
           style={{
-            marginTop: spacing.lg,
+            marginTop:
+              spacing.lg,
           }}
         >
           Order Not Found
@@ -88,8 +131,10 @@ export default function OrderDetailsScreen() {
           color="secondary"
           align="center"
           style={{
-            marginTop: spacing.sm,
-            paddingHorizontal: spacing.xl,
+            marginTop:
+              spacing.sm,
+            paddingHorizontal:
+              spacing.xl,
           }}
         >
           {error instanceof Error
@@ -102,29 +147,51 @@ export default function OrderDetailsScreen() {
 
   const order = currentOrder;
 
-  async function handleUpdateStatus(status: Order["status"]) {
+  /**
+   * -------------------------------------------------------------------------
+   * UPDATE STATUS
+   * -------------------------------------------------------------------------
+   */
+
+  async function handleUpdateStatus(
+    status: Order["status"]
+  ) {
     try {
-      await updateStatus.mutateAsync({
-        orderId: order.id,
-        status,
-      });
+      await updateStatus.mutateAsync(
+        {
+          orderId: order.id,
+          status,
+        }
+      );
 
-      setStatusBottomSheetVisible(false);
+      statusBottomSheetRef.current?.dismiss();
 
-      Alert.alert("Success", "Order status updated successfully.");
+      Alert.alert(
+        "Success",
+        "Order status updated successfully."
+      );
     } catch (error) {
       Alert.alert(
         "Unable to Update Order",
-        error instanceof Error ? error.message : "Something went wrong."
+        error instanceof Error
+          ? error.message
+          : "Something went wrong."
       );
     }
   }
+
+  /**
+   * -------------------------------------------------------------------------
+   * UI
+   * -------------------------------------------------------------------------
+   */
 
   return (
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: theme.background.primary,
+        backgroundColor:
+          theme.background.primary,
       }}
     >
       <StatusBar style="auto" />
@@ -132,31 +199,40 @@ export default function OrderDetailsScreen() {
       <View
         style={{
           flex: 1,
-          paddingHorizontal: spacing.lg,
+          paddingHorizontal:
+            spacing.lg,
         }}
       >
-        {/* Header */}
+        {/* HEADER */}
 
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
+            flexDirection:
+              "row",
+            alignItems:
+              "center",
             gap: spacing.md,
           }}
         >
           <Pressable
-            onPress={() => router.back()}
+            onPress={() =>
+              router.back()
+            }
             style={{
               width: 44,
               height: 44,
-              justifyContent: "center",
-              alignItems: "center",
+              justifyContent:
+                "center",
+              alignItems:
+                "center",
             }}
           >
             <Ionicons
               name="chevron-back"
               size={24}
-              color={theme.text.primary}
+              color={
+                theme.text.primary
+              }
             />
           </Pressable>
 
@@ -165,50 +241,81 @@ export default function OrderDetailsScreen() {
               flex: 1,
             }}
           >
-            <AppText variant="h1">Order</AppText>
+            <AppText variant="h1">
+              Order
+            </AppText>
 
-            <AppText variant="body" color="secondary">
+            <AppText
+              variant="body"
+              color="secondary"
+            >
               Order Details
             </AppText>
           </View>
         </View>
 
+        {/* CONTENT */}
+
         <ScrollView
           style={{
             flex: 1,
           }}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={
+            false
+          }
           contentContainerStyle={{
-            paddingBottom: spacing["3xl"],
+            paddingBottom:
+              spacing["3xl"],
           }}
         >
-          <OrderSummarySection order={order} />
+          <OrderSummarySection
+            order={order}
+          />
 
-          <CustomerInformationSection order={order} />
+          <CustomerInformationSection
+            order={order}
+          />
 
           <OrderStatusCard
             order={order}
-            onUpdateStatus={() => setStatusBottomSheetVisible(true)}
+            onUpdateStatus={() =>
+              statusBottomSheetRef.current?.present()
+            }
           />
 
-          <OrderItemsSection order={order} />
+          <OrderItemsSection
+            order={order}
+          />
 
-          <OrderTotalsSection order={order} />
+          <OrderTotalsSection
+            order={order}
+          />
 
-          <PaymentInformationSection order={order} />
+          <PaymentInformationSection
+            order={order}
+          />
 
-          <OrderTimelineSection order={order} />
+          <OrderTimelineSection
+            order={order}
+          />
 
-          <OrderStatusHistorySection order={order} />
+          <OrderStatusHistorySection
+            order={order}
+          />
         </ScrollView>
       </View>
 
+      {/* UPDATE ORDER STATUS */}
+
       <UpdateOrderStatusBottomSheet
-        visible={statusBottomSheetVisible}
+        ref={statusBottomSheetRef}
         order={order}
-        loading={updateStatus.isPending}
-        onClose={() => setStatusBottomSheetVisible(false)}
-        onUpdateStatus={handleUpdateStatus}
+        loading={
+          updateStatus.isPending
+        }
+        onUpdateStatus={
+          handleUpdateStatus
+        }
       />
     </SafeAreaView>
   );

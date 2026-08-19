@@ -17,13 +17,13 @@ import {
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 
-import { radius, spacing, theme } from "@/theme";
-
-import { AppText } from "@/components/ui/AppText";
 import { BottomSheetHeader } from "@/components/ui/BottomSheetHeader";
 import { BottomSheetSection } from "@/components/ui/BottomSheetSection";
 import { Divider } from "@/components/ui/Divider";
 import { ListActionItem } from "@/components/ui/ListActionItem";
+import { AppText } from "@/components/ui/AppText";
+
+import { radius, spacing, theme } from "@/theme";
 
 import type { PaymentLink } from "@/types/paymentLink";
 
@@ -37,17 +37,22 @@ interface PaymentLinkBottomSheetProps {
 
 /**
  * ---------------------------------------------------------------------------
- * Payment Link URL
+ * PAYMENT LINK URL
  * ---------------------------------------------------------------------------
- *
- * The Payment Pages API may return the generated payment link directly.
- *
- * If it does not, construct the public payment-page URL using the payment
- * link reference.
  */
-function getPaymentLinkUrl(link: PaymentLink) {
-  return link.paymentLink || `https://payx.press/${link.paymentLinkReference}`;
+
+function getPaymentLinkUrl(paymentLink: PaymentLink) {
+  return (
+    paymentLink.paymentLink ||
+    `https://payx.press/${paymentLink.paymentLinkReference}`
+  );
 }
+
+/**
+ * ---------------------------------------------------------------------------
+ * PAYMENT LINK BOTTOM SHEET
+ * ---------------------------------------------------------------------------
+ */
 
 export const PaymentLinkBottomSheet = forwardRef<
   BottomSheetModal,
@@ -57,7 +62,19 @@ export const PaymentLinkBottomSheet = forwardRef<
 
   const snapPoints = useMemo(() => ["65%"], []);
 
+  /**
+   * -----------------------------------------------------------------------
+   * EXPOSE REF
+   * -----------------------------------------------------------------------
+   */
+
   useImperativeHandle(ref, () => bottomSheetRef.current!, []);
+
+  /**
+   * -----------------------------------------------------------------------
+   * BACKDROP
+   * -----------------------------------------------------------------------
+   */
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -67,27 +84,57 @@ export const PaymentLinkBottomSheet = forwardRef<
         disappearsOnIndex={-1}
         pressBehavior="close"
         opacity={0.4}
+        enableTouchThrough={false}
       />
     ),
     []
   );
 
+  /**
+   * -----------------------------------------------------------------------
+   * DISMISS
+   * -----------------------------------------------------------------------
+   */
+
   const dismissSheet = () => {
     bottomSheetRef.current?.dismiss();
   };
 
-  async function handleCopyLink() {
-    if (!paymentLink) return;
+  /**
+   * -----------------------------------------------------------------------
+   * COPY LINK
+   * -----------------------------------------------------------------------
+   */
+
+  const handleCopyLink = async () => {
+    if (!paymentLink) {
+      return;
+    }
 
     const paymentLinkUrl = getPaymentLinkUrl(paymentLink);
 
-    await Clipboard.setStringAsync(paymentLinkUrl);
+    try {
+      await Clipboard.setStringAsync(paymentLinkUrl);
 
-    Alert.alert("Link Copied", "Payment link copied to clipboard.");
-  }
+      Alert.alert("Link Copied", "Payment link copied to clipboard.");
+    } catch {
+      Alert.alert(
+        "Unable to Copy",
+        "Something went wrong while copying the payment link."
+      );
+    }
+  };
 
-  async function handleShareLink() {
-    if (!paymentLink) return;
+  /**
+   * -----------------------------------------------------------------------
+   * SHARE LINK
+   * -----------------------------------------------------------------------
+   */
+
+  const handleShareLink = async () => {
+    if (!paymentLink) {
+      return;
+    }
 
     const paymentLinkUrl = getPaymentLinkUrl(paymentLink);
 
@@ -103,23 +150,45 @@ export const PaymentLinkBottomSheet = forwardRef<
         "Something went wrong while trying to share the payment link."
       );
     }
-  }
+  };
 
-  function handleQRCode() {
-    if (!paymentLink) return;
+  /**
+   * -----------------------------------------------------------------------
+   * VIEW QR CODE
+   * -----------------------------------------------------------------------
+   */
+
+  const handleQRCode = () => {
+    if (!paymentLink) {
+      return;
+    }
 
     dismissSheet();
 
     onViewQRCode?.(paymentLink);
-  }
+  };
 
-  function handleDeactivate() {
-    if (!paymentLink) return;
+  /**
+   * -----------------------------------------------------------------------
+   * DEACTIVATE
+   * -----------------------------------------------------------------------
+   */
+
+  const handleDeactivate = () => {
+    if (!paymentLink) {
+      return;
+    }
 
     dismissSheet();
 
     onDeactivateLink?.(paymentLink);
-  }
+  };
+
+  /**
+   * -----------------------------------------------------------------------
+   * RENDER
+   * -----------------------------------------------------------------------
+   */
 
   return (
     <BottomSheetModal
@@ -132,37 +201,57 @@ export const PaymentLinkBottomSheet = forwardRef<
       keyboardBlurBehavior="restore"
       backgroundStyle={{
         backgroundColor: theme.background.surface,
+
         borderTopLeftRadius: radius["2xl"],
+
         borderTopRightRadius: radius["2xl"],
       }}
       handleIndicatorStyle={{
         backgroundColor: theme.border.default,
       }}
     >
+      {/* HEADER */}
+
       <BottomSheetHeader title="Payment Link" onClose={dismissSheet} />
 
+      {/* CONTENT */}
+
       <BottomSheetScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
           paddingHorizontal: spacing.lg,
+
           paddingVertical: spacing.lg,
+
           paddingBottom: spacing["2xl"],
         }}
       >
+        {/* INFORMATION */}
+
         <BottomSheetSection title="Information">
           <View
             style={{
               gap: spacing.xs,
             }}
           >
-            <AppText variant="bodyBold">{paymentLink?.name}</AppText>
+            <AppText variant="bodyBold" numberOfLines={1}>
+              {paymentLink?.name ?? "Payment Link"}
+            </AppText>
 
-            <AppText color="secondary">
-              {paymentLink ? getPaymentLinkUrl(paymentLink) : undefined}
+            <AppText variant="bodySmall" color="secondary" numberOfLines={2}>
+              {paymentLink
+                ? getPaymentLinkUrl(paymentLink)
+                : "No payment link selected"}
             </AppText>
           </View>
         </BottomSheetSection>
 
+        {/* ACTIONS */}
+
         <BottomSheetSection title="Actions">
+          {/* COPY */}
+
           <ListActionItem
             icon="copy-outline"
             title="Copy Link"
@@ -170,6 +259,8 @@ export const PaymentLinkBottomSheet = forwardRef<
           />
 
           <Divider />
+
+          {/* SHARE */}
 
           <ListActionItem
             icon="share-social-outline"
@@ -179,6 +270,8 @@ export const PaymentLinkBottomSheet = forwardRef<
 
           <Divider />
 
+          {/* QR CODE */}
+
           <ListActionItem
             icon="qr-code-outline"
             title="View QR Code"
@@ -186,6 +279,8 @@ export const PaymentLinkBottomSheet = forwardRef<
           />
 
           <Divider />
+
+          {/* DEACTIVATE */}
 
           <ListActionItem
             icon="pause-circle-outline"

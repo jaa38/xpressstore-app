@@ -7,6 +7,8 @@ export const ROUTES = {
   /**
    * ONBOARDING
    */
+
+  // Welcome
   WELCOME: "/(onboarding)/welcome",
 
   // Step 1
@@ -48,17 +50,41 @@ export const ROUTES = {
   /**
    * MAIN APP
    */
+
   TABS: "/(tabs)",
 
   HOME: "/(tabs)",
 
+  /**
+   * STOREFRONT
+   */
+
+  // Storefront list
   STORE: "/(tabs)/store",
 
+  // Storefront details
   STORE_DETAILS: "/stores/view/[id]",
+
+  // Create Store - Step 1
+  ADD_STORE_INFORMATION: "/stores/add/information",
+
+  // Create Store - Step 2
+  ADD_STORE_STOREFRONT: "/stores/add/storefront",
+
+  // Create Store - Step 3
+  ADD_STORE_SETTINGS: "/stores/add/settings",
+
+  /**
+   * ORDERS
+   */
 
   ORDERS: "/(tabs)/orders",
 
   ORDER_DETAILS: "/orders/[id]",
+
+  /**
+   * PRODUCTS
+   */
 
   PRODUCTS: "/(tabs)/products",
 
@@ -67,6 +93,7 @@ export const ROUTES = {
   /**
    * MORE
    */
+
   PAYMENT_LINKS: "/(tabs)/more/payment-link",
 
   BUSINESS: "/(tabs)/more/business",
@@ -116,11 +143,13 @@ export const ROUTES = {
    * PAYMENT LINKS
    */
 
-  // Create Payment Link
+  // Step 1
   ADD_PAYMENT_LINK_INFORMATION: "/payment-link/add/information",
 
+  // Step 2
   ADD_PAYMENT_LINK_SETTINGS: "/payment-link/add/settings",
 
+  // Step 3
   ADD_PAYMENT_LINK_REVIEW: "/payment-link/add/review",
 
   // QR Code
@@ -130,24 +159,51 @@ export const ROUTES = {
    * CUSTOMERS
    */
 
-  // Create a Customer
+  // Create Customer - Step 1
   ADD_CUSTOMER: "/customers/add/information",
 
   CUSTOMER_DETAILS: "/more/customers/view/[id]",
 
+  // Create Customer
   ADD_CUSTOMER_INFORMATION: "/customers/add/information",
+
+  // Create Customer - Step 2
   ADD_CUSTOMER_ADDRESS: "/customers/add/address",
 } as const;
 
-export const getProductDetailsRoute = (id: string) => `/product/${id}` as const;
+/**
+ * ============================================================================
+ * ROUTE HELPERS
+ * ============================================================================
+ */
 
+/**
+ * Product Details
+ */
+export const getProductDetailsRoute = (id: string) =>
+  `/product/${id}` as const;
+
+/**
+ * Customer Details
+ */
 export const getCustomerDetailsRoute = (id: string) =>
   `/more/customers/view/${id}` as const;
 
+/**
+ * Transaction Details
+ */
 export const getTransactionDetailsRoute = (id: string) =>
   `/transactions/${id}` as const;
 
-export const getOrderDetailsRoute = (id: string) => `/orders/${id}` as const;
+/**
+ * Order Details
+ */
+export const getOrderDetailsRoute = (id: string) =>
+  `/orders/${id}` as const;
 
-export const getStoreDetailsRoute = (id: number | string) =>
-  `/stores/view/${id}` as const;
+/**
+ * Store Details
+ */
+export const getStoreDetailsRoute = (
+  id: number | string
+) => `/stores/view/${id}` as const;

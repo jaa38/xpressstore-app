@@ -20,8 +20,7 @@ import { router } from "expo-router";
 
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
-import { getStoreDetailsRoute } from "@/navigation/routes";
-
+import { ROUTES, getStoreDetailsRoute } from "@/navigation/routes";
 import { AppText } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -270,7 +269,7 @@ export default function StoreScreen() {
               accessibilityRole="button"
               accessibilityLabel="Create Store"
               onPress={() => {
-                // Add Create Store route here
+                router.push(ROUTES.ADD_STORE_INFORMATION);
               }}
               style={({ pressed }) => ({
                 width: 44,

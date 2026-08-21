@@ -50,14 +50,7 @@ import { ROUTES } from "@/navigation/routes";
 
 import { MOCK_TRANSACTIONS } from "@/mocks/transactions";
 
-/**
- * ===========================================================================
- * MOCK MODE
- * ===========================================================================
- *
- * Set this to false when the real Transactions API is ready.
- */
-const USE_MOCK_TRANSACTIONS = true;
+import { USE_MOCK_TRANSACTIONS } from "@/mocks/config";
 
 /**
  * ===========================================================================
@@ -71,9 +64,8 @@ const PAGE_SIZE = 20;
  * ===========================================================================
  * MOCK LOAD SIZE
  * ===========================================================================
- *
- * Number of transactions revealed every time the user reaches the bottom.
  */
+
 const MOCK_LOAD_SIZE = 20;
 
 /**
@@ -105,12 +97,6 @@ export default function TransactionsScreen() {
    * -------------------------------------------------------------------------
    * ACCUMULATED API TRANSACTIONS
    * -------------------------------------------------------------------------
-   *
-   * The Transactions API is page-based.
-   *
-   * When page 2 is loaded, the API returns page 2 only. We therefore keep
-   * previously loaded pages in local state so FlatList can display one
-   * continuous list.
    */
 
   const [loadedApiTransactions, setLoadedApiTransactions] = useState<any[]>([]);
@@ -186,15 +172,6 @@ export default function TransactionsScreen() {
    * =========================================================================
    * API PAGE ACCUMULATION
    * =========================================================================
-   *
-   * Whenever a new API page arrives:
-   *
-   * Page 1 → replace
-   * Page 2 → append
-   * Page 3 → append
-   *
-   * When filters/search are changed we reset currentPage to 1 and page 1
-   * replaces the accumulated list.
    */
 
   useEffect(() => {
@@ -324,9 +301,6 @@ export default function TransactionsScreen() {
    * =========================================================================
    * MOCK PAGINATION
    * =========================================================================
-   *
-   * In mock mode we reveal more records instead of actually requesting
-   * another API page.
    */
 
   const displayedTransactions = useMemo(() => {
@@ -373,13 +347,6 @@ export default function TransactionsScreen() {
    */
 
   const loadMoreTransactions = async () => {
-    /**
-     * Don't load another page when:
-     *
-     * - already loading
-     * - there is nothing else to load
-     */
-
     if (isLoadingMore || !hasMoreTransactions) {
       return;
     }
@@ -406,11 +373,6 @@ export default function TransactionsScreen() {
 
     /**
      * API MODE
-     *
-     * useTransactions() receives
-     * currentPage, so increasing it
-     * causes React Query/API fetching
-     * for the next page.
      */
 
     setCurrentPage((page) => page + 1);
@@ -633,9 +595,7 @@ export default function TransactionsScreen() {
             flex: 1,
           }}
         >
-          {/* ================================================================
-              HEADER
-          ================================================================ */}
+          {/* HEADER */}
 
           <View
             style={{
@@ -676,18 +636,14 @@ export default function TransactionsScreen() {
             </View>
           </View>
 
-          {/* ================================================================
-              CONTENT
-          ================================================================ */}
+          {/* CONTENT */}
 
           <View
             style={{
               flex: 1,
             }}
           >
-            {/* ==============================================================
-                SUMMARY
-            ============================================================== */}
+            {/* SUMMARY */}
 
             <Card
               variant="active"
@@ -701,8 +657,6 @@ export default function TransactionsScreen() {
                   alignItems: "center",
                 }}
               >
-                {/* LEFT */}
-
                 <View
                   style={{
                     flex: 1,
@@ -743,8 +697,6 @@ export default function TransactionsScreen() {
                   </View>
                 </View>
 
-                {/* DIVIDER */}
-
                 <View
                   style={{
                     width: 1,
@@ -753,8 +705,6 @@ export default function TransactionsScreen() {
                     backgroundColor: theme.divider.strong,
                   }}
                 />
-
-                {/* RIGHT */}
 
                 <View
                   style={{
@@ -779,9 +729,7 @@ export default function TransactionsScreen() {
               </View>
             </Card>
 
-            {/* ==============================================================
-                SEARCH + FILTER
-            ============================================================== */}
+            {/* SEARCH + FILTER */}
 
             {!isFirstTimeUser && !showTransactionError && (
               <View
@@ -815,9 +763,7 @@ export default function TransactionsScreen() {
               </View>
             )}
 
-            {/* ==============================================================
-                STATUS FILTERS
-            ============================================================== */}
+            {/* STATUS FILTERS */}
 
             {!isFirstTimeUser && !showTransactionError && (
               <View
@@ -840,9 +786,7 @@ export default function TransactionsScreen() {
               </View>
             )}
 
-            {/* ==============================================================
-                TRANSACTION CONTENT
-            ============================================================== */}
+            {/* TRANSACTION CONTENT */}
 
             <View
               style={{
@@ -851,10 +795,6 @@ export default function TransactionsScreen() {
               }}
             >
               {isLoading ? (
-                /* ============================================================
-                   LOADING
-                ============================================================ */
-
                 <View
                   style={{
                     flex: 1,
@@ -878,10 +818,6 @@ export default function TransactionsScreen() {
                   </AppText>
                 </View>
               ) : isFirstTimeUser ? (
-                /* ============================================================
-                   FIRST-TIME USER
-                ============================================================ */
-
                 <Card
                   style={{
                     alignItems: "center",
@@ -953,10 +889,6 @@ export default function TransactionsScreen() {
                   </AppText>
                 </Card>
               ) : showTransactionError ? (
-                /* ============================================================
-                   ERROR
-                ============================================================ */
-
                 <View
                   style={{
                     flex: 1,
@@ -1018,10 +950,6 @@ export default function TransactionsScreen() {
                   </Pressable>
                 </View>
               ) : hasNoResults ? (
-                /* ============================================================
-                   NO RESULTS
-                ============================================================ */
-
                 <Card
                   style={{
                     alignItems: "center",
@@ -1095,10 +1023,6 @@ export default function TransactionsScreen() {
                   )}
                 </Card>
               ) : (
-                /* ============================================================
-                   TRANSACTION LIST
-                ============================================================ */
-
                 <FlatList
                   data={displayedTransactions}
                   keyExtractor={(transaction) => transaction.id}
@@ -1167,9 +1091,7 @@ export default function TransactionsScreen() {
         </View>
       </View>
 
-      {/* ======================================================================
-          TRANSACTION FILTER BOTTOM SHEET
-      ====================================================================== */}
+      {/* TRANSACTION FILTER BOTTOM SHEET */}
 
       <TransactionFilterBottomSheet
         ref={transactionFilterRef}

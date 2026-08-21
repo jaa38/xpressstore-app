@@ -27,24 +27,26 @@ import {
 
 import { MOCK_TRANSACTIONS } from "@/mocks/transactions";
 
-/**
- * ============================================================================
- * MOCK MODE
- * ============================================================================
- *
- * true:
- *   Detail screen uses shared local mock data.
- *
- * false:
- *   Detail screen uses the real useTransaction() API.
- *
- * The API hook itself is not modified.
- */
-const USE_MOCK_TRANSACTIONS = true;
+import { USE_MOCK_TRANSACTIONS } from "@/mocks/config";
 
 /**
  * ============================================================================
- * SCREEN
+ * TRANSACTION DETAILS SCREEN
+ * ============================================================================
+ *
+ * MOCK MODE
+ *
+ * USE_MOCK_TRANSACTIONS is controlled centrally from:
+ *
+ * src/mocks/config.ts
+ *
+ * true:
+ *   Uses MOCK_TRANSACTIONS.
+ *
+ * false:
+ *   Uses the real useTransaction() API.
+ *
+ * This screen does not define its own mock switch.
  * ============================================================================
  */
 
@@ -60,12 +62,17 @@ export default function TransactionDetailsScreen() {
   }>();
 
   /**
-   * Expo Router can return a route
-   * parameter as either a string or
-   * string[].
+   * Expo Router can return route parameters as either:
    *
-   * Normalize it to a single string.
+   * string
+   *
+   * or
+   *
+   * string[]
+   *
+   * Normalize the value to a single string.
    */
+
   const transactionId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   /**
@@ -77,7 +84,11 @@ export default function TransactionDetailsScreen() {
    *
    * When USE_MOCK_TRANSACTIONS is true,
    * the API result is ignored.
+   *
+   * When USE_MOCK_TRANSACTIONS is false,
+   * the API result becomes the active transaction.
    */
+
   const {
     data: apiTransaction,
     isLoading: apiIsLoading,
@@ -90,9 +101,22 @@ export default function TransactionDetailsScreen() {
    * MOCK TRANSACTION
    * --------------------------------------------------------------------------
    *
-   * Look up the transaction using the
-   * exact ID passed by TransactionList.
+   * Find the transaction using the exact ID
+   * passed from TransactionList.
+   *
+   * This means:
+   *
+   * Home
+   *   ↓
+   * TransactionList
+   *   ↓
+   * /transactions/[id]
+   *   ↓
+   * MOCK_TRANSACTIONS.find(...)
+   *
+   * all use the same transaction source.
    */
+
   const mockTransaction = MOCK_TRANSACTIONS.find(
     (transaction) => transaction.id === transactionId
   );
@@ -105,7 +129,19 @@ export default function TransactionDetailsScreen() {
 
   const transaction = USE_MOCK_TRANSACTIONS ? mockTransaction : apiTransaction;
 
+  /**
+   * --------------------------------------------------------------------------
+   * LOADING
+   * --------------------------------------------------------------------------
+   */
+
   const isLoading = USE_MOCK_TRANSACTIONS ? false : apiIsLoading;
+
+  /**
+   * --------------------------------------------------------------------------
+   * ERROR
+   * --------------------------------------------------------------------------
+   */
 
   const isError = USE_MOCK_TRANSACTIONS ? false : apiIsError;
 
@@ -127,7 +163,6 @@ export default function TransactionDetailsScreen() {
     } catch (error) {
       Alert.alert(
         "Unable to Share Receipt",
-
         error instanceof Error ? error.message : "Something went wrong."
       );
     }
@@ -154,7 +189,6 @@ export default function TransactionDetailsScreen() {
     } catch (error) {
       Alert.alert(
         "Unable to Download Receipt",
-
         error instanceof Error ? error.message : "Something went wrong."
       );
     }
@@ -162,7 +196,7 @@ export default function TransactionDetailsScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * LOADING
+   * LOADING STATE
    * --------------------------------------------------------------------------
    */
 
@@ -332,23 +366,33 @@ export default function TransactionDetailsScreen() {
             paddingBottom: spacing["3xl"],
           }}
         >
-          {/* SUMMARY */}
+          {/* ==============================================================
+              SUMMARY
+          ============================================================== */}
 
           <TransactionSummarySection transaction={transaction} />
 
-          {/* CUSTOMER */}
+          {/* ==============================================================
+              CUSTOMER
+          ============================================================== */}
 
           <CustomerInformationSection transaction={transaction} />
 
-          {/* TRANSACTION INFORMATION */}
+          {/* ==============================================================
+              TRANSACTION INFORMATION
+          ============================================================== */}
 
           <TransactionInformationSection transaction={transaction} />
 
-          {/* TIMELINE */}
+          {/* ==============================================================
+              TIMELINE
+          ============================================================== */}
 
           <TransactionTimelineSection transaction={transaction} />
 
-          {/* RECEIPT ACTIONS */}
+          {/* ==============================================================
+              RECEIPT ACTIONS
+          ============================================================== */}
 
           <TransactionReceiptActions
             transaction={transaction}

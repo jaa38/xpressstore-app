@@ -1,8 +1,6 @@
-// src/mocks/config.ts
-
 /**
  * ============================================================================
- * MOCK MODE
+ * MOCK MODE CONFIGURATION
  * ============================================================================
  *
  * true  = use local mock data
@@ -20,3 +18,5 @@ export const USE_MOCK_CUSTOMERS = true;
 export const USE_MOCK_PAYMENT_LINKS = true;
 
 export const USE_MOCK_ORDERS = true;
+
+export const USE_MOCK_TRANSACTIONS = true;

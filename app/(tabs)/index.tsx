@@ -1,9 +1,4 @@
-import {
-  Pressable,
-  View,
-  ScrollView,
-  RefreshControl,
-} from "react-native";
+import { Pressable, View, ScrollView, RefreshControl } from "react-native";
 
 import { useMemo, useState } from "react";
 
@@ -35,26 +30,30 @@ import { useMerchantProfile } from "@/hooks/merchant/useMerchantProfile";
 
 import { MOCK_TRANSACTIONS } from "@/mocks/transactions";
 
+import { USE_MOCK_TRANSACTIONS } from "@/mocks/config";
+
 /**
  * ============================================================================
  * MOCK CONFIGURATION
  * ============================================================================
  *
- * Set to false when you want the Home screen
- * to use the real APIs.
+ * Dashboard and merchant profile continue to use the existing Home screen
+ * mock configuration.
  *
- * When true:
+ * Transactions now use the centralized transaction mock configuration:
  *
- * - Profile → mock
- * - Dashboard → mock
- * - Transactions → shared mock
+ * src/mocks/config.ts
  *
- * When false:
+ * USE_MOCK_TRANSACTIONS
  *
- * - Profile → API
- * - Dashboard → API
- * - Transactions → API
+ * This keeps transaction mock mode consistent across:
+ *
+ * - Home
+ * - Transactions
+ * - Transaction Details
+ * ============================================================================
  */
+
 const USE_MOCK_DASHBOARD = true;
 
 /**
@@ -115,67 +114,50 @@ export default function HomeScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * TRANSACTIONS
+   * TRANSACTIONS API
    * --------------------------------------------------------------------------
    *
-   * The API hook is still called exactly as before.
+   * The API hook is always called.
    *
-   * We simply choose between:
+   * We choose between the API data and the shared mock data below based on:
    *
-   * MOCK_TRANSACTIONS
-   *
-   * and
-   *
-   * apiTransactions
-   *
-   * below.
+   * USE_MOCK_TRANSACTIONS
    */
 
-  const {
-    data: transactionsData,
-    refetch: refetchTransactions,
-  } = useTransactions();
+  const { data: transactionsData, refetch: refetchTransactions } =
+    useTransactions();
 
-  const apiTransactions =
-    transactionsData?.transactions ?? [];
+  /**
+   * --------------------------------------------------------------------------
+   * API TRANSACTIONS
+   * --------------------------------------------------------------------------
+   */
+
+  const apiTransactions = transactionsData?.transactions ?? [];
 
   /**
    * --------------------------------------------------------------------------
    * DATA SOURCE
    * --------------------------------------------------------------------------
    *
-   * IMPORTANT:
+   * Dashboard/profile:
    *
-   * The Home screen now uses the shared transaction mock:
+   * USE_MOCK_DASHBOARD
    *
-   * @/mocks/transactions
+   * Transactions:
    *
-   * This means the IDs here are exactly the same IDs used by:
+   * USE_MOCK_TRANSACTIONS
    *
-   * app/transactions/[id]/index.tsx
+   * This is important because transaction mock mode is now controlled from:
    *
-   * Therefore:
-   *
-   * Home
-   *   ↓
-   * TransactionList
-   *   ↓
-   * /transactions/[id]
-   *   ↓
-   * MOCK_TRANSACTIONS.find(...)
-   *
-   * will resolve correctly.
+   * src/mocks/config.ts
    */
 
-  const profile = USE_MOCK_DASHBOARD
-    ? MOCK_PROFILE
-    : apiProfile;
+  const profile = USE_MOCK_DASHBOARD ? MOCK_PROFILE : apiProfile;
 
-  const dashboard = USE_MOCK_DASHBOARD
-    ? MOCK_DASHBOARD
-    : apiDashboard;
+  const dashboard = USE_MOCK_DASHBOARD ? MOCK_DASHBOARD : apiDashboard;
 
-  const transactions = USE_MOCK_DASHBOARD
+  const transactions = USE_MOCK_TRANSACTIONS
     ? MOCK_TRANSACTIONS
     : apiTransactions;
 
@@ -185,15 +167,9 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const profileLoading =
-    USE_MOCK_DASHBOARD
-      ? false
-      : profileLoadingApi;
+  const profileLoading = USE_MOCK_DASHBOARD ? false : profileLoadingApi;
 
-  const dashboardLoading =
-    USE_MOCK_DASHBOARD
-      ? false
-      : dashboardLoadingApi;
+  const dashboardLoading = USE_MOCK_DASHBOARD ? false : dashboardLoadingApi;
 
   /**
    * --------------------------------------------------------------------------
@@ -202,14 +178,14 @@ export default function HomeScreen() {
    *
    * Only show the first 5 transactions on Home.
    *
-   * The complete transaction list remains available
-   * on the Transactions screen.
+   * The complete transaction list remains available on:
+   *
+   * /more/transactions
    */
 
-  const recentTransactions =
-    useMemo(() => {
-      return transactions.slice(0, 5);
-    }, [transactions]);
+  const recentTransactions = useMemo(() => {
+    return transactions.slice(0, 5);
+  }, [transactions]);
 
   /**
    * --------------------------------------------------------------------------
@@ -217,44 +193,49 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   async function onRefresh() {
     setRefreshing(true);
 
     try {
-      if (USE_MOCK_DASHBOARD) {
-        /**
-         * Mock data is local.
-         *
-         * There is nothing to refetch, but we keep
-         * the refresh interaction so the UI behaves
-         * consistently with the API version.
-         */
+      /**
+       * ----------------------------------------------------------------------
+       * MOCK MODE
+       * ----------------------------------------------------------------------
+       *
+       * If all currently displayed data is mocked, there is nothing to
+       * actually refetch.
+       *
+       * Keep the refresh interaction so the UI behaves consistently with
+       * the API version.
+       */
 
-        await new Promise(
-          (resolve) =>
-            setTimeout(resolve, 500)
-        );
+      if (USE_MOCK_DASHBOARD && USE_MOCK_TRANSACTIONS) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         return;
       }
 
       /**
+       * ----------------------------------------------------------------------
        * API MODE
+       * ----------------------------------------------------------------------
        *
-       * Nothing changes here.
-       *
-       * All existing API refetch functions remain
-       * exactly as they were.
+       * Refetch only the data sources that are currently using the API.
        */
 
-      await Promise.all([
-        refetchProfile(),
-        refetchDashboard(),
-        refetchTransactions(),
-      ]);
+      const refetchPromises: Promise<unknown>[] = [];
+
+      if (!USE_MOCK_DASHBOARD) {
+        refetchPromises.push(refetchProfile(), refetchDashboard());
+      }
+
+      if (!USE_MOCK_TRANSACTIONS) {
+        refetchPromises.push(refetchTransactions());
+      }
+
+      await Promise.all(refetchPromises);
     } finally {
       setRefreshing(false);
     }
@@ -267,9 +248,7 @@ export default function HomeScreen() {
    */
 
   const hasTransactions =
-    (dashboard?.summary
-      .totalTransactions ?? 0) > 0 ||
-    transactions.length > 0;
+    (dashboard?.summary.totalTransactions ?? 0) > 0 || transactions.length > 0;
 
   /**
    * --------------------------------------------------------------------------
@@ -277,9 +256,7 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const showEmptyDashboard =
-    !dashboardLoading &&
-    !hasTransactions;
+  const showEmptyDashboard = !dashboardLoading && !hasTransactions;
 
   /**
    * --------------------------------------------------------------------------
@@ -288,9 +265,7 @@ export default function HomeScreen() {
    */
 
   const showDashboardStats =
-    !dashboardLoading &&
-    !!dashboard &&
-    hasTransactions;
+    !dashboardLoading && !!dashboard && hasTransactions;
 
   /**
    * --------------------------------------------------------------------------
@@ -303,15 +278,13 @@ export default function HomeScreen() {
       edges={["top"]}
       style={{
         flex: 1,
-        backgroundColor:
-          theme.background.primary,
+        backgroundColor: theme.background.primary,
       }}
     >
       <View
         style={{
           flex: 1,
-          paddingHorizontal:
-            spacing.lg,
+          paddingHorizontal: spacing.lg,
         }}
       >
         {/* ==================================================================
@@ -320,12 +293,9 @@ export default function HomeScreen() {
 
         <View
           style={{
-            flexDirection:
-              "row",
-            justifyContent:
-              "space-between",
-            alignItems:
-              "center",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
           {/* GREETING */}
@@ -335,21 +305,14 @@ export default function HomeScreen() {
               gap: spacing.xs,
             }}
           >
-            <AppText
-              variant="body"
-              color="secondary"
-            >
+            <AppText variant="body" color="secondary">
               Good morning,
             </AppText>
 
             <AppText variant="h1">
               {profileLoading
                 ? "Loading..."
-                : (
-                    profile
-                      ?.businessName ??
-                    "Merchant"
-                  )}
+                : (profile?.businessName ?? "Merchant")}
             </AppText>
           </View>
 
@@ -363,24 +326,16 @@ export default function HomeScreen() {
               style={{
                 width: 40,
                 height: 40,
-                justifyContent:
-                  "center",
-                alignItems:
-                  "center",
-                backgroundColor:
-                  theme.icon.default
-                    .background,
-                borderRadius:
-                  radius.full,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: theme.icon.default.background,
+                borderRadius: radius.full,
               }}
             >
               <Ionicons
                 name="notifications-outline"
                 size={24}
-                color={
-                  theme.icon.default
-                    .icon
-                }
+                color={theme.icon.default.icon}
               />
             </View>
           </Pressable>
@@ -394,29 +349,17 @@ export default function HomeScreen() {
           style={{
             flex: 1,
           }}
-          showsVerticalScrollIndicator={
-            false
-          }
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={{
-            paddingBottom:
-              spacing.xl,
+            paddingBottom: spacing.xl,
           }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={
-                theme.icon.branding
-                  .icon
-              }
-              colors={[
-                theme.icon.branding
-                  .icon,
-              ]}
-              progressBackgroundColor={
-                theme.background
-                  .surface
-              }
+              tintColor={theme.icon.branding.icon}
+              colors={[theme.icon.branding.icon]}
+              progressBackgroundColor={theme.background.surface}
             />
           }
         >
@@ -424,51 +367,33 @@ export default function HomeScreen() {
               DASHBOARD
           ================================================================ */}
 
-          {showDashboardStats &&
-            dashboard && (
-              <DashboardStatsCard
-                title="Total Revenue"
-                amount={formatCurrency(
-                  dashboard.summary
-                    .totalRevenue,
-                  {
-                    currency:
-                      "NGN",
-                  }
-                )}
-                trend={`${dashboard.summary.revenueChangePercent}%`}
-                metrics={[
-                  {
-                    label:
-                      "Revenue",
-                    value:
-                      formatCurrency(
-                        dashboard
-                          .summary
-                          .totalRevenue,
-                        {
-                          currency:
-                            "NGN",
-                        }
-                      ),
-                  },
+          {showDashboardStats && dashboard && (
+            <DashboardStatsCard
+              title="Total Revenue"
+              amount={formatCurrency(dashboard.summary.totalRevenue, {
+                currency: "NGN",
+              })}
+              trend={`${dashboard.summary.revenueChangePercent}%`}
+              metrics={[
+                {
+                  label: "Revenue",
+                  value: formatCurrency(dashboard.summary.totalRevenue, {
+                    currency: "NGN",
+                  }),
+                },
 
-                  {
-                    label:
-                      "Transactions",
-                    value:
-                      dashboard.summary.totalTransactions.toString(),
-                  },
+                {
+                  label: "Transactions",
+                  value: dashboard.summary.totalTransactions.toString(),
+                },
 
-                  {
-                    label:
-                      "Pending",
-                    value:
-                      dashboard.summary.pendingSettlements.toString(),
-                  },
-                ]}
-              />
-            )}
+                {
+                  label: "Pending",
+                  value: dashboard.summary.pendingSettlements.toString(),
+                },
+              ]}
+            />
+          )}
 
           {/* ================================================================
               EMPTY DASHBOARD
@@ -477,16 +402,13 @@ export default function HomeScreen() {
           {showEmptyDashboard && (
             <Card
               style={{
-                marginTop:
-                  spacing.lg,
-                padding:
-                  spacing.lg,
+                marginTop: spacing.lg,
+                padding: spacing.lg,
               }}
             >
               <View
                 style={{
-                  alignItems:
-                    "center",
+                  alignItems: "center",
                   gap: spacing.sm,
                 }}
               >
@@ -496,26 +418,16 @@ export default function HomeScreen() {
                   style={{
                     width: 56,
                     height: 56,
-                    borderRadius:
-                      radius.full,
-                    backgroundColor:
-                      theme.icon
-                        .default
-                        .background,
-                    alignItems:
-                      "center",
-                    justifyContent:
-                      "center",
+                    borderRadius: radius.full,
+                    backgroundColor: theme.icon.default.background,
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
                   <Ionicons
                     name="bar-chart-outline"
                     size={28}
-                    color={
-                      theme.icon
-                        .default
-                        .icon
-                    }
+                    color={theme.icon.default.icon}
                   />
                 </View>
 
@@ -524,8 +436,7 @@ export default function HomeScreen() {
                 <AppText
                   variant="h3"
                   style={{
-                    textAlign:
-                      "center",
+                    textAlign: "center",
                   }}
                 >
                   No transactions yet
@@ -537,15 +448,11 @@ export default function HomeScreen() {
                   variant="bodySmall"
                   color="secondary"
                   style={{
-                    textAlign:
-                      "center",
+                    textAlign: "center",
                   }}
                 >
-                  Your sales and
-                  transaction activity
-                  will appear here once
-                  you receive your first
-                  payment.
+                  Your sales and transaction activity will appear here once you
+                  receive your first payment.
                 </AppText>
               </View>
             </Card>
@@ -557,21 +464,16 @@ export default function HomeScreen() {
 
           <View
             style={{
-              marginTop:
-                spacing.lg,
+              marginTop: spacing.lg,
             }}
           >
-            <AppText variant="h3">
-              Quick Actions
-            </AppText>
+            <AppText variant="h3">Quick Actions</AppText>
 
             <View
               style={{
-                flexDirection:
-                  "row",
+                flexDirection: "row",
                 gap: spacing.md,
-                marginTop:
-                  spacing.md,
+                marginTop: spacing.md,
               }}
             >
               {/* PAYMENT LINK */}
@@ -579,61 +481,32 @@ export default function HomeScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Payment Link"
-                onPress={() =>
-                  router.push(
-                    "/more/payment-link"
-                  )
-                }
-                style={({
-                  pressed,
-                }) => [
+                onPress={() => router.push("/more/payment-link")}
+                style={({ pressed }) => [
                   {
                     flex: 1,
-                    flexDirection:
-                      "row",
-                    alignItems:
-                      "center",
-                    justifyContent:
-                      "center",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
                     gap: spacing.sm,
 
-                    paddingHorizontal:
-                      spacing.md,
-                    paddingVertical:
-                      spacing.md,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: spacing.md,
 
                     borderWidth: 1,
-                    borderRadius:
-                      radius.md,
+                    borderRadius: radius.md,
 
-                    backgroundColor:
-                      theme.card
-                        .default
-                        .background,
+                    backgroundColor: theme.card.default.background,
 
-                    borderColor:
-                      theme.card
-                        .default
-                        .border,
+                    borderColor: theme.card.default.border,
 
-                    opacity:
-                      pressed
-                        ? 0.8
-                        : 1,
+                    opacity: pressed ? 0.8 : 1,
                   },
                 ]}
               >
-                <Ionicons
-                  name="link"
-                  size={24}
-                  color={
-                    theme.text.primary
-                  }
-                />
+                <Ionicons name="link" size={24} color={theme.text.primary} />
 
-                <AppText variant="button">
-                  Payment Link
-                </AppText>
+                <AppText variant="button">Payment Link</AppText>
               </Pressable>
 
               {/* STOREFRONT */}
@@ -641,61 +514,36 @@ export default function HomeScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Storefront"
-                onPress={() =>
-                  router.push(
-                    "/store"
-                  )
-                }
-                style={({
-                  pressed,
-                }) => [
+                onPress={() => router.push("/store")}
+                style={({ pressed }) => [
                   {
                     flex: 1,
-                    flexDirection:
-                      "row",
-                    alignItems:
-                      "center",
-                    justifyContent:
-                      "center",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
                     gap: spacing.sm,
 
-                    paddingHorizontal:
-                      spacing.md,
-                    paddingVertical:
-                      spacing.md,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: spacing.md,
 
                     borderWidth: 1,
-                    borderRadius:
-                      radius.md,
+                    borderRadius: radius.md,
 
-                    backgroundColor:
-                      theme.card
-                        .default
-                        .background,
+                    backgroundColor: theme.card.default.background,
 
-                    borderColor:
-                      theme.card
-                        .default
-                        .border,
+                    borderColor: theme.card.default.border,
 
-                    opacity:
-                      pressed
-                        ? 0.8
-                        : 1,
+                    opacity: pressed ? 0.8 : 1,
                   },
                 ]}
               >
                 <Ionicons
                   name="storefront-outline"
                   size={24}
-                  color={
-                    theme.text.primary
-                  }
+                  color={theme.text.primary}
                 />
 
-                <AppText variant="button">
-                  Storefront
-                </AppText>
+                <AppText variant="button">Storefront</AppText>
               </Pressable>
             </View>
           </View>
@@ -706,39 +554,26 @@ export default function HomeScreen() {
 
           <View
             style={{
-              marginTop:
-                spacing.lg,
+              marginTop: spacing.lg,
             }}
           >
             {/* SECTION HEADER */}
 
             <View
               style={{
-                flexDirection:
-                  "row",
-                justifyContent:
-                  "space-between",
-                alignItems:
-                  "center",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
               }}
             >
-              <AppText variant="h3">
-                Recent Transactions
-              </AppText>
+              <AppText variant="h3">Recent Transactions</AppText>
 
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="View all transactions"
-                onPress={() =>
-                  router.push(
-                    ROUTES.TRANSACTIONS
-                  )
-                }
+                onPress={() => router.push(ROUTES.TRANSACTIONS)}
               >
-                <AppText
-                  variant="bodySmallBold"
-                  color="link"
-                >
+                <AppText variant="bodySmallBold" color="link">
                   View All
                 </AppText>
               </Pressable>
@@ -748,41 +583,28 @@ export default function HomeScreen() {
 
             <View
               style={{
-                marginTop:
-                  spacing.md,
+                marginTop: spacing.md,
               }}
             >
-              {recentTransactions.length >
-              0 ? (
-                <TransactionList
-                  transactions={
-                    recentTransactions
-                  }
-                />
+              {recentTransactions.length > 0 ? (
+                <TransactionList transactions={recentTransactions} />
               ) : (
                 <Card
                   style={{
-                    alignItems:
-                      "center",
-                    paddingVertical:
-                      spacing.xl,
+                    alignItems: "center",
+                    paddingVertical: spacing.xl,
                   }}
                 >
                   <Ionicons
                     name="receipt-outline"
                     size={32}
-                    color={
-                      theme.icon
-                        .default
-                        .icon
-                    }
+                    color={theme.icon.default.icon}
                   />
 
                   <AppText
                     variant="bodyBold"
                     style={{
-                      marginTop:
-                        spacing.sm,
+                      marginTop: spacing.sm,
                     }}
                   >
                     No transactions yet
@@ -792,15 +614,11 @@ export default function HomeScreen() {
                     variant="bodySmall"
                     color="secondary"
                     style={{
-                      textAlign:
-                        "center",
-                      marginTop:
-                        spacing.xs,
+                      textAlign: "center",
+                      marginTop: spacing.xs,
                     }}
                   >
-                    Your recent
-                    transactions will
-                    appear here.
+                    Your recent transactions will appear here.
                   </AppText>
                 </Card>
               )}

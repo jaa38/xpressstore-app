@@ -11,28 +11,26 @@ import {
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { Ionicons } from "@expo/vector-icons";
+
 import { useEffect, useState, useCallback } from "react";
 
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 
 import { Button } from "@/components/ui/Button";
-
 import { ImageActionCard } from "@/components/ui/ImageActionCard";
-
 import { Divider } from "@/components/ui/Divider";
 import { Input } from "@/components/ui/Input";
 import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { AppText } from "@/components/ui/AppText";
-
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 
-import { spacing, theme } from "@/theme";
+import { spacing, theme, radius } from "@/theme";
 
 import { useProduct } from "@/hooks/products/useProduct";
 
 import { useCreateCategory } from "@/hooks/categories/useCreateCategory";
-
 import { useCategories } from "@/hooks/categories/useCategories";
 
 import * as ImagePicker from "expo-image-picker";
@@ -50,26 +48,101 @@ import {
 
 import { useUploadProductImage } from "@/hooks/products/useUploadProductImage";
 
-import type { UpdateProductRequest } from "@/types/product";
-
-import type { ProductImageDto } from "@/types/product";
+import type {
+  UpdateProductRequest,
+  ProductImageDto,
+  MerchantProduct,
+} from "@/types/product";
 
 import { useUpdateProduct } from "@/hooks/products/useUpdateProduct";
-
-import type { Currency } from "@/types/currency";
 
 import { Card } from "@/components/ui/Card";
 
 import { buildVariantPayload } from "@/utils/products/buildProductPayload";
 
+/**
+ * ============================================================================
+ * MOCKS
+ * ============================================================================
+ */
+
+import { USE_MOCK_PRODUCTS } from "@/mocks/config";
+
+import { getMockProduct, updateMockProduct } from "@/mocks/products";
+
+import { MOCK_CATEGORIES } from "@/mocks/categories";
+
+/**
+ * ============================================================================
+ * PRODUCT DETAILS SCREEN
+ * ============================================================================
+ */
+
 export default function ProductDetailsScreen() {
+  /**
+   * ==========================================================================
+   * ROUTE
+   * ==========================================================================
+   */
+
   const { id } = useLocalSearchParams<{
     id: string;
   }>();
 
   const router = useRouter();
 
-  const { product, isLoading: loading } = useProduct(Number(id));
+  const productId = Number(id);
+
+  /**
+   * ==========================================================================
+   * API PRODUCT
+   * ==========================================================================
+   *
+   * The API hook remains completely intact.
+   *
+   * In mock mode, its result is ignored.
+   */
+
+  const { product: apiProduct, isLoading: apiLoading } = useProduct(productId);
+
+  /**
+   * ==========================================================================
+   * MOCK PRODUCT
+   * ==========================================================================
+   */
+
+  const [mockProduct, setMockProduct] = useState<MerchantProduct | undefined>(
+    () => (USE_MOCK_PRODUCTS ? getMockProduct(productId) : undefined)
+  );
+
+  /**
+   * Keep mock product synchronized
+   * with the shared repository.
+   */
+
+  useEffect(() => {
+    if (!USE_MOCK_PRODUCTS) {
+      return;
+    }
+
+    setMockProduct(getMockProduct(productId));
+  }, [productId]);
+
+  /**
+   * ==========================================================================
+   * SOURCE OF TRUTH
+   * ==========================================================================
+   */
+
+  const product = USE_MOCK_PRODUCTS ? mockProduct : apiProduct;
+
+  const loading = USE_MOCK_PRODUCTS ? false : apiLoading;
+
+  /**
+   * ==========================================================================
+   * CATEGORIES API
+   * ==========================================================================
+   */
 
   const {
     data: categories = [],
@@ -77,30 +150,63 @@ export default function ProductDetailsScreen() {
     isError: categoriesError,
   } = useCategories();
 
-  // const [visible, setVisible] = useState(false);
+  /**
+   * ==========================================================================
+   * CATEGORY SOURCE OF TRUTH
+   * ==========================================================================
+   */
+
+  const categoryOptions = USE_MOCK_PRODUCTS ? MOCK_CATEGORIES : categories;
+
+  const categoryLoading = USE_MOCK_PRODUCTS ? false : categoriesLoading;
+
+  const categoryError = USE_MOCK_PRODUCTS ? false : categoriesError;
+
+  /**
+   * ==========================================================================
+   * STATE
+   * ==========================================================================
+   */
 
   const [newCategory, setNewCategory] = useState("");
 
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
-  const createCategoryMutation = useCreateCategory();
-
   const [saving, setSaving] = useState(false);
 
   const [hasSaved, setHasSaved] = useState(false);
 
-  const { showToast } = useToast();
+  /**
+   * ==========================================================================
+   * MUTATIONS
+   * ==========================================================================
+   */
+
+  const createCategoryMutation = useCreateCategory();
 
   const updateProductMutation = useUpdateProduct();
 
   const uploadImagesMutation = useUploadProductImage();
+
+  /**
+   * ==========================================================================
+   * TOAST
+   * ==========================================================================
+   */
+
+  const { showToast } = useToast();
+
+  /**
+   * ==========================================================================
+   * FORM
+   * ==========================================================================
+   */
 
   const {
     control,
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { isDirty, isValid },
   } = useForm<EditProductForm>({
     resolver: zodResolver(editProductSchema),
@@ -113,8 +219,18 @@ export default function ProductDetailsScreen() {
       stock: "",
       image: "",
       visible: false,
+      youtubeLink: "",
+      unit: "",
+      productLocation: "",
+      minOrderQty: "",
     },
   });
+
+  /**
+   * ==========================================================================
+   * IMAGE CONFIGURATION
+   * ==========================================================================
+   */
 
   const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
     mediaTypes: ["images"],
@@ -124,6 +240,12 @@ export default function ProductDetailsScreen() {
   };
 
   const MAX_GALLERY_IMAGES = 5;
+
+  /**
+   * ==========================================================================
+   * LOAD PRODUCT INTO FORM
+   * ==========================================================================
+   */
 
   useEffect(() => {
     if (!product) {
@@ -135,15 +257,15 @@ export default function ProductDetailsScreen() {
     setGalleryImages(images);
 
     reset({
-      productName: product.productName,
+      productName: product.productName ?? "",
 
       category: product.productCategories?.[0]?.toString() ?? "",
 
-      description: product.description,
+      description: product.description ?? "",
 
-      price: String(product.unitPrice),
+      price: String(product.unitPrice ?? ""),
 
-      stock: String(product.totalInStock),
+      stock: String(product.totalInStock ?? ""),
 
       image: images[0] ?? "",
 
@@ -158,6 +280,12 @@ export default function ProductDetailsScreen() {
       minOrderQty: product.minOrderQty ?? "",
     });
   }, [product, reset]);
+
+  /**
+   * ==========================================================================
+   * HARDWARE BACK BUTTON
+   * ==========================================================================
+   */
 
   useFocusEffect(
     useCallback(() => {
@@ -177,8 +305,14 @@ export default function ProductDetailsScreen() {
       );
 
       return () => subscription.remove();
-    }, [isDirty])
+    }, [isDirty, router])
   );
+
+  /**
+   * ==========================================================================
+   * CAMERA
+   * ==========================================================================
+   */
 
   async function handleCamera() {
     if (galleryImages.length >= MAX_GALLERY_IMAGES) {
@@ -194,28 +328,44 @@ export default function ProductDetailsScreen() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permission.granted) {
+      showToast({
+        type: "error",
+        title: "Camera Permission Required",
+        message: "Please allow camera access to take a product photo.",
+      });
+
       return;
     }
 
     const result = await ImagePicker.launchCameraAsync(IMAGE_PICKER_OPTIONS);
 
-    if (!result.canceled) {
-      const asset = result.assets?.[0];
-
-      if (asset) {
-        setGalleryImages((current) => {
-          const updated = [...current, asset.uri];
-
-          setValue("image", updated[0] ?? "", {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-
-          return updated;
-        });
-      }
+    if (result.canceled) {
+      return;
     }
+
+    const asset = result.assets?.[0];
+
+    if (!asset) {
+      return;
+    }
+
+    setGalleryImages((current) => {
+      const updated = [...current, asset.uri];
+
+      setValue("image", updated[0] ?? "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+
+      return updated;
+    });
   }
+
+  /**
+   * ==========================================================================
+   * GALLERY
+   * ==========================================================================
+   */
 
   async function handleGallery() {
     if (galleryImages.length >= MAX_GALLERY_IMAGES) {
@@ -236,49 +386,31 @@ export default function ProductDetailsScreen() {
       selectionLimit: MAX_GALLERY_IMAGES - galleryImages.length,
     });
 
-    if (!result.canceled) {
-      const selectedImages = result.assets.map((asset) => asset.uri);
-
-      setGalleryImages((current) => {
-        /**
-         * Remove duplicates
-         */
-        const merged = [...current, ...selectedImages];
-
-        const uniqueImages = [...new Set(merged)].slice(0, MAX_GALLERY_IMAGES);
-
-        setValue("image", uniqueImages[0] ?? "", {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
-
-        return uniqueImages;
-      });
+    if (result.canceled) {
+      return;
     }
+
+    const selectedImages = result.assets.map((asset) => asset.uri);
+
+    setGalleryImages((current) => {
+      const merged = [...current, ...selectedImages];
+
+      const uniqueImages = [...new Set(merged)].slice(0, MAX_GALLERY_IMAGES);
+
+      setValue("image", uniqueImages[0] ?? "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+
+      return uniqueImages;
+    });
   }
 
-  // function handleRemoveImage() {
-  //   Alert.alert(
-  //     "Remove Product Image?",
-  //     "This will remove the current product image. You can always add another one before saving.",
-  //     [
-  //       {
-  //         text: "Cancel",
-  //         style: "cancel",
-  //       },
-  //       {
-  //         text: "Remove",
-  //         style: "destructive",
-  //         onPress: () => {
-  //           setValue("image", "", {
-  //             shouldDirty: true,
-  //             shouldValidate: true,
-  //           });
-  //         },
-  //       },
-  //     ]
-  //   );
-  // }
+  /**
+   * ==========================================================================
+   * REMOVE IMAGE
+   * ==========================================================================
+   */
 
   function removeGalleryImage(index: number) {
     Alert.alert(
@@ -289,9 +421,11 @@ export default function ProductDetailsScreen() {
           text: "Cancel",
           style: "cancel",
         },
+
         {
           text: "Remove",
           style: "destructive",
+
           onPress: () => {
             setGalleryImages((current) => {
               const updated = current.filter((_, i) => i !== index);
@@ -308,6 +442,12 @@ export default function ProductDetailsScreen() {
       ]
     );
   }
+
+  /**
+   * ==========================================================================
+   * MAKE COVER IMAGE
+   * ==========================================================================
+   */
 
   function makeCoverImage(index: number) {
     if (index === 0) {
@@ -332,15 +472,77 @@ export default function ProductDetailsScreen() {
     });
   }
 
+  /**
+   * ==========================================================================
+   * CREATE CATEGORY
+   * ==========================================================================
+   */
+
   async function handleCreateCategory() {
-    if (!newCategory.trim()) {
+    const categoryName = newCategory.trim();
+
+    if (!categoryName) {
       return;
     }
 
-    try {
-      const category = await createCategoryMutation.mutateAsync(newCategory);
+    /**
+     * ========================================================================
+     * MOCK MODE
+     * ========================================================================
+     *
+     * For mock mode we create a local option.
+     *
+     * The value is generated from the current
+     * timestamp so it does not collide with
+     * the existing mock category IDs.
+     */
 
-      setValue("category", category.value);
+    if (USE_MOCK_PRODUCTS) {
+      const mockValue = String(Date.now());
+
+      /**
+       * Since MOCK_CATEGORIES is
+       * imported from the mock module,
+       * we cannot mutate it directly.
+       *
+       * For the current form session,
+       * selecting the generated value is
+       * enough for the mock product update.
+       */
+
+      setValue("category", mockValue, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+
+      setNewCategory("");
+
+      showToast({
+        type: "success",
+        title: "Category Created",
+        message: `${categoryName} has been added.`,
+      });
+
+      return;
+    }
+
+    /**
+     * ========================================================================
+     * API MODE
+     * ========================================================================
+     */
+
+    try {
+      const category = await createCategoryMutation.mutateAsync(categoryName);
+
+      if (!category) {
+        throw new Error("Category could not be created.");
+      }
+
+      setValue("category", category.value, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
 
       setNewCategory("");
 
@@ -360,23 +562,121 @@ export default function ProductDetailsScreen() {
     }
   }
 
+  /**
+   * ==========================================================================
+   * VARIANTS
+   * ==========================================================================
+   */
+
   const variantPayload = buildVariantPayload(
     product?.variations ?? [],
     (product?.variations.length ?? 0) > 0
   );
+
+  /**
+   * ==========================================================================
+   * UPDATE PRODUCT
+   * ==========================================================================
+   */
 
   async function handleUpdateProduct(data: EditProductForm) {
     try {
       setSaving(true);
 
       /**
-       * Build the gallery payload while preserving:
+       * ========================================================================
+       * MOCK MODE
+       * ========================================================================
        *
-       * • Existing remote images
-       * • Newly selected local images
-       * • Image order (cover image first)
+       * IMPORTANT:
+       *
+       * We do NOT:
+       *
+       * - upload images
+       * - call updateProductMutation
+       * - call the API
+       *
+       * We update the shared mock repository.
        */
+
+      if (USE_MOCK_PRODUCTS) {
+        const images: ProductImageDto[] = galleryImages.map((uri, index) => ({
+          filename: uri.startsWith("http")
+            ? (product?.productImages?.[index]?.filename ??
+              `product-${index + 1}.jpg`)
+            : `product-${Date.now()}-${index}.jpg`,
+
+          url: uri,
+        }));
+
+        const updatedProduct = updateMockProduct(productId, {
+          productName: data.productName.trim(),
+
+          description: data.description.trim(),
+
+          unitPrice: Number(data.price),
+
+          totalInStock: Number(data.stock),
+
+          isActive: data.visible,
+
+          productImages: images,
+
+          youtubeLink: data.youtubeLink.trim(),
+
+          unit: data.unit.trim(),
+
+          productLocation: data.productLocation.trim(),
+
+          minOrderQty: data.minOrderQty.trim(),
+        });
+
+        if (!updatedProduct) {
+          throw new Error("Mock product not found.");
+        }
+
+        /**
+         * Keep the local screen state
+         * synchronized.
+         */
+
+        setMockProduct(updatedProduct);
+
+        showToast({
+          type: "success",
+          title: "Product Updated",
+          message: "Changes saved successfully.",
+        });
+
+        setHasSaved(true);
+
+        const updatedGallery = images.map((image) => image.url);
+
+        setGalleryImages(updatedGallery);
+
+        reset({
+          ...data,
+          image: updatedGallery[0] ?? "",
+        });
+
+        router.back();
+
+        return;
+      }
+
+      /**
+       * ========================================================================
+       * API MODE
+       * ========================================================================
+       */
+
       let images: ProductImageDto[] = [];
+
+      /**
+       * ------------------------------------------------------------------------
+       * IMAGES
+       * ------------------------------------------------------------------------
+       */
 
       if (galleryImages.length > 0) {
         const remoteImages = galleryImages.filter((uri) =>
@@ -388,8 +688,10 @@ export default function ProductDetailsScreen() {
         );
 
         /**
-         * Upload only newly selected images.
+         * Upload newly selected
+         * local images.
          */
+
         const uploadedImages: ProductImageDto[] = [];
 
         for (const imageUri of localImages) {
@@ -407,8 +709,11 @@ export default function ProductDetailsScreen() {
         }
 
         /**
-         * Convert remote URLs back into ProductImageDto.
+         * Convert existing
+         * remote images back into
+         * ProductImageDto.
          */
+
         const existingImages: ProductImageDto[] = remoteImages.map((url) => ({
           filename:
             product?.productImages.find((image) => image.url === url)
@@ -418,8 +723,9 @@ export default function ProductDetailsScreen() {
         }));
 
         /**
-         * Merge everything while preserving gallery order.
+         * Preserve gallery order.
          */
+
         images = galleryImages.map((uri) => {
           if (uri.startsWith("http")) {
             return existingImages.find((image) => image.url === uri)!;
@@ -429,8 +735,14 @@ export default function ProductDetailsScreen() {
         });
       }
 
+      /**
+       * ------------------------------------------------------------------------
+       * API PAYLOAD
+       * ------------------------------------------------------------------------
+       */
+
       const payload: UpdateProductRequest = {
-        id: Number(id),
+        id: productId,
 
         name: data.productName.trim(),
 
@@ -457,10 +769,22 @@ export default function ProductDetailsScreen() {
         ...variantPayload,
       };
 
+      /**
+       * ------------------------------------------------------------------------
+       * API UPDATE
+       * ------------------------------------------------------------------------
+       */
+
       await updateProductMutation.mutateAsync({
-        productId: Number(id),
+        productId,
         payload,
       });
+
+      /**
+       * ------------------------------------------------------------------------
+       * SUCCESS
+       * ------------------------------------------------------------------------
+       */
 
       showToast({
         type: "success",
@@ -493,9 +817,16 @@ export default function ProductDetailsScreen() {
     }
   }
 
+  /**
+   * ==========================================================================
+   * DISCARD CHANGES
+   * ==========================================================================
+   */
+
   function confirmDiscardChanges(onDiscard: () => void) {
     if (!isDirty || hasSaved) {
       onDiscard();
+
       return;
     }
 
@@ -507,6 +838,7 @@ export default function ProductDetailsScreen() {
           text: "Cancel",
           style: "cancel",
         },
+
         {
           text: "Discard",
           style: "destructive",
@@ -515,6 +847,12 @@ export default function ProductDetailsScreen() {
       ]
     );
   }
+
+  /**
+   * ==========================================================================
+   * LOADING
+   * ==========================================================================
+   */
 
   if (loading) {
     return (
@@ -539,6 +877,78 @@ export default function ProductDetailsScreen() {
     );
   }
 
+  /**
+   * ==========================================================================
+   * PRODUCT NOT FOUND
+   * ==========================================================================
+   */
+
+  if (!product) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: theme.background.primary,
+        }}
+      >
+        <ScreenHeader title="Edit Product" onBack={() => router.back()} />
+
+        <Divider />
+
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingHorizontal: spacing.xl,
+          }}
+        >
+          <Ionicons
+            name="cube-outline"
+            size={56}
+            color={theme.icon.default.icon}
+          />
+
+          <AppText
+            variant="h2"
+            style={{
+              marginTop: spacing.lg,
+              textAlign: "center",
+            }}
+          >
+            Product Not Found
+          </AppText>
+
+          <AppText
+            variant="body"
+            color="secondary"
+            style={{
+              marginTop: spacing.sm,
+              textAlign: "center",
+            }}
+          >
+            The product you're trying to edit could not be found.
+          </AppText>
+
+          <Pressable
+            onPress={() => router.back()}
+            style={{
+              marginTop: spacing.lg,
+            }}
+          >
+            <AppText color="link">Go Back</AppText>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  /**
+   * ==========================================================================
+   * UI
+   * ==========================================================================
+   */
+
   return (
     <SafeAreaView
       style={{
@@ -546,6 +956,10 @@ export default function ProductDetailsScreen() {
         backgroundColor: theme.background.primary,
       }}
     >
+      {/* ====================================================================
+          HEADER
+      ==================================================================== */}
+
       <ScreenHeader
         title="Edit Product"
         onBack={() =>
@@ -554,7 +968,12 @@ export default function ProductDetailsScreen() {
           })
         }
       />
+
       <Divider />
+
+      {/* ====================================================================
+          CONTENT
+      ==================================================================== */}
 
       <ScrollView
         style={{
@@ -562,11 +981,16 @@ export default function ProductDetailsScreen() {
         }}
         contentContainerStyle={{
           paddingHorizontal: spacing.lg,
-          paddingTop: spacing.md,
-          paddingBottom: spacing.xl,
+          paddingTop: spacing.lg,
+          paddingBottom: spacing["3xl"],
         }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
+        {/* ==================================================================
+            PRODUCT INFORMATION
+        ================================================================== */}
+
         <View
           style={{
             gap: spacing.md,
@@ -578,185 +1002,285 @@ export default function ProductDetailsScreen() {
             Update your product details, category and image.
           </AppText>
 
-          <Card>
+          {/* ================================================================
+              IMAGE CARD
+          ================================================================ */}
+
+          <Card
+            style={{
+              width: "100%",
+            }}
+          >
             <View
               style={{
-                gap: spacing.sm,
+                width: "100%",
+                gap: spacing.lg,
               }}
             >
+              {/* IMAGE ACTIONS */}
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: spacing.md,
+                }}
+              >
+                <ImageActionCard
+                  title="Take Photo"
+                  icon="camera-outline"
+                  disabled={galleryImages.length >= MAX_GALLERY_IMAGES}
+                  onPress={handleCamera}
+                />
+
+                <ImageActionCard
+                  title="Gallery"
+                  icon="image-outline"
+                  disabled={galleryImages.length >= MAX_GALLERY_IMAGES}
+                  onPress={handleGallery}
+                />
+              </View>
+
+              {/* GALLERY HEADER */}
+
+              <View
+                style={{
+                  width: "100%",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: spacing.md,
+                }}
+              >
+                <AppText
+                  variant="bodySmall"
+                  color="secondary"
+                  style={{
+                    flex: 1,
+                  }}
+                >
+                  Tap an image to make it the cover photo.
+                </AppText>
+
+                <AppText variant="bodySmallBold" color="secondary">
+                  {galleryImages.length}/{MAX_GALLERY_IMAGES}
+                </AppText>
+              </View>
+
+              {/* IMAGE LIST */}
+
+              {galleryImages.length === 0 ? (
+                <View
+                  style={{
+                    width: "100%",
+                    borderWidth: 1,
+                    borderColor: theme.border.default,
+                    borderRadius: radius.md,
+                    paddingVertical: spacing.xl,
+                    paddingHorizontal: spacing.lg,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: radius.full,
+                      backgroundColor: theme.icon.default.background,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Ionicons
+                      name="images-outline"
+                      size={28}
+                      color={theme.icon.default.icon}
+                    />
+                  </View>
+
+                  <AppText
+                    variant="bodyLargeBold"
+                    style={{
+                      marginTop: spacing.md,
+                      textAlign: "center",
+                    }}
+                  >
+                    No Images Added
+                  </AppText>
+
+                  <AppText
+                    variant="bodySmall"
+                    color="secondary"
+                    style={{
+                      marginTop: spacing.xs,
+                      textAlign: "center",
+                    }}
+                  >
+                    Use Camera or Gallery above to add product images.
+                  </AppText>
+                </View>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{
+                    gap: spacing.sm,
+                    paddingVertical: spacing.xs,
+                    paddingRight: spacing.md,
+                  }}
+                >
+                  {galleryImages.map((uri, index) => (
+                    <Pressable
+                      key={`${uri}-${index}`}
+                      onPress={() => makeCoverImage(index)}
+                      style={{
+                        width: 90,
+                        height: 90,
+                        position: "relative",
+                      }}
+                    >
+                      <Image
+                        source={{
+                          uri,
+                        }}
+                        resizeMode="cover"
+                        style={{
+                          width: 90,
+                          height: 90,
+                          borderRadius: radius.md,
+                          borderWidth: index === 0 ? 3 : 1,
+                          borderColor:
+                            index === 0
+                              ? theme.border.brand
+                              : theme.border.strong,
+                        }}
+                      />
+
+                      {/* COVER */}
+
+                      {index === 0 && (
+                        <View
+                          style={{
+                            position: "absolute",
+                            left: 5,
+                            bottom: 5,
+                            backgroundColor: theme.background.brand,
+                            paddingHorizontal: spacing.xs,
+                            paddingVertical: 2,
+                            borderRadius: radius.sm,
+                          }}
+                        >
+                          <AppText variant="caption" color="primary">
+                            Cover
+                          </AppText>
+                        </View>
+                      )}
+
+                      {/* REMOVE */}
+
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Remove image ${index + 1}`}
+                        onPress={() => removeGalleryImage(index)}
+                        hitSlop={8}
+                        style={{
+                          position: "absolute",
+                          top: -6,
+                          right: -6,
+                          width: 26,
+                          height: 26,
+                          borderRadius: radius.full,
+                          backgroundColor: theme.state.error.background,
+                          borderWidth: 1,
+                          borderColor: theme.state.error.border,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Ionicons
+                          name="close"
+                          size={16}
+                          color={theme.state.error.icon}
+                        />
+                      </Pressable>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              )}
+
+              {/* ============================================================
+                  PRODUCT META
+              ============================================================ */}
+
               <View
                 style={{
                   gap: spacing.md,
                 }}
               >
+                {/* CURRENCY */}
+
                 <View
                   style={{
                     flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
                     gap: spacing.md,
                   }}
                 >
-                  <ImageActionCard
-                    title="Take Photo"
-                    icon="camera-outline"
-                    disabled={galleryImages.length >= MAX_GALLERY_IMAGES}
-                    onPress={handleCamera}
-                  />
+                  <AppText variant="body" color="secondary">
+                    Currency
+                  </AppText>
 
-                  <ImageActionCard
-                    title="Gallery"
-                    icon="image-outline"
-                    disabled={galleryImages.length >= MAX_GALLERY_IMAGES}
-                    onPress={handleGallery}
-                  />
+                  <AppText variant="bodyBold">
+                    {product.currency ?? "NGN"}
+                  </AppText>
                 </View>
 
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <AppText variant="bodySmall" color="secondary">
-                      Tap an image to make it the cover photo.
-                    </AppText>
+                {/* INVENTORY */}
 
-                    <AppText variant="bodySmall" color="secondary">
-                      {galleryImages.length}/{MAX_GALLERY_IMAGES}
-                    </AppText>
-                  </View>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      gap: spacing.sm,
-                    }}
-                  >
-                    {galleryImages.length === 0 && (
-                      <Card
-                        style={{
-                          width: 220,
-                        }}
-                      >
-                        <AppText variant="bodyBold">No Images Added</AppText>
-
-                        <AppText variant="bodySmall" color="secondary">
-                          Use Camera or Gallery above to add product images.
-                        </AppText>
-                      </Card>
-                    )}
-
-                    {galleryImages.map((uri, index) => (
-                      <Pressable
-                        key={`${uri}-${index}`}
-                        onPress={() => makeCoverImage(index)}
-                        style={{
-                          position: "relative",
-                        }}
-                      >
-                        <Image
-                          source={{ uri }}
-                          style={{
-                            width: 90,
-                            height: 90,
-                            borderRadius: 12,
-
-                            borderWidth: index === 0 ? 3 : 1,
-
-                            borderColor:
-                              index === 0
-                                ? theme.border.brand
-                                : theme.border.strong,
-                          }}
-                        />
-
-                        {index === 0 && (
-                          <View
-                            style={{
-                              position: "absolute",
-                              left: 6,
-                              top: 6,
-                              backgroundColor: theme.background.brand,
-                              paddingHorizontal: 6,
-                              paddingVertical: 2,
-                              borderRadius: 6,
-                            }}
-                          >
-                            <AppText variant="caption" color="inverse">
-                              Primary
-                            </AppText>
-                          </View>
-                        )}
-
-                        <Pressable
-                          onPress={() => removeGalleryImage(index)}
-                          style={{
-                            position: "absolute",
-                            top: -6,
-                            right: -6,
-                            width: 24,
-                            height: 24,
-                            borderRadius: 12,
-                            backgroundColor: theme.state.error.background,
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                        >
-                          <AppText variant="bodyBold" color="inverse">
-                            ×
-                          </AppText>
-                        </Pressable>
-                      </Pressable>
-                    ))}
-                  </View>
-                </ScrollView>
-              </View>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
-                <AppText variant="body" color="secondary">
-                  Currency
-                </AppText>
-
-                <AppText variant="bodyBold">{product?.currency}</AppText>
-              </View>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
-                <AppText variant="body" color="secondary">
-                  Inventory Status
-                </AppText>
-
-                <AppText
-                  variant="bodyBold"
-                  color={product?.inStock ? "success" : "error"}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: spacing.md,
+                  }}
                 >
-                  {product?.inStock ? "In Stock" : "Out of Stock"}
-                </AppText>
-              </View>
+                  <AppText variant="body" color="secondary">
+                    Inventory Status
+                  </AppText>
 
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
-                <AppText variant="body" color="secondary">
-                  Low Stock Alert
-                </AppText>
+                  <AppText
+                    variant="bodyBold"
+                    color={product.inStock ? "success" : "error"}
+                  >
+                    {product.inStock ? "In Stock" : "Out of Stock"}
+                  </AppText>
+                </View>
 
-                <AppText variant="bodyBold">{product?.lowStockAlert}</AppText>
+                {/* LOW STOCK */}
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: spacing.md,
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Low Stock Alert
+                  </AppText>
+
+                  <AppText variant="bodyBold">{product.lowStockAlert}</AppText>
+                </View>
               </View>
             </View>
           </Card>
+
+          {/* ================================================================
+              PRODUCT NAME
+          ================================================================ */}
 
           <Controller
             control={control}
@@ -772,6 +1296,10 @@ export default function ProductDetailsScreen() {
             )}
           />
 
+          {/* ================================================================
+              CATEGORY
+          ================================================================ */}
+
           <Controller
             control={control}
             name="category"
@@ -782,19 +1310,21 @@ export default function ProductDetailsScreen() {
                 value={value}
                 error={
                   error?.message ??
-                  (categoriesError ? "Unable to load categories." : undefined)
+                  (categoryError ? "Unable to load categories." : undefined)
                 }
-                disabled={categoriesLoading}
-                options={categories}
+                disabled={categoryLoading}
+                options={categoryOptions}
                 placeholder={
-                  categoriesLoading
-                    ? "Loading categories..."
-                    : "Select category"
+                  categoryLoading ? "Loading categories..." : "Select category"
                 }
                 onSelect={onChange}
               />
             )}
           />
+
+          {/* ================================================================
+              CREATE CATEGORY
+          ================================================================ */}
 
           <View
             style={{
@@ -803,7 +1333,7 @@ export default function ProductDetailsScreen() {
           >
             <Input
               label="Create Category"
-              placeholder="e.g Travel Bags"
+              placeholder="e.g. Travel Bags"
               value={newCategory}
               onChangeText={setNewCategory}
             />
@@ -813,13 +1343,18 @@ export default function ProductDetailsScreen() {
               variant="tertiary"
               onPress={handleCreateCategory}
               loading={createCategoryMutation.isPending}
-              disabled={!newCategory.trim()}
+              disabled={!newCategory.trim() || createCategoryMutation.isPending}
             />
           </View>
+
+          {/* ================================================================
+              PRICING & INVENTORY
+          ================================================================ */}
 
           <View
             style={{
               gap: spacing.md,
+              marginTop: spacing.md,
             }}
           >
             <AppText variant="h3">Pricing & Inventory</AppText>
@@ -827,6 +1362,8 @@ export default function ProductDetailsScreen() {
             <AppText variant="body" color="secondary">
               Manage pricing, stock levels and product visibility.
             </AppText>
+
+            {/* PRICE */}
 
             <Controller
               control={control}
@@ -837,13 +1374,15 @@ export default function ProductDetailsScreen() {
                   required
                   keyboardType="decimal-pad"
                   value={field.value}
-                  currency={product?.currency ?? "NGN"}
+                  currency={product.currency ?? "NGN"}
                   disableCurrencySelection
                   error={fieldState.error?.message}
                   onChangeText={field.onChange}
                 />
               )}
             />
+
+            {/* VISIBILITY */}
 
             <Card>
               <View
@@ -861,7 +1400,13 @@ export default function ProductDetailsScreen() {
                 >
                   <AppText variant="bodyLargeBold">Product Status</AppText>
 
-                  <AppText variant="body" color="secondary">
+                  <AppText
+                    variant="body"
+                    color="secondary"
+                    style={{
+                      marginTop: spacing.xs,
+                    }}
+                  >
                     Publish or hide this product from customers.
                   </AppText>
                 </View>
@@ -884,6 +1429,8 @@ export default function ProductDetailsScreen() {
               </View>
             </Card>
 
+            {/* STOCK */}
+
             <Controller
               control={control}
               name="stock"
@@ -898,6 +1445,10 @@ export default function ProductDetailsScreen() {
               )}
             />
           </View>
+
+          {/* ================================================================
+              DESCRIPTION
+          ================================================================ */}
 
           <Controller
             control={control}
@@ -914,10 +1465,14 @@ export default function ProductDetailsScreen() {
           />
         </View>
 
+        {/* ==================================================================
+            ADDITIONAL INFORMATION
+        ================================================================== */}
+
         <View
           style={{
             gap: spacing.md,
-            marginTop: spacing.lg,
+            marginTop: spacing.xl,
           }}
         >
           <AppText variant="h3">Additional Information</AppText>
@@ -925,6 +1480,9 @@ export default function ProductDetailsScreen() {
           <AppText variant="body" color="secondary">
             Optional information to help customers understand this product.
           </AppText>
+
+          {/* YOUTUBE */}
+
           <Controller
             control={control}
             name="youtubeLink"
@@ -938,6 +1496,8 @@ export default function ProductDetailsScreen() {
               />
             )}
           />
+
+          {/* UNIT */}
 
           <Controller
             control={control}
@@ -953,6 +1513,8 @@ export default function ProductDetailsScreen() {
             )}
           />
 
+          {/* MINIMUM ORDER */}
+
           <Controller
             control={control}
             name="minOrderQty"
@@ -966,6 +1528,8 @@ export default function ProductDetailsScreen() {
               />
             )}
           />
+
+          {/* LOCATION */}
 
           <Controller
             control={control}
@@ -982,6 +1546,10 @@ export default function ProductDetailsScreen() {
           />
         </View>
 
+        {/* ==================================================================
+            SAVE
+        ================================================================== */}
+
         <Button
           title={saving ? "Saving..." : isDirty ? "Save Changes" : "No Changes"}
           variant="primary"
@@ -989,7 +1557,7 @@ export default function ProductDetailsScreen() {
           disabled={saving || !isDirty || !isValid}
           onPress={handleSubmit(handleUpdateProduct)}
           style={{
-            marginTop: spacing.lg,
+            marginTop: spacing.xl,
           }}
         />
       </ScrollView>

@@ -1,7 +1,5 @@
 import { Pressable, View } from "react-native";
 
-import { Ionicons } from "@expo/vector-icons";
-
 import { Card } from "@/components/ui/Card";
 import { AppText } from "@/components/ui/AppText";
 
@@ -52,70 +50,39 @@ export function PaymentLinkCard({
         <View
           style={{
             flex: 1,
-
-            flexDirection: "row",
-
-            alignItems: "center",
-
-            gap: spacing.md,
           }}
         >
-          {/* Payment Link Icon */}
+          <AppText
+            variant="bodyBold"
+            numberOfLines={1}
+          >
+            {link.name}
+          </AppText>
 
-          <View
+          <AppText
+            variant="bodySmall"
+            color="secondary"
+            numberOfLines={1}
             style={{
-              width: 64,
-              height: 64,
-
-              borderRadius: radius.md,
-
-              justifyContent: "center",
-              alignItems: "center",
-
-              backgroundColor:
-                theme.icon.branding.background,
+              marginTop: spacing.xs,
             }}
           >
-            <Ionicons
-              name="link-outline"
-              size={28}
-              color={theme.icon.branding.icon}
-            />
-          </View>
+            {link.paymentLink}
+          </AppText>
 
-          <View
+          <AppText
+            variant="caption"
+            color="muted"
             style={{
-              flex: 1,
-
-              gap: spacing.xs,
+              marginTop: spacing.xs,
             }}
           >
-            <AppText
-              variant="bodyBold"
-              numberOfLines={1}
-            >
-              {link.name}
-            </AppText>
-
-            <AppText
-              variant="bodySmall"
-              color="secondary"
-              numberOfLines={1}
-            >
-              {link.paymentLink}
-            </AppText>
-
-            <AppText
-              variant="caption"
-              color="muted"
-            >
-              {link.createdAt
-                ? formatDate(
-                    new Date(link.createdAt)
-                  )
-                : "-"}
-            </AppText>
-          </View>
+            {link.createdAt
+              ? formatDate(
+                  new Date(link.createdAt)
+                )
+              : "-"}
+          </AppText>
         </View>
 
         {/* Right */}
@@ -123,11 +90,8 @@ export function PaymentLinkCard({
         <View
           style={{
             alignItems: "flex-end",
-
             alignSelf: "stretch",
-
             minWidth: 90,
-
             gap: spacing.xs,
           }}
         >
@@ -140,17 +104,14 @@ export function PaymentLinkCard({
           <View
             style={{
               paddingHorizontal: spacing.sm,
-
               paddingVertical: spacing.xs,
-
               borderRadius: radius.full,
-
-              backgroundColor: badgeBackground,
-
+              backgroundColor:
+                badgeBackground,
               borderWidth:
                 badgeBorderColor ? 1 : 0,
-
-              borderColor: badgeBorderColor,
+              borderColor:
+                badgeBorderColor,
             }}
           >
             <AppText
@@ -167,11 +128,14 @@ export function PaymentLinkCard({
               onMorePress?.(link)
             }
           >
-            <Ionicons
-              name="ellipsis-horizontal"
-              size={20}
-              color={theme.text.primary}
-            />
+            <AppText
+              style={{
+                fontSize: 20,
+                lineHeight: 20,
+              }}
+            >
+              ⋯
+            </AppText>
           </Pressable>
         </View>
       </View>

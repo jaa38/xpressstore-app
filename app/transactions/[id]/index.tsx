@@ -1,7 +1,11 @@
 import { Alert, Pressable, ScrollView, View } from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
+
 import { StatusBar } from "expo-status-bar";
+
 import { Ionicons } from "@expo/vector-icons";
+
 import { router, useLocalSearchParams } from "expo-router";
 
 import { AppText } from "@/components/ui/AppText";
@@ -16,38 +20,129 @@ import { TransactionInformationSection } from "@/components/transactions/Transac
 import { TransactionTimelineSection } from "@/components/transactions/TransactionTimelineSection";
 import { TransactionReceiptActions } from "@/components/transactions/TransactionReceiptActions";
 
-import { shareReceipt } from "@/services/receipt/receiptActions";
-import { downloadReceipt } from "@/services/receipt/receiptActions";
+import {
+  shareReceipt,
+  downloadReceipt,
+} from "@/services/receipt/receiptActions";
+
+import { MOCK_TRANSACTIONS } from "@/mocks/transactions";
+
+/**
+ * ============================================================================
+ * MOCK MODE
+ * ============================================================================
+ *
+ * true:
+ *   Detail screen uses shared local mock data.
+ *
+ * false:
+ *   Detail screen uses the real useTransaction() API.
+ *
+ * The API hook itself is not modified.
+ */
+const USE_MOCK_TRANSACTIONS = true;
+
+/**
+ * ============================================================================
+ * SCREEN
+ * ============================================================================
+ */
 
 export default function TransactionDetailsScreen() {
-  const { id } = useLocalSearchParams<{
-    id: string;
+  /**
+   * --------------------------------------------------------------------------
+   * ROUTE PARAMETER
+   * --------------------------------------------------------------------------
+   */
+
+  const params = useLocalSearchParams<{
+    id?: string | string[];
   }>();
 
+  /**
+   * Expo Router can return a route
+   * parameter as either a string or
+   * string[].
+   *
+   * Normalize it to a single string.
+   */
+  const transactionId = Array.isArray(params.id) ? params.id[0] : params.id;
+
+  /**
+   * --------------------------------------------------------------------------
+   * REAL TRANSACTION API
+   * --------------------------------------------------------------------------
+   *
+   * Keep the API hook untouched.
+   *
+   * When USE_MOCK_TRANSACTIONS is true,
+   * the API result is ignored.
+   */
   const {
-    data: transaction,
-    isLoading,
-    isError,
-    error,
-  } = useTransaction(id);
+    data: apiTransaction,
+    isLoading: apiIsLoading,
+    isError: apiIsError,
+    error: apiError,
+  } = useTransaction(transactionId ?? "");
+
+  /**
+   * --------------------------------------------------------------------------
+   * MOCK TRANSACTION
+   * --------------------------------------------------------------------------
+   *
+   * Look up the transaction using the
+   * exact ID passed by TransactionList.
+   */
+  const mockTransaction = MOCK_TRANSACTIONS.find(
+    (transaction) => transaction.id === transactionId
+  );
+
+  /**
+   * --------------------------------------------------------------------------
+   * ACTIVE TRANSACTION
+   * --------------------------------------------------------------------------
+   */
+
+  const transaction = USE_MOCK_TRANSACTIONS ? mockTransaction : apiTransaction;
+
+  const isLoading = USE_MOCK_TRANSACTIONS ? false : apiIsLoading;
+
+  const isError = USE_MOCK_TRANSACTIONS ? false : apiIsError;
+
+  const error = USE_MOCK_TRANSACTIONS ? null : apiError;
+
+  /**
+   * --------------------------------------------------------------------------
+   * SHARE RECEIPT
+   * --------------------------------------------------------------------------
+   */
 
   async function handleShareReceipt() {
-    if (!transaction) return;
+    if (!transaction) {
+      return;
+    }
 
     try {
       await shareReceipt(transaction);
     } catch (error) {
       Alert.alert(
         "Unable to Share Receipt",
-        error instanceof Error
-          ? error.message
-          : "Something went wrong."
+
+        error instanceof Error ? error.message : "Something went wrong."
       );
     }
   }
 
+  /**
+   * --------------------------------------------------------------------------
+   * DOWNLOAD RECEIPT
+   * --------------------------------------------------------------------------
+   */
+
   async function handleDownloadReceipt() {
-    if (!transaction) return;
+    if (!transaction) {
+      return;
+    }
 
     try {
       const path = await downloadReceipt(transaction);
@@ -59,12 +154,17 @@ export default function TransactionDetailsScreen() {
     } catch (error) {
       Alert.alert(
         "Unable to Download Receipt",
-        error instanceof Error
-          ? error.message
-          : "Something went wrong."
+
+        error instanceof Error ? error.message : "Something went wrong."
       );
     }
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * LOADING
+   * --------------------------------------------------------------------------
+   */
 
   if (isLoading) {
     return (
@@ -94,6 +194,12 @@ export default function TransactionDetailsScreen() {
       </SafeAreaView>
     );
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * NOT FOUND / ERROR
+   * --------------------------------------------------------------------------
+   */
 
   if (isError || !transaction) {
     return (
@@ -133,9 +239,28 @@ export default function TransactionDetailsScreen() {
             ? error.message
             : "The requested transaction could not be found."}
         </AppText>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          onPress={() => router.back()}
+          style={{
+            marginTop: spacing.lg,
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.sm,
+          }}
+        >
+          <AppText color="link">Go Back</AppText>
+        </Pressable>
       </SafeAreaView>
     );
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * UI
+   * --------------------------------------------------------------------------
+   */
 
   return (
     <SafeAreaView
@@ -152,7 +277,9 @@ export default function TransactionDetailsScreen() {
           paddingHorizontal: spacing.lg,
         }}
       >
-        {/* Header */}
+        {/* ================================================================
+            HEADER
+        ================================================================ */}
 
         <View
           style={{
@@ -162,6 +289,8 @@ export default function TransactionDetailsScreen() {
           }}
         >
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
             onPress={() => router.back()}
             style={{
               width: 44,
@@ -182,18 +311,17 @@ export default function TransactionDetailsScreen() {
               flex: 1,
             }}
           >
-            <AppText variant="h1">
-              Transaction
-            </AppText>
+            <AppText variant="h1">Transaction</AppText>
 
-            <AppText
-              variant="body"
-              color="secondary"
-            >
+            <AppText variant="body" color="secondary">
               Receipt Details
             </AppText>
           </View>
         </View>
+
+        {/* ================================================================
+            TRANSACTION CONTENT
+        ================================================================ */}
 
         <ScrollView
           style={{
@@ -204,31 +332,23 @@ export default function TransactionDetailsScreen() {
             paddingBottom: spacing["3xl"],
           }}
         >
-          {/* Summary */}
+          {/* SUMMARY */}
 
-          <TransactionSummarySection
-            transaction={transaction}
-          />
+          <TransactionSummarySection transaction={transaction} />
 
-          {/* Customer */}
+          {/* CUSTOMER */}
 
-          <CustomerInformationSection
-            transaction={transaction}
-          />
+          <CustomerInformationSection transaction={transaction} />
 
-          {/* Transaction */}
+          {/* TRANSACTION INFORMATION */}
 
-          <TransactionInformationSection
-            transaction={transaction}
-          />
+          <TransactionInformationSection transaction={transaction} />
 
-          {/* Timeline */}
+          {/* TIMELINE */}
 
-          <TransactionTimelineSection
-            transaction={transaction}
-          />
+          <TransactionTimelineSection transaction={transaction} />
 
-          {/* Actions */}
+          {/* RECEIPT ACTIONS */}
 
           <TransactionReceiptActions
             transaction={transaction}

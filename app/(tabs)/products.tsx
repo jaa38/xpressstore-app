@@ -1,5 +1,3 @@
-import { router, useFocusEffect } from "expo-router";
-
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +16,8 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { router, useFocusEffect } from "expo-router";
+
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
 import { AppText } from "@/components/ui/AppText";
@@ -31,293 +31,36 @@ import { ROUTES } from "@/navigation/routes";
 import { useProducts } from "@/hooks/products/useProducts";
 import { useDeleteProduct } from "@/hooks/products/useDeleteProduct";
 import { useToggleProductStatus } from "@/hooks/products/useToggleProductStatus";
-
 import { useToast } from "@/hooks/useToast";
 
 import { formatCurrency } from "@/utils/formatters/currency";
 
-import { Currency } from "@/types/currency";
+import type { Currency } from "@/types/currency";
 import type { MerchantProduct } from "@/types/product";
 
 import { radius, spacing, theme } from "@/theme";
 
 /**
  * ============================================================================
- * MOCK MODE
+ * MOCK CONFIGURATION
  * ============================================================================
  *
- * Set to false when you want to use the real products API.
+ * Set this to false when you want the screen to use the real products API.
  */
-const USE_MOCK_PRODUCTS = true;
+
+import { USE_MOCK_PRODUCTS } from "@/mocks/config";
 
 /**
  * ============================================================================
- * MOCK PRODUCTS
+ * MOCK REPOSITORY
  * ============================================================================
  */
 
-const MOCK_PRODUCTS: MerchantProduct[] = [
-  {
-    id: 1,
-    productReference: "PROD-001",
-    productName: "Classic Leather Sneakers",
-    description:
-      "Classic everyday leather sneakers designed for comfort and durability.",
-    unitPrice: 85000,
-    currency: "NGN",
-    totalInStock: 18,
-    lowStockAlert: 5,
-    inStock: true,
-    isActive: true,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "classic-leather-sneakers.jpg",
-        url: "",
-      },
-    ],
-  },
-
-  {
-    id: 2,
-    productReference: "PROD-002",
-    productName: "Premium Ankara Tote Bag",
-    description:
-      "A stylish Ankara tote bag suitable for everyday shopping and casual use.",
-    unitPrice: 45000,
-    currency: "NGN",
-    totalInStock: 4,
-    lowStockAlert: 5,
-    inStock: true,
-    isActive: true,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "premium-ankara-tote-bag.jpg",
-        url: "",
-      },
-    ],
-  },
-
-  {
-    id: 3,
-    productReference: "PROD-003",
-    productName: "Minimalist Wrist Watch",
-    description: "Minimalist wrist watch featuring a clean and modern design.",
-    unitPrice: 52500,
-    currency: "NGN",
-    totalInStock: 12,
-    lowStockAlert: 4,
-    inStock: true,
-    isActive: true,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "minimalist-wrist-watch.jpg",
-        url: "",
-      },
-    ],
-  },
-
-  {
-    id: 4,
-    productReference: "PROD-004",
-    productName: "Premium Wireless Headphones",
-    description:
-      "Premium wireless headphones designed for music, calls and entertainment.",
-    unitPrice: 125000,
-    currency: "NGN",
-    totalInStock: 2,
-    lowStockAlert: 5,
-    inStock: true,
-    isActive: true,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "premium-wireless-headphones.jpg",
-        url: "",
-      },
-    ],
-  },
-
-  {
-    id: 5,
-    productReference: "PROD-005",
-    productName: "Smart Travel Backpack",
-    description:
-      "Spacious travel backpack with dedicated compartments for everyday essentials.",
-    unitPrice: 100000,
-    currency: "NGN",
-    totalInStock: 25,
-    lowStockAlert: 5,
-    inStock: true,
-    isActive: false,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "smart-travel-backpack.jpg",
-        url: "",
-      },
-    ],
-  },
-
-  {
-    id: 6,
-    productReference: "PROD-006",
-    productName: "Classic Cotton Shirt",
-    description:
-      "Comfortable cotton shirt suitable for casual and smart-casual outfits.",
-    unitPrice: 22500,
-    currency: "NGN",
-    totalInStock: 3,
-    lowStockAlert: 5,
-    inStock: true,
-    isActive: true,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "classic-cotton-shirt.jpg",
-        url: "",
-      },
-    ],
-  },
-
-  {
-    id: 7,
-    productReference: "PROD-007",
-    productName: "Executive Office Chair",
-    description:
-      "Comfortable executive office chair designed for long working sessions.",
-    unitPrice: 180000,
-    currency: "NGN",
-    totalInStock: 9,
-    lowStockAlert: 3,
-    inStock: true,
-    isActive: true,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "executive-office-chair.jpg",
-        url: "",
-      },
-    ],
-  },
-
-  {
-    id: 8,
-    productReference: "PROD-008",
-    productName: "Adjustable Laptop Stand",
-    description: "Adjustable laptop stand designed to improve desk ergonomics.",
-    unitPrice: 35000,
-    currency: "NGN",
-    totalInStock: 16,
-    lowStockAlert: 5,
-    inStock: true,
-    isActive: true,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "adjustable-laptop-stand.jpg",
-        url: "",
-      },
-    ],
-  },
-
-  {
-    id: 9,
-    productReference: "PROD-009",
-    productName: "Wireless Keyboard",
-    description:
-      "Compact wireless keyboard suitable for work and everyday computing.",
-    unitPrice: 60000,
-    currency: "NGN",
-    totalInStock: 7,
-    lowStockAlert: 3,
-    inStock: true,
-    isActive: false,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "wireless-keyboard.jpg",
-        url: "",
-      },
-    ],
-  },
-
-  {
-    id: 10,
-    productReference: "PROD-010",
-    productName: "Premium Crossbody Bag",
-    description:
-      "Premium crossbody bag combining practical storage with a modern design.",
-    unitPrice: 69000,
-    currency: "NGN",
-    totalInStock: 22,
-    lowStockAlert: 5,
-    inStock: true,
-    isActive: true,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "premium-crossbody-bag.jpg",
-        url: "",
-      },
-    ],
-  },
-
-  {
-    id: 11,
-    productReference: "PROD-011",
-    productName: "Fashion Sunglasses",
-    description: "Modern fashion sunglasses designed for everyday wear.",
-    unitPrice: 25000,
-    currency: "NGN",
-    totalInStock: 1,
-    lowStockAlert: 5,
-    inStock: true,
-    isActive: true,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "fashion-sunglasses.jpg",
-        url: "",
-      },
-    ],
-  },
-
-  {
-    id: 12,
-    productReference: "PROD-012",
-    productName: "Modern Canvas Backpack",
-    description:
-      "Durable canvas backpack suitable for work, school and everyday travel.",
-    unitPrice: 55000,
-    currency: "NGN",
-    totalInStock: 14,
-    lowStockAlert: 4,
-    inStock: true,
-    isActive: true,
-    productCategories: [],
-    variations: [],
-    productImages: [
-      {
-        filename: "modern-canvas-backpack.jpg",
-        url: "",
-      },
-    ],
-  },
-];
+import {
+  getMockProducts,
+  deleteMockProduct,
+  toggleMockProductStatus,
+} from "@/mocks/products";
 
 /**
  * ============================================================================
@@ -378,23 +121,20 @@ function ProductCard({
   toggling,
 }: {
   product: MerchantProduct;
-
   onToggle: (productId: number, value: boolean) => void;
-
   onDelete: (productId: number) => void;
-
   deleting: boolean;
-
   toggling: boolean;
-
   onEdit: (productId: number) => void;
 }) {
+  const actionDisabled = deleting || toggling;
+
   return (
     <Swipeable
-      enabled={!deleting && !toggling}
+      enabled={!actionDisabled}
       renderRightActions={() => (
         <RightActions
-          disabled={deleting || toggling}
+          disabled={actionDisabled}
           onDelete={() => onDelete(product.id)}
         />
       )}
@@ -410,13 +150,13 @@ function ProductCard({
       >
         {/* ================================================================
             PRODUCT IMAGE
-        ================================================================ */}
+        ================================================================= */}
 
         <ProductImage image={product.productImages?.[0]?.url ?? ""} />
 
         {/* ================================================================
             PRODUCT INFORMATION
-        ================================================================ */}
+        ================================================================= */}
 
         <View
           style={{
@@ -441,7 +181,7 @@ function ProductCard({
 
         {/* ================================================================
             PRODUCT ACTIONS
-        ================================================================ */}
+        ================================================================= */}
 
         <View
           style={{
@@ -456,11 +196,11 @@ function ProductCard({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Edit ${product.productName}`}
-            disabled={deleting || toggling}
+            disabled={actionDisabled}
             onPress={() => onEdit(product.id)}
             hitSlop={12}
             style={{
-              opacity: deleting || toggling ? 0.5 : 1,
+              opacity: actionDisabled ? 0.5 : 1,
             }}
           >
             <Ionicons
@@ -473,7 +213,7 @@ function ProductCard({
           {/* ACTIVE / INACTIVE */}
 
           <Switch
-            disabled={deleting || toggling}
+            disabled={actionDisabled}
             value={product.isActive}
             onValueChange={(value) => onToggle(product.id, value)}
           />
@@ -491,9 +231,9 @@ function ProductCard({
 
 export default function ProductScreen() {
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * PRODUCTS API
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const {
@@ -505,18 +245,25 @@ export default function ProductScreen() {
   } = useProducts();
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * MOCK PRODUCTS STATE
-   * --------------------------------------------------------------------------
+   * ==========================================================================
+   *
+   * This state mirrors the shared mock repository.
+   *
+   * The repository itself lives in:
+   *
+   * src/mocks/products.ts
    */
 
-  const [mockProducts, setMockProducts] =
-    useState<MerchantProduct[]>(MOCK_PRODUCTS);
+  const [mockProducts, setMockProducts] = useState<MerchantProduct[]>(() =>
+    getMockProducts()
+  );
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * SOURCE OF TRUTH
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const productList = USE_MOCK_PRODUCTS ? mockProducts : (products ?? []);
@@ -528,9 +275,9 @@ export default function ProductScreen() {
   const error = USE_MOCK_PRODUCTS ? null : apiError;
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * MUTATIONS
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const deleteProductMutation = useDeleteProduct();
@@ -540,17 +287,17 @@ export default function ProductScreen() {
   const { showToast } = useToast();
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * SEARCH
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const [searchQuery, setSearchQuery] = useState("");
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * PAGINATION
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -558,22 +305,31 @@ export default function ProductScreen() {
   const PRODUCTS_PER_PAGE = 5;
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * LOW STOCK
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const [showLowStockBanner, setShowLowStockBanner] = useState(true);
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * REFRESH
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   async function onRefresh() {
     if (USE_MOCK_PRODUCTS) {
-      setMockProducts([...MOCK_PRODUCTS]);
+      /**
+       * Re-read the shared mock repository.
+       *
+       * Do NOT reset to MOCK_PRODUCTS here.
+       *
+       * This preserves edits made on the
+       * Edit Product screen.
+       */
+
+      setMockProducts(getMockProducts());
 
       setCurrentPage(1);
 
@@ -584,9 +340,38 @@ export default function ProductScreen() {
   }
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
+   * REFRESH MOCK DATA WHEN SCREEN GETS FOCUS
+   * ==========================================================================
+   *
+   * This is important after:
+   *
+   * Products
+   *    ↓
+   * Edit
+   *    ↓
+   * Save
+   *    ↓
+   * router.back()
+   *
+   * The Products screen gets the latest
+   * data from the mock repository.
+   */
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!USE_MOCK_PRODUCTS) {
+        return;
+      }
+
+      setMockProducts(getMockProducts());
+    }, [])
+  );
+
+  /**
+   * ==========================================================================
    * SORT PRODUCTS
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const sortedProducts = useMemo(() => {
@@ -596,9 +381,9 @@ export default function ProductScreen() {
   }, [productList]);
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * SEARCH PRODUCTS
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const filteredProducts = useMemo(() => {
@@ -614,20 +399,9 @@ export default function ProductScreen() {
   }, [sortedProducts, searchQuery]);
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * PAGINATION
-   * --------------------------------------------------------------------------
-   *
-   * Pagination is applied AFTER search.
-   *
-   * Example:
-   *
-   * 12 products
-   * 5 products per page
-   *
-   * Page 1 = products 1–5
-   * Page 2 = products 6–10
-   * Page 3 = products 11–12
+   * ==========================================================================
    */
 
   const totalProductCount = filteredProducts.length;
@@ -652,9 +426,9 @@ export default function ProductScreen() {
   }, [filteredProducts, displayedPageNumber]);
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * LOW STOCK PRODUCTS
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const lowStockProducts = useMemo(() => {
@@ -664,10 +438,9 @@ export default function ProductScreen() {
   }, [filteredProducts]);
 
   /**
-   * --------------------------------------------------------------------------
-   * RESET PAGINATION WHEN SEARCH
-   * CHANGES
-   * --------------------------------------------------------------------------
+   * ==========================================================================
+   * RESET PAGINATION WHEN SEARCH CHANGES
+   * ==========================================================================
    */
 
   useEffect(() => {
@@ -675,15 +448,9 @@ export default function ProductScreen() {
   }, [searchQuery]);
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * KEEP PAGE VALID
-   * --------------------------------------------------------------------------
-   *
-   * This handles cases such as:
-   *
-   * - deleting products
-   * - filtering products
-   * - changing the underlying API result
+   * ==========================================================================
    */
 
   useEffect(() => {
@@ -693,9 +460,9 @@ export default function ProductScreen() {
   }, [currentPage, totalPages]);
 
   /**
-   * --------------------------------------------------------------------------
-   * KEEP LOW STOCK BANNER VISIBLE
-   * --------------------------------------------------------------------------
+   * ==========================================================================
+   * LOW STOCK BANNER
+   * ==========================================================================
    */
 
   useFocusEffect(
@@ -707,9 +474,9 @@ export default function ProductScreen() {
   );
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * SCREEN STATES
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const hasProducts = productList.length > 0;
@@ -727,27 +494,32 @@ export default function ProductScreen() {
     filteredProducts.length === 0;
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * TOGGLE PRODUCT
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   async function toggleProduct(productId: number, value: boolean) {
     /**
+     * ========================================================================
      * MOCK MODE
+     * ========================================================================
      */
 
     if (USE_MOCK_PRODUCTS) {
-      setMockProducts((currentProducts) =>
-        currentProducts.map((product) =>
-          product.id === productId
-            ? {
-                ...product,
-                isActive: value,
-              }
-            : product
-        )
-      );
+      const updatedProduct = toggleMockProductStatus(productId, value);
+
+      if (!updatedProduct) {
+        showToast({
+          type: "error",
+          title: "Update Failed",
+          message: "Product could not be found.",
+        });
+
+        return;
+      }
+
+      setMockProducts(getMockProducts());
 
       showToast({
         type: "success",
@@ -759,7 +531,9 @@ export default function ProductScreen() {
     }
 
     /**
+     * ========================================================================
      * API MODE
+     * ========================================================================
      */
 
     try {
@@ -785,9 +559,9 @@ export default function ProductScreen() {
   }
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * DELETE PRODUCT
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   async function handleDelete(productId: number) {
@@ -817,21 +591,18 @@ export default function ProductScreen() {
           onPress: async () => {
             try {
               /**
+               * ==============================================================
                * MOCK MODE
-               */
+               * ============================================================== */
 
               if (USE_MOCK_PRODUCTS) {
-                setMockProducts((currentProducts) =>
-                  currentProducts.filter((item) => item.id !== productId)
-                );
+                const deleted = deleteMockProduct(productId);
 
-                /**
-                 * Calculate the number
-                 * of products remaining
-                 * after deletion.
-                 */
+                if (!deleted) {
+                  throw new Error("Product not found.");
+                }
 
-                const remaining = productList.length - 1;
+                setMockProducts(getMockProducts());
 
                 const filteredRemaining = filteredProducts.filter(
                   (item) => item.id !== productId
@@ -841,12 +612,6 @@ export default function ProductScreen() {
                   1,
                   Math.ceil(filteredRemaining / PRODUCTS_PER_PAGE)
                 );
-
-                /**
-                 * If the current page
-                 * becomes empty, move
-                 * to the previous page.
-                 */
 
                 setCurrentPage((page) => Math.min(page, remainingPages));
 
@@ -860,8 +625,9 @@ export default function ProductScreen() {
               }
 
               /**
+               * ==============================================================
                * API MODE
-               */
+               * ============================================================== */
 
               await deleteProductMutation.mutateAsync(productId);
 
@@ -886,9 +652,9 @@ export default function ProductScreen() {
   }
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * EDIT PRODUCT
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   function handleEdit(productId: number) {
@@ -901,9 +667,9 @@ export default function ProductScreen() {
   }
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * UI
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   return (
@@ -926,9 +692,9 @@ export default function ProductScreen() {
             flex: 1,
           }}
         >
-          {/* ================================================================
+          {/* ==================================================================
               HEADER
-          ================================================================ */}
+          ================================================================== */}
 
           <View
             style={{
@@ -990,9 +756,9 @@ export default function ProductScreen() {
             </Pressable>
           </View>
 
-          {/* ================================================================
+          {/* ==================================================================
               LOW STOCK BANNER
-          ================================================================ */}
+          ================================================================== */}
 
           {showLowStockBanner &&
             lowStockProducts.length > 0 &&
@@ -1047,9 +813,9 @@ export default function ProductScreen() {
               </Card>
             )}
 
-          {/* ================================================================
+          {/* ==================================================================
               SEARCH
-          ================================================================ */}
+          ================================================================== */}
 
           {hasProducts && !showProductError && (
             <View
@@ -1065,9 +831,9 @@ export default function ProductScreen() {
             </View>
           )}
 
-          {/* ================================================================
+          {/* ==================================================================
               PRODUCT CONTENT
-          ================================================================ */}
+          ================================================================== */}
 
           <View
             style={{
@@ -1080,9 +846,9 @@ export default function ProductScreen() {
                 flex: 1,
               }}
             >
-              {/* ============================================================
+              {/* ==============================================================
                   INITIAL LOADING
-              ============================================================ */}
+              ============================================================== */}
 
               {isLoading ? (
                 <View
@@ -1340,9 +1106,9 @@ export default function ProductScreen() {
               )}
             </View>
 
-            {/* =============================================================
+            {/* =================================================================
                 PAGINATION
-            ============================================================= */}
+            ================================================================= */}
 
             {!isLoading &&
               !showProductError &&
@@ -1363,9 +1129,7 @@ export default function ProductScreen() {
                       gap: spacing.md,
                     }}
                   >
-                    {/* ===================================================
-                        PREVIOUS
-                    =================================================== */}
+                    {/* PREVIOUS */}
 
                     <Pressable
                       accessibilityRole="button"
@@ -1401,9 +1165,7 @@ export default function ProductScreen() {
                       </AppText>
                     </Pressable>
 
-                    {/* ===================================================
-                        PAGE INFO
-                    =================================================== */}
+                    {/* PAGE INFO */}
 
                     <View
                       style={{
@@ -1427,9 +1189,7 @@ export default function ProductScreen() {
                       </AppText>
                     </View>
 
-                    {/* ===================================================
-                        NEXT
-                    =================================================== */}
+                    {/* NEXT */}
 
                     <Pressable
                       accessibilityRole="button"

@@ -225,24 +225,23 @@ function RightActions({
           width: 90,
           justifyContent: "center",
           alignItems: "center",
+
           backgroundColor: isBlacklisted
             ? theme.action.primary.background
-            : theme.action.destructive.background,
+            : theme.action.blacklist.background,
+
           borderRadius: radius.md,
+
           opacity: disabled ? 0.5 : 1,
         }}
       >
         <Ionicons
-          name={
-            isBlacklisted
-              ? "checkmark-circle-outline"
-              : "ban-outline"
-          }
+          name={isBlacklisted ? "checkmark-circle-outline" : "ban-outline"}
           size={24}
           color={
             isBlacklisted
               ? theme.action.primary.text
-              : theme.action.destructive.text
+              : theme.action.blacklist.text
           }
         />
 
@@ -260,8 +259,11 @@ function RightActions({
           width: 90,
           justifyContent: "center",
           alignItems: "center",
+
           backgroundColor: theme.action.destructive.background,
+
           borderRadius: radius.md,
+
           opacity: disabled ? 0.5 : 1,
         }}
       >
@@ -302,10 +304,6 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    * CUSTOMER SOURCE
    * --------------------------------------------------------------------------
-   *
-   * Mock mode is useful while building and testing the UI.
-   *
-   * Switch USE_MOCK_CUSTOMERS to false to use the API.
    */
 
   const customerList = USE_MOCK_CUSTOMERS
@@ -314,9 +312,7 @@ export default function CustomersScreen() {
 
   const isLoading = USE_MOCK_CUSTOMERS ? false : apiLoading;
 
-  const isRefetching = USE_MOCK_CUSTOMERS
-    ? false
-    : apiRefetching;
+  const isRefetching = USE_MOCK_CUSTOMERS ? false : apiRefetching;
 
   const error = USE_MOCK_CUSTOMERS ? null : apiError;
 
@@ -328,8 +324,7 @@ export default function CustomersScreen() {
 
   const deleteCustomerMutation = useDeleteCustomer();
 
-  const blacklistCustomerMutation =
-    useBlacklistCustomer();
+  const blacklistCustomerMutation = useBlacklistCustomer();
 
   /**
    * --------------------------------------------------------------------------
@@ -337,14 +332,11 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const [sortBy, setSortBy] =
-    useState<CustomerSort>("firstNameAsc");
+  const [sortBy, setSortBy] = useState<CustomerSort>("firstNameAsc");
 
-  const [draftSort, setDraftSort] =
-    useState<CustomerSort>("firstNameAsc");
+  const [draftSort, setDraftSort] = useState<CustomerSort>("firstNameAsc");
 
-  const customerSortBottomSheetRef =
-    useRef<BottomSheetModal>(null);
+  const customerSortBottomSheetRef = useRef<BottomSheetModal>(null);
 
   /**
    * --------------------------------------------------------------------------
@@ -358,17 +350,12 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    * MOCK CUSTOMER STATE
    * --------------------------------------------------------------------------
-   *
-   * We keep local state so blacklist/delete can be tested
-   * without calling the API.
    */
 
   const [mockCustomers, setMockCustomers] =
     useState<Customer[]>(MOCK_CUSTOMERS);
 
-  const activeCustomerList = USE_MOCK_CUSTOMERS
-    ? mockCustomers
-    : customerList;
+  const activeCustomerList = USE_MOCK_CUSTOMERS ? mockCustomers : customerList;
 
   /**
    * --------------------------------------------------------------------------
@@ -419,6 +406,7 @@ export default function CustomersScreen() {
       case "firstNameAsc":
         return data.sort((a, b) => {
           const aName = a.name.split(" ")[0] ?? "";
+
           const bName = b.name.split(" ")[0] ?? "";
 
           return aName.localeCompare(bName);
@@ -427,6 +415,7 @@ export default function CustomersScreen() {
       case "firstNameDesc":
         return data.sort((a, b) => {
           const aName = a.name.split(" ")[0] ?? "";
+
           const bName = b.name.split(" ")[0] ?? "";
 
           return bName.localeCompare(aName);
@@ -455,18 +444,11 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const hasCustomers =
-    activeCustomerList.length > 0;
+  const hasCustomers = activeCustomerList.length > 0;
 
-  const isFirstTimeUser =
-    !isLoading &&
-    !hasCustomers &&
-    search.trim() === "";
+  const isFirstTimeUser = !isLoading && !hasCustomers && search.trim() === "";
 
-  const showCustomerError =
-    !isLoading &&
-    !!error &&
-    hasCustomers;
+  const showCustomerError = !isLoading && !!error && hasCustomers;
 
   /**
    * --------------------------------------------------------------------------
@@ -524,12 +506,15 @@ export default function CustomersScreen() {
   function handleDelete(customer: Customer) {
     Alert.alert(
       "Delete Customer",
+
       `Are you sure you want to permanently delete "${customer.name}"?`,
+
       [
         {
           text: "Cancel",
           style: "cancel",
         },
+
         {
           text: "Delete",
           style: "destructive",
@@ -541,9 +526,7 @@ export default function CustomersScreen() {
 
             if (USE_MOCK_CUSTOMERS) {
               setMockCustomers((current) =>
-                current.filter(
-                  (item) => item.id !== customer.id
-                )
+                current.filter((item) => item.id !== customer.id)
               );
 
               Alert.alert(
@@ -558,25 +541,21 @@ export default function CustomersScreen() {
              * API MODE
              */
 
-            deleteCustomerMutation.mutate(
-              customer.id,
-              {
-                onSuccess: () => {
-                  Alert.alert(
-                    "Customer Deleted",
-                    `"${customer.name}" has been deleted.`
-                  );
-                },
+            deleteCustomerMutation.mutate(customer.id, {
+              onSuccess: () => {
+                Alert.alert(
+                  "Customer Deleted",
+                  `"${customer.name}" has been deleted.`
+                );
+              },
 
-                onError: (mutationError) => {
-                  Alert.alert(
-                    "Delete Failed",
-                    mutationError.message ??
-                      "Unable to delete customer."
-                  );
-                },
-              }
-            );
+              onError: (mutationError) => {
+                Alert.alert(
+                  "Delete Failed",
+                  mutationError.message ?? "Unable to delete customer."
+                );
+              },
+            });
           },
         },
       ]
@@ -590,13 +569,10 @@ export default function CustomersScreen() {
    */
 
   function handleBlacklist(customer: Customer) {
-    const isBlacklisted =
-      customer.isBlackListed;
+    const isBlacklisted = customer.isBlackListed;
 
     Alert.alert(
-      isBlacklisted
-        ? "Remove from Blacklist"
-        : "Blacklist Customer",
+      isBlacklisted ? "Remove from Blacklist" : "Blacklist Customer",
 
       isBlacklisted
         ? `Are you sure you want to remove "${customer.name}" from the blacklist?`
@@ -609,13 +585,9 @@ export default function CustomersScreen() {
         },
 
         {
-          text: isBlacklisted
-            ? "Remove"
-            : "Blacklist",
+          text: isBlacklisted ? "Remove" : "Blacklist",
 
-          style: isBlacklisted
-            ? "default"
-            : "destructive",
+          style: isBlacklisted ? "default" : "destructive",
 
           onPress: () => {
             /**
@@ -628,8 +600,7 @@ export default function CustomersScreen() {
                   item.id === customer.id
                     ? {
                         ...item,
-                        isBlackListed:
-                          !item.isBlackListed,
+                        isBlackListed: !item.isBlackListed,
                       }
                     : item
                 )
@@ -655,9 +626,10 @@ export default function CustomersScreen() {
             blacklistCustomerMutation.mutate(
               {
                 id: customer.id,
-                isBlackListed:
-                  !isBlacklisted,
+
+                isBlackListed: !isBlacklisted,
               },
+
               {
                 onSuccess: () => {
                   Alert.alert(
@@ -697,8 +669,7 @@ export default function CustomersScreen() {
    */
 
   const mutationPending =
-    deleteCustomerMutation.isPending ||
-    blacklistCustomerMutation.isPending;
+    deleteCustomerMutation.isPending || blacklistCustomerMutation.isPending;
 
   /**
    * --------------------------------------------------------------------------
@@ -710,8 +681,7 @@ export default function CustomersScreen() {
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor:
-          theme.background.primary,
+        backgroundColor: theme.background.primary,
       }}
     >
       <StatusBar style="auto" />
@@ -766,20 +736,14 @@ export default function CustomersScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">
-                Customers
-              </AppText>
+              <AppText variant="h1">Customers</AppText>
 
-              <AppText
-                variant="body"
-                color="secondary"
-              >
+              <AppText variant="body" color="secondary">
                 {isLoading
                   ? "Loading customers..."
                   : filteredCustomers.length === 0
                     ? "Add your first customer to start building your customer list"
-                    : filteredCustomers.length ===
-                        1
+                    : filteredCustomers.length === 1
                       ? "1 customer"
                       : `${filteredCustomers.length} customers`}
               </AppText>
@@ -790,28 +754,20 @@ export default function CustomersScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Add customer"
-              onPress={() =>
-                router.push(
-                  ROUTES.ADD_CUSTOMER
-                )
-              }
+              onPress={() => router.push(ROUTES.ADD_CUSTOMER)}
               style={{
                 width: 44,
                 height: 44,
                 borderRadius: radius.full,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor:
-                  theme.action.primary
-                    .background,
+                backgroundColor: theme.action.primary.background,
               }}
             >
               <Ionicons
                 name="add"
                 size={24}
-                color={
-                  theme.action.primary.text
-                }
+                color={theme.action.primary.text}
               />
             </Pressable>
           </View>
@@ -841,9 +797,7 @@ export default function CustomersScreen() {
             </View>
 
             <FilterButton
-              active={
-                sortBy !== "firstNameAsc"
-              }
+              active={sortBy !== "firstNameAsc"}
               onPress={() => {
                 setDraftSort(sortBy);
 
@@ -866,28 +820,19 @@ export default function CustomersScreen() {
               style={{
                 flex: 1,
               }}
-              showsVerticalScrollIndicator={
-                false
-              }
+              showsVerticalScrollIndicator={false}
               refreshControl={
                 <RefreshControl
                   refreshing={isRefetching}
                   onRefresh={onRefresh}
-                  tintColor={
-                    theme.icon.branding.icon
-                  }
-                  colors={[
-                    theme.icon.branding.icon,
-                  ]}
-                  progressBackgroundColor={
-                    theme.background.surface
-                  }
+                  tintColor={theme.icon.branding.icon}
+                  colors={[theme.icon.branding.icon]}
+                  progressBackgroundColor={theme.background.surface}
                 />
               }
               contentContainerStyle={{
                 flexGrow: 1,
-                paddingBottom:
-                  spacing["2xl"],
+                paddingBottom: spacing["2xl"],
               }}
             >
               {/* ============================================================
@@ -898,26 +843,20 @@ export default function CustomersScreen() {
                 <View
                   style={{
                     flex: 1,
-                    justifyContent:
-                      "center",
+                    justifyContent: "center",
                     alignItems: "center",
-                    paddingVertical:
-                      spacing["3xl"],
+                    paddingVertical: spacing["3xl"],
                   }}
                 >
                   <ActivityIndicator
                     size="large"
-                    color={
-                      theme.icon.branding
-                        .icon
-                    }
+                    color={theme.icon.branding.icon}
                   />
 
                   <AppText
                     color="secondary"
                     style={{
-                      marginTop:
-                        spacing.md,
+                      marginTop: spacing.md,
                     }}
                   >
                     Loading customers...
@@ -931,84 +870,61 @@ export default function CustomersScreen() {
                 <View
                   style={{
                     flex: 1,
-                    justifyContent:
-                      "center",
+                    justifyContent: "center",
                     alignItems: "center",
-                    paddingVertical:
-                      spacing["3xl"],
+                    paddingVertical: spacing["3xl"],
                   }}
                 >
                   <View
                     style={{
                       width: 56,
                       height: 56,
-                      borderRadius:
-                        radius.full,
-                      justifyContent:
-                        "center",
+                      borderRadius: radius.full,
+                      justifyContent: "center",
                       alignItems: "center",
-                      backgroundColor:
-                        theme.background
-                          .error,
+                      backgroundColor: theme.background.error,
                     }}
                   >
                     <Ionicons
                       name="alert-circle-outline"
                       size={30}
-                      color={
-                        theme.icon.error
-                          .icon
-                      }
+                      color={theme.icon.error.icon}
                     />
                   </View>
 
                   <AppText
                     variant="bodyLargeBold"
                     style={{
-                      marginTop:
-                        spacing.md,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.md,
+                      textAlign: "center",
                     }}
                   >
-                    Unable to load
-                    customers
+                    Unable to load customers
                   </AppText>
 
                   <AppText
                     variant="body"
                     color="secondary"
                     style={{
-                      marginTop:
-                        spacing.xs,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.xs,
+                      textAlign: "center",
                       maxWidth: 320,
                     }}
                   >
-                    We couldn't load your
-                    customers. Please try
-                    again.
+                    We couldn't load your customers. Please try again.
                   </AppText>
 
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Try again"
-                    onPress={() =>
-                      apiRefetch()
-                    }
+                    onPress={() => apiRefetch()}
                     style={{
-                      marginTop:
-                        spacing.md,
-                      paddingVertical:
-                        spacing.xs,
-                      paddingHorizontal:
-                        spacing.sm,
+                      marginTop: spacing.md,
+                      paddingVertical: spacing.xs,
+                      paddingHorizontal: spacing.sm,
                     }}
                   >
-                    <AppText color="link">
-                      Try Again
-                    </AppText>
+                    <AppText color="link">Try Again</AppText>
                   </Pressable>
                 </View>
               ) : isFirstTimeUser ? (
@@ -1018,46 +934,33 @@ export default function CustomersScreen() {
 
                 <Card
                   style={{
-                    alignItems:
-                      "center",
-                    paddingVertical:
-                      spacing.xl,
-                    paddingHorizontal:
-                      spacing.lg,
+                    alignItems: "center",
+                    paddingVertical: spacing.xl,
+                    paddingHorizontal: spacing.lg,
                   }}
                 >
                   <View
                     style={{
                       width: 64,
                       height: 64,
-                      borderRadius:
-                        radius.full,
-                      alignItems:
-                        "center",
-                      justifyContent:
-                        "center",
-                      backgroundColor:
-                        theme.icon.branding
-                          .background,
+                      borderRadius: radius.full,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: theme.icon.branding.background,
                     }}
                   >
                     <Ionicons
                       name="people-outline"
                       size={32}
-                      color={
-                        theme.icon.branding
-                          .icon
-                      }
+                      color={theme.icon.branding.icon}
                     />
                   </View>
 
                   <AppText
                     variant="bodyLargeBold"
                     style={{
-                      marginTop:
-                        spacing.md,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.md,
+                      textAlign: "center",
                     }}
                   >
                     No customers yet
@@ -1067,48 +970,33 @@ export default function CustomersScreen() {
                     variant="body"
                     color="secondary"
                     style={{
-                      marginTop:
-                        spacing.xs,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.xs,
+                      textAlign: "center",
                       maxWidth: 320,
                     }}
                   >
-                    Add your first
-                    customer to start
-                    managing customer
-                    information and
-                    orders.
+                    Add your first customer to start managing customer
+                    information and orders.
                   </AppText>
 
                   <Button
                     title="Add Customer"
                     variant="primary"
                     style={{
-                      marginTop:
-                        spacing.lg,
+                      marginTop: spacing.lg,
                     }}
-                    onPress={() =>
-                      router.push(
-                        ROUTES.ADD_CUSTOMER
-                      )
-                    }
+                    onPress={() => router.push(ROUTES.ADD_CUSTOMER)}
                   />
 
                   <AppText
                     variant="caption"
                     color="muted"
                     style={{
-                      marginTop:
-                        spacing.sm,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.sm,
+                      textAlign: "center",
                     }}
                   >
-                    You can update
-                    customer details
-                    and contact them
-                    anytime.
+                    You can update customer details and contact them anytime.
                   </AppText>
                 </Card>
               ) : hasNoSearchResults ? (
@@ -1118,46 +1006,33 @@ export default function CustomersScreen() {
 
                 <Card
                   style={{
-                    alignItems:
-                      "center",
-                    paddingVertical:
-                      spacing.xl,
-                    paddingHorizontal:
-                      spacing.lg,
+                    alignItems: "center",
+                    paddingVertical: spacing.xl,
+                    paddingHorizontal: spacing.lg,
                   }}
                 >
                   <View
                     style={{
                       width: 56,
                       height: 56,
-                      borderRadius:
-                        radius.full,
-                      alignItems:
-                        "center",
-                      justifyContent:
-                        "center",
-                      backgroundColor:
-                        theme.icon.default
-                          .background,
+                      borderRadius: radius.full,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: theme.icon.default.background,
                     }}
                   >
                     <Ionicons
                       name="search-outline"
                       size={28}
-                      color={
-                        theme.icon.default
-                          .icon
-                      }
+                      color={theme.icon.default.icon}
                     />
                   </View>
 
                   <AppText
                     variant="bodyLargeBold"
                     style={{
-                      marginTop:
-                        spacing.md,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.md,
+                      textAlign: "center",
                     }}
                   >
                     No customers found
@@ -1167,29 +1042,20 @@ export default function CustomersScreen() {
                     variant="body"
                     color="secondary"
                     style={{
-                      marginTop:
-                        spacing.xs,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.xs,
+                      textAlign: "center",
                     }}
                   >
-                    Try searching with a
-                    different name, phone
-                    number or email.
+                    Try searching with a different name, phone number or email.
                   </AppText>
 
                   <Pressable
-                    onPress={() =>
-                      setSearch("")
-                    }
+                    onPress={() => setSearch("")}
                     style={{
-                      marginTop:
-                        spacing.md,
+                      marginTop: spacing.md,
                     }}
                   >
-                    <AppText color="link">
-                      Clear Search
-                    </AppText>
+                    <AppText color="link">Clear Search</AppText>
                   </Pressable>
                 </Card>
               ) : (
@@ -1202,302 +1068,212 @@ export default function CustomersScreen() {
                     gap: spacing.md,
                   }}
                 >
-                  {sortedCustomers.map(
-                    (customer) => (
-                      <Swipeable
-                        key={customer.id}
-                        renderRightActions={() => (
-                          <RightActions
-                            isBlacklisted={
-                              customer.isBlackListed
+                  {sortedCustomers.map((customer) => (
+                    <Swipeable
+                      key={customer.id}
+                      renderRightActions={() => (
+                        <RightActions
+                          isBlacklisted={customer.isBlackListed}
+                          disabled={mutationPending}
+                          onBlacklist={() => {
+                            if (!mutationPending) {
+                              handleBlacklist(customer);
                             }
-                            disabled={
-                              mutationPending
+                          }}
+                          onDelete={() => {
+                            if (!mutationPending) {
+                              handleDelete(customer);
                             }
-                            onBlacklist={() => {
-                              if (
-                                !mutationPending
-                              ) {
-                                handleBlacklist(
-                                  customer
-                                );
-                              }
-                            }}
-                            onDelete={() => {
-                              if (
-                                !mutationPending
-                              ) {
-                                handleDelete(
-                                  customer
-                                );
-                              }
-                            }}
-                          />
-                        )}
-                      >
-                        <Card>
-                          {/* =================================================
+                          }}
+                        />
+                      )}
+                    >
+                      <Card>
+                        {/* =================================================
                               CUSTOMER HEADER
                           ================================================= */}
 
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: spacing.sm,
+                          }}
+                        >
+                          <Ionicons
+                            name="person-circle"
+                            size={56}
+                            color={theme.icon.default.icon}
+                          />
+
                           <View
                             style={{
-                              flexDirection:
-                                "row",
-                              alignItems:
-                                "center",
-                              gap: spacing.sm,
+                              flex: 1,
                             }}
                           >
-                            <Ionicons
-                              name="person-circle"
-                              size={56}
-                              color={
-                                theme.icon
-                                  .default
-                                  .icon
-                              }
-                            />
-
                             <View
                               style={{
-                                flex: 1,
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: spacing.sm,
                               }}
                             >
-                              <View
-                                style={{
-                                  flexDirection:
-                                    "row",
-                                  alignItems:
-                                    "center",
-                                  gap: spacing.sm,
-                                }}
-                              >
-                                <AppText variant="h3">
-                                  {
-                                    customer.name
-                                  }
-                                </AppText>
+                              <AppText variant="h3">{customer.name}</AppText>
 
-                                {customer.isBlackListed && (
-                                  <View
-                                    style={{
-                                      paddingHorizontal:
-                                        spacing.sm,
-                                      paddingVertical:
-                                        spacing.xs,
-                                      borderRadius:
-                                        radius.full,
-                                      backgroundColor:
-                                        theme
-                                          .state
-                                          .error
-                                          .background,
-                                    }}
-                                  >
-                                    <AppText
-                                      variant="caption"
-                                      color="error"
-                                    >
-                                      Blacklisted
-                                    </AppText>
-                                  </View>
-                                )}
-                              </View>
-
-                              <AppText
-                                variant="body"
-                                color="secondary"
-                              >
-                                {
-                                  customer.phone
-                                }
-                              </AppText>
+                              {customer.isBlackListed && (
+                                <View
+                                  style={{
+                                    paddingHorizontal: spacing.sm,
+                                    paddingVertical: spacing.xs,
+                                    borderRadius: radius.full,
+                                    backgroundColor:
+                                      theme.state.error.background,
+                                  }}
+                                >
+                                  <AppText variant="caption" color="error">
+                                    Blacklisted
+                                  </AppText>
+                                </View>
+                              )}
                             </View>
 
-                            {/* VIEW / EDIT */}
-
-                            <View
-                              style={{
-                                flexDirection:
-                                  "row",
-                                alignItems:
-                                  "center",
-                                gap: spacing.xs,
-                              }}
-                            >
-                              <Pressable
-                                accessibilityRole="button"
-                                accessibilityLabel={`View ${customer.name}`}
-                                style={{
-                                  width: 40,
-                                  height: 40,
-                                  borderRadius:
-                                    radius.full,
-                                  justifyContent:
-                                    "center",
-                                  alignItems:
-                                    "center",
-                                }}
-                                onPress={() =>
-                                  router.push(
-                                    {
-                                      pathname:
-                                        "/customers/view/[id]",
-                                      params: {
-                                        id: customer.id,
-                                      },
-                                    }
-                                  )
-                                }
-                              >
-                                <Ionicons
-                                  name="eye-outline"
-                                  size={20}
-                                  color={
-                                    theme
-                                      .state
-                                      .info
-                                      .icon
-                                  }
-                                />
-                              </Pressable>
-
-                              <Pressable
-                                accessibilityRole="button"
-                                accessibilityLabel={`Edit ${customer.name}`}
-                                style={{
-                                  width: 40,
-                                  height: 40,
-                                  borderRadius:
-                                    radius.full,
-                                  justifyContent:
-                                    "center",
-                                  alignItems:
-                                    "center",
-                                }}
-                                onPress={() =>
-                                  router.push(
-                                    {
-                                      pathname:
-                                        "/customers/[id]",
-                                      params: {
-                                        id: customer.id,
-                                      },
-                                    }
-                                  )
-                                }
-                              >
-                                <Ionicons
-                                  name="create-outline"
-                                  size={20}
-                                  color={
-                                    theme
-                                      .icon
-                                      .default
-                                      .icon
-                                  }
-                                />
-                              </Pressable>
-                            </View>
+                            <AppText variant="body" color="secondary">
+                              {customer.phone}
+                            </AppText>
                           </View>
 
-                          {/* =================================================
+                          {/* VIEW / EDIT */}
+
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: spacing.xs,
+                            }}
+                          >
+                            <Pressable
+                              accessibilityRole="button"
+                              accessibilityLabel={`View ${customer.name}`}
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: radius.full,
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }}
+                              onPress={() =>
+                                router.push({
+                                  pathname: "/customers/view/[id]",
+                                  params: {
+                                    id: customer.id,
+                                  },
+                                })
+                              }
+                            >
+                              <Ionicons
+                                name="eye-outline"
+                                size={20}
+                                color={theme.state.info.icon}
+                              />
+                            </Pressable>
+
+                            <Pressable
+                              accessibilityRole="button"
+                              accessibilityLabel={`Edit ${customer.name}`}
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: radius.full,
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }}
+                              onPress={() =>
+                                router.push({
+                                  pathname: "/customers/[id]",
+                                  params: {
+                                    id: customer.id,
+                                  },
+                                })
+                              }
+                            >
+                              <Ionicons
+                                name="create-outline"
+                                size={20}
+                                color={theme.icon.default.icon}
+                              />
+                            </Pressable>
+                          </View>
+                        </View>
+
+                        {/* =================================================
                               DIVIDER
                           ================================================= */}
 
-                          <Divider
-                            style={{
-                              marginVertical:
-                                spacing.rg,
-                            }}
-                          />
+                        <Divider
+                          style={{
+                            marginVertical: spacing.rg,
+                          }}
+                        />
 
-                          {/* =================================================
+                        {/* =================================================
                               CUSTOMER ACTIONS
                           ================================================= */}
 
-                          <View
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
+                            gap: spacing.sm,
+                          }}
+                        >
+                          {/* CALL */}
+
+                          <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel={`Call ${customer.name}`}
                             style={{
-                              flexDirection:
-                                "row",
-                              alignItems:
-                                "center",
-                              justifyContent:
-                                "flex-end",
-                              gap: spacing.sm,
+                              width: 44,
+                              height: 44,
+                              borderRadius: radius.full,
+                              justifyContent: "center",
+                              alignItems: "center",
+                              backgroundColor: theme.background.subtle,
                             }}
+                            onPress={() => handleCall(customer.phone)}
                           >
-                            {/* CALL */}
+                            <Ionicons
+                              name="call-outline"
+                              size={22}
+                              color={theme.icon.default.icon}
+                            />
+                          </Pressable>
 
-                            <Pressable
-                              accessibilityRole="button"
-                              accessibilityLabel={`Call ${customer.name}`}
-                              style={{
-                                width: 44,
-                                height: 44,
-                                borderRadius:
-                                  radius.full,
-                                justifyContent:
-                                  "center",
-                                alignItems:
-                                  "center",
-                                backgroundColor:
-                                  theme
-                                    .background
-                                    .subtle,
-                              }}
-                              onPress={() =>
-                                handleCall(
-                                  customer.phone
-                                )
-                              }
-                            >
-                              <Ionicons
-                                name="call-outline"
-                                size={22}
-                                color={
-                                  theme.icon
-                                    .default
-                                    .icon
-                                }
-                              />
-                            </Pressable>
+                          {/* WHATSAPP */}
 
-                            {/* WHATSAPP */}
-
-                            <Pressable
-                              accessibilityRole="button"
-                              accessibilityLabel={`WhatsApp ${customer.name}`}
-                              style={{
-                                width: 44,
-                                height: 44,
-                                borderRadius:
-                                  radius.full,
-                                justifyContent:
-                                  "center",
-                                alignItems:
-                                  "center",
-                                backgroundColor:
-                                  "#25D36615",
-                              }}
-                              onPress={() =>
-                                handleWhatsApp(
-                                  customer.phone
-                                )
-                              }
-                            >
-                              <Ionicons
-                                name="logo-whatsapp"
-                                size={22}
-                                color="#25D366"
-                              />
-                            </Pressable>
-                          </View>
-                        </Card>
-                      </Swipeable>
-                    )
-                  )}
+                          <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel={`WhatsApp ${customer.name}`}
+                            style={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: radius.full,
+                              justifyContent: "center",
+                              alignItems: "center",
+                              backgroundColor: "#25D36615",
+                            }}
+                            onPress={() => handleWhatsApp(customer.phone)}
+                          >
+                            <Ionicons
+                              name="logo-whatsapp"
+                              size={22}
+                              color="#25D366"
+                            />
+                          </Pressable>
+                        </View>
+                      </Card>
+                    </Swipeable>
+                  ))}
                 </View>
               )}
             </ScrollView>
@@ -1508,9 +1284,7 @@ export default function CustomersScreen() {
           ================================================================ */}
 
           <CustomerSortBottomSheet
-            ref={
-              customerSortBottomSheetRef
-            }
+            ref={customerSortBottomSheetRef}
             draftSort={draftSort}
             setDraftSort={setDraftSort}
             onApply={(sort) => {

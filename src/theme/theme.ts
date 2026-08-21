@@ -79,7 +79,6 @@ export const theme = {
   /**
    * 🔘 UI Card
    */
-
   uicard: {
     default: {
       borderColor: colors.gray[300],
@@ -119,6 +118,17 @@ export const theme = {
 
       text: colors.neutral.white,
       disabledText: colors.gray[500],
+    },
+
+    /**
+     * BLACKLIST
+     *
+     * Used for the customer blacklist swipe action.
+     */
+    blacklist: {
+      background: colors.neutral.black,
+      pressed: colors.gray[800],
+      text: colors.neutral.white,
     },
 
     whatsapp: {
@@ -173,12 +183,14 @@ export const theme = {
       hover: colors.primary[600],
       pressed: colors.primary[700],
     },
+
     secondary: {
       background: colors.secondary[500],
       text: colors.neutral.white,
       hover: colors.secondary[600],
       pressed: colors.secondary[700],
     },
+
     disabled: {
       background: colors.gray[300],
       text: colors.neutral.white,
@@ -305,7 +317,6 @@ export const theme = {
   /**
    * 🔔 Input Fields
    */
-
   inputField: {
     default: {
       background: colors.neutral.white,
@@ -335,7 +346,6 @@ export const theme = {
   /**
    * 🔔 Toggle Status States
    */
-
   toggleSwitch: {
     active: colors.primary[500],
     inactive: colors.secondary[500],

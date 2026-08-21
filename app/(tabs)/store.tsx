@@ -30,10 +30,15 @@ import * as Clipboard from "expo-clipboard";
 import { ROUTES, getStoreDetailsRoute } from "@/navigation/routes";
 
 import { AppText } from "@/components/ui/AppText";
+
 import { Button } from "@/components/ui/Button";
+
 import { Card } from "@/components/ui/Card";
+
 import { SearchBar } from "@/components/ui/SearchBar";
+
 import { FilterButton } from "@/components/ui/FilterButton";
+
 import { Divider } from "@/components/ui/Divider";
 
 import {
@@ -44,45 +49,10 @@ import {
 import { spacing, theme, radius } from "@/theme";
 
 import { useStores } from "@/hooks/store/useStores";
+
 import { useDeleteStore } from "@/hooks/store/useDeleteStore";
+
 import { useToast } from "@/hooks/useToast";
-
-/**
- * ============================================================================
- * MOCK STORES — DEVELOPMENT ONLY
- * ============================================================================
- *
- * Set this to false when you are ready to test against the real API.
- */
-
-const USE_MOCK_STORES = true;
-
-/**
- * ============================================================================
- * MOCK STORE DATA
- * ============================================================================
- */
-
-const MOCK_STORES = [
-  {
-    storeId: 1,
-    storeName: "My Fashion Store",
-    storeLink: "https://storelink.myxpresspay.com/store/my-fashion-store",
-    isActive: true,
-  },
-  {
-    storeId: 2,
-    storeName: "Tech Store",
-    storeLink: "https://storelink.myxpresspay.com/store/tech-store",
-    isActive: false,
-  },
-  {
-    storeId: 3,
-    storeName: "Home Essentials",
-    storeLink: "https://storelink.myxpresspay.com/store/home-essentials",
-    isActive: true,
-  },
-];
 
 /**
  * ============================================================================
@@ -148,15 +118,10 @@ function StoreCard({
     storeLink: string;
     isActive: boolean;
   };
-
   deleting: boolean;
-
   onDelete: (storeId: number) => void;
-
   onCopyLink: (storeLink: string) => void;
-
   onShareLink: (storeLink: string) => void;
-
   onViewDetails: (storeId: number) => void;
 }) {
   return (
@@ -172,7 +137,7 @@ function StoreCard({
       <Card>
         {/* ================================================================
             STORE HEADER
-        ================================================================ */}
+        ================================================================= */}
 
         <View
           style={{
@@ -181,7 +146,7 @@ function StoreCard({
             gap: spacing.md,
           }}
         >
-          {/* Store Image */}
+          {/* STORE IMAGE */}
 
           <Image
             source={require("../../assets/images/default-storefront.png.png")}
@@ -193,7 +158,7 @@ function StoreCard({
             resizeMode="cover"
           />
 
-          {/* Store Details */}
+          {/* STORE DETAILS */}
 
           <View
             style={{
@@ -201,13 +166,13 @@ function StoreCard({
               gap: spacing.xs,
             }}
           >
-            {/* Store Name */}
+            {/* STORE NAME */}
 
             <AppText variant="bodyBold" color="primary" numberOfLines={1}>
               {store.storeName}
             </AppText>
 
-            {/* Store Link */}
+            {/* STORE LINK */}
 
             <Pressable
               accessibilityRole="button"
@@ -223,7 +188,7 @@ function StoreCard({
               </AppText>
             </Pressable>
 
-            {/* Status */}
+            {/* STATUS */}
 
             <View
               style={{
@@ -245,7 +210,7 @@ function StoreCard({
             </View>
           </View>
 
-          {/* Share */}
+          {/* SHARE */}
 
           <Pressable
             accessibilityRole="button"
@@ -267,7 +232,7 @@ function StoreCard({
 
         {/* ================================================================
             DIVIDER
-        ================================================================ */}
+        ================================================================= */}
 
         <Divider
           style={{
@@ -277,7 +242,7 @@ function StoreCard({
 
         {/* ================================================================
             STORE INFO
-        ================================================================ */}
+        ================================================================= */}
 
         <Pressable
           accessibilityRole="button"
@@ -315,8 +280,17 @@ function StoreCard({
 export default function StoreScreen() {
   /**
    * --------------------------------------------------------------------------
-   * API STORES
+   * STORES
    * --------------------------------------------------------------------------
+   *
+   * useStores() is the single source of truth.
+   *
+   * The hook decides whether the application uses:
+   *
+   * - Mock store data
+   * - Real API data
+   *
+   * The screen does not need to know which source is active.
    */
 
   const {
@@ -329,25 +303,17 @@ export default function StoreScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * MOCK STORES
-   * --------------------------------------------------------------------------
-   */
-
-  const [mockStores, setMockStores] = useState(MOCK_STORES);
-
-  /**
-   * --------------------------------------------------------------------------
    * DATA SOURCE
    * --------------------------------------------------------------------------
    */
 
-  const stores = USE_MOCK_STORES ? mockStores : (apiStores ?? []);
+  const stores = apiStores ?? [];
 
-  const isLoading = USE_MOCK_STORES ? false : apiIsLoading;
+  const isLoading = apiIsLoading;
 
-  const isRefetching = USE_MOCK_STORES ? false : apiIsRefetching;
+  const isRefetching = apiIsRefetching;
 
-  const error = USE_MOCK_STORES ? null : apiError;
+  const error = apiError;
 
   /**
    * --------------------------------------------------------------------------
@@ -385,13 +351,6 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    * INFINITE SCROLL
    * --------------------------------------------------------------------------
-   *
-   * Stores are progressively rendered in batches instead of rendering the
-   * complete collection at once.
-   *
-   * This is client-side infinite scrolling. The current useStores() hook
-   * provides the available stores, and the FlatList progressively reveals
-   * them.
    */
 
   const STORES_PER_BATCH = 10;
@@ -507,10 +466,6 @@ export default function StoreScreen() {
 
     setIsLoadingMore(true);
 
-    /**
-     * Small delay allows the footer loading indicator to render naturally.
-     */
-
     setTimeout(() => {
       setVisibleStoreCount((currentCount) =>
         Math.min(currentCount + STORES_PER_BATCH, filteredStores.length)
@@ -563,17 +518,13 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    * REFRESH
    * --------------------------------------------------------------------------
+   *
+   * The hook owns the data source.
+   *
+   * The screen simply requests a refetch.
    */
 
   async function onRefresh() {
-    if (USE_MOCK_STORES) {
-      setMockStores([...MOCK_STORES]);
-
-      setVisibleStoreCount(STORES_PER_BATCH);
-
-      return;
-    }
-
     await refetch();
 
     setVisibleStoreCount(STORES_PER_BATCH);
@@ -598,9 +549,7 @@ export default function StoreScreen() {
 
     Alert.alert(
       "Delete Store",
-
       `Are you sure you want to delete "${store.storeName}"? This action cannot be undone.`,
-
       [
         {
           text: "Cancel",
@@ -613,33 +562,9 @@ export default function StoreScreen() {
 
           onPress: async () => {
             try {
-              /**
-               * ------------------------------------------------------------
-               * MOCK DELETE
-               * ------------------------------------------------------------
-               */
-
-              if (USE_MOCK_STORES) {
-                setMockStores((currentStores) =>
-                  currentStores.filter((item) => item.storeId !== storeId)
-                );
-
-                showToast({
-                  type: "success",
-                  title: "Store Deleted",
-                  message: `${store.storeName} has been deleted successfully.`,
-                });
-
-                return;
-              }
-
-              /**
-               * ------------------------------------------------------------
-               * REAL API DELETE
-               * ------------------------------------------------------------
-               */
-
               await deleteStoreMutation.mutateAsync(storeId);
+
+              setVisibleStoreCount(STORES_PER_BATCH);
 
               showToast({
                 type: "success",
@@ -731,7 +656,7 @@ export default function StoreScreen() {
         >
           {/* ================================================================
               HEADER
-          ================================================================ */}
+          ================================================================= */}
 
           <View
             style={{
@@ -788,7 +713,7 @@ export default function StoreScreen() {
 
           {/* ================================================================
               CONTENT
-          ================================================================ */}
+          ================================================================= */}
 
           <View
             style={{
@@ -797,7 +722,7 @@ export default function StoreScreen() {
           >
             {/* ==============================================================
                 SUMMARY
-            ============================================================== */}
+            =============================================================== */}
 
             <Card
               style={{
@@ -888,7 +813,7 @@ export default function StoreScreen() {
 
             {/* ==============================================================
                 SEARCH + FILTER
-            ============================================================== */}
+            =============================================================== */}
 
             {!isFirstTimeUser && !showStoreError && (
               <View
@@ -920,7 +845,7 @@ export default function StoreScreen() {
 
             {/* ==============================================================
                 FILTER LABEL
-            ============================================================== */}
+            =============================================================== */}
 
             {selectedFilter !== "all" &&
               !isFirstTimeUser &&
@@ -964,7 +889,7 @@ export default function StoreScreen() {
 
             {/* ==============================================================
                 STORE CONTENT
-            ============================================================== */}
+            =============================================================== */}
 
             <View
               style={{
@@ -972,9 +897,7 @@ export default function StoreScreen() {
                 marginTop: spacing.md,
               }}
             >
-              {/* ============================================================
-                  INITIAL LOADING
-              ============================================================ */}
+              {/* INITIAL LOADING */}
 
               {isLoading ? (
                 <View
@@ -1000,9 +923,7 @@ export default function StoreScreen() {
                   </AppText>
                 </View>
               ) : isFirstTimeUser ? (
-                /* ==========================================================
-                   FIRST-TIME USER
-                ========================================================== */
+                /* FIRST-TIME USER */
 
                 <Card
                   style={{
@@ -1072,9 +993,7 @@ export default function StoreScreen() {
                   </AppText>
                 </Card>
               ) : showStoreError ? (
-                /* ==========================================================
-                   ERROR
-                ========================================================== */
+                /* ERROR */
 
                 <View
                   style={{
@@ -1137,9 +1056,7 @@ export default function StoreScreen() {
                   </Pressable>
                 </View>
               ) : hasNoSearchResults ? (
-                /* ==========================================================
-                   SEARCH / FILTER EMPTY
-                ========================================================== */
+                /* SEARCH / FILTER EMPTY */
 
                 <Card
                   style={{
@@ -1214,9 +1131,7 @@ export default function StoreScreen() {
                   )}
                 </Card>
               ) : (
-                /* ==========================================================
-                   STORE LIST — INFINITE SCROLL
-                ========================================================== */
+                /* STORE LIST */
 
                 <FlatList
                   data={displayedStores}
@@ -1303,7 +1218,7 @@ export default function StoreScreen() {
 
       {/* ======================================================================
           STORE FILTER BOTTOM SHEET
-      ====================================================================== */}
+      ======================================================================= */}
 
       <StoreFrontBottomSheet
         ref={storeFrontBottomSheetRef}

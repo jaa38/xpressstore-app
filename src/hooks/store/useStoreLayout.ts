@@ -6,16 +6,9 @@ import { storeRepository } from "@/repositories/stores/sqliteStoreRepository";
 
 import { queryKeys } from "@/lib/queryKeys";
 
-/**
- * ============================================================================
- * USE STORE LAYOUT
- * ============================================================================
- *
- * Updates the local storefront layout preference.
- *
- * This does not call the backend because layout is currently not part of
- * the Store API.
- */
+import { USE_MOCK_STORES } from "@/mocks/config";
+
+import { updateMockStoreLayout } from "@/mocks/stores";
 
 export function useStoreLayout() {
   const queryClient = useQueryClient();
@@ -28,22 +21,46 @@ export function useStoreLayout() {
       storeId: number;
       layout: StoreLayout;
     }) => {
+      /**
+       * ================================================================
+       * MOCK MODE
+       * ================================================================
+       */
+
+      if (USE_MOCK_STORES) {
+        const updatedStore = updateMockStoreLayout(storeId, layout);
+
+        if (!updatedStore) {
+          throw new Error("Store not found.");
+        }
+
+        return updatedStore;
+      }
+
+      /**
+       * ================================================================
+       * REAL LOCAL STORAGE
+       * ================================================================
+       */
+
       await storeRepository.updateStoreLayout(storeId, layout);
 
       return layout;
     },
 
-    onSuccess: (_layout, variables) => {
-      /**
-       * Refresh the individual store.
-       */
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.store(variables.storeId),
-      });
+    onSuccess: (result, variables) => {
+      if (USE_MOCK_STORES) {
+        queryClient.setQueryData(queryKeys.store(variables.storeId), {
+          responseCode: "00",
+          responseMessage: "Store retrieved successfully.",
+          data: result,
+        });
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.store(variables.storeId),
+        });
+      }
 
-      /**
-       * Refresh the store list.
-       */
       queryClient.invalidateQueries({
         queryKey: queryKeys.stores,
       });

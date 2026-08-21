@@ -4,11 +4,25 @@ import { storeService } from "@/services/store/store-service";
 
 import { queryKeys } from "@/lib/queryKeys";
 
+import { USE_MOCK_STORES } from "@/mocks/config";
+
+import { getMockStores } from "@/mocks/stores";
+
 export function useStores() {
   const query = useQuery({
     queryKey: queryKeys.stores,
 
-    queryFn: storeService.getStores,
+    queryFn: async () => {
+      if (USE_MOCK_STORES) {
+        return {
+          responseCode: "00",
+          responseMessage: "Stores retrieved successfully.",
+          data: getMockStores(),
+        };
+      }
+
+      return storeService.getStores();
+    },
   });
 
   return {

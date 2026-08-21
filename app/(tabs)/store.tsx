@@ -1,13 +1,14 @@
 import {
-  Pressable,
-  View,
+  ActivityIndicator,
+  Alert,
   Image,
   Platform,
-  ToastAndroid,
-  Alert,
-  Share,
-  ScrollView,
+  Pressable,
   RefreshControl,
+  Share,
+  ToastAndroid,
+  View,
+  ScrollView,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,8 +21,16 @@ import { router } from "expo-router";
 
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+
+import { useMemo, useRef, useState } from "react";
+
+import * as Clipboard from "expo-clipboard";
+
 import { ROUTES, getStoreDetailsRoute } from "@/navigation/routes";
+
 import { AppText } from "@/components/ui/AppText";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { FilterButton } from "@/components/ui/FilterButton";
@@ -34,18 +43,27 @@ import {
 
 import { spacing, theme, radius } from "@/theme";
 
-import { useRef, useState } from "react";
+import { useStores } from "@/hooks/store/useStores";
+import { useDeleteStore } from "@/hooks/store/useDeleteStore";
+import { useToast } from "@/hooks/useToast";
 
-import * as Clipboard from "expo-clipboard";
+/**
+ * ============================================================================
+ * MOCK STORES — DEVELOPMENT ONLY
+ * ============================================================================
+ *
+ * Set this to false when you are ready to test against the real API.
+ */
 
-interface Store {
-  storeId: number;
-  storeName: string;
-  storeLink: string;
-  isActive: boolean;
-}
+const USE_MOCK_STORES = true;
 
-const stores: Store[] = [
+/**
+ * ============================================================================
+ * MOCK STORE DATA
+ * ============================================================================
+ */
+
+const MOCK_STORES = [
   {
     storeId: 1,
     storeName: "My Fashion Store",
@@ -66,8 +84,318 @@ const stores: Store[] = [
   },
 ];
 
+/**
+ * ============================================================================
+ * RIGHT SWIPE ACTIONS
+ * ============================================================================
+ */
+
+function RightActions({
+  onDelete,
+  disabled,
+}: {
+  onDelete: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Delete store"
+      disabled={disabled}
+      onPress={onDelete}
+      style={{
+        width: 90,
+        marginLeft: spacing.sm,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: theme.action.primary.delete,
+        borderRadius: radius.md,
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      <Ionicons name="trash-outline" size={24} color={theme.text.inverse} />
+
+      <AppText
+        variant="bodySmall"
+        color="inverse"
+        style={{
+          marginTop: spacing.xs,
+        }}
+      >
+        Delete
+      </AppText>
+    </Pressable>
+  );
+}
+
+/**
+ * ============================================================================
+ * STORE CARD
+ * ============================================================================
+ */
+
+function StoreCard({
+  store,
+  deleting,
+  onDelete,
+  onCopyLink,
+  onShareLink,
+  onViewDetails,
+}: {
+  store: {
+    storeId: number;
+    storeName: string;
+    storeLink: string;
+    isActive: boolean;
+  };
+
+  deleting: boolean;
+
+  onDelete: (storeId: number) => void;
+
+  onCopyLink: (storeLink: string) => void;
+
+  onShareLink: (storeLink: string) => void;
+
+  onViewDetails: (storeId: number) => void;
+}) {
+  return (
+    <Swipeable
+      enabled={!deleting}
+      renderRightActions={() => (
+        <RightActions
+          disabled={deleting}
+          onDelete={() => onDelete(store.storeId)}
+        />
+      )}
+    >
+      <Card>
+        {/* ================================================================
+            STORE HEADER
+        ================================================================ */}
+
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: spacing.md,
+          }}
+        >
+          {/* Store Image */}
+
+          <Image
+            source={require("../../assets/images/default-storefront.png.png")}
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: radius.sm,
+            }}
+            resizeMode="cover"
+          />
+
+          {/* Store Details */}
+
+          <View
+            style={{
+              flex: 1,
+              gap: spacing.xs,
+            }}
+          >
+            {/* Store Name */}
+
+            <AppText variant="bodyBold" color="primary" numberOfLines={1}>
+              {store.storeName}
+            </AppText>
+
+            {/* Store Link */}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Copy ${store.storeName} link`}
+              disabled={deleting}
+              onPress={() => onCopyLink(store.storeLink)}
+              style={({ pressed }) => ({
+                opacity: pressed || deleting ? 0.6 : 1,
+              })}
+            >
+              <AppText variant="bodySmall" color="link" numberOfLines={1}>
+                {store.storeLink}
+              </AppText>
+            </Pressable>
+
+            {/* Status */}
+
+            <View
+              style={{
+                alignSelf: "flex-start",
+                paddingHorizontal: spacing.sm,
+                paddingVertical: spacing.xs,
+                borderRadius: radius.full,
+                backgroundColor: store.isActive
+                  ? theme.badge.success.background
+                  : theme.badge.error.background,
+              }}
+            >
+              <AppText
+                variant="bodySmall"
+                color={store.isActive ? "success" : "error"}
+              >
+                {store.isActive ? "Active" : "Inactive"}
+              </AppText>
+            </View>
+          </View>
+
+          {/* Share */}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Share ${store.storeName}`}
+            disabled={deleting}
+            hitSlop={10}
+            onPress={() => onShareLink(store.storeLink)}
+            style={({ pressed }) => ({
+              opacity: pressed || deleting ? 0.6 : 1,
+            })}
+          >
+            <Ionicons
+              name="share-outline"
+              size={24}
+              color={theme.icon.default.icon}
+            />
+          </Pressable>
+        </View>
+
+        {/* ================================================================
+            DIVIDER
+        ================================================================ */}
+
+        <Divider
+          style={{
+            marginVertical: spacing.md,
+          }}
+        />
+
+        {/* ================================================================
+            STORE INFO
+        ================================================================ */}
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`View ${store.storeName} information`}
+          disabled={deleting}
+          onPress={() => onViewDetails(store.storeId)}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            opacity: pressed || deleting ? 0.6 : 1,
+          })}
+        >
+          <AppText variant="bodySmall" color="muted">
+            Store Info
+          </AppText>
+
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={theme.icon.default.icon}
+          />
+        </Pressable>
+      </Card>
+    </Swipeable>
+  );
+}
+
+/**
+ * ============================================================================
+ * STORE SCREEN
+ * ============================================================================
+ */
+
 export default function StoreScreen() {
-  /*
+  /**
+   * --------------------------------------------------------------------------
+   * API STORES
+   * --------------------------------------------------------------------------
+   */
+
+  const {
+    stores: apiStores,
+    isLoading: apiIsLoading,
+    isRefetching: apiIsRefetching,
+    error: apiError,
+    refetch,
+  } = useStores();
+
+  /**
+   * --------------------------------------------------------------------------
+   * MOCK STORES
+   * --------------------------------------------------------------------------
+   *
+   * Local state allows swipe-to-delete to actually remove mocked stores
+   * from the screen.
+   */
+
+  const [mockStores, setMockStores] = useState(MOCK_STORES);
+
+  /**
+   * --------------------------------------------------------------------------
+   * DATA SOURCE
+   * --------------------------------------------------------------------------
+   *
+   * true  -> mocked storefronts
+   * false -> real API storefronts
+   */
+
+  const stores = USE_MOCK_STORES ? mockStores : apiStores;
+
+  const isLoading = USE_MOCK_STORES ? false : apiIsLoading;
+
+  const isRefetching = USE_MOCK_STORES ? false : apiIsRefetching;
+
+  const error = USE_MOCK_STORES ? null : apiError;
+
+  /**
+   * --------------------------------------------------------------------------
+   * DELETE MUTATION
+   * --------------------------------------------------------------------------
+   */
+
+  const deleteStoreMutation = useDeleteStore();
+
+  /**
+   * --------------------------------------------------------------------------
+   * TOAST
+   * --------------------------------------------------------------------------
+   */
+
+  const { showToast } = useToast();
+
+  /**
+   * --------------------------------------------------------------------------
+   * SEARCH
+   * --------------------------------------------------------------------------
+   */
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  /**
+   * --------------------------------------------------------------------------
+   * FILTER
+   * --------------------------------------------------------------------------
+   */
+
+  const [selectedFilter, setSelectedFilter] = useState<StoreFilter>("all");
+
+  /**
+   * --------------------------------------------------------------------------
+   * BOTTOM SHEET
+   * --------------------------------------------------------------------------
+   */
+
+  const storeFrontBottomSheetRef = useRef<BottomSheetModal>(null);
+
+  /**
    * --------------------------------------------------------------------------
    * SUMMARY
    * --------------------------------------------------------------------------
@@ -79,80 +407,47 @@ export default function StoreScreen() {
 
   const inactiveStores = stores.filter((store) => !store.isActive).length;
 
-  /*
-   * --------------------------------------------------------------------------
-   * SEARCH
-   * --------------------------------------------------------------------------
-   */
-
-  const [searchQuery, setSearchQuery] = useState("");
-
-  /*
-   * --------------------------------------------------------------------------
-   * FILTER
-   * --------------------------------------------------------------------------
-   */
-
-  const [selectedFilter, setSelectedFilter] = useState<StoreFilter>("all");
-
-  /*
-   * --------------------------------------------------------------------------
-   * REFRESH
-   * --------------------------------------------------------------------------
-   */
-
-  const [refreshing, setRefreshing] = useState(false);
-
-  /*
-   * --------------------------------------------------------------------------
-   * BOTTOM SHEET
-   * --------------------------------------------------------------------------
-   */
-
-  const storeFrontBottomSheetRef = useRef<BottomSheetModal>(null);
-
-  /*
+  /**
    * --------------------------------------------------------------------------
    * SORT STORES
    * --------------------------------------------------------------------------
-   *
-   * Always display stores alphabetically
-   * by store name.
    */
 
-  const sortedStores = [...stores].sort((a, b) =>
-    a.storeName.localeCompare(b.storeName)
-  );
+  const sortedStores = useMemo(() => {
+    return [...stores].sort((a, b) => a.storeName.localeCompare(b.storeName));
+  }, [stores]);
 
-  /*
+  /**
    * --------------------------------------------------------------------------
    * SEARCH + FILTER
    * --------------------------------------------------------------------------
    */
 
-  const filteredStores = sortedStores.filter((store) => {
+  const filteredStores = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    const matchesSearch =
-      !query ||
-      store.storeName.toLowerCase().includes(query) ||
-      store.storeLink.toLowerCase().includes(query);
+    return sortedStores.filter((store) => {
+      const matchesSearch =
+        !query ||
+        store.storeName.toLowerCase().includes(query) ||
+        store.storeLink.toLowerCase().includes(query);
 
-    const matchesFilter =
-      selectedFilter === "all" ||
-      (selectedFilter === "active" && store.isActive) ||
-      (selectedFilter === "inactive" && !store.isActive);
+      const matchesFilter =
+        selectedFilter === "all" ||
+        (selectedFilter === "active" && store.isActive) ||
+        (selectedFilter === "inactive" && !store.isActive);
 
-    return matchesSearch && matchesFilter;
-  });
+      return matchesSearch && matchesFilter;
+    });
+  }, [sortedStores, searchQuery, selectedFilter]);
 
-  /*
+  /**
    * --------------------------------------------------------------------------
    * COPY STORE LINK
    * --------------------------------------------------------------------------
    */
 
-  const handleCopyLink = async (storeLink: string) => {
+  async function handleCopyLink(storeLink: string) {
     await Clipboard.setStringAsync(storeLink);
 
     if (Platform.OS === "android") {
@@ -163,15 +458,15 @@ export default function StoreScreen() {
         "The store link has been copied to your clipboard."
       );
     }
-  };
+  }
 
-  /*
+  /**
    * --------------------------------------------------------------------------
    * SHARE STORE LINK
    * --------------------------------------------------------------------------
    */
 
-  const handleShareLink = async (storeLink: string) => {
+  async function handleShareLink(storeLink: string) {
     if (!storeLink) {
       return;
     }
@@ -183,28 +478,113 @@ export default function StoreScreen() {
     } catch (error) {
       console.log("Error sharing store link:", error);
     }
-  };
+  }
 
-  /*
+  /**
    * --------------------------------------------------------------------------
    * REFRESH
    * --------------------------------------------------------------------------
-   *
-   * Replace the timeout with your API refetch
-   * when the stores API is connected.
    */
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    } finally {
-      setRefreshing(false);
+  async function onRefresh() {
+    if (USE_MOCK_STORES) {
+      return;
     }
-  };
 
-  /*
+    await refetch();
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * DELETE STORE
+   * --------------------------------------------------------------------------
+   */
+
+  function handleDelete(storeId: number) {
+    if (deleteStoreMutation.isPending) {
+      return;
+    }
+
+    const store = stores.find((item) => item.storeId === storeId);
+
+    if (!store) {
+      return;
+    }
+
+    Alert.alert(
+      "Delete Store",
+      `Are you sure you want to delete "${store.storeName}"? This action cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+
+        {
+          text: "Delete",
+          style: "destructive",
+
+          onPress: async () => {
+            try {
+              /**
+               * ------------------------------------------------------------
+               * MOCK DELETE
+               * ------------------------------------------------------------
+               */
+
+              if (USE_MOCK_STORES) {
+                setMockStores((currentStores) =>
+                  currentStores.filter((item) => item.storeId !== storeId)
+                );
+
+                showToast({
+                  type: "success",
+                  title: "Store Deleted",
+                  message: `${store.storeName} has been deleted successfully.`,
+                });
+
+                return;
+              }
+
+              /**
+               * ------------------------------------------------------------
+               * REAL API DELETE
+               * ------------------------------------------------------------
+               */
+
+              await deleteStoreMutation.mutateAsync(storeId);
+
+              showToast({
+                type: "success",
+                title: "Store Deleted",
+                message: `${store.storeName} has been deleted successfully.`,
+              });
+            } catch (error) {
+              console.log("DELETE STORE ERROR", error);
+
+              showToast({
+                type: "error",
+                title: "Delete Failed",
+                message: "Unable to delete this store. Please try again.",
+              });
+            }
+          },
+        },
+      ]
+    );
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * VIEW STORE DETAILS
+   * --------------------------------------------------------------------------
+   */
+
+  function handleViewDetails(storeId: number) {
+    router.push(getStoreDetailsRoute(storeId));
+  }
+
+  /**
    * --------------------------------------------------------------------------
    * FILTER LABEL
    * --------------------------------------------------------------------------
@@ -216,6 +596,31 @@ export default function StoreScreen() {
       : selectedFilter === "inactive"
         ? "Inactive"
         : "All Stores";
+
+  /**
+   * --------------------------------------------------------------------------
+   * SCREEN STATES
+   * --------------------------------------------------------------------------
+   */
+
+  const hasStores = stores.length > 0;
+
+  const isFirstTimeUser =
+    !isLoading &&
+    !hasStores &&
+    searchQuery.trim() === "" &&
+    selectedFilter === "all";
+
+  const showStoreError = !isLoading && !!error && hasStores;
+
+  const hasNoSearchResults =
+    !isLoading && !showStoreError && hasStores && filteredStores.length === 0;
+
+  /**
+   * --------------------------------------------------------------------------
+   * UI
+   * --------------------------------------------------------------------------
+   */
 
   return (
     <SafeAreaView
@@ -237,9 +642,9 @@ export default function StoreScreen() {
             flex: 1,
           }}
         >
-          {/* ================================================================= */}
-          {/* HEADER */}
-          {/* ================================================================= */}
+          {/* ================================================================
+              HEADER
+          ================================================================ */}
 
           <View
             style={{
@@ -248,8 +653,6 @@ export default function StoreScreen() {
               gap: spacing.md,
             }}
           >
-            {/* TITLE */}
-
             <View
               style={{
                 flex: 1,
@@ -259,7 +662,13 @@ export default function StoreScreen() {
               <AppText variant="h1">Storefront</AppText>
 
               <AppText variant="body" color="secondary">
-                Create and manage your online storefronts
+                {isLoading
+                  ? "Loading storefronts..."
+                  : isFirstTimeUser
+                    ? "Create your first storefront"
+                    : totalStores === 1
+                      ? "1 storefront"
+                      : `${totalStores} storefronts`}
               </AppText>
             </View>
 
@@ -268,20 +677,18 @@ export default function StoreScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Create Store"
-              onPress={() => {
-                router.push(ROUTES.ADD_STORE_INFORMATION);
-              }}
+              disabled={deleteStoreMutation.isPending}
+              onPress={() => router.push(ROUTES.ADD_STORE_INFORMATION)}
               style={({ pressed }) => ({
                 width: 44,
                 height: 44,
                 borderRadius: radius.full,
-
                 justifyContent: "center",
                 alignItems: "center",
-
                 backgroundColor: pressed
                   ? theme.action.primary.pressed
                   : theme.action.primary.background,
+                opacity: deleteStoreMutation.isPending ? 0.5 : 1,
               })}
             >
               <Ionicons
@@ -292,381 +699,475 @@ export default function StoreScreen() {
             </Pressable>
           </View>
 
-          {/* ================================================================= */}
-          {/* CONTENT */}
-          {/* ================================================================= */}
+          {/* ================================================================
+              CONTENT
+          ================================================================ */}
 
           <View
             style={{
               flex: 1,
-              marginTop: spacing.md,
             }}
           >
-            {/* ================================================================= */}
-            {/* STORE SUMMARY */}
-            {/* ================================================================= */}
+            {/* ==============================================================
+                SUMMARY
+            ============================================================== */}
 
-            <Card>
+            <Card
+              style={{
+                marginTop: spacing.md,
+              }}
+            >
               <View
                 style={{
                   flexDirection: "row",
-                  justifyContent: "space-evenly",
-                  gap: spacing.lg,
+                  alignItems: "center",
                 }}
               >
                 {/* TOTAL */}
 
                 <View
                   style={{
+                    flex: 1,
                     alignItems: "center",
+                    gap: spacing.xs,
                   }}
                 >
-                  <AppText variant="bodySmall" color="primary">
+                  <AppText variant="bodySmallBold" color="muted">
                     Total Stores
                   </AppText>
 
-                  <AppText variant="h3" color="strong">
-                    {totalStores}
+                  <AppText variant="h2" color="strong">
+                    {isLoading ? "—" : totalStores}
                   </AppText>
                 </View>
+
+                {/* DIVIDER */}
+
+                <View
+                  style={{
+                    width: 1,
+                    height: 40,
+                    backgroundColor: theme.divider.strong,
+                  }}
+                />
 
                 {/* ACTIVE */}
 
                 <View
                   style={{
+                    flex: 1,
                     alignItems: "center",
+                    gap: spacing.xs,
                   }}
                 >
-                  <AppText variant="bodySmall" color="primary">
-                    Active Stores
+                  <AppText variant="bodySmallBold" color="muted">
+                    Active
                   </AppText>
 
-                  <AppText variant="h3" color="success">
-                    {activeStores}
+                  <AppText variant="h2" color="success">
+                    {isLoading ? "—" : activeStores}
                   </AppText>
                 </View>
+
+                {/* DIVIDER */}
+
+                <View
+                  style={{
+                    width: 1,
+                    height: 40,
+                    backgroundColor: theme.divider.strong,
+                  }}
+                />
 
                 {/* INACTIVE */}
 
                 <View
                   style={{
+                    flex: 1,
                     alignItems: "center",
+                    gap: spacing.xs,
                   }}
                 >
-                  <AppText variant="bodySmall" color="primary">
-                    Inactive Stores
+                  <AppText variant="bodySmallBold" color="muted">
+                    Inactive
                   </AppText>
 
-                  <AppText variant="h3" color="error">
-                    {inactiveStores}
+                  <AppText variant="h2" color="error">
+                    {isLoading ? "—" : inactiveStores}
                   </AppText>
                 </View>
               </View>
             </Card>
 
-            {/* ================================================================= */}
-            {/* SEARCH + FILTER */}
-            {/* ================================================================= */}
+            {/* ==============================================================
+                SEARCH + FILTER
+            ============================================================== */}
 
-            <View
-              style={{
-                marginTop: spacing.md,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: spacing.sm,
-              }}
-            >
-              {/* SEARCH */}
-
+            {!isFirstTimeUser && !showStoreError && (
               <View
                 style={{
-                  flex: 1,
-                }}
-              >
-                <SearchBar
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  placeholder="Search stores"
-                />
-              </View>
-
-              {/* FILTER */}
-
-              <FilterButton
-                active={selectedFilter !== "all"}
-                onPress={() => storeFrontBottomSheetRef.current?.present()}
-              />
-            </View>
-
-            {/* ================================================================= */}
-            {/* ACTIVE FILTER */}
-            {/* ================================================================= */}
-
-            {selectedFilter !== "all" && (
-              <View
-                style={{
+                  marginTop: spacing.md,
                   flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "space-between",
-
-                  marginTop: spacing.sm,
+                  gap: spacing.sm,
                 }}
               >
+                <View
+                  style={{
+                    flex: 1,
+                  }}
+                >
+                  <SearchBar
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholder="Search stores"
+                  />
+                </View>
+
+                <FilterButton
+                  active={selectedFilter !== "all"}
+                  onPress={() => storeFrontBottomSheetRef.current?.present()}
+                />
+              </View>
+            )}
+
+            {/* ==============================================================
+                FILTER LABEL
+            ============================================================== */}
+
+            {selectedFilter !== "all" &&
+              !isFirstTimeUser &&
+              !showStoreError && (
                 <View
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: spacing.xs,
+                    justifyContent: "space-between",
+                    marginTop: spacing.sm,
                   }}
                 >
-                  <AppText variant="bodySmall" color="secondary">
-                    Filter:
-                  </AppText>
-
-                  <AppText variant="bodySmallBold" color="brand">
-                    {filterLabel}
-                  </AppText>
-                </View>
-
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Clear store filter"
-                  hitSlop={8}
-                  onPress={() => setSelectedFilter("all")}
-                >
-                  <AppText variant="bodySmall" color="link">
-                    Clear
-                  </AppText>
-                </Pressable>
-              </View>
-            )}
-
-            {/* ================================================================= */}
-            {/* STORE LIST */}
-            {/* ================================================================= */}
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingTop: spacing.lg,
-                paddingBottom: spacing.xl,
-
-                gap: spacing.md,
-              }}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  tintColor={theme.icon.branding.icon}
-                  colors={[theme.icon.branding.icon]}
-                  progressBackgroundColor={theme.background.surface}
-                />
-              }
-            >
-              {filteredStores.length > 0 ? (
-                filteredStores.map((store) => (
-                  <Card
-                    key={store.storeId}
+                  <View
                     style={{
-                      padding: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: spacing.xs,
                     }}
                   >
-                    {/* ===================================================== */}
-                    {/* STORE CONTENT */}
-                    {/* ===================================================== */}
+                    <AppText variant="bodySmall" color="secondary">
+                      Filter:
+                    </AppText>
 
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 12,
-                      }}
-                    >
-                      {/* STORE IMAGE */}
+                    <AppText variant="bodySmallBold" color="brand">
+                      {filterLabel}
+                    </AppText>
+                  </View>
 
-                      <Image
-                        source={require("../../assets/images/default-storefront.png.png")}
-                        style={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: 8,
-                        }}
-                        resizeMode="cover"
-                      />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Clear store filter"
+                    hitSlop={8}
+                    onPress={() => setSelectedFilter("all")}
+                  >
+                    <AppText variant="bodySmall" color="link">
+                      Clear
+                    </AppText>
+                  </Pressable>
+                </View>
+              )}
 
-                      {/* STORE DETAILS */}
+            {/* ==============================================================
+                STORE CONTENT
+            ============================================================== */}
 
-                      <View
-                        style={{
-                          flex: 1,
-                          gap: 4,
-                        }}
-                      >
-                        {/* STORE NAME */}
+            <View
+              style={{
+                flex: 1,
+                marginTop: spacing.md,
+              }}
+            >
+              {/* ============================================================
+                  1. INITIAL LOADING
+              ============================================================ */}
 
-                        <AppText
-                          variant="bodyBold"
-                          color="primary"
-                          numberOfLines={1}
-                        >
-                          {store.storeName}
-                        </AppText>
-
-                        {/* STORE LINK */}
-
-                        <Pressable
-                          accessibilityRole="button"
-                          accessibilityLabel={`Copy ${store.storeName} link`}
-                          onPress={() => handleCopyLink(store.storeLink)}
-                          style={({ pressed }) => ({
-                            opacity: pressed ? 0.6 : 1,
-                          })}
-                        >
-                          <AppText
-                            variant="bodySmall"
-                            color="link"
-                            numberOfLines={1}
-                          >
-                            {store.storeLink}
-                          </AppText>
-                        </Pressable>
-
-                        {/* STATUS */}
-
-                        <View
-                          style={{
-                            alignSelf: "flex-start",
-
-                            paddingHorizontal: 8,
-
-                            paddingVertical: 3,
-
-                            borderRadius: radius.full,
-
-                            backgroundColor: store.isActive
-                              ? theme.badge.success.background
-                              : theme.badge.error.background,
-                          }}
-                        >
-                          <AppText
-                            variant="bodySmall"
-                            color={store.isActive ? "success" : "error"}
-                          >
-                            {store.isActive ? "Active" : "Inactive"}
-                          </AppText>
-                        </View>
-                      </View>
-
-                      {/* SHARE */}
-
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={`Share ${store.storeName}`}
-                        hitSlop={10}
-                        onPress={() => handleShareLink(store.storeLink)}
-                        style={({ pressed }) => ({
-                          opacity: pressed ? 0.6 : 1,
-                        })}
-                      >
-                        <Ionicons
-                          name="share-outline"
-                          size={24}
-                          color={theme.icon.default.icon}
-                        />
-                      </Pressable>
-                    </View>
-
-                    {/* ===================================================== */}
-                    {/* DIVIDER */}
-                    {/* ===================================================== */}
-
-                    <Divider
-                      style={{
-                        marginVertical: spacing.md,
-                      }}
-                    />
-
-                    {/* ===================================================== */}
-                    {/* STORE INFO */}
-                    {/* ===================================================== */}
-
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={`View ${store.storeName} information`}
-                      onPress={() =>
-                        router.push(getStoreDetailsRoute(store.storeId))
-                      }
-                      style={({ pressed }) => ({
-                        flexDirection: "row",
-
-                        justifyContent: "space-between",
-
-                        alignItems: "center",
-
-                        opacity: pressed ? 0.6 : 1,
-                      })}
-                    >
-                      <AppText variant="bodySmall" color="muted">
-                        Store Info
-                      </AppText>
-
-                      <Ionicons
-                        name="chevron-forward"
-                        size={18}
-                        color={theme.icon.default.icon}
-                      />
-                    </Pressable>
-                  </Card>
-                ))
-              ) : (
-                /* =========================================================== */
-                /* EMPTY STATE */
-                /* =========================================================== */
-
+              {isLoading ? (
                 <View
                   style={{
+                    flex: 1,
+                    justifyContent: "center",
                     alignItems: "center",
-                    paddingVertical: spacing.xl,
-
-                    paddingHorizontal: spacing.lg,
+                    paddingVertical: spacing["3xl"],
                   }}
                 >
-                  <Ionicons
-                    name="search-outline"
-                    size={32}
-                    color={theme.icon.default.icon}
+                  <ActivityIndicator
+                    size="large"
+                    color={theme.icon.branding.icon}
                   />
 
                   <AppText
-                    variant="bodyBold"
-                    color="primary"
+                    color="secondary"
+                    style={{
+                      marginTop: spacing.md,
+                    }}
+                  >
+                    Loading storefronts...
+                  </AppText>
+                </View>
+              ) : isFirstTimeUser ? (
+                /* ==========================================================
+                   2. FIRST-TIME USER
+                ========================================================== */
+
+                <Card
+                  style={{
+                    alignItems: "center",
+                    paddingVertical: spacing.xl,
+                    paddingHorizontal: spacing.lg,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: radius.full,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: theme.icon.branding.background,
+                    }}
+                  >
+                    <Ionicons
+                      name="storefront-outline"
+                      size={32}
+                      color={theme.icon.branding.icon}
+                    />
+                  </View>
+
+                  <AppText
+                    variant="bodyLargeBold"
+                    style={{
+                      marginTop: spacing.md,
+                      textAlign: "center",
+                    }}
+                  >
+                    No stores yet
+                  </AppText>
+
+                  <AppText
+                    variant="body"
+                    color="secondary"
+                    style={{
+                      marginTop: spacing.xs,
+                      textAlign: "center",
+                      maxWidth: 320,
+                    }}
+                  >
+                    Create your first storefront to start selling your products
+                    online.
+                  </AppText>
+
+                  <Button
+                    title="Create Store"
+                    variant="primary"
+                    style={{
+                      marginTop: spacing.lg,
+                    }}
+                    onPress={() => router.push(ROUTES.ADD_STORE_INFORMATION)}
+                  />
+
+                  <AppText
+                    variant="caption"
+                    color="muted"
                     style={{
                       marginTop: spacing.sm,
+                      textAlign: "center",
+                    }}
+                  >
+                    You can manage your storefront and products from here.
+                  </AppText>
+                </Card>
+              ) : showStoreError ? (
+                /* ==========================================================
+                   3. ERROR
+                ========================================================== */
+
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    paddingVertical: spacing["3xl"],
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: radius.full,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: theme.background.error,
+                    }}
+                  >
+                    <Ionicons
+                      name="alert-circle-outline"
+                      size={30}
+                      color={theme.icon.error.icon}
+                    />
+                  </View>
+
+                  <AppText
+                    variant="bodyLargeBold"
+                    style={{
+                      marginTop: spacing.md,
+                      textAlign: "center",
+                    }}
+                  >
+                    Unable to load stores
+                  </AppText>
+
+                  <AppText
+                    variant="body"
+                    color="secondary"
+                    style={{
+                      marginTop: spacing.xs,
+                      textAlign: "center",
+                      maxWidth: 320,
+                    }}
+                  >
+                    We couldn't load your storefronts. Please try again.
+                  </AppText>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Try again"
+                    onPress={() => refetch()}
+                    style={{
+                      marginTop: spacing.md,
+                      paddingVertical: spacing.xs,
+                      paddingHorizontal: spacing.sm,
+                    }}
+                  >
+                    <AppText color="link">Try Again</AppText>
+                  </Pressable>
+                </View>
+              ) : hasNoSearchResults ? (
+                /* ==========================================================
+                   4. SEARCH / FILTER EMPTY
+                ========================================================== */
+
+                <Card
+                  style={{
+                    alignItems: "center",
+                    paddingVertical: spacing.xl,
+                    paddingHorizontal: spacing.lg,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: radius.full,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: theme.icon.default.background,
+                    }}
+                  >
+                    <Ionicons
+                      name="search-outline"
+                      size={28}
+                      color={theme.icon.default.icon}
+                    />
+                  </View>
+
+                  <AppText
+                    variant="bodyLargeBold"
+                    style={{
+                      marginTop: spacing.md,
+                      textAlign: "center",
                     }}
                   >
                     No stores found
                   </AppText>
 
                   <AppText
-                    variant="bodySmall"
+                    variant="body"
                     color="secondary"
-                    align="center"
                     style={{
                       marginTop: spacing.xs,
+                      textAlign: "center",
                     }}
                   >
-                    Try changing your search or filter.
+                    Try searching with a different store name or change your
+                    filter.
                   </AppText>
-                </View>
+
+                  {searchQuery.trim() !== "" && (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Clear store search"
+                      onPress={() => setSearchQuery("")}
+                      style={{
+                        marginTop: spacing.md,
+                      }}
+                    >
+                      <AppText color="link">Clear Search</AppText>
+                    </Pressable>
+                  )}
+
+                  {selectedFilter !== "all" && searchQuery.trim() === "" && (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Clear store filter"
+                      onPress={() => setSelectedFilter("all")}
+                      style={{
+                        marginTop: spacing.md,
+                      }}
+                    >
+                      <AppText color="link">Clear Filter</AppText>
+                    </Pressable>
+                  )}
+                </Card>
+              ) : (
+                /* ==========================================================
+                   5. STORE LIST
+                ========================================================== */
+
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{
+                    paddingBottom: spacing["2xl"],
+                    gap: spacing.md,
+                  }}
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={isRefetching}
+                      onRefresh={onRefresh}
+                      tintColor={theme.icon.branding.icon}
+                      colors={[theme.icon.branding.icon]}
+                      progressBackgroundColor={theme.background.surface}
+                    />
+                  }
+                >
+                  {filteredStores.map((store) => (
+                    <StoreCard
+                      key={store.storeId}
+                      store={store}
+                      deleting={deleteStoreMutation.isPending}
+                      onDelete={handleDelete}
+                      onCopyLink={handleCopyLink}
+                      onShareLink={handleShareLink}
+                      onViewDetails={handleViewDetails}
+                    />
+                  ))}
+                </ScrollView>
               )}
-            </ScrollView>
+            </View>
           </View>
         </View>
       </View>
 
-      {/* ==================================================================== */}
-      {/* STOREFRONT FILTER BOTTOM SHEET */}
-      {/* ==================================================================== */}
+      {/* ======================================================================
+          STORE FILTER BOTTOM SHEET
+      ====================================================================== */}
 
       <StoreFrontBottomSheet
         ref={storeFrontBottomSheetRef}

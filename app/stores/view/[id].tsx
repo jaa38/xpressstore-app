@@ -32,8 +32,6 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { useState } from "react";
 import { router } from "expo-router";
 
-
-
 function SettingsRow({
   title,
   subtitle,
@@ -204,7 +202,16 @@ export default function StorefrontView() {
           >
             <View style={{ flexDirection: "column", alignItems: "center" }}>
               <AppText variant="bodySmall" color="primary">
-                Total Products
+                Currency
+              </AppText>
+              <AppText variant="h3" color="strong">
+                ₦
+              </AppText>
+            </View>
+
+            <View style={{ flexDirection: "column", alignItems: "center" }}>
+              <AppText variant="bodySmall" color="primary">
+                Products
               </AppText>
               <AppText variant="h3" color="strong">
                 {isLoading ? "--" : totalProducts}
@@ -213,10 +220,10 @@ export default function StorefrontView() {
 
             <View style={{ flexDirection: "column", alignItems: "center" }}>
               <AppText variant="bodySmall" color="primary">
-                Inventory Value
+                Discounts
               </AppText>
               <AppText variant="h3" color="strong">
-                ₦1,582,500
+                {isLoading ? "--" : totalProducts}
               </AppText>
             </View>
           </View>

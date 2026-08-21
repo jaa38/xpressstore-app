@@ -47,27 +47,356 @@ import { ROUTES } from "@/navigation/routes";
 
 import { spacing, theme, radius } from "@/theme";
 
+/**
+ * ============================================================================
+ * MOCK MODE
+ * ============================================================================
+ *
+ * Set to false when the Orders API is ready.
+ */
+const USE_MOCK_ORDERS = true;
+
+/**
+ * ============================================================================
+ * MOCK ORDERS
+ * ============================================================================
+ */
+
+const MOCK_ORDERS: Order[] = [
+  {
+    id: "mock-order-001",
+    reference: "ORD-20260821",
+    customerName: "Chinedu Okafor",
+    customerPhone: "08031234567",
+    customerEmail: "chinedu.okafor@example.com",
+
+    deliveryAddress: {
+      street: "14 Admiralty Way",
+      city: "Lekki",
+      state: "Lagos",
+      country: "Nigeria",
+      postalCode: "106104",
+    },
+
+    total: 85000,
+    currency: "NGN",
+
+    items: [
+      {
+        productId: "1",
+        productName: "Classic Leather Sneakers",
+        quantity: 1,
+        unitPrice: 85000,
+        subtotal: 85000,
+        currency: "NGN",
+      },
+    ],
+
+    paymentChannel: "card",
+    status: "paid",
+
+    createdAt: "2026-08-21T09:15:00.000Z",
+    updatedAt: "2026-08-21T09:20:00.000Z",
+
+    statusHistory: [],
+  },
+
+  {
+    id: "mock-order-002",
+    reference: "ORD-20260820",
+    customerName: "Amaka Eze",
+    customerPhone: "08145678901",
+    customerEmail: "amaka.eze@example.com",
+
+    deliveryAddress: {
+      street: "22 GRA Avenue",
+      city: "Ikeja",
+      state: "Lagos",
+      country: "Nigeria",
+      postalCode: "101233",
+    },
+
+    total: 142500,
+    currency: "NGN",
+
+    items: [
+      {
+        productId: "2",
+        productName: "Premium Ankara Tote Bag",
+        quantity: 2,
+        unitPrice: 45000,
+        subtotal: 90000,
+        currency: "NGN",
+      },
+      {
+        productId: "3",
+        productName: "Minimalist Wrist Watch",
+        quantity: 1,
+        unitPrice: 52500,
+        subtotal: 52500,
+        currency: "NGN",
+      },
+    ],
+
+    paymentChannel: "bankTransfer",
+    status: "delivered",
+
+    createdAt: "2026-08-20T13:45:00.000Z",
+    updatedAt: "2026-08-21T08:30:00.000Z",
+
+    statusHistory: [],
+  },
+
+  {
+    id: "mock-order-003",
+    reference: "ORD-20260819",
+    customerName: "Tunde Adeyemi",
+    customerPhone: "07012345678",
+    customerEmail: "tunde.adeyemi@example.com",
+
+    deliveryAddress: {
+      street: "8 Wuse 2 Crescent",
+      city: "Abuja",
+      state: "FCT",
+      country: "Nigeria",
+      postalCode: "900288",
+    },
+
+    total: 225000,
+    currency: "NGN",
+
+    items: [
+      {
+        productId: "4",
+        productName: "Premium Wireless Headphones",
+        quantity: 1,
+        unitPrice: 125000,
+        subtotal: 125000,
+        currency: "NGN",
+      },
+      {
+        productId: "5",
+        productName: "Smart Travel Backpack",
+        quantity: 1,
+        unitPrice: 100000,
+        subtotal: 100000,
+        currency: "NGN",
+      },
+    ],
+
+    paymentChannel: "bank",
+    status: "returned",
+
+    createdAt: "2026-08-19T10:30:00.000Z",
+    updatedAt: "2026-08-20T16:00:00.000Z",
+
+    statusHistory: [],
+  },
+
+  {
+    id: "mock-order-004",
+    reference: "ORD-20260818",
+    customerName: "Fatima Bello",
+    customerPhone: "08098765432",
+    customerEmail: "fatima.bello@example.com",
+
+    deliveryAddress: {
+      street: "17 Ahmadu Bello Way",
+      city: "Victoria Island",
+      state: "Lagos",
+      country: "Nigeria",
+      postalCode: "101241",
+    },
+
+    total: 67500,
+    currency: "NGN",
+
+    items: [
+      {
+        productId: "6",
+        productName: "Classic Cotton Shirt",
+        quantity: 3,
+        unitPrice: 22500,
+        subtotal: 67500,
+        currency: "NGN",
+      },
+    ],
+
+    paymentChannel: "ussd",
+    status: "failed",
+
+    createdAt: "2026-08-18T15:20:00.000Z",
+    updatedAt: "2026-08-18T15:35:00.000Z",
+
+    statusHistory: [],
+  },
+
+  {
+    id: "mock-order-005",
+    reference: "ORD-20260817",
+    customerName: "David Williams",
+    customerPhone: "09023456789",
+    customerEmail: "david.williams@example.com",
+
+    deliveryAddress: {
+      street: "5 Allen Avenue",
+      city: "Ikeja",
+      state: "Lagos",
+      country: "Nigeria",
+      postalCode: "101233",
+    },
+
+    total: 310000,
+    currency: "NGN",
+
+    items: [
+      {
+        productId: "7",
+        productName: "Executive Office Chair",
+        quantity: 1,
+        unitPrice: 180000,
+        subtotal: 180000,
+        currency: "NGN",
+      },
+      {
+        productId: "8",
+        productName: "Adjustable Laptop Stand",
+        quantity: 2,
+        unitPrice: 35000,
+        subtotal: 70000,
+        currency: "NGN",
+      },
+      {
+        productId: "9",
+        productName: "Wireless Keyboard",
+        quantity: 1,
+        unitPrice: 60000,
+        subtotal: 60000,
+        currency: "NGN",
+      },
+    ],
+
+    paymentChannel: "nqr",
+    status: "paid",
+
+    createdAt: "2026-08-17T11:10:00.000Z",
+    updatedAt: "2026-08-17T11:15:00.000Z",
+
+    statusHistory: [],
+  },
+
+  {
+    id: "mock-order-006",
+    reference: "ORD-20260816",
+    customerName: "Blessing Johnson",
+    customerPhone: "08167890123",
+    customerEmail: "blessing.johnson@example.com",
+
+    deliveryAddress: {
+      street: "31 Banana Island Road",
+      city: "Ikoyi",
+      state: "Lagos",
+      country: "Nigeria",
+      postalCode: "106104",
+    },
+
+    total: 119000,
+    currency: "NGN",
+
+    items: [
+      {
+        productId: "10",
+        productName: "Premium Crossbody Bag",
+        quantity: 1,
+        unitPrice: 69000,
+        subtotal: 69000,
+        currency: "NGN",
+      },
+      {
+        productId: "11",
+        productName: "Fashion Sunglasses",
+        quantity: 2,
+        unitPrice: 25000,
+        subtotal: 50000,
+        currency: "NGN",
+      },
+    ],
+
+    paymentChannel: "card",
+    status: "delivered",
+
+    createdAt: "2026-08-16T09:40:00.000Z",
+    updatedAt: "2026-08-17T14:20:00.000Z",
+
+    statusHistory: [],
+  },
+];
+
+/**
+ * ============================================================================
+ * MOCK PAGINATION
+ * ============================================================================
+ */
+
+const MOCK_PAGE = {
+  orders: MOCK_ORDERS,
+};
+
+/**
+ * ============================================================================
+ * ORDERS SCREEN
+ * ============================================================================
+ */
+
 export default function OrdersScreen() {
   /**
    * -------------------------------------------------------------------------
-   * ORDERS
+   * ORDERS API
    * -------------------------------------------------------------------------
    */
 
   const {
     data,
-    isLoading,
-    isRefetching,
-    isFetchingNextPage,
-    hasNextPage,
+    isLoading: apiIsLoading,
+    isRefetching: apiIsRefetching,
+    isFetchingNextPage: apiIsFetchingNextPage,
+    hasNextPage: apiHasNextPage,
     fetchNextPage,
     refetch,
     error,
   } = useOrders();
 
+  /**
+   * -------------------------------------------------------------------------
+   * ORDERS
+   * -------------------------------------------------------------------------
+   *
+   * When USE_MOCK_ORDERS is true, the screen completely uses the mock data.
+   *
+   * When false, the existing API data is used.
+   */
+
   const orders = useMemo(() => {
+    if (USE_MOCK_ORDERS) {
+      return MOCK_PAGE.orders;
+    }
+
     return data?.pages.flatMap((page) => page.orders) ?? [];
   }, [data]);
+
+  /**
+   * -------------------------------------------------------------------------
+   * LOADING
+   * -------------------------------------------------------------------------
+   */
+
+  const isLoading = USE_MOCK_ORDERS ? false : apiIsLoading;
+
+  const isRefetching = USE_MOCK_ORDERS ? false : apiIsRefetching;
+
+  const isFetchingNextPage = USE_MOCK_ORDERS ? false : apiIsFetchingNextPage;
+
+  const hasNextPage = USE_MOCK_ORDERS ? false : apiHasNextPage;
 
   /**
    * -------------------------------------------------------------------------
@@ -83,24 +412,19 @@ export default function OrdersScreen() {
    * -------------------------------------------------------------------------
    */
 
-  const [selectedFilter, setSelectedFilter] =
-    useState<OrderFilter>("all");
+  const [selectedFilter, setSelectedFilter] = useState<OrderFilter>("all");
 
-  const [searchQuery, setSearchQuery] =
-    useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [draftFilters, setDraftFilters] =
-    useState<OrderFilters>(
-      defaultOrderFilters
-    );
+    useState<OrderFilters>(defaultOrderFilters);
 
   const [appliedFilters, setAppliedFilters] =
-    useState<OrderFilters>(
-      defaultOrderFilters
-    );
+    useState<OrderFilters>(defaultOrderFilters);
 
-  const [selectedOrder, setSelectedOrder] =
-    useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const [refreshingMock, setRefreshingMock] = useState(false);
 
   /**
    * -------------------------------------------------------------------------
@@ -108,11 +432,9 @@ export default function OrdersScreen() {
    * -------------------------------------------------------------------------
    */
 
-  const filterBottomSheetRef =
-    useRef<BottomSheetModal>(null);
+  const filterBottomSheetRef = useRef<BottomSheetModal>(null);
 
-  const orderActionsBottomSheetRef =
-    useRef<BottomSheetModal>(null);
+  const orderActionsBottomSheetRef = useRef<BottomSheetModal>(null);
 
   /**
    * -------------------------------------------------------------------------
@@ -121,8 +443,7 @@ export default function OrdersScreen() {
    */
 
   const hasActiveFilters = useMemo(() => {
-    const hasStatusFilter =
-      selectedFilter !== "all";
+    const hasStatusFilter = selectedFilter !== "all";
 
     const hasAmountFilter =
       appliedFilters.amount.min !== undefined ||
@@ -132,15 +453,9 @@ export default function OrdersScreen() {
       appliedFilters.date.start !== undefined ||
       appliedFilters.date.end !== undefined;
 
-    const hasSortFilter =
-      appliedFilters.sort !== "mostRecent";
+    const hasSortFilter = appliedFilters.sort !== "mostRecent";
 
-    return (
-      hasStatusFilter ||
-      hasAmountFilter ||
-      hasDateFilter ||
-      hasSortFilter
-    );
+    return hasStatusFilter || hasAmountFilter || hasDateFilter || hasSortFilter;
   }, [selectedFilter, appliedFilters]);
 
   /**
@@ -151,106 +466,79 @@ export default function OrdersScreen() {
 
   const filteredOrders = useMemo(() => {
     const filtered = orders.filter((order) => {
-      const matchesStatus =
-        selectedFilter === "all" ||
-        order.status === selectedFilter;
+      /**
+       * STATUS
+       */
 
-      const query =
-        searchQuery.trim().toLowerCase();
+      const matchesStatus =
+        selectedFilter === "all" || order.status === selectedFilter;
+
+      /**
+       * SEARCH
+       */
+
+      const query = searchQuery.trim().toLowerCase();
 
       const matchesSearch =
         query === "" ||
-        order.reference
-          .toLowerCase()
-          .includes(query) ||
-        order.customerName
-          .toLowerCase()
-          .includes(query) ||
+        order.reference.toLowerCase().includes(query) ||
+        order.customerName.toLowerCase().includes(query) ||
         order.items.some((item) =>
-          item.productName
-            .toLowerCase()
-            .includes(query)
+          item.productName.toLowerCase().includes(query)
         );
+
+      /**
+       * AMOUNT
+       */
 
       const matchesAmount =
-        (
-          appliedFilters.amount.min ===
-            undefined ||
-          order.total >=
-            appliedFilters.amount.min
-        ) &&
-        (
-          appliedFilters.amount.max ===
-            undefined ||
-          order.total <=
-            appliedFilters.amount.max
-        );
+        (appliedFilters.amount.min === undefined ||
+          order.total >= appliedFilters.amount.min) &&
+        (appliedFilters.amount.max === undefined ||
+          order.total <= appliedFilters.amount.max);
 
-      const orderDate =
-        new Date(order.createdAt);
+      /**
+       * DATE
+       */
 
-      const startDate =
-        appliedFilters.date.start;
+      const orderDate = new Date(order.createdAt);
 
-      const endDate =
-        appliedFilters.date.end
-          ? new Date(
-              appliedFilters.date.end
-            )
-          : undefined;
+      const startDate = appliedFilters.date.start;
+
+      const endDate = appliedFilters.date.end
+        ? new Date(appliedFilters.date.end)
+        : undefined;
 
       if (endDate) {
-        endDate.setHours(
-          23,
-          59,
-          59,
-          999
-        );
+        endDate.setHours(23, 59, 59, 999);
       }
 
       const matchesDate =
-        (!startDate ||
-          orderDate >= startDate) &&
-        (!endDate ||
-          orderDate <= endDate);
+        (!startDate || orderDate >= startDate) &&
+        (!endDate || orderDate <= endDate);
 
-      return (
-        matchesStatus &&
-        matchesSearch &&
-        matchesAmount &&
-        matchesDate
-      );
+      return matchesStatus && matchesSearch && matchesAmount && matchesDate;
     });
+
+    /**
+     * SORT
+     */
 
     switch (appliedFilters.sort) {
       case "amountHighToLow":
-        return [...filtered].sort(
-          (a, b) => b.total - a.total
-        );
+        return [...filtered].sort((a, b) => b.total - a.total);
 
       case "amountLowToHigh":
-        return [...filtered].sort(
-          (a, b) => a.total - b.total
-        );
+        return [...filtered].sort((a, b) => a.total - b.total);
 
       case "mostRecent":
       default:
         return [...filtered].sort(
           (a, b) =>
-            new Date(
-              b.createdAt
-            ).getTime() -
-            new Date(
-              a.createdAt
-            ).getTime()
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
     }
-  }, [
-    orders,
-    selectedFilter,
-    searchQuery,
-    appliedFilters,
-  ]);
+  }, [orders, selectedFilter, searchQuery, appliedFilters]);
 
   /**
    * -------------------------------------------------------------------------
@@ -261,32 +549,17 @@ export default function OrdersScreen() {
   const ordersThisWeek = useMemo(() => {
     const now = new Date();
 
-    const startOfWeek =
-      new Date(now);
+    const startOfWeek = new Date(now);
 
-    const day =
-      startOfWeek.getDay();
+    const day = startOfWeek.getDay();
 
-    const diff =
-      day === 0 ? -6 : 1 - day;
+    const diff = day === 0 ? -6 : 1 - day;
 
-    startOfWeek.setDate(
-      startOfWeek.getDate() + diff
-    );
+    startOfWeek.setDate(startOfWeek.getDate() + diff);
 
-    startOfWeek.setHours(
-      0,
-      0,
-      0,
-      0
-    );
+    startOfWeek.setHours(0, 0, 0, 0);
 
-    return orders.filter(
-      (order) =>
-        new Date(
-          order.createdAt
-        ) >= startOfWeek
-    );
+    return orders.filter((order) => new Date(order.createdAt) >= startOfWeek);
   }, [orders]);
 
   /**
@@ -296,12 +569,7 @@ export default function OrdersScreen() {
    */
 
   const productsById = useMemo(() => {
-    return Object.fromEntries(
-      products.map((product) => [
-        product.id,
-        product,
-      ])
-    );
+    return Object.fromEntries(products.map((product) => [product.id, product]));
   }, [products]);
 
   /**
@@ -317,9 +585,7 @@ export default function OrdersScreen() {
     searchQuery.trim() === "";
 
   const showOrderError =
-    !isLoading &&
-    !!error &&
-    orders.length > 0;
+    !isLoading && !USE_MOCK_ORDERS && !!error && orders.length > 0;
 
   const hasNoResults =
     !isLoading &&
@@ -354,13 +620,9 @@ export default function OrdersScreen() {
   const clearFilters = () => {
     setSelectedFilter("all");
 
-    setAppliedFilters(
-      defaultOrderFilters
-    );
+    setAppliedFilters(defaultOrderFilters);
 
-    setDraftFilters(
-      defaultOrderFilters
-    );
+    setDraftFilters(defaultOrderFilters);
   };
 
   /**
@@ -370,8 +632,26 @@ export default function OrdersScreen() {
    */
 
   const onRefresh = async () => {
+    if (USE_MOCK_ORDERS) {
+      setRefreshingMock(true);
+
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      setRefreshingMock(false);
+
+      return;
+    }
+
     await refetch();
   };
+
+  /**
+   * -------------------------------------------------------------------------
+   * REFRESHING STATE
+   * -------------------------------------------------------------------------
+   */
+
+  const refreshing = USE_MOCK_ORDERS ? refreshingMock : isRefetching;
 
   /**
    * -------------------------------------------------------------------------
@@ -384,8 +664,7 @@ export default function OrdersScreen() {
       <SafeAreaView
         style={{
           flex: 1,
-          backgroundColor:
-            theme.background.primary,
+          backgroundColor: theme.background.primary,
         }}
       >
         <StatusBar style="auto" />
@@ -393,8 +672,7 @@ export default function OrdersScreen() {
         <View
           style={{
             flex: 1,
-            paddingHorizontal:
-              spacing.lg,
+            paddingHorizontal: spacing.lg,
           }}
         >
           <View
@@ -402,7 +680,9 @@ export default function OrdersScreen() {
               flex: 1,
             }}
           >
-            {/* HEADER */}
+            {/* ============================================================
+                HEADER
+            ============================================================ */}
 
             <View
               style={{
@@ -416,261 +696,183 @@ export default function OrdersScreen() {
                   gap: spacing.xs,
                 }}
               >
-                <AppText variant="h1">
-                  Orders
-                </AppText>
+                <AppText variant="h1">Orders</AppText>
 
-                <AppText
-                  variant="body"
-                  color="secondary"
-                >
+                <AppText variant="body" color="secondary">
                   {headerSubtitle}
                 </AppText>
               </View>
             </View>
 
-            {/* SEARCH + FILTER */}
+            {/* ============================================================
+                SEARCH + FILTER
+            ============================================================ */}
 
-            {!isFirstTimeUser &&
-              !showOrderError && (
+            {!isFirstTimeUser && !showOrderError && (
+              <View
+                style={{
+                  marginTop: spacing.md,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
                 <View
                   style={{
-                    marginTop:
-                      spacing.md,
-                    flexDirection:
-                      "row",
-                    alignItems:
-                      "center",
-                    gap: spacing.md,
+                    flex: 1,
                   }}
                 >
-                  <View
-                    style={{
-                      flex: 1,
-                    }}
-                  >
-                    <SearchBar
-                      placeholder="Search orders"
-                      value={
-                        searchQuery
-                      }
-                      onChangeText={
-                        setSearchQuery
-                      }
-                    />
-                  </View>
-
-                  <FilterButton
-                    active={
-                      hasActiveFilters
-                    }
-                    onPress={() => {
-                      setDraftFilters(
-                        appliedFilters
-                      );
-
-                      filterBottomSheetRef.current?.present();
-                    }}
+                  <SearchBar
+                    placeholder="Search orders"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
                   />
                 </View>
-              )}
 
-            {/* STATUS FILTERS */}
+                <FilterButton
+                  active={hasActiveFilters}
+                  onPress={() => {
+                    setDraftFilters(appliedFilters);
 
-            {!isFirstTimeUser &&
-              !showOrderError && (
-                <View
-                  style={{
-                    flexDirection:
-                      "row",
-                    marginTop:
-                      spacing.md,
-                    gap: spacing.sm,
+                    filterBottomSheetRef.current?.present();
                   }}
-                >
-                  <UICard
-                    title="All"
-                    variant={
-                      selectedFilter ===
-                      "all"
-                        ? "active"
-                        : "default"
-                    }
-                    onPress={() =>
-                      setSelectedFilter(
-                        "all"
-                      )
-                    }
-                  />
+                />
+              </View>
+            )}
 
-                  <UICard
-                    title="Paid"
-                    variant={
-                      selectedFilter ===
-                      "paid"
-                        ? "active"
-                        : "default"
-                    }
-                    onPress={() =>
-                      setSelectedFilter(
-                        "paid"
-                      )
-                    }
-                  />
+            {/* ============================================================
+                STATUS FILTERS
+            ============================================================ */}
 
-                  <UICard
-                    title="Delivered"
-                    variant={
-                      selectedFilter ===
-                      "delivered"
-                        ? "active"
-                        : "default"
-                    }
-                    onPress={() =>
-                      setSelectedFilter(
-                        "delivered"
-                      )
-                    }
-                  />
+            {!isFirstTimeUser && !showOrderError && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginTop: spacing.md,
+                  gap: spacing.sm,
+                }}
+              >
+                <UICard
+                  title="All"
+                  variant={selectedFilter === "all" ? "active" : "default"}
+                  onPress={() => setSelectedFilter("all")}
+                />
 
-                  <UICard
-                    title="Returned"
-                    variant={
-                      selectedFilter ===
-                      "returned"
-                        ? "active"
-                        : "default"
-                    }
-                    onPress={() =>
-                      setSelectedFilter(
-                        "returned"
-                      )
-                    }
-                  />
+                <UICard
+                  title="Paid"
+                  variant={selectedFilter === "paid" ? "active" : "default"}
+                  onPress={() => setSelectedFilter("paid")}
+                />
 
-                  <UICard
-                    title="Failed"
-                    variant={
-                      selectedFilter ===
-                      "failed"
-                        ? "active"
-                        : "default"
-                    }
-                    onPress={() =>
-                      setSelectedFilter(
-                        "failed"
-                      )
-                    }
-                  />
-                </View>
-              )}
+                <UICard
+                  title="Delivered"
+                  variant={
+                    selectedFilter === "delivered" ? "active" : "default"
+                  }
+                  onPress={() => setSelectedFilter("delivered")}
+                />
 
-            {/* CONTENT */}
+                <UICard
+                  title="Returned"
+                  variant={selectedFilter === "returned" ? "active" : "default"}
+                  onPress={() => setSelectedFilter("returned")}
+                />
+
+                <UICard
+                  title="Failed"
+                  variant={selectedFilter === "failed" ? "active" : "default"}
+                  onPress={() => setSelectedFilter("failed")}
+                />
+              </View>
+            )}
+
+            {/* ============================================================
+                CONTENT
+            ============================================================ */}
 
             <View
               style={{
                 flex: 1,
-                marginTop:
-                  spacing.md,
+                marginTop: spacing.md,
               }}
             >
+              {/* ==========================================================
+                  LOADING
+              ========================================================== */}
+
               {isLoading ? (
                 <View
                   style={{
                     flex: 1,
-                    justifyContent:
-                      "center",
-                    alignItems:
-                      "center",
-                    paddingVertical:
-                      spacing["3xl"],
+                    justifyContent: "center",
+                    alignItems: "center",
+                    paddingVertical: spacing["3xl"],
                   }}
                 >
                   <ActivityIndicator
                     size="large"
-                    color={
-                      theme.icon
-                        .branding
-                        .icon
-                    }
+                    color={theme.icon.branding.icon}
                   />
 
                   <AppText
                     color="secondary"
                     style={{
-                      marginTop:
-                        spacing.md,
+                      marginTop: spacing.md,
                     }}
                   >
                     Loading orders...
                   </AppText>
                 </View>
               ) : showOrderError ? (
+                /* ==========================================================
+                   ERROR
+                ========================================================== */
+
                 <View
                   style={{
                     flex: 1,
-                    justifyContent:
-                      "center",
-                    alignItems:
-                      "center",
-                    paddingVertical:
-                      spacing["3xl"],
+                    justifyContent: "center",
+                    alignItems: "center",
+                    paddingVertical: spacing["3xl"],
                   }}
                 >
                   <View
                     style={{
                       width: 56,
                       height: 56,
-                      borderRadius:
-                        radius.full,
-                      justifyContent:
-                        "center",
-                      alignItems:
-                        "center",
-                      backgroundColor:
-                        theme.background
-                          .error,
+                      borderRadius: radius.full,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: theme.background.error,
                     }}
                   >
                     <Ionicons
                       name="alert-circle-outline"
                       size={30}
-                      color={
-                        theme.icon
-                          .error
-                          .icon
-                      }
+                      color={theme.icon.error.icon}
                     />
                   </View>
 
                   <AppText
                     variant="bodyLargeBold"
                     style={{
-                      marginTop:
-                        spacing.md,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.md,
+                      textAlign: "center",
                     }}
                   >
-                    Unable to load
-                    orders
+                    Unable to load orders
                   </AppText>
 
                   <AppText
                     variant="body"
                     color="secondary"
                     style={{
-                      marginTop:
-                        spacing.xs,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.xs,
+                      textAlign: "center",
                       maxWidth: 320,
                     }}
                   >
-                    We couldn't load
-                    your orders.
-                    Please try
-                    again.
+                    We couldn't load your orders. Please try again.
                   </AppText>
 
                   <Pressable
@@ -680,64 +882,48 @@ export default function OrdersScreen() {
                       refetch();
                     }}
                     style={{
-                      marginTop:
-                        spacing.md,
-                      paddingVertical:
-                        spacing.xs,
-                      paddingHorizontal:
-                        spacing.sm,
+                      marginTop: spacing.md,
+                      paddingVertical: spacing.xs,
+                      paddingHorizontal: spacing.sm,
                     }}
                   >
-                    <AppText color="link">
-                      Try Again
-                    </AppText>
+                    <AppText color="link">Try Again</AppText>
                   </Pressable>
                 </View>
               ) : isFirstTimeUser ? (
+                /* ==========================================================
+                   FIRST-TIME USER
+                ========================================================== */
+
                 <Card
                   style={{
-                    alignItems:
-                      "center",
-                    paddingVertical:
-                      spacing.xl,
-                    paddingHorizontal:
-                      spacing.lg,
+                    alignItems: "center",
+                    paddingVertical: spacing.xl,
+                    paddingHorizontal: spacing.lg,
                   }}
                 >
                   <View
                     style={{
                       width: 64,
                       height: 64,
-                      borderRadius:
-                        radius.full,
-                      alignItems:
-                        "center",
-                      justifyContent:
-                        "center",
-                      backgroundColor:
-                        theme.icon
-                          .branding
-                          .background,
+                      borderRadius: radius.full,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: theme.icon.branding.background,
                     }}
                   >
                     <Ionicons
                       name="receipt-outline"
                       size={32}
-                      color={
-                        theme.icon
-                          .branding
-                          .icon
-                      }
+                      color={theme.icon.branding.icon}
                     />
                   </View>
 
                   <AppText
                     variant="bodyLargeBold"
                     style={{
-                      marginTop:
-                        spacing.md,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.md,
+                      textAlign: "center",
                     }}
                   >
                     No orders yet
@@ -747,52 +933,40 @@ export default function OrdersScreen() {
                     variant="body"
                     color="secondary"
                     style={{
-                      marginTop:
-                        spacing.xs,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.xs,
+                      textAlign: "center",
                       maxWidth: 320,
                     }}
                   >
-                    Orders will
-                    appear here
-                    when customers
-                    make purchases
-                    through your
-                    store.
+                    Orders will appear here when customers make purchases
+                    through your store.
                   </AppText>
 
                   <Button
                     title="Add Product"
                     variant="primary"
                     style={{
-                      marginTop:
-                        spacing.lg,
+                      marginTop: spacing.lg,
                     }}
-                    onPress={() =>
-                      router.push(
-                        ROUTES.ADD_PRODUCT_INFO
-                      )
-                    }
+                    onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
                   />
 
                   <AppText
                     variant="caption"
                     color="muted"
                     style={{
-                      marginTop:
-                        spacing.sm,
-                      textAlign:
-                        "center",
+                      marginTop: spacing.sm,
+                      textAlign: "center",
                     }}
                   >
-                    Add products to
-                    your store to
-                    start accepting
-                    orders.
+                    Add products to your store to start accepting orders.
                   </AppText>
                 </Card>
               ) : hasNoResults ? (
+                /* ==========================================================
+                   NO SEARCH RESULTS
+                ========================================================== */
+
                 <View
                   style={{
                     flex: 1,
@@ -800,50 +974,34 @@ export default function OrdersScreen() {
                 >
                   <Card
                     style={{
-                      marginTop:
-                        spacing.md,
-                      paddingVertical:
-                        spacing.xl,
-                      paddingHorizontal:
-                        spacing.lg,
-                      alignItems:
-                        "center",
+                      marginTop: spacing.md,
+                      paddingVertical: spacing.xl,
+                      paddingHorizontal: spacing.lg,
+                      alignItems: "center",
                     }}
                   >
                     <View
                       style={{
                         width: 56,
                         height: 56,
-                        borderRadius:
-                          radius.full,
-                        backgroundColor:
-                          theme.icon
-                            .default
-                            .background,
-                        alignItems:
-                          "center",
-                        justifyContent:
-                          "center",
+                        borderRadius: radius.full,
+                        backgroundColor: theme.icon.default.background,
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
                       <Ionicons
                         name="search-outline"
                         size={28}
-                        color={
-                          theme.icon
-                            .default
-                            .icon
-                        }
+                        color={theme.icon.default.icon}
                       />
                     </View>
 
                     <AppText
                       variant="bodyLargeBold"
                       style={{
-                        marginTop:
-                          spacing.md,
-                        textAlign:
-                          "center",
+                        marginTop: spacing.md,
+                        textAlign: "center",
                       }}
                     >
                       No orders found
@@ -853,217 +1011,160 @@ export default function OrdersScreen() {
                       variant="body"
                       color="secondary"
                       style={{
-                        marginTop:
-                          spacing.xs,
-                        textAlign:
-                          "center",
+                        marginTop: spacing.xs,
+                        textAlign: "center",
                       }}
                     >
-                      Try searching
-                      with a
-                      different order
-                      reference,
-                      customer or
-                      product.
+                      Try searching with a different order reference, customer
+                      or product.
                     </AppText>
 
-                    {searchQuery.trim() !==
-                      "" && (
+                    {searchQuery.trim() !== "" && (
                       <Pressable
                         accessibilityRole="button"
                         accessibilityLabel="Clear search"
-                        onPress={
-                          clearSearch
-                        }
+                        onPress={clearSearch}
                         style={{
-                          marginTop:
-                            spacing.md,
+                          marginTop: spacing.md,
                         }}
                       >
-                        <AppText color="link">
-                          Clear Search
-                        </AppText>
+                        <AppText color="link">Clear Search</AppText>
                       </Pressable>
                     )}
 
-                    {hasActiveFilters &&
-                      searchQuery.trim() ===
-                        "" && (
-                        <Pressable
-                          accessibilityRole="button"
-                          accessibilityLabel="Clear filters"
-                          onPress={
-                            clearFilters
-                          }
-                          style={{
-                            marginTop:
-                              spacing.md,
-                          }}
-                        >
-                          <AppText color="link">
-                            Clear Filters
-                          </AppText>
-                        </Pressable>
-                      )}
+                    {hasActiveFilters && searchQuery.trim() === "" && (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Clear filters"
+                        onPress={clearFilters}
+                        style={{
+                          marginTop: spacing.md,
+                        }}
+                      >
+                        <AppText color="link">Clear Filters</AppText>
+                      </Pressable>
+                    )}
                   </Card>
                 </View>
               ) : (
+                /* ==========================================================
+                   ORDER LIST
+                ========================================================== */
+
                 <FlatList
                   style={{
                     flex: 1,
                   }}
-                  data={
-                    filteredOrders
-                  }
-                  showsVerticalScrollIndicator={
-                    false
-                  }
+                  data={filteredOrders}
+                  showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
                   refreshControl={
                     <RefreshControl
-                      refreshing={
-                        isRefetching
-                      }
-                      onRefresh={
-                        onRefresh
-                      }
-                      tintColor={
-                        theme.icon
-                          .branding
-                          .icon
-                      }
-                      colors={[
-                        theme.icon
-                          .branding
-                          .icon,
-                      ]}
-                      progressBackgroundColor={
-                        theme
-                          .background
-                          .surface
-                      }
+                      refreshing={refreshing}
+                      onRefresh={onRefresh}
+                      tintColor={theme.icon.branding.icon}
+                      colors={[theme.icon.branding.icon]}
+                      progressBackgroundColor={theme.background.surface}
                     />
                   }
                   onEndReached={() => {
                     if (
+                      !USE_MOCK_ORDERS &&
                       hasNextPage &&
                       !isFetchingNextPage
                     ) {
                       fetchNextPage();
                     }
                   }}
-                  onEndReachedThreshold={
-                    0.5
-                  }
+                  onEndReachedThreshold={0.5}
                   ListFooterComponent={
                     isFetchingNextPage ? (
                       <View
                         style={{
-                          paddingVertical:
-                            spacing.lg,
-                          alignItems:
-                            "center",
+                          paddingVertical: spacing.lg,
+                          alignItems: "center",
                         }}
                       >
-                        <ActivityIndicator
-                          color={
-                            theme
-                              .icon
-                              .branding
-                              .icon
-                          }
-                        />
+                        <ActivityIndicator color={theme.icon.branding.icon} />
                       </View>
                     ) : null
                   }
                   contentContainerStyle={{
-                    paddingTop:
-                      spacing.md,
+                    paddingTop: spacing.md,
                     gap: spacing.md,
-                    paddingBottom:
-                      spacing.lg,
+                    paddingBottom: spacing.lg,
                   }}
-                  keyExtractor={(item) =>
-                    item.id
-                  }
-                  renderItem={({
-                    item: order,
-                  }) => {
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item: order }) => {
+                    /**
+                     * STATUS
+                     */
+
                     const status =
-                      order.status !==
-                      "paid"
-                        ? ORDER_STATUS[
-                            order.status
-                          ]
+                      order.status !== "paid"
+                        ? ORDER_STATUS[order.status]
                         : null;
 
-                    const firstItem =
-                      order.items[0];
+                    /**
+                     * FIRST ITEM
+                     */
 
-                    const totalItems =
-                      order.items.reduce(
-                        (
-                          total,
-                          item
-                        ) =>
-                          total +
-                          item.quantity,
-                        0
-                      );
+                    const firstItem = order.items[0];
 
-                    const product =
-                      firstItem
-                        ? productsById[
-                            firstItem
-                              .productId
-                          ]
-                        : undefined;
+                    /**
+                     * TOTAL ITEMS
+                     */
 
-                    const productSummary =
-                      (() => {
-                        if (
-                          !firstItem
-                        ) {
-                          return "Unknown Product";
-                        }
+                    const totalItems = order.items.reduce(
+                      (total, item) => total + item.quantity,
+                      0
+                    );
 
-                        const firstProductName =
-                          product?.productName ??
-                          firstItem.productName;
+                    /**
+                     * PRODUCT
+                     */
 
-                        const additionalProducts =
-                          order.items
-                            .length -
-                          1;
+                    const product = firstItem
+                      ? productsById[firstItem.productId]
+                      : undefined;
 
-                        if (
-                          additionalProducts <=
-                          0
-                        ) {
-                          return firstProductName;
-                        }
+                    /**
+                     * PRODUCT SUMMARY
+                     */
 
-                        return `${firstProductName} +${additionalProducts} more`;
-                      })();
+                    const productSummary = (() => {
+                      if (!firstItem) {
+                        return "Unknown Product";
+                      }
+
+                      const firstProductName =
+                        product?.productName ?? firstItem.productName;
+
+                      const additionalProducts = order.items.length - 1;
+
+                      if (additionalProducts <= 0) {
+                        return firstProductName;
+                      }
+
+                      return `${firstProductName} +${additionalProducts} more`;
+                    })();
 
                     return (
                       <Card>
                         <View
                           style={{
-                            flexDirection:
-                              "row",
-                            alignItems:
-                              "center",
+                            flexDirection: "row",
+                            alignItems: "center",
                             gap: spacing.md,
                           }}
                         >
+                          {/* PRODUCT IMAGE */}
+
                           <ProductImage
-                            image={
-                              product
-                                ?.productImages?.[0]
-                                ?.url ?? ""
-                            }
+                            image={product?.productImages?.[0]?.url ?? ""}
                           />
+
+                          {/* ORDER DETAILS */}
 
                           <View
                             style={{
@@ -1071,129 +1172,92 @@ export default function OrdersScreen() {
                               gap: spacing.xs,
                             }}
                           >
+                            {/* REFERENCE + STATUS */}
+
                             <View
                               style={{
-                                flexDirection:
-                                  "row",
-                                alignItems:
-                                  "center",
+                                flexDirection: "row",
+                                alignItems: "center",
                                 gap: spacing.xs,
                               }}
                             >
-                              <AppText
-                                variant="bodySmall"
-                                color="secondary"
-                              >
-                                {
-                                  order.reference
-                                }
+                              <AppText variant="bodySmall" color="secondary">
+                                {order.reference}
                               </AppText>
 
                               <Ionicons
                                 name={
-                                  order.status ===
-                                  "paid"
-                                    ? PAYMENT_CHANNELS[
-                                        order
-                                          .paymentChannel
-                                      ]
+                                  order.status === "paid"
+                                    ? PAYMENT_CHANNELS[order.paymentChannel]
                                         .icon
-                                    : status!
-                                        .icon
+                                    : status!.icon
                                 }
                                 size={16}
                                 color={
-                                  order.status ===
-                                  "paid"
-                                    ? theme
-                                        .icon
-                                        .success
-                                        .icon
-                                    : status!
-                                        .iconColor
+                                  order.status === "paid"
+                                    ? theme.icon.success.icon
+                                    : status!.iconColor
                                 }
                               />
                             </View>
 
+                            {/* CUSTOMER */}
+
                             <AppText variant="bodyLargeBold">
-                              {
-                                order.customerName
-                              }
+                              {order.customerName}
                             </AppText>
+
+                            {/* ITEMS */}
 
                             <AppText
                               variant="bodySmall"
                               color="secondary"
-                              numberOfLines={
-                                1
-                              }
+                              numberOfLines={1}
                             >
-                              {
-                                totalItems
-                              }{" "}
-                              item
-                              {totalItems ===
-                              1
-                                ? ""
-                                : "s"}{" "}
-                              •{" "}
-                              {
-                                productSummary
-                              }
+                              {totalItems} item
+                              {totalItems === 1 ? "" : "s"} • {productSummary}
                             </AppText>
                           </View>
 
+                          {/* RIGHT SIDE */}
+
                           <View
                             style={{
-                              alignItems:
-                                "flex-end",
-                              justifyContent:
-                                "space-between",
-                              alignSelf:
-                                "stretch",
+                              alignItems: "flex-end",
+                              justifyContent: "space-between",
+                              alignSelf: "stretch",
                             }}
                           >
-                            <AppText
-                              variant="bodySmall"
-                              color="secondary"
-                            >
-                              {formatOrderDate(
-                                order.createdAt
-                              )}
+                            {/* DATE */}
+
+                            <AppText variant="bodySmall" color="secondary">
+                              {formatOrderDate(order.createdAt)}
                             </AppText>
+
+                            {/* AMOUNT */}
 
                             <AppText
                               variant="bodyLargeBold"
                               style={{
                                 color:
-                                  order.status ===
-                                  "paid"
-                                    ? theme
-                                        .text
-                                        .success
-                                    : status!
-                                        .textColor,
+                                  order.status === "paid"
+                                    ? theme.text.success
+                                    : status!.textColor,
                               }}
                             >
-                              {formatCurrency(
-                                order.total,
-                                {
-                                  currency:
-                                    order.currency,
-                                }
-                              )}
+                              {formatCurrency(order.total, {
+                                currency: order.currency,
+                              })}
                             </AppText>
 
+                            {/* ACTIONS */}
+
                             <Pressable
-                              hitSlop={
-                                10
-                              }
+                              hitSlop={10}
                               accessibilityRole="button"
                               accessibilityLabel={`Actions for order ${order.reference}`}
                               onPress={() => {
-                                setSelectedOrder(
-                                  order
-                                );
+                                setSelectedOrder(order);
 
                                 orderActionsBottomSheetRef.current?.present();
                               }}
@@ -1201,11 +1265,7 @@ export default function OrdersScreen() {
                               <Ionicons
                                 name="ellipsis-horizontal"
                                 size={20}
-                                color={
-                                  theme
-                                    .text
-                                    .primary
-                                }
+                                color={theme.text.primary}
                               />
                             </Pressable>
                           </View>
@@ -1220,31 +1280,25 @@ export default function OrdersScreen() {
         </View>
       </SafeAreaView>
 
-      {/* FILTER */}
+      {/* ======================================================================
+          FILTER BOTTOM SHEET
+      ====================================================================== */}
 
       <FilterBottomSheet
-        ref={
-          filterBottomSheetRef
-        }
-        draftFilters={
-          draftFilters
-        }
-        setDraftFilters={
-          setDraftFilters
-        }
+        ref={filterBottomSheetRef}
+        draftFilters={draftFilters}
+        setDraftFilters={setDraftFilters}
         onApply={(filters) => {
-          setAppliedFilters(
-            filters
-          );
+          setAppliedFilters(filters);
         }}
       />
 
-      {/* ORDER ACTIONS */}
+      {/* ======================================================================
+          ORDER ACTIONS BOTTOM SHEET
+      ====================================================================== */}
 
       <OrderActionsBottomSheet
-        ref={
-          orderActionsBottomSheetRef
-        }
+        ref={orderActionsBottomSheetRef}
         order={selectedOrder}
       />
     </>

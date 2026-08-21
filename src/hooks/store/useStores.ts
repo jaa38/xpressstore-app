@@ -16,6 +16,8 @@ export function useStores() {
 
     isLoading: query.isLoading,
 
+    isRefetching: query.isRefetching,
+
     error: query.error,
 
     refetch: query.refetch,

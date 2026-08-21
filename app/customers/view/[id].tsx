@@ -1,17 +1,21 @@
 import {
-  View,
-  ScrollView,
   ActivityIndicator,
-  Linking,
   Alert,
+  Linking,
   Pressable,
+  ScrollView,
+  View,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+
+import * as Clipboard from "expo-clipboard";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 
@@ -25,11 +29,18 @@ import { spacing, radius, theme } from "@/theme";
 import { useCustomerById } from "@/hooks/customers/useCustomerById";
 import { useBlacklistCustomer } from "@/hooks/customers/useBlacklistCustomer";
 
+import {
+  getMockCustomerById,
+  toggleMockCustomerBlacklist,
+} from "@/mocks/customers";
+
+import { USE_MOCK_CUSTOMERS } from "@/mocks/config";
+
 import { countryOptions } from "@/constants/address/countries";
 
-import * as Clipboard from "expo-clipboard";
-
 import { useToast } from "@/hooks/useToast";
+
+import type { Customer } from "@/types/customer";
 
 export default function CustomerDetailsScreen() {
   const { id } = useLocalSearchParams<{
@@ -40,20 +51,74 @@ export default function CustomerDetailsScreen() {
 
   const { showToast } = useToast();
 
-  const { data: customer, isLoading } = useCustomerById(id);
+  /**
+   * --------------------------------------------------------------------------
+   * API CUSTOMER
+   * --------------------------------------------------------------------------
+   */
+
+  const { data: apiCustomer, isLoading: apiLoading } = useCustomerById(id);
+
+  /**
+   * --------------------------------------------------------------------------
+   * MOCK CUSTOMER
+   * --------------------------------------------------------------------------
+   */
+
+  const [mockCustomer, setMockCustomer] = useState<Customer | undefined>(() =>
+    USE_MOCK_CUSTOMERS ? getMockCustomerById(id) : undefined
+  );
+
+  /**
+   * --------------------------------------------------------------------------
+   * CUSTOMER SOURCE
+   * --------------------------------------------------------------------------
+   */
+
+  const customer = USE_MOCK_CUSTOMERS ? mockCustomer : apiCustomer;
+
+  const isLoading = USE_MOCK_CUSTOMERS ? false : apiLoading;
+
+  /**
+   * --------------------------------------------------------------------------
+   * SYNCHRONIZE MOCK CUSTOMER
+   * --------------------------------------------------------------------------
+   */
+
+  useFocusEffect(
+    useCallback(() => {
+      if (USE_MOCK_CUSTOMERS) {
+        setMockCustomer(getMockCustomerById(id));
+      }
+    }, [id])
+  );
+
+  /**
+   * --------------------------------------------------------------------------
+   * BLACKLIST MUTATION
+   * --------------------------------------------------------------------------
+   */
 
   const blacklistCustomerMutation = useBlacklistCustomer();
 
-  const isUpdatingBlacklist = blacklistCustomerMutation.isPending;
+  const isUpdatingBlacklist = USE_MOCK_CUSTOMERS
+    ? false
+    : blacklistCustomerMutation.isPending;
+
+  /**
+   * --------------------------------------------------------------------------
+   * COUNTRY
+   * --------------------------------------------------------------------------
+   */
 
   const countryLabel =
     countryOptions.find((country) => country.value === customer?.country)
       ?.label ?? customer?.country;
 
   /**
-   * ---------------------------------------------------------------------------
-   * Contact Actions
-   * ---------------------------------------------------------------------------
+   * --------------------------------------------------------------------------
+   * CONTACT ACTIONS
+   * --------------------------------------------------------------------------
    */
 
   async function handleCall(phone: string) {
@@ -110,9 +175,9 @@ export default function CustomerDetailsScreen() {
   }
 
   /**
-   * ---------------------------------------------------------------------------
-   * Blacklist Customer
-   * ---------------------------------------------------------------------------
+   * --------------------------------------------------------------------------
+   * BLACKLIST CUSTOMER
+   * --------------------------------------------------------------------------
    */
 
   function handleBlacklistToggle() {
@@ -124,29 +189,68 @@ export default function CustomerDetailsScreen() {
 
     Alert.alert(
       nextStatus ? "Blacklist Customer" : "Remove from Blacklist",
+
       nextStatus
         ? `Are you sure you want to blacklist "${customer.name}"?`
         : `Are you sure you want to remove "${customer.name}" from the blacklist?`,
+
       [
         {
           text: "Cancel",
           style: "cancel",
         },
+
         {
           text: nextStatus ? "Blacklist" : "Remove",
+
           style: nextStatus ? "destructive" : "default",
+
           onPress: async () => {
             try {
+              /**
+               * MOCK MODE
+               */
+
+              if (USE_MOCK_CUSTOMERS) {
+                const updatedCustomer = toggleMockCustomerBlacklist(
+                  customer.id,
+                  nextStatus
+                );
+
+                setMockCustomer(updatedCustomer);
+
+                showToast({
+                  type: "success",
+
+                  title: nextStatus
+                    ? "Customer Blacklisted"
+                    : "Customer Unblacklisted",
+
+                  message: nextStatus
+                    ? `"${customer.name}" has been blacklisted.`
+                    : `"${customer.name}" has been removed from the blacklist.`,
+                });
+
+                return;
+              }
+
+              /**
+               * API MODE
+               */
+
               await blacklistCustomerMutation.mutateAsync({
                 id: customer.id,
+
                 isBlackListed: nextStatus,
               });
 
               showToast({
                 type: "success",
+
                 title: nextStatus
                   ? "Customer Blacklisted"
                   : "Customer Unblacklisted",
+
                 message: nextStatus
                   ? `"${customer.name}" has been blacklisted.`
                   : `"${customer.name}" has been removed from the blacklist.`,
@@ -156,7 +260,9 @@ export default function CustomerDetailsScreen() {
 
               showToast({
                 type: "error",
+
                 title: "Update Failed",
+
                 message:
                   error instanceof Error
                     ? error.message
@@ -170,9 +276,9 @@ export default function CustomerDetailsScreen() {
   }
 
   /**
-   * ---------------------------------------------------------------------------
-   * Loading State
-   * ---------------------------------------------------------------------------
+   * --------------------------------------------------------------------------
+   * LOADING STATE
+   * --------------------------------------------------------------------------
    */
 
   if (isLoading) {
@@ -199,9 +305,9 @@ export default function CustomerDetailsScreen() {
   }
 
   /**
-   * ---------------------------------------------------------------------------
-   * Customer Not Found
-   * ---------------------------------------------------------------------------
+   * --------------------------------------------------------------------------
+   * CUSTOMER NOT FOUND
+   * --------------------------------------------------------------------------
    */
 
   if (!customer) {
@@ -211,26 +317,37 @@ export default function CustomerDetailsScreen() {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
+          paddingHorizontal: spacing.lg,
           backgroundColor: theme.background.primary,
         }}
       >
-        <AppText>Customer not found.</AppText>
-
-        <Button
-          title="Go Back"
-          onPress={() => router.back()}
+        <AppText
+          variant="h2"
           style={{
-            marginTop: spacing.lg,
+            marginBottom: spacing.sm,
           }}
-        />
+        >
+          Customer not found
+        </AppText>
+
+        <AppText
+          style={{
+            textAlign: "center",
+            marginBottom: spacing.lg,
+          }}
+        >
+          The customer you're trying to view no longer exists.
+        </AppText>
+
+        <Button title="Go Back" onPress={() => router.back()} />
       </SafeAreaView>
     );
   }
 
   /**
-   * ---------------------------------------------------------------------------
-   * Customer Initials
-   * ---------------------------------------------------------------------------
+   * --------------------------------------------------------------------------
+   * CUSTOMER INITIALS
+   * --------------------------------------------------------------------------
    */
 
   const initials = customer.name
@@ -238,6 +355,12 @@ export default function CustomerDetailsScreen() {
     .slice(0, 2)
     .map((name) => name[0]?.toUpperCase())
     .join("");
+
+  /**
+   * --------------------------------------------------------------------------
+   * UI
+   * --------------------------------------------------------------------------
+   */
 
   return (
     <SafeAreaView
@@ -262,7 +385,7 @@ export default function CustomerDetailsScreen() {
         }}
       >
         {/* ------------------------------------------------------------------ */}
-        {/* Customer Profile */}
+        {/* CUSTOMER PROFILE */}
         {/* ------------------------------------------------------------------ */}
 
         <Card>
@@ -302,7 +425,7 @@ export default function CustomerDetailsScreen() {
               {customer.name}
             </AppText>
 
-            {/* Customer Type */}
+            {/* CUSTOMER TYPE */}
 
             <View
               style={{
@@ -323,6 +446,7 @@ export default function CustomerDetailsScreen() {
                     customer.customerType === "business"
                       ? theme.badge.secondary.text
                       : theme.badge.primary.text,
+
                   textTransform: "capitalize",
                 }}
               >
@@ -330,7 +454,7 @@ export default function CustomerDetailsScreen() {
               </AppText>
             </View>
 
-            {/* Blacklist Status */}
+            {/* BLACKLIST STATUS */}
 
             {customer.isBlackListed && (
               <View
@@ -351,7 +475,7 @@ export default function CustomerDetailsScreen() {
         </Card>
 
         {/* ------------------------------------------------------------------ */}
-        {/* Contact Information */}
+        {/* CONTACT INFORMATION */}
         {/* ------------------------------------------------------------------ */}
 
         <View>
@@ -362,7 +486,7 @@ export default function CustomerDetailsScreen() {
               marginTop: spacing.sm,
             }}
           >
-            {/* Phone */}
+            {/* PHONE */}
 
             <View
               style={{
@@ -431,7 +555,7 @@ export default function CustomerDetailsScreen() {
               }}
             />
 
-            {/* Email */}
+            {/* EMAIL */}
 
             <View
               style={{
@@ -503,7 +627,7 @@ export default function CustomerDetailsScreen() {
         </View>
 
         {/* ------------------------------------------------------------------ */}
-        {/* Customer Summary */}
+        {/* CUSTOMER SUMMARY */}
         {/* ------------------------------------------------------------------ */}
 
         <View>
@@ -576,7 +700,7 @@ export default function CustomerDetailsScreen() {
         </View>
 
         {/* ------------------------------------------------------------------ */}
-        {/* Address Information */}
+        {/* ADDRESS INFORMATION */}
         {/* ------------------------------------------------------------------ */}
 
         <View>
@@ -587,7 +711,7 @@ export default function CustomerDetailsScreen() {
               marginTop: spacing.sm,
             }}
           >
-            {/* Country */}
+            {/* COUNTRY */}
 
             <View
               style={{
@@ -630,7 +754,7 @@ export default function CustomerDetailsScreen() {
               }}
             />
 
-            {/* State */}
+            {/* STATE */}
 
             <View
               style={{
@@ -673,7 +797,7 @@ export default function CustomerDetailsScreen() {
               }}
             />
 
-            {/* City */}
+            {/* CITY */}
 
             <View
               style={{
@@ -716,7 +840,7 @@ export default function CustomerDetailsScreen() {
               }}
             />
 
-            {/* Street */}
+            {/* STREET */}
 
             <View
               style={{
@@ -756,7 +880,7 @@ export default function CustomerDetailsScreen() {
         </View>
 
         {/* ------------------------------------------------------------------ */}
-        {/* Quick Actions */}
+        {/* QUICK ACTIONS */}
         {/* ------------------------------------------------------------------ */}
 
         <View
@@ -800,7 +924,7 @@ export default function CustomerDetailsScreen() {
         </View>
 
         {/* ------------------------------------------------------------------ */}
-        {/* Blacklist Action */}
+        {/* BLACKLIST ACTION */}
         {/* ------------------------------------------------------------------ */}
 
         <Button

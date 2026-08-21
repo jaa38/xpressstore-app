@@ -1,3 +1,23 @@
+/**
+ * ============================================================================
+ * STORE TYPES
+ * ============================================================================
+ */
+
+/**
+ * Product layout used by the storefront.
+ *
+ * This is currently a local presentation preference.
+ * It is NOT part of the Store API UpdateStore request.
+ */
+export type StoreLayout = "grid" | "list";
+
+/**
+ * ============================================================================
+ * STORE
+ * ============================================================================
+ */
+
 export interface Store {
   storeId: number;
 
@@ -16,6 +36,13 @@ export interface Store {
   isActive: boolean;
 
   themeColor?: string;
+
+  /**
+   * Local storefront product layout preference.
+   *
+   * The backend API does not currently expose this field.
+   */
+  layout: StoreLayout;
 
   callBackUrl?: string;
 
@@ -38,6 +65,12 @@ export interface Store {
   discounts?: number[];
 }
 
+/**
+ * ============================================================================
+ * STORE SUMMARY
+ * ============================================================================
+ */
+
 export interface StoreSummary {
   storeId: number;
 
@@ -49,6 +82,12 @@ export interface StoreSummary {
 
   isActive: boolean;
 }
+
+/**
+ * ============================================================================
+ * CREATE STORE
+ * ============================================================================
+ */
 
 export interface CreateStoreRequest {
   storeName: string;
@@ -69,6 +108,12 @@ export interface CreateStoreRequest {
 
   storeProducts?: number[];
 }
+
+/**
+ * ============================================================================
+ * UPDATE STORE
+ * ============================================================================
+ */
 
 export interface UpdateStoreRequest {
   id: number;
@@ -112,6 +157,12 @@ export interface UpdateStoreRequest {
   storeShippingRegion?: number[];
 }
 
+/**
+ * ============================================================================
+ * SHIPPING REGIONS
+ * ============================================================================
+ */
+
 export interface ShippingRegion {
   id: number;
 
@@ -139,6 +190,12 @@ export interface UpdateShippingRegionRequest {
 
   shippingFee: number;
 }
+
+/**
+ * ============================================================================
+ * STORE VALIDATION
+ * ============================================================================
+ */
 
 export interface StoreAvailabilityResponse {
   isAvailable: boolean;

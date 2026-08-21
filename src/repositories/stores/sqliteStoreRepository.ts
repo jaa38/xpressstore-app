@@ -2,6 +2,7 @@ import type {
   Store,
   StoreSummary,
   ShippingRegion,
+  StoreLayout,
 } from "@/types/store";
 
 import { getDatabase } from "@/database";
@@ -10,33 +11,49 @@ import type { StoreRepository } from "./storeRepository";
 
 /**
  * ============================================================================
- * SQLite Row Types
+ * SQLITE ROW TYPES
  * ============================================================================
  */
 
 interface StoreRow {
   store_id: number;
+
   store_name: string;
+
   store_reference: string;
+
   store_link: string;
+
   currency: string;
 
   welcome_message: string | null;
+
   description: string | null;
 
   is_active: number;
 
   theme_color: string | null;
+
+  layout: string;
+
   callback_url: string | null;
+
   success_message: string | null;
+
   whatsapp_number: string | null;
+
   phone_number: string | null;
+
   email: string | null;
+
   instagram: string | null;
+
   facebook: string | null;
+
   twitter: string | null;
 
   products: string | null;
+
   discounts: string | null;
 
   updated_at: number;
@@ -44,15 +61,19 @@ interface StoreRow {
 
 interface ShippingRegionRow {
   id: number;
+
   region: string;
+
   state: string;
+
   shipping_fee: number;
+
   updated_at: number;
 }
 
 /**
  * ============================================================================
- * Mapping Helpers
+ * MAPPING HELPERS
  * ============================================================================
  */
 
@@ -62,9 +83,7 @@ interface ShippingRegionRow {
  * Store products and discounts are represented by number[]
  * in the application model but persisted as TEXT in SQLite.
  */
-function parseNumberArray(
-  value: string | null
-): number[] | undefined {
+function parseNumberArray(value: string | null): number[] | undefined {
   if (!value) {
     return undefined;
   }
@@ -78,8 +97,7 @@ function parseNumberArray(
 
     const numbers = parsed.filter(
       (item): item is number =>
-        typeof item === "number" &&
-        Number.isFinite(item)
+        typeof item === "number" && Number.isFinite(item)
     );
 
     return numbers;
@@ -91,9 +109,7 @@ function parseNumberArray(
 /**
  * Serialize a number array for SQLite storage.
  */
-function serializeNumberArray(
-  value?: number[]
-): string | null {
+function serializeNumberArray(value?: number[]): string | null {
   if (!value) {
     return null;
   }
@@ -102,11 +118,18 @@ function serializeNumberArray(
 }
 
 /**
+ * Safely map the SQLite layout value.
+ *
+ * Anything other than "list" becomes "grid".
+ */
+function mapStoreLayout(value: string | null | undefined): StoreLayout {
+  return value === "list" ? "list" : "grid";
+}
+
+/**
  * Map a SQLite store row into the application Store model.
  */
-function mapRowToStore(
-  row: StoreRow
-): Store {
+function mapRowToStore(row: StoreRow): Store {
   return {
     storeId: row.store_id,
 
@@ -118,56 +141,42 @@ function mapRowToStore(
 
     currency: row.currency,
 
-    welcomeMessage:
-      row.welcome_message ?? undefined,
+    welcomeMessage: row.welcome_message ?? undefined,
 
-    description:
-      row.description ?? undefined,
+    description: row.description ?? undefined,
 
-    isActive:
-      row.is_active === 1,
+    isActive: row.is_active === 1,
 
-    themeColor:
-      row.theme_color ?? undefined,
+    themeColor: row.theme_color ?? undefined,
 
-    callBackUrl:
-      row.callback_url ?? undefined,
+    layout: mapStoreLayout(row.layout),
 
-    successMessage:
-      row.success_message ?? undefined,
+    callBackUrl: row.callback_url ?? undefined,
 
-    whatsAppNumber:
-      row.whatsapp_number ?? undefined,
+    successMessage: row.success_message ?? undefined,
 
-    phoneNumber:
-      row.phone_number ?? undefined,
+    whatsAppNumber: row.whatsapp_number ?? undefined,
 
-    email:
-      row.email ?? undefined,
+    phoneNumber: row.phone_number ?? undefined,
 
-    instagram:
-      row.instagram ?? undefined,
+    email: row.email ?? undefined,
 
-    facebook:
-      row.facebook ?? undefined,
+    instagram: row.instagram ?? undefined,
 
-    twitter:
-      row.twitter ?? undefined,
+    facebook: row.facebook ?? undefined,
 
-    products:
-      parseNumberArray(row.products),
+    twitter: row.twitter ?? undefined,
 
-    discounts:
-      parseNumberArray(row.discounts),
+    products: parseNumberArray(row.products),
+
+    discounts: parseNumberArray(row.discounts),
   };
 }
 
 /**
  * Map a SQLite store row into the smaller StoreSummary model.
  */
-function mapRowToStoreSummary(
-  row: StoreRow
-): StoreSummary {
+function mapRowToStoreSummary(row: StoreRow): StoreSummary {
   return {
     storeId: row.store_id,
 
@@ -177,17 +186,14 @@ function mapRowToStoreSummary(
 
     currency: row.currency,
 
-    isActive:
-      row.is_active === 1,
+    isActive: row.is_active === 1,
   };
 }
 
 /**
  * Map a SQLite shipping-region row into the application model.
  */
-function mapRowToShippingRegion(
-  row: ShippingRegionRow
-): ShippingRegion {
+function mapRowToShippingRegion(row: ShippingRegionRow): ShippingRegion {
   return {
     id: row.id,
 
@@ -201,13 +207,11 @@ function mapRowToShippingRegion(
 
 /**
  * ============================================================================
- * SQLite Store Repository
+ * SQLITE STORE REPOSITORY
  * ============================================================================
  */
 
-class SQLiteStoreRepository
-  implements StoreRepository
-{
+class SQLiteStoreRepository implements StoreRepository {
   /**
    * --------------------------------------------------------------------------
    * Get Stores
@@ -217,8 +221,7 @@ class SQLiteStoreRepository
   async getStores(): Promise<Store[]> {
     const database = await getDatabase();
 
-    const rows =
-      await database.getAllAsync<StoreRow>(`
+    const rows = await database.getAllAsync<StoreRow>(`
         SELECT
           store_id,
           store_name,
@@ -229,6 +232,7 @@ class SQLiteStoreRepository
           description,
           is_active,
           theme_color,
+          layout,
           callback_url,
           success_message,
           whatsapp_number,
@@ -253,14 +257,11 @@ class SQLiteStoreRepository
    * --------------------------------------------------------------------------
    */
 
-  async getStoreById(
-    id: number
-  ): Promise<Store | null> {
+  async getStoreById(id: number): Promise<Store | null> {
     const database = await getDatabase();
 
-    const row =
-      await database.getFirstAsync<StoreRow>(
-        `
+    const row = await database.getFirstAsync<StoreRow>(
+      `
           SELECT
             store_id,
             store_name,
@@ -271,6 +272,7 @@ class SQLiteStoreRepository
             description,
             is_active,
             theme_color,
+            layout,
             callback_url,
             success_message,
             whatsapp_number,
@@ -286,8 +288,8 @@ class SQLiteStoreRepository
           WHERE store_id = ?
           LIMIT 1
         `,
-        id
-      );
+      id
+    );
 
     if (!row) {
       return null;
@@ -305,8 +307,7 @@ class SQLiteStoreRepository
   async getStoreSummaries(): Promise<StoreSummary[]> {
     const database = await getDatabase();
 
-    const rows =
-      await database.getAllAsync<StoreRow>(`
+    const rows = await database.getAllAsync<StoreRow>(`
         SELECT
           store_id,
           store_name,
@@ -341,21 +342,14 @@ class SQLiteStoreRepository
    * --------------------------------------------------------------------------
    */
 
-  async saveStores(
-    stores: Store[]
-  ): Promise<void> {
+  async saveStores(stores: Store[]): Promise<void> {
     const database = await getDatabase();
 
-    await database.withTransactionAsync(
-      async () => {
-        for (const store of stores) {
-          await this.upsertStore(
-            database,
-            store
-          );
-        }
+    await database.withTransactionAsync(async () => {
+      for (const store of stores) {
+        await this.upsertStore(database, store);
       }
-    );
+    });
   }
 
   /**
@@ -364,18 +358,41 @@ class SQLiteStoreRepository
    * --------------------------------------------------------------------------
    */
 
-  async saveStore(
-    store: Store
-  ): Promise<void> {
+  async saveStore(store: Store): Promise<void> {
     const database = await getDatabase();
 
-    await database.withTransactionAsync(
-      async () => {
-        await this.upsertStore(
-          database,
-          store
-        );
-      }
+    await database.withTransactionAsync(async () => {
+      await this.upsertStore(database, store);
+    });
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * Update Store Layout
+   * --------------------------------------------------------------------------
+   *
+   * Layout is a local presentation preference.
+   *
+   * It is deliberately NOT sent to the Store API because the current
+   * UpdateStore endpoint does not document a layout property.
+   */
+
+  async updateStoreLayout(id: number, layout: StoreLayout): Promise<void> {
+    const database = await getDatabase();
+
+    await database.runAsync(
+      `
+        UPDATE stores
+        SET
+          layout = ?,
+          updated_at = ?
+        WHERE store_id = ?
+      `,
+      layout,
+
+      Date.now(),
+
+      id
     );
   }
 
@@ -383,14 +400,36 @@ class SQLiteStoreRepository
    * --------------------------------------------------------------------------
    * Upsert Store
    * --------------------------------------------------------------------------
+   *
+   * API-owned store fields are synchronized here.
+   *
+   * The local layout preference is intentionally excluded so that refreshing
+   * the store from the API does not overwrite the user's layout choice.
    */
 
   private async upsertStore(
-    database: Awaited<
-      ReturnType<typeof getDatabase>
-    >,
+    database: Awaited<ReturnType<typeof getDatabase>>,
     store: Store
   ): Promise<void> {
+    /**
+     * Check whether this store already exists.
+     *
+     * We use this to preserve its locally-selected layout.
+     */
+    const existing = await database.getFirstAsync<{
+      layout: string;
+    }>(
+      `
+          SELECT layout
+          FROM stores
+          WHERE store_id = ?
+          LIMIT 1
+        `,
+      store.storeId
+    );
+
+    const layout = existing?.layout ?? "grid";
+
     await database.runAsync(
       `
         INSERT INTO stores (
@@ -403,6 +442,7 @@ class SQLiteStoreRepository
           description,
           is_active,
           theme_color,
+          layout,
           callback_url,
           success_message,
           whatsapp_number,
@@ -435,6 +475,7 @@ class SQLiteStoreRepository
           ?,
           ?,
           ?,
+          ?,
           ?
         )
         ON CONFLICT(store_id)
@@ -447,6 +488,7 @@ class SQLiteStoreRepository
           description = excluded.description,
           is_active = excluded.is_active,
           theme_color = excluded.theme_color,
+          layout = excluded.layout,
           callback_url = excluded.callback_url,
           success_message = excluded.success_message,
           whatsapp_number = excluded.whatsapp_number,
@@ -477,6 +519,8 @@ class SQLiteStoreRepository
 
       store.themeColor ?? null,
 
+      layout,
+
       store.callBackUrl ?? null,
 
       store.successMessage ?? null,
@@ -493,13 +537,9 @@ class SQLiteStoreRepository
 
       store.twitter ?? null,
 
-      serializeNumberArray(
-        store.products
-      ),
+      serializeNumberArray(store.products),
 
-      serializeNumberArray(
-        store.discounts
-      ),
+      serializeNumberArray(store.discounts),
 
       Date.now()
     );
@@ -514,8 +554,7 @@ class SQLiteStoreRepository
   async getShippingRegions(): Promise<ShippingRegion[]> {
     const database = await getDatabase();
 
-    const rows =
-      await database.getAllAsync<ShippingRegionRow>(`
+    const rows = await database.getAllAsync<ShippingRegionRow>(`
         SELECT
           id,
           region,
@@ -526,9 +565,7 @@ class SQLiteStoreRepository
         ORDER BY region ASC, state ASC
       `);
 
-    return rows.map(
-      mapRowToShippingRegion
-    );
+    return rows.map(mapRowToShippingRegion);
   }
 
   /**
@@ -537,16 +574,13 @@ class SQLiteStoreRepository
    * --------------------------------------------------------------------------
    */
 
-  async saveShippingRegions(
-    regions: ShippingRegion[]
-  ): Promise<void> {
+  async saveShippingRegions(regions: ShippingRegion[]): Promise<void> {
     const database = await getDatabase();
 
-    await database.withTransactionAsync(
-      async () => {
-        for (const region of regions) {
-          await database.runAsync(
-            `
+    await database.withTransactionAsync(async () => {
+      for (const region of regions) {
+        await database.runAsync(
+          `
               INSERT INTO shipping_regions (
                 id,
                 region,
@@ -562,19 +596,18 @@ class SQLiteStoreRepository
                 shipping_fee = excluded.shipping_fee,
                 updated_at = excluded.updated_at
             `,
-            region.id,
+          region.id,
 
-            region.region,
+          region.region,
 
-            region.state,
+          region.state,
 
-            region.shippingFee,
+          region.shippingFee,
 
-            Date.now()
-          );
-        }
+          Date.now()
+        );
       }
-    );
+    });
   }
 
   /**
@@ -583,9 +616,7 @@ class SQLiteStoreRepository
    * --------------------------------------------------------------------------
    */
 
-  async deleteStore(
-    id: number
-  ): Promise<void> {
+  async deleteStore(id: number): Promise<void> {
     const database = await getDatabase();
 
     await database.runAsync(
@@ -614,9 +645,8 @@ class SQLiteStoreRepository
 
 /**
  * ============================================================================
- * Repository Instance
+ * REPOSITORY INSTANCE
  * ============================================================================
  */
 
-export const storeRepository =
-  new SQLiteStoreRepository();
+export const storeRepository = new SQLiteStoreRepository();

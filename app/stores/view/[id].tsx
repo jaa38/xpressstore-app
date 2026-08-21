@@ -14,23 +14,33 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
 import { spacing, theme, radius } from "@/theme";
+
 import { UICard } from "@/components/ui/UICard";
 
 import * as Clipboard from "expo-clipboard";
+
 import { Divider } from "@/components/ui/Divider";
 
 import { useStores } from "@/hooks/store/useStores";
 
-import { formatCurrency } from "@/utils/formatCurrency";
+import { useMemo, useState } from "react";
 
-import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { router, useLocalSearchParams } from "expo-router";
 
-import { useState } from "react";
-import { router } from "expo-router";
+import {
+  getStoreEditRoute,
+  getStoreThemeRoute,
+  getStoreLayoutRoute,
+  getStoreProductsRoute,
+} from "@/navigation/routes";
+/**
+ * ============================================================================
+ * SETTINGS ROW
+ * ============================================================================
+ */
 
 function SettingsRow({
   title,
@@ -42,7 +52,16 @@ function SettingsRow({
   onPress?: () => void;
 }) {
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${subtitle}`}
+      onPress={onPress}
+      disabled={!onPress}
+      hitSlop={4}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.6 : 1,
+      })}
+    >
       <View
         style={{
           flexDirection: "row",
@@ -64,7 +83,7 @@ function SettingsRow({
         </View>
 
         <Ionicons
-          name="ellipsis-horizontal"
+          name="chevron-forward"
           size={20}
           color={theme.icon.default.icon}
         />
@@ -73,14 +92,74 @@ function SettingsRow({
   );
 }
 
+/**
+ * ============================================================================
+ * STOREFRONT VIEW
+ * ============================================================================
+ */
+
 export default function StorefrontView() {
+  /**
+   * --------------------------------------------------------------------------
+   * ROUTE PARAMETER
+   * --------------------------------------------------------------------------
+   */
+
+  const { id } = useLocalSearchParams<{ id: string }>();
+
+  /**
+   * --------------------------------------------------------------------------
+   * STORES
+   * --------------------------------------------------------------------------
+   */
+
   const { stores, isLoading, refetch } = useStores();
 
-  const store = stores[0];
+  /**
+   * --------------------------------------------------------------------------
+   * CURRENT STORE
+   * --------------------------------------------------------------------------
+   */
+
+  const store = useMemo(() => {
+    const storeId = Number(id);
+
+    if (!Number.isFinite(storeId)) {
+      return undefined;
+    }
+
+    return stores.find((item) => item.storeId === storeId);
+  }, [id, stores]);
+
+  /**
+   * --------------------------------------------------------------------------
+   * STORE DATA
+   * --------------------------------------------------------------------------
+   */
 
   const storeUrl = store?.storeLink ?? "";
 
   const totalProducts = store?.products?.length ?? 0;
+
+  /**
+   * --------------------------------------------------------------------------
+   * EDIT STORE
+   * --------------------------------------------------------------------------
+   */
+
+  function handleEditStore() {
+    if (!store) {
+      return;
+    }
+
+    router.push(getStoreEditRoute(store.storeId));
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * REFRESH
+   * --------------------------------------------------------------------------
+   */
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -94,6 +173,12 @@ export default function StorefrontView() {
     }
   }
 
+  /**
+   * --------------------------------------------------------------------------
+   * COPY STORE LINK
+   * --------------------------------------------------------------------------
+   */
+
   async function handleCopyLink() {
     if (!storeUrl) {
       Alert.alert("Store URL", "No store URL available.");
@@ -105,6 +190,12 @@ export default function StorefrontView() {
 
     Alert.alert("Copied", "Store link copied to clipboard.");
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * SHARE STORE LINK
+   * --------------------------------------------------------------------------
+   */
 
   async function handleShareLink() {
     if (!storeUrl) {
@@ -121,6 +212,12 @@ export default function StorefrontView() {
       console.log(error);
     }
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * UI
+   * --------------------------------------------------------------------------
+   */
 
   return (
     <SafeAreaView
@@ -150,7 +247,9 @@ export default function StorefrontView() {
           />
         }
       >
-        {/* HEADER */}
+        {/* ================================================================
+            HEADER
+        ================================================================ */}
 
         <View
           style={{
@@ -178,7 +277,9 @@ export default function StorefrontView() {
               gap: spacing.xs,
             }}
           >
-            <AppText variant="h1">Storefront Name</AppText>
+            <AppText variant="h1">
+              {isLoading ? "Loading..." : (store?.storeName ?? "Storefront")}
+            </AppText>
 
             <AppText variant="body" color="secondary">
               Manage your shop & share with customers
@@ -186,7 +287,9 @@ export default function StorefrontView() {
           </View>
         </View>
 
-        {/* STORE URL */}
+        {/* ================================================================
+            STORE SUMMARY
+        ================================================================ */}
 
         <Card
           style={{
@@ -200,57 +303,81 @@ export default function StorefrontView() {
               gap: spacing.lg,
             }}
           >
-            <View style={{ flexDirection: "column", alignItems: "center" }}>
+            {/* CURRENCY */}
+
+            <View
+              style={{
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
               <AppText variant="bodySmall" color="primary">
                 Currency
               </AppText>
+
               <AppText variant="h3" color="strong">
-                ₦
+                {isLoading ? "--" : (store?.currency ?? "--")}
               </AppText>
             </View>
 
-            <View style={{ flexDirection: "column", alignItems: "center" }}>
+            {/* PRODUCTS */}
+
+            <View
+              style={{
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
               <AppText variant="bodySmall" color="primary">
                 Products
               </AppText>
+
               <AppText variant="h3" color="strong">
                 {isLoading ? "--" : totalProducts}
               </AppText>
             </View>
 
-            <View style={{ flexDirection: "column", alignItems: "center" }}>
+            {/* DISCOUNTS */}
+
+            <View
+              style={{
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
               <AppText variant="bodySmall" color="primary">
                 Discounts
               </AppText>
+
               <AppText variant="h3" color="strong">
-                {isLoading ? "--" : totalProducts}
+                {isLoading ? "--" : (store?.discounts?.length ?? 0)}
               </AppText>
             </View>
           </View>
         </Card>
 
-        {/* STORE STATUS */}
+        {/* ================================================================
+            STORE STATUS
+        ================================================================ */}
 
         <Card
           style={{
             marginTop: spacing.md,
             backgroundColor: theme.background.brand,
-
             gap: spacing.md,
           }}
         >
           <View
             style={{
               flexDirection: "row",
-
               justifyContent: "space-between",
-
               alignItems: "center",
             }}
           >
             <AppText variant="bodyBold">
               {isLoading ? "Loading..." : (store?.storeName ?? "Unnamed Store")}
             </AppText>
+
             <UICard
               title={store?.isActive ? "Live" : "Offline"}
               variant={store?.isActive ? "active" : "status"}
@@ -260,18 +387,12 @@ export default function StorefrontView() {
           <View
             style={{
               flexDirection: "row",
-
               alignItems: "center",
-
               paddingHorizontal: spacing.md,
               paddingVertical: spacing.md,
-
               backgroundColor: theme.background.primary,
-
               borderRadius: radius.md,
-
               borderWidth: 1,
-
               borderColor: theme.border.default,
             }}
           >
@@ -283,19 +404,22 @@ export default function StorefrontView() {
                 flex: 1,
               }}
             >
-              {storeUrl}
+              {storeUrl || "No store URL available"}
             </AppText>
 
             <View
               style={{
                 flexDirection: "row",
-
                 gap: spacing.sm,
-
                 marginLeft: spacing.sm,
               }}
             >
-              <Pressable onPress={handleCopyLink}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Copy store link"
+                hitSlop={10}
+                onPress={handleCopyLink}
+              >
                 <Ionicons
                   name="copy-outline"
                   size={20}
@@ -303,7 +427,12 @@ export default function StorefrontView() {
                 />
               </Pressable>
 
-              <Pressable onPress={handleShareLink}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Share store link"
+                hitSlop={10}
+                onPress={handleShareLink}
+              >
                 <Ionicons
                   name="share-social-outline"
                   size={20}
@@ -314,7 +443,9 @@ export default function StorefrontView() {
           </View>
         </Card>
 
-        {/* Preview Store */}
+        {/* ================================================================
+            PREVIEW STORE
+        ================================================================ */}
 
         <View
           style={{
@@ -333,20 +464,33 @@ export default function StorefrontView() {
                 alignItems: "center",
               }}
             >
-              <View style={{ flexDirection: "column", gap: spacing.xs }}>
+              <View
+                style={{
+                  flexDirection: "column",
+                  gap: spacing.xs,
+                }}
+              >
                 <AppText variant="bodyBold" color="primary">
                   Preview Store
                 </AppText>
+
                 <AppText variant="bodySmall" color="secondary">
                   See what customers see
                 </AppText>
               </View>
-              <Ionicons name="globe-outline" size={24} />
+
+              <Ionicons
+                name="globe-outline"
+                size={24}
+                color={theme.icon.default.icon}
+              />
             </View>
           </Card>
         </View>
 
-        {/* CUSTOMISE */}
+        {/* ================================================================
+            CUSTOMISE
+        ================================================================ */}
 
         <View
           style={{
@@ -361,18 +505,63 @@ export default function StorefrontView() {
               marginTop: spacing.md,
             }}
           >
+            {/* STORE NAME & INFO */}
+
             <SettingsRow
               title="Store Name & Info"
               subtitle={store?.storeName ?? "No Store"}
+              onPress={handleEditStore}
+            />
+
+            <Divider />
+
+            {/* THEME */}
+
+            <SettingsRow
+              title="Theme"
+              subtitle={store?.themeColor ?? "Default"}
+              onPress={() => {
+                if (!store) {
+                  return;
+                }
+
+                router.push(getStoreThemeRoute(store.storeId));
+              }}
+            />
+
+            <Divider />
+
+            {/* LAYOUT */}
+
+            {/* LAYOUT */}
+
+            <SettingsRow
+              title="Layout"
+              subtitle={store?.layout === "list" ? "List view" : "Grid view"}
+              onPress={() => {
+                if (!store) {
+                  return;
+                }
+
+                router.push(getStoreLayoutRoute(store.storeId));
+              }}
             />
             <Divider />
-            <SettingsRow title="Theme" subtitle="Forest Green" />
-            <Divider />
-            <SettingsRow title="Layout" subtitle="Grid view" />
-            <Divider />
+
+            {/* PRODUCTS */}
+
             <SettingsRow
               title="Products in Store"
-              subtitle={`${totalProducts} products`}
+              subtitle={`${totalProducts} ${
+                totalProducts === 1 ? "product" : "products"
+              }`}
+              onPress={() => {
+                if (!store) {
+                  return;
+                }
+
+                router.push(getStoreProductsRoute(store.storeId));
+              }}
             />
           </Card>
         </View>

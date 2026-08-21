@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { storeService } from "@/services/store/storeService";
+import { storeService } from "@/services/store/store-service";
+
+import { queryKeys } from "@/lib/queryKeys";
 
 export function useUpdateStore() {
   const queryClient = useQueryClient();
@@ -8,13 +10,19 @@ export function useUpdateStore() {
   return useMutation({
     mutationFn: storeService.updateStore,
 
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      /**
+       * Refresh the store list.
+       */
       queryClient.invalidateQueries({
-        queryKey: ["stores"],
+        queryKey: queryKeys.stores,
       });
 
+      /**
+       * Refresh the specific store being edited.
+       */
       queryClient.invalidateQueries({
-        queryKey: ["store"],
+        queryKey: queryKeys.store(variables.id),
       });
     },
   });

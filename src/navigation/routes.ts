@@ -65,6 +65,12 @@ export const ROUTES = {
   // Storefront details
   STORE_DETAILS: "/stores/view/[id]",
 
+  // Edit storefront information
+  STORE_EDIT: "/stores/view/edit/[id]",
+
+  // Storefront theme
+  STORE_THEME: "/stores/view/theme/[id]",
+
   // Create Store - Step 1
   ADD_STORE_INFORMATION: "/stores/add/information",
 
@@ -207,3 +213,27 @@ export const getOrderDetailsRoute = (id: string) => `/orders/${id}` as const;
  */
 export const getStoreDetailsRoute = (id: number | string) =>
   `/stores/view/${id}` as const;
+
+/**
+ * Store Edit
+ */
+export const getStoreEditRoute = (id: number | string) =>
+  `/stores/view/edit/${id}` as const;
+
+/**
+ * Store Theme
+ */
+export const getStoreThemeRoute = (id: number | string) =>
+  `/stores/view/theme/${id}` as const;
+
+/**
+ * Store Layout
+ */
+export const getStoreLayoutRoute = (id: number | string) =>
+  `/stores/view/layout/${id}` as const;
+
+/**
+ * Store Products
+ */
+export const getStoreProductsRoute = (id: number | string) =>
+  `/stores/view/products/${id}` as const;

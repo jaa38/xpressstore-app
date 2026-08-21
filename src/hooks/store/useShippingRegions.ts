@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { storeService } from "@/services/store/storeService";
+import { storeService } from "@/services/store/store-service";
 
 export function useShippingRegions() {
   const query = useQuery({

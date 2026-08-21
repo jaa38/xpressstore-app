@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { storeService } from "@/services/store/storeService";
+import { storeService } from "@/services/store/store-service";
 
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -14,13 +14,15 @@ export function useStore({ storeId }: Props) {
 
     queryFn: () => storeService.getStore(storeId),
 
-    enabled: !!storeId,
+    enabled: Number.isFinite(storeId) && storeId > 0,
   });
 
   return {
     store: query.data?.data,
 
     isLoading: query.isLoading,
+
+    isFetching: query.isFetching,
 
     error: query.error,
 

@@ -162,15 +162,24 @@ export default function OrdersScreen() {
    * -------------------------------------------------------------------------
    * OPEN ORDER ACTIONS
    * -------------------------------------------------------------------------
+   *
+   * IMPORTANT:
+   *
+   * We do not use a useEffect here.
+   *
+   * The button explicitly selects the order and then presents the sheet on
+   * the next animation frame. This avoids the timing issue where the sheet
+   * attempts to present before the ref/order state has been updated.
+   * -------------------------------------------------------------------------
    */
 
-  useEffect(() => {
-    if (!selectedOrder) {
-      return;
-    }
+  const handleOpenOrderActions = useCallback((order: Order) => {
+    setSelectedOrder(order);
 
-    orderActionsBottomSheetRef.current?.present();
-  }, [selectedOrder]);
+    requestAnimationFrame(() => {
+      orderActionsBottomSheetRef.current?.present();
+    });
+  }, []);
 
   /**
    * -------------------------------------------------------------------------
@@ -202,8 +211,16 @@ export default function OrdersScreen() {
 
   const filteredOrders = useMemo(() => {
     const filtered = orders.filter((order) => {
+      /**
+       * STATUS
+       */
+
       const matchesStatus =
         selectedFilter === "all" || order.status === selectedFilter;
+
+      /**
+       * SEARCH
+       */
 
       const query = searchQuery.trim().toLowerCase();
 
@@ -215,11 +232,19 @@ export default function OrdersScreen() {
           item.productName.toLowerCase().includes(query)
         );
 
+      /**
+       * AMOUNT
+       */
+
       const matchesAmount =
         (appliedFilters.amount.min === undefined ||
           order.total >= appliedFilters.amount.min) &&
         (appliedFilters.amount.max === undefined ||
           order.total <= appliedFilters.amount.max);
+
+      /**
+       * DATE
+       */
 
       const orderDate = new Date(order.createdAt);
 
@@ -239,6 +264,10 @@ export default function OrdersScreen() {
 
       return matchesStatus && matchesSearch && matchesAmount && matchesDate;
     });
+
+    /**
+     * SORT
+     */
 
     switch (appliedFilters.sort) {
       case "amountHighToLow":
@@ -432,6 +461,12 @@ export default function OrdersScreen() {
     await refetch();
   };
 
+  /**
+   * -------------------------------------------------------------------------
+   * REFRESHING
+   * -------------------------------------------------------------------------
+   */
+
   const refreshing = USE_MOCK_ORDERS ? refreshingMock : isRefetching;
 
   /**
@@ -461,7 +496,9 @@ export default function OrdersScreen() {
               flex: 1,
             }}
           >
-            {/* HEADER */}
+            {/* ============================================================
+                HEADER
+            ============================================================ */}
 
             <View
               style={{
@@ -483,7 +520,9 @@ export default function OrdersScreen() {
               </View>
             </View>
 
-            {/* SEARCH + FILTER */}
+            {/* ============================================================
+                SEARCH + FILTER
+            ============================================================ */}
 
             {!isFirstTimeUser && !showOrderError && (
               <View
@@ -517,7 +556,9 @@ export default function OrdersScreen() {
               </View>
             )}
 
-            {/* STATUS FILTERS */}
+            {/* ============================================================
+                STATUS FILTERS
+            ============================================================ */}
 
             {!isFirstTimeUser && !showOrderError && (
               <View
@@ -561,7 +602,9 @@ export default function OrdersScreen() {
               </View>
             )}
 
-            {/* CONTENT */}
+            {/* ============================================================
+                CONTENT
+            ============================================================ */}
 
             <View
               style={{
@@ -850,21 +893,41 @@ export default function OrdersScreen() {
                     )
                   }
                   renderItem={({ item: order }) => {
+                    /**
+                     * STATUS
+                     */
+
                     const status =
                       order.status !== "paid"
                         ? ORDER_STATUS[order.status]
                         : null;
 
+                    /**
+                     * FIRST ITEM
+                     */
+
                     const firstItem = order.items[0];
+
+                    /**
+                     * TOTAL ITEMS
+                     */
 
                     const totalItems = order.items.reduce(
                       (total, item) => total + item.quantity,
                       0
                     );
 
+                    /**
+                     * PRODUCT
+                     */
+
                     const product = firstItem
                       ? productsById[firstItem.productId]
                       : undefined;
+
+                    /**
+                     * PRODUCT SUMMARY
+                     */
 
                     const productSummary = (() => {
                       if (!firstItem) {
@@ -892,9 +955,13 @@ export default function OrdersScreen() {
                             gap: spacing.md,
                           }}
                         >
+                          {/* PRODUCT IMAGE */}
+
                           <ProductImage
                             image={product?.productImages?.[0]?.url ?? ""}
                           />
+
+                          {/* ORDER DETAILS */}
 
                           <View
                             style={{
@@ -943,6 +1010,8 @@ export default function OrdersScreen() {
                             </AppText>
                           </View>
 
+                          {/* RIGHT SIDE */}
+
                           <View
                             style={{
                               alignItems: "flex-end",
@@ -968,11 +1037,16 @@ export default function OrdersScreen() {
                               })}
                             </AppText>
 
+                            {/* ==================================================
+                                ORDER ACTIONS BUTTON
+                                UI UNCHANGED
+                            ================================================== */}
+
                             <Pressable
                               hitSlop={10}
                               accessibilityRole="button"
                               accessibilityLabel={`Actions for order ${order.reference}`}
-                              onPress={() => setSelectedOrder(order)}
+                              onPress={() => handleOpenOrderActions(order)}
                             >
                               <Ionicons
                                 name="ellipsis-horizontal"
@@ -992,7 +1066,9 @@ export default function OrdersScreen() {
         </View>
       </SafeAreaView>
 
-      {/* FILTER */}
+      {/* ======================================================================
+          FILTER
+      ====================================================================== */}
 
       <FilterBottomSheet
         ref={filterBottomSheetRef}
@@ -1003,11 +1079,16 @@ export default function OrdersScreen() {
         }}
       />
 
-      {/* ORDER ACTIONS */}
+      {/* ======================================================================
+          ORDER ACTIONS
+      ====================================================================== */}
 
       <OrderActionsBottomSheet
         ref={orderActionsBottomSheetRef}
         order={selectedOrder}
+        onDismiss={() => {
+          setSelectedOrder(null);
+        }}
       />
     </>
   );

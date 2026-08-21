@@ -1,9 +1,6 @@
 import { forwardRef, useCallback, useMemo, useState } from "react";
 
-import {
-  Alert,
-  View,
-} from "react-native";
+import { Alert, View } from "react-native";
 
 import { router } from "expo-router";
 
@@ -30,6 +27,7 @@ import { radius, spacing, theme } from "@/theme";
 
 interface OrderActionsBottomSheetProps {
   order: Order | null;
+  onDismiss?: () => void;
 }
 
 type LoadingAction = "share" | "download" | null;
@@ -37,7 +35,7 @@ type LoadingAction = "share" | "download" | null;
 export const OrderActionsBottomSheet = forwardRef<
   BottomSheetModal,
   OrderActionsBottomSheetProps
->(({ order }, ref) => {
+>(({ order, onDismiss }, ref) => {
   const [loadingAction, setLoadingAction] = useState<LoadingAction>(null);
 
   /**
@@ -209,14 +207,13 @@ export const OrderActionsBottomSheet = forwardRef<
       snapPoints={snapPoints}
       enablePanDownToClose
       enableDismissOnClose
+      onDismiss={onDismiss}
       backdropComponent={renderBackdrop}
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
       backgroundStyle={{
         backgroundColor: theme.background.surface,
-
         borderTopLeftRadius: radius["2xl"],
-
         borderTopRightRadius: radius["2xl"],
       }}
       handleIndicatorStyle={{

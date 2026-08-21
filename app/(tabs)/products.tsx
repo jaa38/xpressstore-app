@@ -44,8 +44,6 @@ import { radius, spacing, theme } from "@/theme";
  * ============================================================================
  * MOCK CONFIGURATION
  * ============================================================================
- *
- * Set this to false when you want the screen to use the real products API.
  */
 
 import { USE_MOCK_PRODUCTS } from "@/mocks/config";
@@ -248,12 +246,6 @@ export default function ProductScreen() {
    * ==========================================================================
    * MOCK PRODUCTS STATE
    * ==========================================================================
-   *
-   * This state mirrors the shared mock repository.
-   *
-   * The repository itself lives in:
-   *
-   * src/mocks/products.ts
    */
 
   const [mockProducts, setMockProducts] = useState<MerchantProduct[]>(() =>
@@ -296,13 +288,21 @@ export default function ProductScreen() {
 
   /**
    * ==========================================================================
-   * PAGINATION
+   * INFINITE SCROLL
    * ==========================================================================
+   *
+   * The API/mock repository provides the complete product list.
+   *
+   * We progressively render products from that list instead of displaying
+   * everything at once.
    */
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const PRODUCTS_PER_BATCH = 10;
 
-  const PRODUCTS_PER_PAGE = 5;
+  const [visibleProductCount, setVisibleProductCount] =
+    useState(PRODUCTS_PER_BATCH);
+
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   /**
    * ==========================================================================
@@ -320,42 +320,22 @@ export default function ProductScreen() {
 
   async function onRefresh() {
     if (USE_MOCK_PRODUCTS) {
-      /**
-       * Re-read the shared mock repository.
-       *
-       * Do NOT reset to MOCK_PRODUCTS here.
-       *
-       * This preserves edits made on the
-       * Edit Product screen.
-       */
-
       setMockProducts(getMockProducts());
 
-      setCurrentPage(1);
+      setVisibleProductCount(PRODUCTS_PER_BATCH);
 
       return;
     }
 
     await apiRefetch();
+
+    setVisibleProductCount(PRODUCTS_PER_BATCH);
   }
 
   /**
    * ==========================================================================
    * REFRESH MOCK DATA WHEN SCREEN GETS FOCUS
    * ==========================================================================
-   *
-   * This is important after:
-   *
-   * Products
-   *    ↓
-   * Edit
-   *    ↓
-   * Save
-   *    ↓
-   * router.back()
-   *
-   * The Products screen gets the latest
-   * data from the mock repository.
    */
 
   useFocusEffect(
@@ -400,30 +380,73 @@ export default function ProductScreen() {
 
   /**
    * ==========================================================================
-   * PAGINATION
+   * RESET INFINITE SCROLL WHEN SEARCH CHANGES
    * ==========================================================================
    */
 
-  const totalProductCount = filteredProducts.length;
+  useEffect(() => {
+    setVisibleProductCount(PRODUCTS_PER_BATCH);
+  }, [searchQuery]);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(totalProductCount / PRODUCTS_PER_PAGE)
-  );
+  /**
+   * ==========================================================================
+   * KEEP VISIBLE COUNT VALID
+   * ==========================================================================
+   */
 
-  const displayedPageNumber = Math.min(currentPage, totalPages);
+  useEffect(() => {
+    setVisibleProductCount((currentCount) =>
+      Math.min(
+        currentCount,
+        Math.max(PRODUCTS_PER_BATCH, filteredProducts.length)
+      )
+    );
+  }, [filteredProducts.length]);
 
-  const hasPreviousPage = displayedPageNumber > 1;
+  /**
+   * ==========================================================================
+   * PRODUCTS TO DISPLAY
+   * ==========================================================================
+   */
 
-  const hasNextPage = displayedPageNumber < totalPages;
+  const displayedProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleProductCount);
+  }, [filteredProducts, visibleProductCount]);
 
-  const paginatedProducts = useMemo(() => {
-    const startIndex = (displayedPageNumber - 1) * PRODUCTS_PER_PAGE;
+  /**
+   * ==========================================================================
+   * HAS MORE PRODUCTS
+   * ==========================================================================
+   */
 
-    const endIndex = startIndex + PRODUCTS_PER_PAGE;
+  const hasMoreProducts = displayedProducts.length < filteredProducts.length;
 
-    return filteredProducts.slice(startIndex, endIndex);
-  }, [filteredProducts, displayedPageNumber]);
+  /**
+   * ==========================================================================
+   * LOAD MORE PRODUCTS
+   * ==========================================================================
+   */
+
+  const loadMoreProducts = useCallback(() => {
+    if (isLoadingMore || !hasMoreProducts) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+
+    /**
+     * Keep this asynchronous so the loading indicator has an opportunity
+     * to render before the next batch is added.
+     */
+
+    setTimeout(() => {
+      setVisibleProductCount((currentCount) =>
+        Math.min(currentCount + PRODUCTS_PER_BATCH, filteredProducts.length)
+      );
+
+      setIsLoadingMore(false);
+    }, 150);
+  }, [isLoadingMore, hasMoreProducts, filteredProducts.length]);
 
   /**
    * ==========================================================================
@@ -436,28 +459,6 @@ export default function ProductScreen() {
       (product) => product.totalInStock <= product.lowStockAlert
     );
   }, [filteredProducts]);
-
-  /**
-   * ==========================================================================
-   * RESET PAGINATION WHEN SEARCH CHANGES
-   * ==========================================================================
-   */
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
-
-  /**
-   * ==========================================================================
-   * KEEP PAGE VALID
-   * ==========================================================================
-   */
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
 
   /**
    * ==========================================================================
@@ -577,7 +578,9 @@ export default function ProductScreen() {
 
     Alert.alert(
       "Delete Product",
+
       `Are you sure you want to delete "${product.productName}"? This action cannot be undone.`,
+
       [
         {
           text: "Cancel",
@@ -603,17 +606,6 @@ export default function ProductScreen() {
                 }
 
                 setMockProducts(getMockProducts());
-
-                const filteredRemaining = filteredProducts.filter(
-                  (item) => item.id !== productId
-                ).length;
-
-                const remainingPages = Math.max(
-                  1,
-                  Math.ceil(filteredRemaining / PRODUCTS_PER_PAGE)
-                );
-
-                setCurrentPage((page) => Math.min(page, remainingPages));
 
                 showToast({
                   type: "success",
@@ -660,6 +652,7 @@ export default function ProductScreen() {
   function handleEdit(productId: number) {
     router.push({
       pathname: "/product/[id]",
+
       params: {
         id: String(productId),
       },
@@ -676,6 +669,7 @@ export default function ProductScreen() {
     <SafeAreaView
       style={{
         flex: 1,
+
         backgroundColor: theme.background.primary,
       }}
     >
@@ -684,6 +678,7 @@ export default function ProductScreen() {
       <View
         style={{
           flex: 1,
+
           paddingHorizontal: spacing.lg,
         }}
       >
@@ -699,13 +694,16 @@ export default function ProductScreen() {
           <View
             style={{
               flexDirection: "row",
+
               alignItems: "center",
+
               gap: spacing.md,
             }}
           >
             <View
               style={{
                 flex: 1,
+
                 gap: spacing.xs,
               }}
             >
@@ -734,13 +732,19 @@ export default function ProductScreen() {
               onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
               style={({ pressed }) => ({
                 width: 44,
+
                 height: 44,
+
                 borderRadius: radius.full,
+
                 justifyContent: "center",
+
                 alignItems: "center",
+
                 backgroundColor: pressed
                   ? theme.action.primary.pressed
                   : theme.action.primary.background,
+
                 opacity:
                   deleteProductMutation.isPending ||
                   toggleStatusMutation.isPending
@@ -767,9 +771,13 @@ export default function ProductScreen() {
               <Card
                 style={{
                   marginTop: spacing.md,
+
                   flexDirection: "row",
+
                   alignItems: "center",
+
                   borderColor: theme.border.warning,
+
                   backgroundColor: theme.background.warning,
                 }}
               >
@@ -782,6 +790,7 @@ export default function ProductScreen() {
                 <View
                   style={{
                     flex: 1,
+
                     marginHorizontal: spacing.md,
                   }}
                 >
@@ -838,6 +847,7 @@ export default function ProductScreen() {
           <View
             style={{
               flex: 1,
+
               marginTop: spacing.md,
             }}
           >
@@ -854,8 +864,11 @@ export default function ProductScreen() {
                 <View
                   style={{
                     flex: 1,
+
                     justifyContent: "center",
+
                     alignItems: "center",
+
                     paddingVertical: spacing["3xl"],
                   }}
                 >
@@ -881,18 +894,26 @@ export default function ProductScreen() {
                 <View
                   style={{
                     flex: 1,
+
                     justifyContent: "center",
+
                     alignItems: "center",
+
                     paddingVertical: spacing["3xl"],
                   }}
                 >
                   <View
                     style={{
                       width: 56,
+
                       height: 56,
+
                       borderRadius: radius.full,
+
                       justifyContent: "center",
+
                       alignItems: "center",
+
                       backgroundColor: theme.background.error,
                     }}
                   >
@@ -907,6 +928,7 @@ export default function ProductScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
+
                       textAlign: "center",
                     }}
                   >
@@ -918,7 +940,9 @@ export default function ProductScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
+
                       textAlign: "center",
+
                       maxWidth: 320,
                     }}
                   >
@@ -931,7 +955,9 @@ export default function ProductScreen() {
                     onPress={() => apiRefetch()}
                     style={{
                       marginTop: spacing.md,
+
                       paddingVertical: spacing.xs,
+
                       paddingHorizontal: spacing.sm,
                     }}
                   >
@@ -946,17 +972,24 @@ export default function ProductScreen() {
                 <Card
                   style={{
                     alignItems: "center",
+
                     paddingVertical: spacing.xl,
+
                     paddingHorizontal: spacing.lg,
                   }}
                 >
                   <View
                     style={{
                       width: 56,
+
                       height: 56,
+
                       borderRadius: radius.full,
+
                       alignItems: "center",
+
                       justifyContent: "center",
+
                       backgroundColor: theme.icon.branding.background,
                     }}
                   >
@@ -971,6 +1004,7 @@ export default function ProductScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
+
                       textAlign: "center",
                     }}
                   >
@@ -982,7 +1016,9 @@ export default function ProductScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
+
                       textAlign: "center",
+
                       maxWidth: 320,
                     }}
                   >
@@ -1007,17 +1043,24 @@ export default function ProductScreen() {
                 <Card
                   style={{
                     alignItems: "center",
+
                     paddingVertical: spacing.xl,
+
                     paddingHorizontal: spacing.lg,
                   }}
                 >
                   <View
                     style={{
                       width: 56,
+
                       height: 56,
+
                       borderRadius: radius.full,
+
                       alignItems: "center",
+
                       justifyContent: "center",
+
                       backgroundColor: theme.icon.default.background,
                     }}
                   >
@@ -1032,6 +1075,7 @@ export default function ProductScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
+
                       textAlign: "center",
                     }}
                   >
@@ -1043,6 +1087,7 @@ export default function ProductScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
+
                       textAlign: "center",
                     }}
                   >
@@ -1072,7 +1117,7 @@ export default function ProductScreen() {
                   contentContainerStyle={{
                     paddingBottom: spacing.md,
                   }}
-                  data={paginatedProducts}
+                  data={displayedProducts}
                   refreshControl={
                     <RefreshControl
                       refreshing={isRefetching}
@@ -1102,131 +1147,53 @@ export default function ProductScreen() {
                       }}
                     />
                   )}
+                  onEndReached={loadMoreProducts}
+                  onEndReachedThreshold={0.5}
+                  ListFooterComponent={
+                    hasMoreProducts || isLoadingMore ? (
+                      <View
+                        style={{
+                          paddingVertical: spacing.lg,
+
+                          alignItems: "center",
+                        }}
+                      >
+                        {isLoadingMore && (
+                          <>
+                            <ActivityIndicator
+                              size="small"
+                              color={theme.icon.branding.icon}
+                            />
+
+                            <AppText
+                              variant="caption"
+                              color="secondary"
+                              style={{
+                                marginTop: spacing.xs,
+                              }}
+                            >
+                              Loading more products...
+                            </AppText>
+                          </>
+                        )}
+                      </View>
+                    ) : (
+                      <View
+                        style={{
+                          paddingVertical: spacing.lg,
+
+                          alignItems: "center",
+                        }}
+                      >
+                        <AppText variant="caption" color="muted">
+                          You've reached the end of your products.
+                        </AppText>
+                      </View>
+                    )
+                  }
                 />
               )}
             </View>
-
-            {/* =================================================================
-                PAGINATION
-            ================================================================= */}
-
-            {!isLoading &&
-              !showProductError &&
-              !isFirstTimeUser &&
-              filteredProducts.length > 0 &&
-              totalPages > 1 && (
-                <View
-                  style={{
-                    paddingTop: spacing.md,
-                    paddingBottom: 0,
-                  }}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: spacing.md,
-                    }}
-                  >
-                    {/* PREVIOUS */}
-
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Previous page"
-                      disabled={!hasPreviousPage}
-                      onPress={() => {
-                        if (hasPreviousPage) {
-                          setCurrentPage((page) => page - 1);
-                        }
-                      }}
-                      style={({ pressed }) => ({
-                        flex: 1,
-                        height: 44,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: spacing.xs,
-                        borderWidth: 1,
-                        borderColor: theme.border.default,
-                        borderRadius: radius.sm,
-                        backgroundColor: theme.background.surface,
-                        opacity: !hasPreviousPage ? 0.4 : pressed ? 0.7 : 1,
-                      })}
-                    >
-                      <Ionicons
-                        name="chevron-back"
-                        size={18}
-                        color={theme.text.primary}
-                      />
-
-                      <AppText variant="bodySmallBold" color="primary">
-                        Previous
-                      </AppText>
-                    </Pressable>
-
-                    {/* PAGE INFO */}
-
-                    <View
-                      style={{
-                        minWidth: 80,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <AppText variant="bodySmallBold" color="secondary">
-                        Page {displayedPageNumber} of {totalPages}
-                      </AppText>
-
-                      <AppText
-                        variant="caption"
-                        color="muted"
-                        style={{
-                          marginTop: spacing.xs,
-                        }}
-                      >
-                        {totalProductCount} products
-                      </AppText>
-                    </View>
-
-                    {/* NEXT */}
-
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Next page"
-                      disabled={!hasNextPage}
-                      onPress={() => {
-                        if (hasNextPage) {
-                          setCurrentPage((page) => page + 1);
-                        }
-                      }}
-                      style={({ pressed }) => ({
-                        flex: 1,
-                        height: 44,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: spacing.xs,
-                        borderWidth: 1,
-                        borderColor: theme.border.default,
-                        borderRadius: radius.sm,
-                        backgroundColor: theme.background.surface,
-                        opacity: !hasNextPage ? 0.4 : pressed ? 0.7 : 1,
-                      })}
-                    >
-                      <AppText variant="bodySmallBold" color="primary">
-                        Next
-                      </AppText>
-
-                      <Ionicons
-                        name="chevron-forward"
-                        size={18}
-                        color={theme.text.primary}
-                      />
-                    </Pressable>
-                  </View>
-                </View>
-              )}
           </View>
         </View>
       </View>

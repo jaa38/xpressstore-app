@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Image,
   Platform,
   Pressable,
@@ -8,7 +9,6 @@ import {
   Share,
   ToastAndroid,
   View,
-  ScrollView,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,7 +23,7 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import * as Clipboard from "expo-clipboard";
 
@@ -331,9 +331,6 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    * MOCK STORES
    * --------------------------------------------------------------------------
-   *
-   * Local state allows swipe-to-delete to actually remove mocked stores
-   * from the screen.
    */
 
   const [mockStores, setMockStores] = useState(MOCK_STORES);
@@ -342,12 +339,9 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    * DATA SOURCE
    * --------------------------------------------------------------------------
-   *
-   * true  -> mocked storefronts
-   * false -> real API storefronts
    */
 
-  const stores = USE_MOCK_STORES ? mockStores : apiStores;
+  const stores = USE_MOCK_STORES ? mockStores : (apiStores ?? []);
 
   const isLoading = USE_MOCK_STORES ? false : apiIsLoading;
 
@@ -386,6 +380,25 @@ export default function StoreScreen() {
    */
 
   const [selectedFilter, setSelectedFilter] = useState<StoreFilter>("all");
+
+  /**
+   * --------------------------------------------------------------------------
+   * INFINITE SCROLL
+   * --------------------------------------------------------------------------
+   *
+   * Stores are progressively rendered in batches instead of rendering the
+   * complete collection at once.
+   *
+   * This is client-side infinite scrolling. The current useStores() hook
+   * provides the available stores, and the FlatList progressively reveals
+   * them.
+   */
+
+  const STORES_PER_BATCH = 10;
+
+  const [visibleStoreCount, setVisibleStoreCount] = useState(STORES_PER_BATCH);
+
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   /**
    * --------------------------------------------------------------------------
@@ -443,6 +456,72 @@ export default function StoreScreen() {
 
   /**
    * --------------------------------------------------------------------------
+   * RESET INFINITE SCROLL WHEN SEARCH OR FILTER CHANGES
+   * --------------------------------------------------------------------------
+   */
+
+  useEffect(() => {
+    setVisibleStoreCount(STORES_PER_BATCH);
+  }, [searchQuery, selectedFilter]);
+
+  /**
+   * --------------------------------------------------------------------------
+   * KEEP VISIBLE COUNT VALID
+   * --------------------------------------------------------------------------
+   */
+
+  useEffect(() => {
+    setVisibleStoreCount((currentCount) =>
+      Math.min(currentCount, Math.max(STORES_PER_BATCH, filteredStores.length))
+    );
+  }, [filteredStores.length]);
+
+  /**
+   * --------------------------------------------------------------------------
+   * DISPLAYED STORES
+   * --------------------------------------------------------------------------
+   */
+
+  const displayedStores = useMemo(() => {
+    return filteredStores.slice(0, visibleStoreCount);
+  }, [filteredStores, visibleStoreCount]);
+
+  /**
+   * --------------------------------------------------------------------------
+   * HAS MORE STORES
+   * --------------------------------------------------------------------------
+   */
+
+  const hasMoreStores = displayedStores.length < filteredStores.length;
+
+  /**
+   * --------------------------------------------------------------------------
+   * LOAD MORE STORES
+   * --------------------------------------------------------------------------
+   */
+
+  const loadMoreStores = useCallback(() => {
+    if (isLoadingMore || !hasMoreStores) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+
+    /**
+     * Small delay allows the footer loading indicator to render naturally.
+     */
+
+    setTimeout(() => {
+      setVisibleStoreCount((currentCount) =>
+        Math.min(currentCount + STORES_PER_BATCH, filteredStores.length)
+      );
+
+      setIsLoadingMore(false);
+    }, 150);
+  }, [isLoadingMore, hasMoreStores, filteredStores.length]);
+
+  /**
+   * --------------------------------------------------------------------------
    * COPY STORE LINK
    * --------------------------------------------------------------------------
    */
@@ -488,10 +567,16 @@ export default function StoreScreen() {
 
   async function onRefresh() {
     if (USE_MOCK_STORES) {
+      setMockStores([...MOCK_STORES]);
+
+      setVisibleStoreCount(STORES_PER_BATCH);
+
       return;
     }
 
     await refetch();
+
+    setVisibleStoreCount(STORES_PER_BATCH);
   }
 
   /**
@@ -513,7 +598,9 @@ export default function StoreScreen() {
 
     Alert.alert(
       "Delete Store",
+
       `Are you sure you want to delete "${store.storeName}"? This action cannot be undone.`,
+
       [
         {
           text: "Cancel",
@@ -886,7 +973,7 @@ export default function StoreScreen() {
               }}
             >
               {/* ============================================================
-                  1. INITIAL LOADING
+                  INITIAL LOADING
               ============================================================ */}
 
               {isLoading ? (
@@ -914,7 +1001,7 @@ export default function StoreScreen() {
                 </View>
               ) : isFirstTimeUser ? (
                 /* ==========================================================
-                   2. FIRST-TIME USER
+                   FIRST-TIME USER
                 ========================================================== */
 
                 <Card
@@ -986,7 +1073,7 @@ export default function StoreScreen() {
                 </Card>
               ) : showStoreError ? (
                 /* ==========================================================
-                   3. ERROR
+                   ERROR
                 ========================================================== */
 
                 <View
@@ -1051,7 +1138,7 @@ export default function StoreScreen() {
                 </View>
               ) : hasNoSearchResults ? (
                 /* ==========================================================
-                   4. SEARCH / FILTER EMPTY
+                   SEARCH / FILTER EMPTY
                 ========================================================== */
 
                 <Card
@@ -1128,15 +1215,34 @@ export default function StoreScreen() {
                 </Card>
               ) : (
                 /* ==========================================================
-                   5. STORE LIST
+                   STORE LIST — INFINITE SCROLL
                 ========================================================== */
 
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
+                <FlatList
+                  data={displayedStores}
+                  keyExtractor={(item) => item.storeId.toString()}
+                  renderItem={({ item }) => (
+                    <StoreCard
+                      store={item}
+                      deleting={deleteStoreMutation.isPending}
+                      onDelete={handleDelete}
+                      onCopyLink={handleCopyLink}
+                      onShareLink={handleShareLink}
+                      onViewDetails={handleViewDetails}
+                    />
+                  )}
+                  ItemSeparatorComponent={() => (
+                    <View
+                      style={{
+                        height: spacing.md,
+                      }}
+                    />
+                  )}
                   contentContainerStyle={{
                     paddingBottom: spacing["2xl"],
-                    gap: spacing.md,
                   }}
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
                   refreshControl={
                     <RefreshControl
                       refreshing={isRefetching}
@@ -1146,19 +1252,49 @@ export default function StoreScreen() {
                       progressBackgroundColor={theme.background.surface}
                     />
                   }
-                >
-                  {filteredStores.map((store) => (
-                    <StoreCard
-                      key={store.storeId}
-                      store={store}
-                      deleting={deleteStoreMutation.isPending}
-                      onDelete={handleDelete}
-                      onCopyLink={handleCopyLink}
-                      onShareLink={handleShareLink}
-                      onViewDetails={handleViewDetails}
-                    />
-                  ))}
-                </ScrollView>
+                  onEndReached={loadMoreStores}
+                  onEndReachedThreshold={0.5}
+                  ListFooterComponent={
+                    hasMoreStores || isLoadingMore ? (
+                      <View
+                        style={{
+                          paddingVertical: spacing.lg,
+                          alignItems: "center",
+                        }}
+                      >
+                        {isLoadingMore && (
+                          <>
+                            <ActivityIndicator
+                              size="small"
+                              color={theme.icon.branding.icon}
+                            />
+
+                            <AppText
+                              variant="caption"
+                              color="secondary"
+                              style={{
+                                marginTop: spacing.xs,
+                              }}
+                            >
+                              Loading more stores...
+                            </AppText>
+                          </>
+                        )}
+                      </View>
+                    ) : (
+                      <View
+                        style={{
+                          paddingVertical: spacing.lg,
+                          alignItems: "center",
+                        }}
+                      >
+                        <AppText variant="caption" color="muted">
+                          You've reached the end of your stores.
+                        </AppText>
+                      </View>
+                    )
+                  }
+                />
               )}
             </View>
           </View>

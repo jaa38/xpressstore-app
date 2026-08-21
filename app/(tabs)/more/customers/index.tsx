@@ -1,10 +1,10 @@
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Linking,
   Pressable,
   RefreshControl,
-  ScrollView,
   View,
 } from "react-native";
 
@@ -12,14 +12,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { StatusBar } from "expo-status-bar";
 
-import {
-  router,
-  useFocusEffect,
-} from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
@@ -55,6 +52,17 @@ import { USE_MOCK_CUSTOMERS } from "@/mocks/config";
 
 /**
  * ============================================================================
+ * INFINITE SCROLL CONFIGURATION
+ * ============================================================================
+ *
+ * Number of customers displayed initially and added each time the user
+ * reaches the bottom of the list.
+ */
+
+const CUSTOMERS_PER_BATCH = 10;
+
+/**
+ * ============================================================================
  * RIGHT SWIPE ACTIONS
  * ============================================================================
  */
@@ -80,28 +88,27 @@ function RightActions({
       {/* BLACKLIST / UNBLOCK */}
 
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={
+          isBlacklisted
+            ? "Remove customer from blacklist"
+            : "Blacklist customer"
+        }
         disabled={disabled}
         onPress={onBlacklist}
         style={{
           width: 90,
           justifyContent: "center",
           alignItems: "center",
-
           backgroundColor: isBlacklisted
             ? theme.action.primary.background
             : theme.action.blacklist.background,
-
           borderRadius: radius.md,
-
           opacity: disabled ? 0.5 : 1,
         }}
       >
         <Ionicons
-          name={
-            isBlacklisted
-              ? "checkmark-circle-outline"
-              : "ban-outline"
-          }
+          name={isBlacklisted ? "checkmark-circle-outline" : "ban-outline"}
           size={24}
           color={
             isBlacklisted
@@ -118,18 +125,16 @@ function RightActions({
       {/* DELETE */}
 
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Delete customer"
         disabled={disabled}
         onPress={onDelete}
         style={{
           width: 90,
           justifyContent: "center",
           alignItems: "center",
-
-          backgroundColor:
-            theme.action.destructive.background,
-
+          backgroundColor: theme.action.destructive.background,
           borderRadius: radius.md,
-
           opacity: disabled ? 0.5 : 1,
         }}
       >
@@ -139,11 +144,239 @@ function RightActions({
           color={theme.action.destructive.text}
         />
 
-        <AppText color="inverse">
-          Delete
-        </AppText>
+        <AppText color="inverse">Delete</AppText>
       </Pressable>
     </View>
+  );
+}
+
+/**
+ * ============================================================================
+ * CUSTOMER CARD
+ * ============================================================================
+ */
+
+function CustomerCard({
+  customer,
+  mutationPending,
+  onBlacklist,
+  onDelete,
+  onCall,
+  onWhatsApp,
+  onView,
+  onEdit,
+}: {
+  customer: Customer;
+  mutationPending: boolean;
+  onBlacklist: (customer: Customer) => void;
+  onDelete: (customer: Customer) => void;
+  onCall: (phone: string) => void;
+  onWhatsApp: (phone: string) => void;
+  onView: (customerId: string) => void;
+  onEdit: (customerId: string) => void;
+}) {
+  return (
+    <Swipeable
+      enabled={!mutationPending}
+      renderRightActions={() => (
+        <RightActions
+          isBlacklisted={customer.isBlackListed}
+          disabled={mutationPending}
+          onBlacklist={() => onBlacklist(customer)}
+          onDelete={() => onDelete(customer)}
+        />
+      )}
+    >
+      <Card>
+        {/* ================================================================
+            CUSTOMER HEADER
+        ================================================================ */}
+
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: spacing.sm,
+          }}
+        >
+          {/* CUSTOMER ICON */}
+
+          <Ionicons
+            name="person-circle"
+            size={56}
+            color={theme.icon.default.icon}
+          />
+
+          {/* CUSTOMER DETAILS */}
+
+          <View
+            style={{
+              flex: 1,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.sm,
+              }}
+            >
+              <AppText
+                variant="h3"
+                numberOfLines={1}
+                style={{
+                  flexShrink: 1,
+                }}
+              >
+                {customer.name}
+              </AppText>
+
+              {customer.isBlackListed && (
+                <View
+                  style={{
+                    paddingHorizontal: spacing.sm,
+                    paddingVertical: spacing.xs,
+                    borderRadius: radius.full,
+                    backgroundColor: theme.state.error.background,
+                  }}
+                >
+                  <AppText variant="caption" color="error">
+                    Blacklisted
+                  </AppText>
+                </View>
+              )}
+            </View>
+
+            <AppText variant="body" color="secondary">
+              {customer.phone}
+            </AppText>
+          </View>
+
+          {/* VIEW / EDIT */}
+
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing.xs,
+            }}
+          >
+            {/* VIEW */}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`View ${customer.name}`}
+              disabled={mutationPending}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: radius.full,
+                justifyContent: "center",
+                alignItems: "center",
+                opacity: mutationPending ? 0.5 : 1,
+              }}
+              onPress={() => onView(customer.id)}
+            >
+              <Ionicons
+                name="eye-outline"
+                size={20}
+                color={theme.state.info.icon}
+              />
+            </Pressable>
+
+            {/* EDIT */}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Edit ${customer.name}`}
+              disabled={mutationPending}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: radius.full,
+                justifyContent: "center",
+                alignItems: "center",
+                opacity: mutationPending ? 0.5 : 1,
+              }}
+              onPress={() => onEdit(customer.id)}
+            >
+              <Ionicons
+                name="create-outline"
+                size={20}
+                color={theme.icon.default.icon}
+              />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* ================================================================
+            DIVIDER
+        ================================================================ */}
+
+        <Divider
+          style={{
+            marginVertical: spacing.rg,
+          }}
+        />
+
+        {/* ================================================================
+            CUSTOMER ACTIONS
+        ================================================================ */}
+
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: spacing.sm,
+          }}
+        >
+          {/* CALL */}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Call ${customer.name}`}
+            disabled={mutationPending}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: radius.full,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: theme.background.subtle,
+              opacity: mutationPending ? 0.5 : 1,
+            }}
+            onPress={() => onCall(customer.phone)}
+          >
+            <Ionicons
+              name="call-outline"
+              size={22}
+              color={theme.icon.default.icon}
+            />
+          </Pressable>
+
+          {/* WHATSAPP */}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`WhatsApp ${customer.name}`}
+            disabled={mutationPending}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: radius.full,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "#25D36615",
+              opacity: mutationPending ? 0.5 : 1,
+            }}
+            onPress={() => onWhatsApp(customer.phone)}
+          >
+            <Ionicons name="logo-whatsapp" size={22} color="#25D366" />
+          </Pressable>
+        </View>
+      </Card>
+    </Swipeable>
   );
 }
 
@@ -174,8 +407,20 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const [mockCustomers, setMockCustomers] =
-    useState<Customer[]>(getMockCustomers());
+  const [mockCustomers, setMockCustomers] = useState<Customer[]>(() =>
+    getMockCustomers()
+  );
+
+  /**
+   * --------------------------------------------------------------------------
+   * MOCK INFINITE SCROLL STATE
+   * --------------------------------------------------------------------------
+   */
+
+  const [visibleCustomerCount, setVisibleCustomerCount] =
+    useState(CUSTOMERS_PER_BATCH);
+
+  const [isLoadingMoreMock, setIsLoadingMoreMock] = useState(false);
 
   /**
    * --------------------------------------------------------------------------
@@ -201,17 +446,11 @@ export default function CustomersScreen() {
     ? mockCustomers
     : (apiCustomers ?? []);
 
-  const isLoading = USE_MOCK_CUSTOMERS
-    ? false
-    : apiLoading;
+  const isLoading = USE_MOCK_CUSTOMERS ? false : apiLoading;
 
-  const isRefetching = USE_MOCK_CUSTOMERS
-    ? false
-    : apiRefetching;
+  const isRefetching = USE_MOCK_CUSTOMERS ? false : apiRefetching;
 
-  const error = USE_MOCK_CUSTOMERS
-    ? null
-    : apiError;
+  const error = USE_MOCK_CUSTOMERS ? null : apiError;
 
   /**
    * --------------------------------------------------------------------------
@@ -219,11 +458,9 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const deleteCustomerMutation =
-    useDeleteCustomer();
+  const deleteCustomerMutation = useDeleteCustomer();
 
-  const blacklistCustomerMutation =
-    useBlacklistCustomer();
+  const blacklistCustomerMutation = useBlacklistCustomer();
 
   /**
    * --------------------------------------------------------------------------
@@ -231,14 +468,11 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const [sortBy, setSortBy] =
-    useState<CustomerSort>("firstNameAsc");
+  const [sortBy, setSortBy] = useState<CustomerSort>("firstNameAsc");
 
-  const [draftSort, setDraftSort] =
-    useState<CustomerSort>("firstNameAsc");
+  const [draftSort, setDraftSort] = useState<CustomerSort>("firstNameAsc");
 
-  const customerSortBottomSheetRef =
-    useRef<BottomSheetModal>(null);
+  const customerSortBottomSheetRef = useRef<BottomSheetModal>(null);
 
   /**
    * --------------------------------------------------------------------------
@@ -257,6 +491,9 @@ export default function CustomersScreen() {
   const onRefresh = async () => {
     if (USE_MOCK_CUSTOMERS) {
       setMockCustomers(getMockCustomers());
+
+      setVisibleCustomerCount(CUSTOMERS_PER_BATCH);
+
       return;
     }
 
@@ -278,15 +515,9 @@ export default function CustomersScreen() {
 
     return customerList.filter((customer) => {
       return (
-        customer.name
-          .toLowerCase()
-          .includes(query) ||
-        customer.phone
-          .toLowerCase()
-          .includes(query) ||
-        customer.email
-          .toLowerCase()
-          .includes(query)
+        customer.name.toLowerCase().includes(query) ||
+        customer.phone.toLowerCase().includes(query) ||
+        customer.email.toLowerCase().includes(query)
       );
     });
   }, [customerList, search]);
@@ -303,45 +534,33 @@ export default function CustomersScreen() {
     switch (sortBy) {
       case "firstNameAsc":
         return data.sort((a, b) => {
-          const aName =
-            a.name.split(" ")[0] ?? "";
+          const aName = a.name.split(" ")[0] ?? "";
 
-          const bName =
-            b.name.split(" ")[0] ?? "";
+          const bName = b.name.split(" ")[0] ?? "";
 
           return aName.localeCompare(bName);
         });
 
       case "firstNameDesc":
         return data.sort((a, b) => {
-          const aName =
-            a.name.split(" ")[0] ?? "";
+          const aName = a.name.split(" ")[0] ?? "";
 
-          const bName =
-            b.name.split(" ")[0] ?? "";
+          const bName = b.name.split(" ")[0] ?? "";
 
           return bName.localeCompare(aName);
         });
 
       case "highestSpent":
-        return data.sort(
-          (a, b) => b.spent - a.spent
-        );
+        return data.sort((a, b) => b.spent - a.spent);
 
       case "lowestSpent":
-        return data.sort(
-          (a, b) => a.spent - b.spent
-        );
+        return data.sort((a, b) => a.spent - b.spent);
 
       case "mostOrders":
-        return data.sort(
-          (a, b) => b.orders - a.orders
-        );
+        return data.sort((a, b) => b.orders - a.orders);
 
       case "leastOrders":
-        return data.sort(
-          (a, b) => a.orders - b.orders
-        );
+        return data.sort((a, b) => a.orders - b.orders);
 
       default:
         return data;
@@ -350,22 +569,94 @@ export default function CustomersScreen() {
 
   /**
    * --------------------------------------------------------------------------
+   * RESET INFINITE SCROLL
+   * --------------------------------------------------------------------------
+   *
+   * Search and sorting should start from the beginning of the list.
+   */
+
+  useEffect(() => {
+    setVisibleCustomerCount(CUSTOMERS_PER_BATCH);
+  }, [search, sortBy]);
+
+  /**
+   * --------------------------------------------------------------------------
+   * DISPLAYED CUSTOMERS
+   * --------------------------------------------------------------------------
+   *
+   * Mock mode progressively reveals customers.
+   *
+   * API mode currently displays all customers returned by useCustomers().
+   */
+
+  const displayedCustomers = useMemo(() => {
+    if (!USE_MOCK_CUSTOMERS) {
+      return sortedCustomers;
+    }
+
+    return sortedCustomers.slice(0, visibleCustomerCount);
+  }, [sortedCustomers, visibleCustomerCount]);
+
+  /**
+   * --------------------------------------------------------------------------
+   * HAS MORE CUSTOMERS
+   * --------------------------------------------------------------------------
+   */
+
+  const hasMoreMockCustomers =
+    displayedCustomers.length < sortedCustomers.length;
+
+  /**
+   * --------------------------------------------------------------------------
+   * LOAD MORE CUSTOMERS
+   * --------------------------------------------------------------------------
+   */
+
+  const loadMoreCustomers = useCallback(() => {
+    if (!USE_MOCK_CUSTOMERS) {
+      /**
+       * API MODE
+       *
+       * The current useCustomers() hook returns the customer collection
+       * directly, so there is no API pagination to trigger here.
+       *
+       * When the API hook is converted to useInfiniteQuery, this is where
+       * fetchNextPage() should be called.
+       */
+
+      return;
+    }
+
+    if (isLoadingMoreMock || !hasMoreMockCustomers) {
+      return;
+    }
+
+    setIsLoadingMoreMock(true);
+
+    /**
+     * Simulate a small network delay for mock infinite scrolling.
+     */
+
+    setTimeout(() => {
+      setVisibleCustomerCount((currentCount) =>
+        Math.min(currentCount + CUSTOMERS_PER_BATCH, sortedCustomers.length)
+      );
+
+      setIsLoadingMoreMock(false);
+    }, 150);
+  }, [isLoadingMoreMock, hasMoreMockCustomers, sortedCustomers.length]);
+
+  /**
+   * --------------------------------------------------------------------------
    * CUSTOMER HISTORY / FIRST-TIME STATE
    * --------------------------------------------------------------------------
    */
 
-  const hasCustomers =
-    customerList.length > 0;
+  const hasCustomers = customerList.length > 0;
 
-  const isFirstTimeUser =
-    !isLoading &&
-    !hasCustomers &&
-    search.trim() === "";
+  const isFirstTimeUser = !isLoading && !hasCustomers && search.trim() === "";
 
-  const showCustomerError =
-    !isLoading &&
-    !!error &&
-    hasCustomers;
+  const showCustomerError = !isLoading && !!error && hasCustomers;
 
   /**
    * --------------------------------------------------------------------------
@@ -402,21 +693,15 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    */
 
-  async function handleWhatsApp(
-    phone: string
-  ) {
-    const cleanedPhone =
-      phone.replace(/\D/g, "");
+  async function handleWhatsApp(phone: string) {
+    const cleanedPhone = phone.replace(/\D/g, "");
 
-    const url =
-      `https://wa.me/${cleanedPhone}`;
+    const url = `https://wa.me/${cleanedPhone}`;
 
     if (await Linking.canOpenURL(url)) {
       await Linking.openURL(url);
     } else {
-      Alert.alert(
-        "WhatsApp is not installed."
-      );
+      Alert.alert("WhatsApp is not installed.");
     }
   }
 
@@ -426,9 +711,11 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    */
 
-  function handleDelete(
-    customer: Customer
-  ) {
+  function handleDelete(customer: Customer) {
+    if (deleteCustomerMutation.isPending) {
+      return;
+    }
+
     Alert.alert(
       "Delete Customer",
 
@@ -451,12 +738,16 @@ export default function CustomersScreen() {
 
             if (USE_MOCK_CUSTOMERS) {
               try {
-                deleteMockCustomer(
-                  customer.id
-                );
+                deleteMockCustomer(customer.id);
 
-                setMockCustomers(
-                  getMockCustomers()
+                setMockCustomers(getMockCustomers());
+
+                /**
+                 * Keep the list position valid after deletion.
+                 */
+
+                setVisibleCustomerCount((currentCount) =>
+                  Math.min(currentCount, getMockCustomers().length)
                 );
 
                 Alert.alert(
@@ -479,27 +770,21 @@ export default function CustomersScreen() {
              * API MODE
              */
 
-            deleteCustomerMutation.mutate(
-              customer.id,
-              {
-                onSuccess: () => {
-                  Alert.alert(
-                    "Customer Deleted",
-                    `"${customer.name}" has been deleted.`
-                  );
-                },
+            deleteCustomerMutation.mutate(customer.id, {
+              onSuccess: () => {
+                Alert.alert(
+                  "Customer Deleted",
+                  `"${customer.name}" has been deleted.`
+                );
+              },
 
-                onError: (
-                  mutationError
-                ) => {
-                  Alert.alert(
-                    "Delete Failed",
-                    mutationError.message ??
-                      "Unable to delete customer."
-                  );
-                },
-              }
-            );
+              onError: (mutationError) => {
+                Alert.alert(
+                  "Delete Failed",
+                  mutationError.message ?? "Unable to delete customer."
+                );
+              },
+            });
           },
         },
       ]
@@ -512,16 +797,15 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    */
 
-  function handleBlacklist(
-    customer: Customer
-  ) {
-    const isBlacklisted =
-      customer.isBlackListed;
+  function handleBlacklist(customer: Customer) {
+    if (blacklistCustomerMutation.isPending) {
+      return;
+    }
+
+    const isBlacklisted = customer.isBlackListed;
 
     Alert.alert(
-      isBlacklisted
-        ? "Remove from Blacklist"
-        : "Blacklist Customer",
+      isBlacklisted ? "Remove from Blacklist" : "Blacklist Customer",
 
       isBlacklisted
         ? `Are you sure you want to remove "${customer.name}" from the blacklist?`
@@ -534,13 +818,9 @@ export default function CustomersScreen() {
         },
 
         {
-          text: isBlacklisted
-            ? "Remove"
-            : "Blacklist",
+          text: isBlacklisted ? "Remove" : "Blacklist",
 
-          style: isBlacklisted
-            ? "default"
-            : "destructive",
+          style: isBlacklisted ? "default" : "destructive",
 
           onPress: () => {
             /**
@@ -549,14 +829,9 @@ export default function CustomersScreen() {
 
             if (USE_MOCK_CUSTOMERS) {
               try {
-                toggleMockCustomerBlacklist(
-                  customer.id,
-                  !isBlacklisted
-                );
+                toggleMockCustomerBlacklist(customer.id, !isBlacklisted);
 
-                setMockCustomers(
-                  getMockCustomers()
-                );
+                setMockCustomers(getMockCustomers());
 
                 Alert.alert(
                   isBlacklisted
@@ -587,8 +862,7 @@ export default function CustomersScreen() {
               {
                 id: customer.id,
 
-                isBlackListed:
-                  !isBlacklisted,
+                isBlackListed: !isBlacklisted,
               },
 
               {
@@ -604,9 +878,7 @@ export default function CustomersScreen() {
                   );
                 },
 
-                onError: (
-                  mutationError
-                ) => {
+                onError: (mutationError) => {
                   Alert.alert(
                     isBlacklisted
                       ? "Unable to Remove from Blacklist"
@@ -627,13 +899,42 @@ export default function CustomersScreen() {
 
   /**
    * --------------------------------------------------------------------------
+   * VIEW CUSTOMER
+   * --------------------------------------------------------------------------
+   */
+
+  function handleView(customerId: string) {
+    router.push({
+      pathname: "/customers/view/[id]",
+      params: {
+        id: customerId,
+      },
+    });
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * EDIT CUSTOMER
+   * --------------------------------------------------------------------------
+   */
+
+  function handleEdit(customerId: string) {
+    router.push({
+      pathname: "/customers/[id]",
+      params: {
+        id: customerId,
+      },
+    });
+  }
+
+  /**
+   * --------------------------------------------------------------------------
    * MUTATION STATE
    * --------------------------------------------------------------------------
    */
 
   const mutationPending =
-    deleteCustomerMutation.isPending ||
-    blacklistCustomerMutation.isPending;
+    deleteCustomerMutation.isPending || blacklistCustomerMutation.isPending;
 
   /**
    * --------------------------------------------------------------------------
@@ -645,8 +946,7 @@ export default function CustomersScreen() {
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor:
-          theme.background.primary,
+        backgroundColor: theme.background.primary,
       }}
     >
       <StatusBar style="auto" />
@@ -678,23 +978,18 @@ export default function CustomersScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Go back"
-              onPress={() =>
-                router.back()
-              }
+              onPress={() => router.back()}
               style={{
                 width: 44,
                 height: 44,
-                justifyContent:
-                  "center",
+                justifyContent: "center",
                 alignItems: "center",
               }}
             >
               <Ionicons
                 name="chevron-back"
                 size={24}
-                color={
-                  theme.text.primary
-                }
+                color={theme.text.primary}
               />
             </Pressable>
 
@@ -706,21 +1001,14 @@ export default function CustomersScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">
-                Customers
-              </AppText>
+              <AppText variant="h1">Customers</AppText>
 
-              <AppText
-                variant="body"
-                color="secondary"
-              >
+              <AppText variant="body" color="secondary">
                 {isLoading
                   ? "Loading customers..."
-                  : filteredCustomers.length ===
-                      0
+                  : filteredCustomers.length === 0
                     ? "Add your first customer to start building your customer list"
-                    : filteredCustomers.length ===
-                        1
+                    : filteredCustomers.length === 1
                       ? "1 customer"
                       : `${filteredCustomers.length} customers`}
               </AppText>
@@ -731,30 +1019,24 @@ export default function CustomersScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Add customer"
-              onPress={() =>
-                router.push(
-                  ROUTES.ADD_CUSTOMER
-                )
-              }
-              style={{
+              disabled={mutationPending}
+              onPress={() => router.push(ROUTES.ADD_CUSTOMER)}
+              style={({ pressed }) => ({
                 width: 44,
                 height: 44,
-                borderRadius:
-                  radius.full,
-                justifyContent:
-                  "center",
+                borderRadius: radius.full,
+                justifyContent: "center",
                 alignItems: "center",
-                backgroundColor:
-                  theme.action.primary
-                    .background,
-              }}
+                backgroundColor: pressed
+                  ? theme.action.primary.pressed
+                  : theme.action.primary.background,
+                opacity: mutationPending ? 0.5 : 1,
+              })}
             >
               <Ionicons
                 name="add"
                 size={24}
-                color={
-                  theme.action.primary.text
-                }
+                color={theme.action.primary.text}
               />
             </Pressable>
           </View>
@@ -766,10 +1048,8 @@ export default function CustomersScreen() {
           <View
             style={{
               marginTop: spacing.md,
-              flexDirection:
-                "row",
-              alignItems:
-                "center",
+              flexDirection: "row",
+              alignItems: "center",
               gap: spacing.sm,
             }}
           >
@@ -780,22 +1060,15 @@ export default function CustomersScreen() {
             >
               <SearchBar
                 value={search}
-                onChangeText={
-                  setSearch
-                }
+                onChangeText={setSearch}
                 placeholder="Search by name, phone or email"
               />
             </View>
 
             <FilterButton
-              active={
-                sortBy !==
-                "firstNameAsc"
-              }
+              active={sortBy !== "firstNameAsc"}
               onPress={() => {
-                setDraftSort(
-                  sortBy
-                );
+                setDraftSort(sortBy);
 
                 customerSortBottomSheetRef.current?.present();
               }}
@@ -809,660 +1082,333 @@ export default function CustomersScreen() {
           <View
             style={{
               flex: 1,
-              marginTop:
-                spacing.md,
+              marginTop: spacing.md,
             }}
           >
-            <ScrollView
-              style={{
-                flex: 1,
-              }}
-              showsVerticalScrollIndicator={
-                false
-              }
-              refreshControl={
-                <RefreshControl
-                  refreshing={
-                    isRefetching
-                  }
-                  onRefresh={
-                    onRefresh
-                  }
-                  tintColor={
-                    theme.icon
-                      .branding
-                      .icon
-                  }
-                  colors={[
-                    theme.icon
-                      .branding
-                      .icon,
-                  ]}
-                  progressBackgroundColor={
-                    theme.background
-                      .surface
-                  }
+            {/* ============================================================
+                INITIAL LOADING
+            ============================================================ */}
+
+            {isLoading ? (
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingVertical: spacing["3xl"],
+                }}
+              >
+                <ActivityIndicator
+                  size="large"
+                  color={theme.icon.branding.icon}
                 />
-              }
-              contentContainerStyle={{
-                flexGrow: 1,
-                paddingBottom:
-                  spacing["2xl"],
-              }}
-            >
-              {/* INITIAL LOADING */}
 
-              {isLoading ? (
-                <View
+                <AppText
+                  color="secondary"
                   style={{
-                    flex: 1,
-                    justifyContent:
-                      "center",
-                    alignItems:
-                      "center",
-                    paddingVertical:
-                      spacing["3xl"],
+                    marginTop: spacing.md,
                   }}
                 >
-                  <ActivityIndicator
-                    size="large"
-                    color={
-                      theme.icon
-                        .branding
-                        .icon
-                    }
+                  Loading customers...
+                </AppText>
+              </View>
+            ) : showCustomerError ? (
+              /* ==========================================================
+                 ERROR
+              ========================================================== */
+
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingVertical: spacing["3xl"],
+                }}
+              >
+                <View
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: radius.full,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: theme.background.error,
+                  }}
+                >
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={30}
+                    color={theme.icon.error.icon}
                   />
-
-                  <AppText
-                    color="secondary"
-                    style={{
-                      marginTop:
-                        spacing.md,
-                    }}
-                  >
-                    Loading
-                    customers...
-                  </AppText>
                 </View>
-              ) : showCustomerError ? (
-                /* ERROR */
 
+                <AppText
+                  variant="bodyLargeBold"
+                  style={{
+                    marginTop: spacing.md,
+                    textAlign: "center",
+                  }}
+                >
+                  Unable to load customers
+                </AppText>
+
+                <AppText
+                  variant="body"
+                  color="secondary"
+                  style={{
+                    marginTop: spacing.xs,
+                    textAlign: "center",
+                    maxWidth: 320,
+                  }}
+                >
+                  We couldn't load your customers. Please try again.
+                </AppText>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Try again"
+                  onPress={() => apiRefetch()}
+                  style={{
+                    marginTop: spacing.md,
+                    paddingVertical: spacing.xs,
+                    paddingHorizontal: spacing.sm,
+                  }}
+                >
+                  <AppText color="link">Try Again</AppText>
+                </Pressable>
+              </View>
+            ) : isFirstTimeUser ? (
+              /* ==========================================================
+                 FIRST-TIME USER
+              ========================================================== */
+
+              <Card
+                style={{
+                  alignItems: "center",
+                  paddingVertical: spacing.xl,
+                  paddingHorizontal: spacing.lg,
+                }}
+              >
                 <View
                   style={{
-                    flex: 1,
-                    justifyContent:
-                      "center",
-                    alignItems:
-                      "center",
-                    paddingVertical:
-                      spacing["3xl"],
+                    width: 64,
+                    height: 64,
+                    borderRadius: radius.full,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: theme.icon.branding.background,
                   }}
                 >
-                  <View
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius:
-                        radius.full,
-                      justifyContent:
-                        "center",
-                      alignItems:
-                        "center",
-                      backgroundColor:
-                        theme.background
-                          .error,
-                    }}
-                  >
-                    <Ionicons
-                      name="alert-circle-outline"
-                      size={30}
-                      color={
-                        theme.icon
-                          .error
-                          .icon
-                      }
-                    />
-                  </View>
-
-                  <AppText
-                    variant="bodyLargeBold"
-                    style={{
-                      marginTop:
-                        spacing.md,
-                      textAlign:
-                        "center",
-                    }}
-                  >
-                    Unable to load
-                    customers
-                  </AppText>
-
-                  <AppText
-                    variant="body"
-                    color="secondary"
-                    style={{
-                      marginTop:
-                        spacing.xs,
-                      textAlign:
-                        "center",
-                      maxWidth: 320,
-                    }}
-                  >
-                    We couldn't load
-                    your customers.
-                    Please try
-                    again.
-                  </AppText>
-
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Try again"
-                    onPress={() =>
-                      apiRefetch()
-                    }
-                    style={{
-                      marginTop:
-                        spacing.md,
-                      paddingVertical:
-                        spacing.xs,
-                      paddingHorizontal:
-                        spacing.sm,
-                    }}
-                  >
-                    <AppText color="link">
-                      Try Again
-                    </AppText>
-                  </Pressable>
-                </View>
-              ) : isFirstTimeUser ? (
-                /* FIRST-TIME USER */
-
-                <Card
-                  style={{
-                    alignItems:
-                      "center",
-                    paddingVertical:
-                      spacing.xl,
-                    paddingHorizontal:
-                      spacing.lg,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius:
-                        radius.full,
-                      alignItems:
-                        "center",
-                      justifyContent:
-                        "center",
-                      backgroundColor:
-                        theme.icon
-                          .branding
-                          .background,
-                    }}
-                  >
-                    <Ionicons
-                      name="people-outline"
-                      size={32}
-                      color={
-                        theme.icon
-                          .branding
-                          .icon
-                      }
-                    />
-                  </View>
-
-                  <AppText
-                    variant="bodyLargeBold"
-                    style={{
-                      marginTop:
-                        spacing.md,
-                      textAlign:
-                        "center",
-                    }}
-                  >
-                    No customers yet
-                  </AppText>
-
-                  <AppText
-                    variant="body"
-                    color="secondary"
-                    style={{
-                      marginTop:
-                        spacing.xs,
-                      textAlign:
-                        "center",
-                      maxWidth: 320,
-                    }}
-                  >
-                    Add your first
-                    customer to
-                    start managing
-                    customer
-                    information and
-                    orders.
-                  </AppText>
-
-                  <Button
-                    title="Add Customer"
-                    variant="primary"
-                    style={{
-                      marginTop:
-                        spacing.lg,
-                    }}
-                    onPress={() =>
-                      router.push(
-                        ROUTES.ADD_CUSTOMER
-                      )
-                    }
+                  <Ionicons
+                    name="people-outline"
+                    size={32}
+                    color={theme.icon.branding.icon}
                   />
+                </View>
 
-                  <AppText
-                    variant="caption"
-                    color="muted"
-                    style={{
-                      marginTop:
-                        spacing.sm,
-                      textAlign:
-                        "center",
-                    }}
-                  >
-                    You can update
-                    customer details
-                    and contact them
-                    anytime.
-                  </AppText>
-                </Card>
-              ) : hasNoSearchResults ? (
-                /* NO SEARCH RESULTS */
-
-                <Card
+                <AppText
+                  variant="bodyLargeBold"
                   style={{
-                    alignItems:
-                      "center",
-                    paddingVertical:
-                      spacing.xl,
-                    paddingHorizontal:
-                      spacing.lg,
+                    marginTop: spacing.md,
+                    textAlign: "center",
                   }}
                 >
-                  <View
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius:
-                        radius.full,
-                      alignItems:
-                        "center",
-                      justifyContent:
-                        "center",
-                      backgroundColor:
-                        theme.icon
-                          .default
-                          .background,
-                    }}
-                  >
-                    <Ionicons
-                      name="search-outline"
-                      size={28}
-                      color={
-                        theme.icon
-                          .default
-                          .icon
-                      }
-                    />
-                  </View>
+                  No customers yet
+                </AppText>
 
-                  <AppText
-                    variant="bodyLargeBold"
-                    style={{
-                      marginTop:
-                        spacing.md,
-                      textAlign:
-                        "center",
-                    }}
-                  >
-                    No customers
-                    found
-                  </AppText>
+                <AppText
+                  variant="body"
+                  color="secondary"
+                  style={{
+                    marginTop: spacing.xs,
+                    textAlign: "center",
+                    maxWidth: 320,
+                  }}
+                >
+                  Add your first customer to start managing customer information
+                  and orders.
+                </AppText>
 
-                  <AppText
-                    variant="body"
-                    color="secondary"
-                    style={{
-                      marginTop:
-                        spacing.xs,
-                      textAlign:
-                        "center",
-                    }}
-                  >
-                    Try searching
-                    with a different
-                    name, phone
-                    number or email.
-                  </AppText>
+                <Button
+                  title="Add Customer"
+                  variant="primary"
+                  style={{
+                    marginTop: spacing.lg,
+                  }}
+                  onPress={() => router.push(ROUTES.ADD_CUSTOMER)}
+                />
 
-                  <Pressable
-                    onPress={() =>
-                      setSearch("")
-                    }
-                    style={{
-                      marginTop:
-                        spacing.md,
-                    }}
-                  >
-                    <AppText color="link">
-                      Clear Search
-                    </AppText>
-                  </Pressable>
-                </Card>
-              ) : (
-                /* CUSTOMER LIST */
+                <AppText
+                  variant="caption"
+                  color="muted"
+                  style={{
+                    marginTop: spacing.sm,
+                    textAlign: "center",
+                  }}
+                >
+                  You can update customer details and contact them anytime.
+                </AppText>
+              </Card>
+            ) : hasNoSearchResults ? (
+              /* ==========================================================
+                 NO SEARCH RESULTS
+              ========================================================== */
 
+              <Card
+                style={{
+                  alignItems: "center",
+                  paddingVertical: spacing.xl,
+                  paddingHorizontal: spacing.lg,
+                }}
+              >
                 <View
                   style={{
-                    gap: spacing.md,
+                    width: 56,
+                    height: 56,
+                    borderRadius: radius.full,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: theme.icon.default.background,
                   }}
                 >
-                  {sortedCustomers.map(
-                    (customer) => (
-                      <Swipeable
-                        key={
-                          customer.id
-                        }
-                        renderRightActions={() => (
-                          <RightActions
-                            isBlacklisted={
-                              customer.isBlackListed
-                            }
-                            disabled={
-                              mutationPending
-                            }
-                            onBlacklist={() => {
-                              if (
-                                !mutationPending
-                              ) {
-                                handleBlacklist(
-                                  customer
-                                );
-                              }
-                            }}
-                            onDelete={() => {
-                              if (
-                                !mutationPending
-                              ) {
-                                handleDelete(
-                                  customer
-                                );
-                              }
-                            }}
-                          />
-                        )}
+                  <Ionicons
+                    name="search-outline"
+                    size={28}
+                    color={theme.icon.default.icon}
+                  />
+                </View>
+
+                <AppText
+                  variant="bodyLargeBold"
+                  style={{
+                    marginTop: spacing.md,
+                    textAlign: "center",
+                  }}
+                >
+                  No customers found
+                </AppText>
+
+                <AppText
+                  variant="body"
+                  color="secondary"
+                  style={{
+                    marginTop: spacing.xs,
+                    textAlign: "center",
+                  }}
+                >
+                  Try searching with a different name, phone number or email.
+                </AppText>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear search"
+                  onPress={() => setSearch("")}
+                  style={{
+                    marginTop: spacing.md,
+                  }}
+                >
+                  <AppText color="link">Clear Search</AppText>
+                </Pressable>
+              </Card>
+            ) : (
+              /* ==========================================================
+                 CUSTOMER LIST
+              ========================================================== */
+
+              <FlatList
+                style={{
+                  flex: 1,
+                }}
+                data={displayedCustomers}
+                keyExtractor={(item) => String(item.id)}
+                renderItem={({ item }) => (
+                  <CustomerCard
+                    customer={item}
+                    mutationPending={mutationPending}
+                    onBlacklist={handleBlacklist}
+                    onDelete={handleDelete}
+                    onCall={handleCall}
+                    onWhatsApp={handleWhatsApp}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                  />
+                )}
+                ItemSeparatorComponent={() => (
+                  <View
+                    style={{
+                      height: spacing.md,
+                    }}
+                  />
+                )}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                refreshControl={
+                  <RefreshControl
+                    refreshing={isRefetching}
+                    onRefresh={onRefresh}
+                    tintColor={theme.icon.branding.icon}
+                    colors={[theme.icon.branding.icon]}
+                    progressBackgroundColor={theme.background.surface}
+                  />
+                }
+                contentContainerStyle={{
+                  paddingTop: spacing.md,
+                  paddingBottom: spacing["2xl"],
+                }}
+                onEndReached={loadMoreCustomers}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={
+                  <>
+                    {/* ==================================================
+                        LOADING MORE
+                    ================================================== */}
+
+                    {isLoadingMoreMock && (
+                      <View
+                        style={{
+                          paddingVertical: spacing.lg,
+                          alignItems: "center",
+                        }}
                       >
-                        <Card>
-                          {/* CUSTOMER HEADER */}
+                        <ActivityIndicator
+                          size="small"
+                          color={theme.icon.branding.icon}
+                        />
 
-                          <View
-                            style={{
-                              flexDirection:
-                                "row",
-                              alignItems:
-                                "center",
-                              gap: spacing.sm,
-                            }}
-                          >
-                            <Ionicons
-                              name="person-circle"
-                              size={56}
-                              color={
-                                theme.icon
-                                  .default
-                                  .icon
-                              }
-                            />
+                        <AppText
+                          variant="caption"
+                          color="secondary"
+                          style={{
+                            marginTop: spacing.xs,
+                          }}
+                        >
+                          Loading more customers...
+                        </AppText>
+                      </View>
+                    )}
 
-                            <View
-                              style={{
-                                flex: 1,
-                              }}
-                            >
-                              <View
-                                style={{
-                                  flexDirection:
-                                    "row",
-                                  alignItems:
-                                    "center",
-                                  gap: spacing.sm,
-                                }}
-                              >
-                                <AppText variant="h3">
-                                  {
-                                    customer.name
-                                  }
-                                </AppText>
+                    {/* ==================================================
+                        END OF LIST
+                    ================================================== */}
 
-                                {customer.isBlackListed && (
-                                  <View
-                                    style={{
-                                      paddingHorizontal:
-                                        spacing.sm,
-                                      paddingVertical:
-                                        spacing.xs,
-                                      borderRadius:
-                                        radius.full,
-                                      backgroundColor:
-                                        theme
-                                          .state
-                                          .error
-                                          .background,
-                                    }}
-                                  >
-                                    <AppText
-                                      variant="caption"
-                                      color="error"
-                                    >
-                                      Blacklisted
-                                    </AppText>
-                                  </View>
-                                )}
-                              </View>
-
-                              <AppText
-                                variant="body"
-                                color="secondary"
-                              >
-                                {
-                                  customer.phone
-                                }
-                              </AppText>
-                            </View>
-
-                            {/* VIEW / EDIT */}
-
-                            <View
-                              style={{
-                                flexDirection:
-                                  "row",
-                                alignItems:
-                                  "center",
-                                gap: spacing.xs,
-                              }}
-                            >
-                              <Pressable
-                                accessibilityRole="button"
-                                accessibilityLabel={`View ${customer.name}`}
-                                style={{
-                                  width: 40,
-                                  height: 40,
-                                  borderRadius:
-                                    radius.full,
-                                  justifyContent:
-                                    "center",
-                                  alignItems:
-                                    "center",
-                                }}
-                                onPress={() =>
-                                  router.push(
-                                    {
-                                      pathname:
-                                        "/customers/view/[id]",
-                                      params:
-                                        {
-                                          id: customer.id,
-                                        },
-                                    }
-                                  )
-                                }
-                              >
-                                <Ionicons
-                                  name="eye-outline"
-                                  size={20}
-                                  color={
-                                    theme
-                                      .state
-                                      .info
-                                      .icon
-                                  }
-                                />
-                              </Pressable>
-
-                              <Pressable
-                                accessibilityRole="button"
-                                accessibilityLabel={`Edit ${customer.name}`}
-                                style={{
-                                  width: 40,
-                                  height: 40,
-                                  borderRadius:
-                                    radius.full,
-                                  justifyContent:
-                                    "center",
-                                  alignItems:
-                                    "center",
-                                }}
-                                onPress={() =>
-                                  router.push(
-                                    {
-                                      pathname:
-                                        "/customers/[id]",
-                                      params:
-                                        {
-                                          id: customer.id,
-                                        },
-                                    }
-                                  )
-                                }
-                              >
-                                <Ionicons
-                                  name="create-outline"
-                                  size={20}
-                                  color={
-                                    theme
-                                      .icon
-                                      .default
-                                      .icon
-                                  }
-                                />
-                              </Pressable>
-                            </View>
-                          </View>
-
-                          {/* DIVIDER */}
-
-                          <Divider
-                            style={{
-                              marginVertical:
-                                spacing.rg,
-                            }}
-                          />
-
-                          {/* CUSTOMER ACTIONS */}
-
-                          <View
-                            style={{
-                              flexDirection:
-                                "row",
-                              alignItems:
-                                "center",
-                              justifyContent:
-                                "flex-end",
-                              gap: spacing.sm,
-                            }}
-                          >
-                            {/* CALL */}
-
-                            <Pressable
-                              accessibilityRole="button"
-                              accessibilityLabel={`Call ${customer.name}`}
-                              style={{
-                                width: 44,
-                                height: 44,
-                                borderRadius:
-                                  radius.full,
-                                justifyContent:
-                                  "center",
-                                alignItems:
-                                  "center",
-                                backgroundColor:
-                                  theme
-                                    .background
-                                    .subtle,
-                              }}
-                              onPress={() =>
-                                handleCall(
-                                  customer.phone
-                                )
-                              }
-                            >
-                              <Ionicons
-                                name="call-outline"
-                                size={22}
-                                color={
-                                  theme.icon
-                                    .default
-                                    .icon
-                                }
-                              />
-                            </Pressable>
-
-                            {/* WHATSAPP */}
-
-                            <Pressable
-                              accessibilityRole="button"
-                              accessibilityLabel={`WhatsApp ${customer.name}`}
-                              style={{
-                                width: 44,
-                                height: 44,
-                                borderRadius:
-                                  radius.full,
-                                justifyContent:
-                                  "center",
-                                alignItems:
-                                  "center",
-                                backgroundColor:
-                                  "#25D36615",
-                              }}
-                              onPress={() =>
-                                handleWhatsApp(
-                                  customer.phone
-                                )
-                              }
-                            >
-                              <Ionicons
-                                name="logo-whatsapp"
-                                size={22}
-                                color="#25D366"
-                              />
-                            </Pressable>
-                          </View>
-                        </Card>
-                      </Swipeable>
-                    )
-                  )}
-                </View>
-              )}
-            </ScrollView>
+                    {!isLoadingMoreMock &&
+                      !hasMoreMockCustomers &&
+                      displayedCustomers.length > 0 && (
+                        <View
+                          style={{
+                            paddingVertical: spacing.lg,
+                            alignItems: "center",
+                          }}
+                        >
+                          <AppText variant="caption" color="muted">
+                            You've reached the end of your customers.
+                          </AppText>
+                        </View>
+                      )}
+                  </>
+                }
+              />
+            )}
           </View>
 
           {/* ================================================================
@@ -1470,13 +1416,9 @@ export default function CustomersScreen() {
           ================================================================ */}
 
           <CustomerSortBottomSheet
-            ref={
-              customerSortBottomSheetRef
-            }
+            ref={customerSortBottomSheetRef}
             draftSort={draftSort}
-            setDraftSort={
-              setDraftSort
-            }
+            setDraftSort={setDraftSort}
             onApply={(sort) => {
               setSortBy(sort);
             }}

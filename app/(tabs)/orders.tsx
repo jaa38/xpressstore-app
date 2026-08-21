@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -54,7 +54,20 @@ import { spacing, theme, radius } from "@/theme";
  *
  * Set to false when the Orders API is ready.
  */
+
 const USE_MOCK_ORDERS = true;
+
+/**
+ * ============================================================================
+ * INFINITE SCROLL CONFIGURATION
+ * ============================================================================
+ *
+ * In mock mode, orders are progressively revealed in batches.
+ *
+ * In API mode, the actual API pagination is handled by useOrders().
+ */
+
+const ORDERS_PER_BATCH = 10;
 
 /**
  * ============================================================================
@@ -334,7 +347,7 @@ const MOCK_ORDERS: Order[] = [
 
 /**
  * ============================================================================
- * MOCK PAGINATION
+ * MOCK PAGE
  * ============================================================================
  */
 
@@ -370,10 +383,6 @@ export default function OrdersScreen() {
    * -------------------------------------------------------------------------
    * ORDERS
    * -------------------------------------------------------------------------
-   *
-   * When USE_MOCK_ORDERS is true, the screen completely uses the mock data.
-   *
-   * When false, the existing API data is used.
    */
 
   const orders = useMemo(() => {
@@ -397,6 +406,16 @@ export default function OrdersScreen() {
   const isFetchingNextPage = USE_MOCK_ORDERS ? false : apiIsFetchingNextPage;
 
   const hasNextPage = USE_MOCK_ORDERS ? false : apiHasNextPage;
+
+  /**
+   * -------------------------------------------------------------------------
+   * MOCK INFINITE SCROLL STATE
+   * -------------------------------------------------------------------------
+   */
+
+  const [visibleOrderCount, setVisibleOrderCount] = useState(ORDERS_PER_BATCH);
+
+  const [isLoadingMoreMock, setIsLoadingMoreMock] = useState(false);
 
   /**
    * -------------------------------------------------------------------------
@@ -542,6 +561,91 @@ export default function OrdersScreen() {
 
   /**
    * -------------------------------------------------------------------------
+   * RESET MOCK INFINITE SCROLL
+   * -------------------------------------------------------------------------
+   *
+   * Whenever search, status or advanced filters change, start again from the
+   * first batch.
+   */
+
+  useEffect(() => {
+    setVisibleOrderCount(ORDERS_PER_BATCH);
+  }, [searchQuery, selectedFilter, appliedFilters]);
+
+  /**
+   * -------------------------------------------------------------------------
+   * DISPLAYED ORDERS
+   * -------------------------------------------------------------------------
+   */
+
+  const displayedOrders = useMemo(() => {
+    if (!USE_MOCK_ORDERS) {
+      return filteredOrders;
+    }
+
+    return filteredOrders.slice(0, visibleOrderCount);
+  }, [filteredOrders, visibleOrderCount]);
+
+  /**
+   * -------------------------------------------------------------------------
+   * MOCK HAS MORE
+   * -------------------------------------------------------------------------
+   */
+
+  const hasMoreMockOrders = displayedOrders.length < filteredOrders.length;
+
+  /**
+   * -------------------------------------------------------------------------
+   * LOAD MORE ORDERS
+   * -------------------------------------------------------------------------
+   */
+
+  const loadMoreOrders = useCallback(() => {
+    /**
+     * API MODE
+     */
+
+    if (!USE_MOCK_ORDERS) {
+      if (hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+
+      return;
+    }
+
+    /**
+     * MOCK MODE
+     */
+
+    if (isLoadingMoreMock || !hasMoreMockOrders) {
+      return;
+    }
+
+    setIsLoadingMoreMock(true);
+
+    /**
+     * Small delay gives the footer loader time to render and makes the
+     * infinite-scroll behaviour feel natural during mock development.
+     */
+
+    setTimeout(() => {
+      setVisibleOrderCount((currentCount) =>
+        Math.min(currentCount + ORDERS_PER_BATCH, filteredOrders.length)
+      );
+
+      setIsLoadingMoreMock(false);
+    }, 150);
+  }, [
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    isLoadingMoreMock,
+    hasMoreMockOrders,
+    filteredOrders.length,
+  ]);
+
+  /**
+   * -------------------------------------------------------------------------
    * ORDERS THIS WEEK
    * -------------------------------------------------------------------------
    */
@@ -637,12 +741,26 @@ export default function OrdersScreen() {
 
       await new Promise((resolve) => setTimeout(resolve, 600));
 
+      /**
+       * Reset infinite scroll to the first batch.
+       */
+
+      setVisibleOrderCount(ORDERS_PER_BATCH);
+
       setRefreshingMock(false);
 
       return;
     }
 
     await refetch();
+
+    /**
+     * The API itself controls how many pages are loaded.
+     * Resetting this state is harmless and keeps the screen consistent
+     * if the mode is changed during development.
+     */
+
+    setVisibleOrderCount(ORDERS_PER_BATCH);
   };
 
   /**
@@ -878,9 +996,7 @@ export default function OrdersScreen() {
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Try again"
-                    onPress={() => {
-                      refetch();
-                    }}
+                    onPress={() => refetch()}
                     style={{
                       marginTop: spacing.md,
                       paddingVertical: spacing.xs,
@@ -1048,14 +1164,14 @@ export default function OrdersScreen() {
                 </View>
               ) : (
                 /* ==========================================================
-                   ORDER LIST
+                   ORDER LIST — INFINITE SCROLL
                 ========================================================== */
 
                 <FlatList
                   style={{
                     flex: 1,
                   }}
-                  data={filteredOrders}
+                  data={displayedOrders}
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
                   refreshControl={
@@ -1067,17 +1183,17 @@ export default function OrdersScreen() {
                       progressBackgroundColor={theme.background.surface}
                     />
                   }
-                  onEndReached={() => {
-                    if (
-                      !USE_MOCK_ORDERS &&
-                      hasNextPage &&
-                      !isFetchingNextPage
-                    ) {
-                      fetchNextPage();
-                    }
-                  }}
+                  onEndReached={loadMoreOrders}
                   onEndReachedThreshold={0.5}
+                  contentContainerStyle={{
+                    paddingTop: spacing.md,
+                    gap: spacing.md,
+                    paddingBottom: spacing.lg,
+                  }}
+                  keyExtractor={(item) => item.id}
                   ListFooterComponent={
+                    (USE_MOCK_ORDERS && hasMoreMockOrders) ||
+                    isLoadingMoreMock ||
                     isFetchingNextPage ? (
                       <View
                         style={{
@@ -1085,16 +1201,36 @@ export default function OrdersScreen() {
                           alignItems: "center",
                         }}
                       >
-                        <ActivityIndicator color={theme.icon.branding.icon} />
+                        <ActivityIndicator
+                          size="small"
+                          color={theme.icon.branding.icon}
+                        />
+
+                        <AppText
+                          variant="caption"
+                          color="secondary"
+                          style={{
+                            marginTop: spacing.xs,
+                          }}
+                        >
+                          Loading more orders...
+                        </AppText>
                       </View>
-                    ) : null
+                    ) : (
+                      <View
+                        style={{
+                          paddingVertical: spacing.lg,
+                          alignItems: "center",
+                        }}
+                      >
+                        <AppText variant="caption" color="muted">
+                          {USE_MOCK_ORDERS && filteredOrders.length > 0
+                            ? "You've reached the end of your orders."
+                            : ""}
+                        </AppText>
+                      </View>
+                    )
                   }
-                  contentContainerStyle={{
-                    paddingTop: spacing.md,
-                    gap: spacing.md,
-                    paddingBottom: spacing.lg,
-                  }}
-                  keyExtractor={(item) => item.id}
                   renderItem={({ item: order }) => {
                     /**
                      * STATUS

@@ -1,36 +1,44 @@
+// src/hooks/orders/useOrder.ts
+
 import { useQuery } from "@tanstack/react-query";
 
-import { getOrderById } from "@/services/order/order-service";
+import { getMockOrderById } from "@/mocks/orders";
+import { USE_MOCK_ORDERS } from "@/mocks/config";
 
-import { queryKeys } from "@/lib/queryKeys";
+import type { Order } from "@/types/order";
 
-import { queryWithCache } from "@/database/query";
+/**
+ * ============================================================================
+ * USE ORDER
+ * ============================================================================
+ */
 
-const ORDER_CACHE_MAX_AGE =
-  1000 * 60 * 30;
+export function useOrder(id: string) {
+  return useQuery<Order | undefined>({
+    queryKey: ["order", id],
 
-export function useOrder(orderId?: string) {
-  const queryKey = orderId
-    ? queryKeys.order(orderId)
-    : ([...queryKeys.orders, "detail"] as const);
+    queryFn: async () => {
+      /**
+       * -----------------------------------------------------------------------
+       * MOCK MODE
+       * -----------------------------------------------------------------------
+       */
 
-  return useQuery({
-    queryKey,
-
-    queryFn: () => {
-      if (!orderId) {
-        throw new Error("Order ID is required.");
+      if (USE_MOCK_ORDERS) {
+        return getMockOrderById(id);
       }
 
-      return queryWithCache(
-        queryKey,
-        () => getOrderById(orderId),
-        {
-          maxAge: ORDER_CACHE_MAX_AGE,
-        }
-      );
+      /**
+       * -----------------------------------------------------------------------
+       * API MODE
+       * -----------------------------------------------------------------------
+       *
+       * Replace this with the real Orders API once the service is available.
+       */
+
+      throw new Error("Orders API is not implemented yet.");
     },
 
-    enabled: Boolean(orderId),
+    enabled: Boolean(id),
   });
 }

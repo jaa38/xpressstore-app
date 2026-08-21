@@ -1,38 +1,79 @@
+// src/hooks/orders/useOrders.ts
+
 import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { getOrdersPage } from "@/services/order/order-service";
+import { USE_MOCK_ORDERS } from "@/mocks/config";
+import { getMockOrders } from "@/mocks/orders";
 
-import { queryKeys } from "@/lib/queryKeys";
+import type { Order } from "@/types/order";
 
-import { queryWithCache } from "@/database/query";
+interface OrdersPage {
+  orders: Order[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+}
 
-const ORDERS_PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
-const ORDERS_CACHE_MAX_AGE = 1000 * 60 * 30;
+/**
+ * ============================================================================
+ * USE ORDERS
+ * ============================================================================
+ */
 
 export function useOrders() {
-  return useInfiniteQuery({
-    queryKey: queryKeys.orders,
+  return useInfiniteQuery<OrdersPage>({
+    queryKey: ["orders"],
 
     initialPageParam: 1,
 
-    queryFn: ({ pageParam }) =>
-      queryWithCache(
-        queryKeys.ordersPage(pageParam, ORDERS_PAGE_SIZE),
-        () => getOrdersPage(pageParam, ORDERS_PAGE_SIZE),
-        {
-          maxAge: ORDERS_CACHE_MAX_AGE,
-        }
-      ),
+    queryFn: async ({ pageParam }) => {
+      const page = Number(pageParam);
 
-    getNextPageParam: (lastPage) => {
-      const loadedCount = lastPage.pageNumber * lastPage.pageSize;
+      /**
+       * -----------------------------------------------------------------------
+       * MOCK MODE
+       * -----------------------------------------------------------------------
+       */
 
-      if (loadedCount >= lastPage.totalCount) {
-        return undefined;
+      if (USE_MOCK_ORDERS) {
+        const orders = getMockOrders();
+
+        const startIndex = (page - 1) * PAGE_SIZE;
+
+        const endIndex = startIndex + PAGE_SIZE;
+
+        const paginatedOrders = orders.slice(startIndex, endIndex);
+
+        return {
+          orders: paginatedOrders,
+
+          pageNumber: page,
+
+          pageSize: PAGE_SIZE,
+
+          totalCount: orders.length,
+        };
       }
 
-      return lastPage.pageNumber + 1;
+      /**
+       * -----------------------------------------------------------------------
+       * API MODE
+       * -----------------------------------------------------------------------
+       *
+       * Connect your real Orders API here.
+       */
+
+      throw new Error("Orders API is not implemented yet.");
+    },
+
+    getNextPageParam: (lastPage) => {
+      const totalPages = Math.ceil(lastPage.totalCount / lastPage.pageSize);
+
+      const nextPage = lastPage.pageNumber + 1;
+
+      return nextPage <= totalPages ? nextPage : undefined;
     },
   });
 }

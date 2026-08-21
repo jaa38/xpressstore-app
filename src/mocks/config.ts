@@ -18,3 +18,5 @@ export const USE_MOCK_PRODUCTS = true;
 export const USE_MOCK_CUSTOMERS = true;
 
 export const USE_MOCK_PAYMENT_LINKS = true;
+
+export const USE_MOCK_ORDERS = true;

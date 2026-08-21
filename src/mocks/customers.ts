@@ -128,12 +128,8 @@ export function getMockCustomers(): Customer[] {
  * ============================================================================
  */
 
-export function getMockCustomerById(
-  id: string
-): Customer | undefined {
-  return MOCK_CUSTOMERS.find(
-    (customer) => customer.id === id
-  );
+export function getMockCustomerById(id: string): Customer | undefined {
+  return MOCK_CUSTOMERS.find((customer) => customer.id === id);
 }
 
 /**
@@ -143,10 +139,7 @@ export function getMockCustomerById(
  */
 
 export function createMockCustomer(
-  customer: Omit<
-    Customer,
-    "id" | "created_at" | "updated_at"
-  >
+  customer: Omit<Customer, "id" | "created_at" | "updated_at">
 ): Customer {
   const now = new Date().toISOString();
 
@@ -172,17 +165,23 @@ export function updateMockCustomer(
   id: string,
   updates: Partial<Customer>
 ): Customer | undefined {
-  const customerIndex =
-    MOCK_CUSTOMERS.findIndex(
-      (customer) => customer.id === id
-    );
+  const customerIndex = MOCK_CUSTOMERS.findIndex(
+    (customer) => customer.id === id
+  );
 
   if (customerIndex === -1) {
     return undefined;
   }
 
-  const existingCustomer =
-    MOCK_CUSTOMERS[customerIndex];
+  /**
+   * TypeScript needs an explicit guard here because Array[index]
+   * can be undefined even after checking the index.
+   */
+  const existingCustomer = MOCK_CUSTOMERS[customerIndex];
+
+  if (!existingCustomer) {
+    return undefined;
+  }
 
   const updatedCustomer: Customer = {
     ...existingCustomer,
@@ -200,8 +199,7 @@ export function updateMockCustomer(
     updated_at: new Date().toISOString(),
   };
 
-  MOCK_CUSTOMERS[customerIndex] =
-    updatedCustomer;
+  MOCK_CUSTOMERS[customerIndex] = updatedCustomer;
 
   return updatedCustomer;
 }
@@ -212,22 +210,16 @@ export function updateMockCustomer(
  * ============================================================================
  */
 
-export function deleteMockCustomer(
-  id: string
-): boolean {
-  const customerIndex =
-    MOCK_CUSTOMERS.findIndex(
-      (customer) => customer.id === id
-    );
+export function deleteMockCustomer(id: string): boolean {
+  const customerIndex = MOCK_CUSTOMERS.findIndex(
+    (customer) => customer.id === id
+  );
 
   if (customerIndex === -1) {
     return false;
   }
 
-  MOCK_CUSTOMERS.splice(
-    customerIndex,
-    1
-  );
+  MOCK_CUSTOMERS.splice(customerIndex, 1);
 
   return true;
 }
@@ -258,17 +250,19 @@ export function toggleMockCustomerBlacklist(
   id: string,
   isBlackListed?: boolean
 ): Customer | undefined {
-  const customerIndex =
-    MOCK_CUSTOMERS.findIndex(
-      (customer) => customer.id === id
-    );
+  const customerIndex = MOCK_CUSTOMERS.findIndex(
+    (customer) => customer.id === id
+  );
 
   if (customerIndex === -1) {
     return undefined;
   }
 
-  const existingCustomer =
-    MOCK_CUSTOMERS[customerIndex];
+  const existingCustomer = MOCK_CUSTOMERS[customerIndex];
+
+  if (!existingCustomer) {
+    return undefined;
+  }
 
   const nextStatus =
     typeof isBlackListed === "boolean"
@@ -283,8 +277,7 @@ export function toggleMockCustomerBlacklist(
     updated_at: new Date().toISOString(),
   };
 
-  MOCK_CUSTOMERS[customerIndex] =
-    updatedCustomer;
+  MOCK_CUSTOMERS[customerIndex] = updatedCustomer;
 
   return updatedCustomer;
 }
@@ -299,17 +292,19 @@ export function setMockCustomerBlacklist(
   id: string,
   isBlackListed: boolean
 ): Customer | undefined {
-  const customerIndex =
-    MOCK_CUSTOMERS.findIndex(
-      (customer) => customer.id === id
-    );
+  const customerIndex = MOCK_CUSTOMERS.findIndex(
+    (customer) => customer.id === id
+  );
 
   if (customerIndex === -1) {
     return undefined;
   }
 
-  const existingCustomer =
-    MOCK_CUSTOMERS[customerIndex];
+  const existingCustomer = MOCK_CUSTOMERS[customerIndex];
+
+  if (!existingCustomer) {
+    return undefined;
+  }
 
   const updatedCustomer: Customer = {
     ...existingCustomer,
@@ -319,8 +314,7 @@ export function setMockCustomerBlacklist(
     updated_at: new Date().toISOString(),
   };
 
-  MOCK_CUSTOMERS[customerIndex] =
-    updatedCustomer;
+  MOCK_CUSTOMERS[customerIndex] = updatedCustomer;
 
   return updatedCustomer;
 }
@@ -331,11 +325,8 @@ export function setMockCustomerBlacklist(
  * ============================================================================
  */
 
-export function searchMockCustomers(
-  query: string
-): Customer[] {
-  const normalizedQuery =
-    query.trim().toLowerCase();
+export function searchMockCustomers(query: string): Customer[] {
+  const normalizedQuery = query.trim().toLowerCase();
 
   if (!normalizedQuery) {
     return getMockCustomers();
@@ -343,15 +334,9 @@ export function searchMockCustomers(
 
   return MOCK_CUSTOMERS.filter(
     (customer) =>
-      customer.name
-        .toLowerCase()
-        .includes(normalizedQuery) ||
-      customer.phone
-        .toLowerCase()
-        .includes(normalizedQuery) ||
-      customer.email
-        .toLowerCase()
-        .includes(normalizedQuery)
+      customer.name.toLowerCase().includes(normalizedQuery) ||
+      customer.phone.toLowerCase().includes(normalizedQuery) ||
+      customer.email.toLowerCase().includes(normalizedQuery)
   );
 }
 
@@ -362,45 +347,31 @@ export function searchMockCustomers(
  */
 
 export function getMockCustomerStats() {
-  const customers =
-    MOCK_CUSTOMERS;
+  const customers = MOCK_CUSTOMERS;
 
-  const totalCustomers =
-    customers.length;
+  const totalCustomers = customers.length;
 
-  const totalOrders =
-    customers.reduce(
-      (total, customer) =>
-        total + customer.orders,
-      0
-    );
+  const totalOrders = customers.reduce(
+    (total, customer) => total + customer.orders,
+    0
+  );
 
-  const totalSpent =
-    customers.reduce(
-      (total, customer) =>
-        total + customer.spent,
-      0
-    );
+  const totalSpent = customers.reduce(
+    (total, customer) => total + customer.spent,
+    0
+  );
 
-  const blacklistedCustomers =
-    customers.filter(
-      (customer) =>
-        customer.isBlackListed
-    ).length;
+  const blacklistedCustomers = customers.filter(
+    (customer) => customer.isBlackListed
+  ).length;
 
-  const individualCustomers =
-    customers.filter(
-      (customer) =>
-        customer.customerType ===
-        "individual"
-    ).length;
+  const individualCustomers = customers.filter(
+    (customer) => customer.customerType === "individual"
+  ).length;
 
-  const businessCustomers =
-    customers.filter(
-      (customer) =>
-        customer.customerType ===
-        "business"
-    ).length;
+  const businessCustomers = customers.filter(
+    (customer) => customer.customerType === "business"
+  ).length;
 
   return {
     totalCustomers,

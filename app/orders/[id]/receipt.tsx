@@ -1,25 +1,37 @@
 import { useCallback, useEffect, useState } from "react";
+
 import { Alert, Pressable, View } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
+
 import { StatusBar } from "expo-status-bar";
+
 import { Ionicons } from "@expo/vector-icons";
+
 import { router, useLocalSearchParams } from "expo-router";
+
 import { WebView } from "react-native-webview";
 
 import { AppText } from "@/components/ui/AppText";
 
 import { ReceiptActionButton } from "@/components/receipt/ReceiptActionButton";
+
 import { ReceiptErrorState } from "@/components/receipt/ReceiptErrorState";
+
 import { ReceiptHeader } from "@/components/receipt/ReceiptHeader";
+
 import { ReceiptMetadataCard } from "@/components/receipt/ReceiptMetadataCard";
+
 import { ReceiptSkeleton } from "@/components/receipt/ReceiptSkeleton";
+
+import { ReceiptActionBar } from "@/components/receipt/ReceiptActionBar";
 
 import { radius, spacing, theme } from "@/theme";
 
 import { useOrders } from "@/hooks/orders/useOrders";
 
 import { generateReceipt } from "@/services/receipt/generateReceipt";
+
 import { receiptFromOrder } from "@/services/receipt/receiptFromOrder";
 
 import {
@@ -27,20 +39,46 @@ import {
   printOrderReceipt,
   shareOrderReceipt,
 } from "@/services/receipt/orderReceiptActions";
-import { ReceiptActionBar } from "@/components/receipt/ReceiptActionBar";
+
+import { getMockOrderById, USE_MOCK_ORDERS } from "@/mocks";
 
 export default function OrderReceiptScreen() {
   const { id } = useLocalSearchParams<{
     id: string;
   }>();
 
+  /**
+   * -------------------------------------------------------------------------
+   * API ORDERS
+   * -------------------------------------------------------------------------
+   */
+
   const { data } = useOrders();
 
-  const orders = data?.pages.flatMap((page) => page.orders) ?? [];
+  /**
+   * -------------------------------------------------------------------------
+   * ORDER
+   * -------------------------------------------------------------------------
+   *
+   * Mock mode:
+   *   Read from src/mocks/orders.ts
+   *
+   * API mode:
+   *   Read from useOrders()
+   * -------------------------------------------------------------------------
+   */
 
-  const order = orders.find((item) => item.id === id);
+  const order = USE_MOCK_ORDERS
+    ? getMockOrderById(id)
+    : data?.pages.flatMap((page) => page.orders).find((item) => item.id === id);
 
-  const [receiptUri, setReceiptUri] = useState<string>();
+  /**
+   * -------------------------------------------------------------------------
+   * STATE
+   * -------------------------------------------------------------------------
+   */
+
+  const [receiptUri, setReceiptUri] = useState<string | undefined>();
 
   const [loading, setLoading] = useState(true);
 
@@ -52,8 +90,16 @@ export default function OrderReceiptScreen() {
 
   const [printing, setPrinting] = useState(false);
 
+  /**
+   * -------------------------------------------------------------------------
+   * LOAD RECEIPT
+   * -------------------------------------------------------------------------
+   */
+
   const loadReceipt = useCallback(async () => {
     if (!order) {
+      setLoading(false);
+
       return;
     }
 
@@ -75,9 +121,21 @@ export default function OrderReceiptScreen() {
     }
   }, [order]);
 
+  /**
+   * -------------------------------------------------------------------------
+   * LOAD
+   * -------------------------------------------------------------------------
+   */
+
   useEffect(() => {
     loadReceipt();
   }, [loadReceipt]);
+
+  /**
+   * -------------------------------------------------------------------------
+   * ORDER NOT FOUND
+   * -------------------------------------------------------------------------
+   */
 
   if (!order) {
     return (
@@ -119,6 +177,12 @@ export default function OrderReceiptScreen() {
     );
   }
 
+  /**
+   * -------------------------------------------------------------------------
+   * LOADING
+   * -------------------------------------------------------------------------
+   */
+
   if (loading) {
     return (
       <SafeAreaView
@@ -134,6 +198,12 @@ export default function OrderReceiptScreen() {
     );
   }
 
+  /**
+   * -------------------------------------------------------------------------
+   * UI
+   * -------------------------------------------------------------------------
+   */
+
   return (
     <SafeAreaView
       style={{
@@ -143,7 +213,7 @@ export default function OrderReceiptScreen() {
     >
       <StatusBar style="auto" />
 
-      {/* Header */}
+      {/* HEADER */}
 
       <View
         style={{
@@ -156,6 +226,8 @@ export default function OrderReceiptScreen() {
         }}
       >
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
           onPress={() => router.back()}
           style={{
             width: 44,
@@ -180,23 +252,25 @@ export default function OrderReceiptScreen() {
         </View>
       </View>
 
+      {/* RECEIPT HEADER */}
+
       <ReceiptHeader order={order} />
 
+      {/* RECEIPT METADATA */}
+
       <ReceiptMetadataCard order={order} />
+
+      {/* RECEIPT PREVIEW */}
 
       <View
         style={{
           flex: 1,
           marginHorizontal: spacing.lg,
           marginBottom: spacing.lg,
-
           borderRadius: radius.lg,
-
           overflow: "hidden",
-
           borderWidth: 1,
           borderColor: theme.border.default,
-
           backgroundColor: theme.background.surface,
         }}
       >
@@ -220,9 +294,11 @@ export default function OrderReceiptScreen() {
         )}
       </View>
 
-      {/* Actions */}
+      {/* ACTIONS */}
 
       <ReceiptActionBar>
+        {/* PRINT */}
+
         <ReceiptActionButton
           icon="print-outline"
           title="Print"
@@ -243,6 +319,8 @@ export default function OrderReceiptScreen() {
           }}
         />
 
+        {/* DOWNLOAD */}
+
         <ReceiptActionButton
           icon="download-outline"
           title="Download"
@@ -262,6 +340,8 @@ export default function OrderReceiptScreen() {
             }
           }}
         />
+
+        {/* SHARE */}
 
         <ReceiptActionButton
           icon="share-social-outline"

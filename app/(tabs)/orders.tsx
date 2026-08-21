@@ -37,6 +37,9 @@ import { defaultOrderFilters } from "@/constants/defaultOrderFilters";
 import { PAYMENT_CHANNELS } from "@/constants/paymentChannels";
 import { ORDER_STATUS } from "@/constants/orderStatus";
 
+import { USE_MOCK_ORDERS } from "@/mocks/config";
+import { MOCK_ORDERS } from "@/mocks/orders";
+
 import { useOrders } from "@/hooks/orders/useOrders";
 import { useProducts } from "@/hooks/products/useProducts";
 
@@ -49,311 +52,11 @@ import { spacing, theme, radius } from "@/theme";
 
 /**
  * ============================================================================
- * MOCK MODE
- * ============================================================================
- *
- * Set to false when the Orders API is ready.
- */
-
-const USE_MOCK_ORDERS = true;
-
-/**
- * ============================================================================
  * INFINITE SCROLL CONFIGURATION
  * ============================================================================
- *
- * In mock mode, orders are progressively revealed in batches.
- *
- * In API mode, the actual API pagination is handled by useOrders().
  */
 
 const ORDERS_PER_BATCH = 10;
-
-/**
- * ============================================================================
- * MOCK ORDERS
- * ============================================================================
- */
-
-const MOCK_ORDERS: Order[] = [
-  {
-    id: "mock-order-001",
-    reference: "ORD-20260821",
-    customerName: "Chinedu Okafor",
-    customerPhone: "08031234567",
-    customerEmail: "chinedu.okafor@example.com",
-
-    deliveryAddress: {
-      street: "14 Admiralty Way",
-      city: "Lekki",
-      state: "Lagos",
-      country: "Nigeria",
-      postalCode: "106104",
-    },
-
-    total: 85000,
-    currency: "NGN",
-
-    items: [
-      {
-        productId: "1",
-        productName: "Classic Leather Sneakers",
-        quantity: 1,
-        unitPrice: 85000,
-        subtotal: 85000,
-        currency: "NGN",
-      },
-    ],
-
-    paymentChannel: "card",
-    status: "paid",
-
-    createdAt: "2026-08-21T09:15:00.000Z",
-    updatedAt: "2026-08-21T09:20:00.000Z",
-
-    statusHistory: [],
-  },
-
-  {
-    id: "mock-order-002",
-    reference: "ORD-20260820",
-    customerName: "Amaka Eze",
-    customerPhone: "08145678901",
-    customerEmail: "amaka.eze@example.com",
-
-    deliveryAddress: {
-      street: "22 GRA Avenue",
-      city: "Ikeja",
-      state: "Lagos",
-      country: "Nigeria",
-      postalCode: "101233",
-    },
-
-    total: 142500,
-    currency: "NGN",
-
-    items: [
-      {
-        productId: "2",
-        productName: "Premium Ankara Tote Bag",
-        quantity: 2,
-        unitPrice: 45000,
-        subtotal: 90000,
-        currency: "NGN",
-      },
-      {
-        productId: "3",
-        productName: "Minimalist Wrist Watch",
-        quantity: 1,
-        unitPrice: 52500,
-        subtotal: 52500,
-        currency: "NGN",
-      },
-    ],
-
-    paymentChannel: "bankTransfer",
-    status: "delivered",
-
-    createdAt: "2026-08-20T13:45:00.000Z",
-    updatedAt: "2026-08-21T08:30:00.000Z",
-
-    statusHistory: [],
-  },
-
-  {
-    id: "mock-order-003",
-    reference: "ORD-20260819",
-    customerName: "Tunde Adeyemi",
-    customerPhone: "07012345678",
-    customerEmail: "tunde.adeyemi@example.com",
-
-    deliveryAddress: {
-      street: "8 Wuse 2 Crescent",
-      city: "Abuja",
-      state: "FCT",
-      country: "Nigeria",
-      postalCode: "900288",
-    },
-
-    total: 225000,
-    currency: "NGN",
-
-    items: [
-      {
-        productId: "4",
-        productName: "Premium Wireless Headphones",
-        quantity: 1,
-        unitPrice: 125000,
-        subtotal: 125000,
-        currency: "NGN",
-      },
-      {
-        productId: "5",
-        productName: "Smart Travel Backpack",
-        quantity: 1,
-        unitPrice: 100000,
-        subtotal: 100000,
-        currency: "NGN",
-      },
-    ],
-
-    paymentChannel: "bank",
-    status: "returned",
-
-    createdAt: "2026-08-19T10:30:00.000Z",
-    updatedAt: "2026-08-20T16:00:00.000Z",
-
-    statusHistory: [],
-  },
-
-  {
-    id: "mock-order-004",
-    reference: "ORD-20260818",
-    customerName: "Fatima Bello",
-    customerPhone: "08098765432",
-    customerEmail: "fatima.bello@example.com",
-
-    deliveryAddress: {
-      street: "17 Ahmadu Bello Way",
-      city: "Victoria Island",
-      state: "Lagos",
-      country: "Nigeria",
-      postalCode: "101241",
-    },
-
-    total: 67500,
-    currency: "NGN",
-
-    items: [
-      {
-        productId: "6",
-        productName: "Classic Cotton Shirt",
-        quantity: 3,
-        unitPrice: 22500,
-        subtotal: 67500,
-        currency: "NGN",
-      },
-    ],
-
-    paymentChannel: "ussd",
-    status: "failed",
-
-    createdAt: "2026-08-18T15:20:00.000Z",
-    updatedAt: "2026-08-18T15:35:00.000Z",
-
-    statusHistory: [],
-  },
-
-  {
-    id: "mock-order-005",
-    reference: "ORD-20260817",
-    customerName: "David Williams",
-    customerPhone: "09023456789",
-    customerEmail: "david.williams@example.com",
-
-    deliveryAddress: {
-      street: "5 Allen Avenue",
-      city: "Ikeja",
-      state: "Lagos",
-      country: "Nigeria",
-      postalCode: "101233",
-    },
-
-    total: 310000,
-    currency: "NGN",
-
-    items: [
-      {
-        productId: "7",
-        productName: "Executive Office Chair",
-        quantity: 1,
-        unitPrice: 180000,
-        subtotal: 180000,
-        currency: "NGN",
-      },
-      {
-        productId: "8",
-        productName: "Adjustable Laptop Stand",
-        quantity: 2,
-        unitPrice: 35000,
-        subtotal: 70000,
-        currency: "NGN",
-      },
-      {
-        productId: "9",
-        productName: "Wireless Keyboard",
-        quantity: 1,
-        unitPrice: 60000,
-        subtotal: 60000,
-        currency: "NGN",
-      },
-    ],
-
-    paymentChannel: "nqr",
-    status: "paid",
-
-    createdAt: "2026-08-17T11:10:00.000Z",
-    updatedAt: "2026-08-17T11:15:00.000Z",
-
-    statusHistory: [],
-  },
-
-  {
-    id: "mock-order-006",
-    reference: "ORD-20260816",
-    customerName: "Blessing Johnson",
-    customerPhone: "08167890123",
-    customerEmail: "blessing.johnson@example.com",
-
-    deliveryAddress: {
-      street: "31 Banana Island Road",
-      city: "Ikoyi",
-      state: "Lagos",
-      country: "Nigeria",
-      postalCode: "106104",
-    },
-
-    total: 119000,
-    currency: "NGN",
-
-    items: [
-      {
-        productId: "10",
-        productName: "Premium Crossbody Bag",
-        quantity: 1,
-        unitPrice: 69000,
-        subtotal: 69000,
-        currency: "NGN",
-      },
-      {
-        productId: "11",
-        productName: "Fashion Sunglasses",
-        quantity: 2,
-        unitPrice: 25000,
-        subtotal: 50000,
-        currency: "NGN",
-      },
-    ],
-
-    paymentChannel: "card",
-    status: "delivered",
-
-    createdAt: "2026-08-16T09:40:00.000Z",
-    updatedAt: "2026-08-17T14:20:00.000Z",
-
-    statusHistory: [],
-  },
-];
-
-/**
- * ============================================================================
- * MOCK PAGE
- * ============================================================================
- */
-
-const MOCK_PAGE = {
-  orders: MOCK_ORDERS,
-};
 
 /**
  * ============================================================================
@@ -387,7 +90,7 @@ export default function OrdersScreen() {
 
   const orders = useMemo(() => {
     if (USE_MOCK_ORDERS) {
-      return MOCK_PAGE.orders;
+      return MOCK_ORDERS;
     }
 
     return data?.pages.flatMap((page) => page.orders) ?? [];
@@ -409,7 +112,7 @@ export default function OrdersScreen() {
 
   /**
    * -------------------------------------------------------------------------
-   * MOCK INFINITE SCROLL STATE
+   * MOCK INFINITE SCROLL
    * -------------------------------------------------------------------------
    */
 
@@ -447,13 +150,27 @@ export default function OrdersScreen() {
 
   /**
    * -------------------------------------------------------------------------
-   * BOTTOM SHEET REFS
+   * BOTTOM SHEETS
    * -------------------------------------------------------------------------
    */
 
   const filterBottomSheetRef = useRef<BottomSheetModal>(null);
 
   const orderActionsBottomSheetRef = useRef<BottomSheetModal>(null);
+
+  /**
+   * -------------------------------------------------------------------------
+   * OPEN ORDER ACTIONS
+   * -------------------------------------------------------------------------
+   */
+
+  useEffect(() => {
+    if (!selectedOrder) {
+      return;
+    }
+
+    orderActionsBottomSheetRef.current?.present();
+  }, [selectedOrder]);
 
   /**
    * -------------------------------------------------------------------------
@@ -485,16 +202,8 @@ export default function OrdersScreen() {
 
   const filteredOrders = useMemo(() => {
     const filtered = orders.filter((order) => {
-      /**
-       * STATUS
-       */
-
       const matchesStatus =
         selectedFilter === "all" || order.status === selectedFilter;
-
-      /**
-       * SEARCH
-       */
 
       const query = searchQuery.trim().toLowerCase();
 
@@ -506,19 +215,11 @@ export default function OrdersScreen() {
           item.productName.toLowerCase().includes(query)
         );
 
-      /**
-       * AMOUNT
-       */
-
       const matchesAmount =
         (appliedFilters.amount.min === undefined ||
           order.total >= appliedFilters.amount.min) &&
         (appliedFilters.amount.max === undefined ||
           order.total <= appliedFilters.amount.max);
-
-      /**
-       * DATE
-       */
 
       const orderDate = new Date(order.createdAt);
 
@@ -539,10 +240,6 @@ export default function OrdersScreen() {
       return matchesStatus && matchesSearch && matchesAmount && matchesDate;
     });
 
-    /**
-     * SORT
-     */
-
     switch (appliedFilters.sort) {
       case "amountHighToLow":
         return [...filtered].sort((a, b) => b.total - a.total);
@@ -561,11 +258,8 @@ export default function OrdersScreen() {
 
   /**
    * -------------------------------------------------------------------------
-   * RESET MOCK INFINITE SCROLL
+   * RESET MOCK PAGINATION
    * -------------------------------------------------------------------------
-   *
-   * Whenever search, status or advanced filters change, start again from the
-   * first batch.
    */
 
   useEffect(() => {
@@ -596,15 +290,11 @@ export default function OrdersScreen() {
 
   /**
    * -------------------------------------------------------------------------
-   * LOAD MORE ORDERS
+   * LOAD MORE
    * -------------------------------------------------------------------------
    */
 
   const loadMoreOrders = useCallback(() => {
-    /**
-     * API MODE
-     */
-
     if (!USE_MOCK_ORDERS) {
       if (hasNextPage && !isFetchingNextPage) {
         fetchNextPage();
@@ -613,20 +303,11 @@ export default function OrdersScreen() {
       return;
     }
 
-    /**
-     * MOCK MODE
-     */
-
     if (isLoadingMoreMock || !hasMoreMockOrders) {
       return;
     }
 
     setIsLoadingMoreMock(true);
-
-    /**
-     * Small delay gives the footer loader time to render and makes the
-     * infinite-scroll behaviour feel natural during mock development.
-     */
 
     setTimeout(() => {
       setVisibleOrderCount((currentCount) =>
@@ -713,7 +394,7 @@ export default function OrdersScreen() {
 
   /**
    * -------------------------------------------------------------------------
-   * SEARCH / FILTER HANDLERS
+   * SEARCH / FILTER
    * -------------------------------------------------------------------------
    */
 
@@ -741,10 +422,6 @@ export default function OrdersScreen() {
 
       await new Promise((resolve) => setTimeout(resolve, 600));
 
-      /**
-       * Reset infinite scroll to the first batch.
-       */
-
       setVisibleOrderCount(ORDERS_PER_BATCH);
 
       setRefreshingMock(false);
@@ -753,21 +430,7 @@ export default function OrdersScreen() {
     }
 
     await refetch();
-
-    /**
-     * The API itself controls how many pages are loaded.
-     * Resetting this state is harmless and keeps the screen consistent
-     * if the mode is changed during development.
-     */
-
-    setVisibleOrderCount(ORDERS_PER_BATCH);
   };
-
-  /**
-   * -------------------------------------------------------------------------
-   * REFRESHING STATE
-   * -------------------------------------------------------------------------
-   */
 
   const refreshing = USE_MOCK_ORDERS ? refreshingMock : isRefetching;
 
@@ -798,9 +461,7 @@ export default function OrdersScreen() {
               flex: 1,
             }}
           >
-            {/* ============================================================
-                HEADER
-            ============================================================ */}
+            {/* HEADER */}
 
             <View
               style={{
@@ -822,9 +483,7 @@ export default function OrdersScreen() {
               </View>
             </View>
 
-            {/* ============================================================
-                SEARCH + FILTER
-            ============================================================ */}
+            {/* SEARCH + FILTER */}
 
             {!isFirstTimeUser && !showOrderError && (
               <View
@@ -858,9 +517,7 @@ export default function OrdersScreen() {
               </View>
             )}
 
-            {/* ============================================================
-                STATUS FILTERS
-            ============================================================ */}
+            {/* STATUS FILTERS */}
 
             {!isFirstTimeUser && !showOrderError && (
               <View
@@ -904,9 +561,7 @@ export default function OrdersScreen() {
               </View>
             )}
 
-            {/* ============================================================
-                CONTENT
-            ============================================================ */}
+            {/* CONTENT */}
 
             <View
               style={{
@@ -914,17 +569,12 @@ export default function OrdersScreen() {
                 marginTop: spacing.md,
               }}
             >
-              {/* ==========================================================
-                  LOADING
-              ========================================================== */}
-
               {isLoading ? (
                 <View
                   style={{
                     flex: 1,
                     justifyContent: "center",
                     alignItems: "center",
-                    paddingVertical: spacing["3xl"],
                   }}
                 >
                   <ActivityIndicator
@@ -942,16 +592,11 @@ export default function OrdersScreen() {
                   </AppText>
                 </View>
               ) : showOrderError ? (
-                /* ==========================================================
-                   ERROR
-                ========================================================== */
-
                 <View
                   style={{
                     flex: 1,
                     justifyContent: "center",
                     alignItems: "center",
-                    paddingVertical: spacing["3xl"],
                   }}
                 >
                   <View
@@ -987,30 +632,21 @@ export default function OrdersScreen() {
                     style={{
                       marginTop: spacing.xs,
                       textAlign: "center",
-                      maxWidth: 320,
                     }}
                   >
                     We couldn't load your orders. Please try again.
                   </AppText>
 
                   <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Try again"
                     onPress={() => refetch()}
                     style={{
                       marginTop: spacing.md,
-                      paddingVertical: spacing.xs,
-                      paddingHorizontal: spacing.sm,
                     }}
                   >
                     <AppText color="link">Try Again</AppText>
                   </Pressable>
                 </View>
               ) : isFirstTimeUser ? (
-                /* ==========================================================
-                   FIRST-TIME USER
-                ========================================================== */
-
                 <Card
                   style={{
                     alignItems: "center",
@@ -1079,94 +715,76 @@ export default function OrdersScreen() {
                   </AppText>
                 </Card>
               ) : hasNoResults ? (
-                /* ==========================================================
-                   NO SEARCH RESULTS
-                ========================================================== */
-
-                <View
+                <Card
                   style={{
-                    flex: 1,
+                    marginTop: spacing.md,
+                    paddingVertical: spacing.xl,
+                    paddingHorizontal: spacing.lg,
+                    alignItems: "center",
                   }}
                 >
-                  <Card
+                  <View
                     style={{
-                      marginTop: spacing.md,
-                      paddingVertical: spacing.xl,
-                      paddingHorizontal: spacing.lg,
+                      width: 56,
+                      height: 56,
+                      borderRadius: radius.full,
+                      backgroundColor: theme.icon.default.background,
                       alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <View
-                      style={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: radius.full,
-                        backgroundColor: theme.icon.default.background,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Ionicons
-                        name="search-outline"
-                        size={28}
-                        color={theme.icon.default.icon}
-                      />
-                    </View>
+                    <Ionicons
+                      name="search-outline"
+                      size={28}
+                      color={theme.icon.default.icon}
+                    />
+                  </View>
 
-                    <AppText
-                      variant="bodyLargeBold"
+                  <AppText
+                    variant="bodyLargeBold"
+                    style={{
+                      marginTop: spacing.md,
+                      textAlign: "center",
+                    }}
+                  >
+                    No orders found
+                  </AppText>
+
+                  <AppText
+                    variant="body"
+                    color="secondary"
+                    style={{
+                      marginTop: spacing.xs,
+                      textAlign: "center",
+                    }}
+                  >
+                    Try searching with a different order reference, customer or
+                    product.
+                  </AppText>
+
+                  {searchQuery.trim() !== "" && (
+                    <Pressable
+                      onPress={clearSearch}
                       style={{
                         marginTop: spacing.md,
-                        textAlign: "center",
                       }}
                     >
-                      No orders found
-                    </AppText>
+                      <AppText color="link">Clear Search</AppText>
+                    </Pressable>
+                  )}
 
-                    <AppText
-                      variant="body"
-                      color="secondary"
+                  {hasActiveFilters && searchQuery.trim() === "" && (
+                    <Pressable
+                      onPress={clearFilters}
                       style={{
-                        marginTop: spacing.xs,
-                        textAlign: "center",
+                        marginTop: spacing.md,
                       }}
                     >
-                      Try searching with a different order reference, customer
-                      or product.
-                    </AppText>
-
-                    {searchQuery.trim() !== "" && (
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Clear search"
-                        onPress={clearSearch}
-                        style={{
-                          marginTop: spacing.md,
-                        }}
-                      >
-                        <AppText color="link">Clear Search</AppText>
-                      </Pressable>
-                    )}
-
-                    {hasActiveFilters && searchQuery.trim() === "" && (
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Clear filters"
-                        onPress={clearFilters}
-                        style={{
-                          marginTop: spacing.md,
-                        }}
-                      >
-                        <AppText color="link">Clear Filters</AppText>
-                      </Pressable>
-                    )}
-                  </Card>
-                </View>
+                      <AppText color="link">Clear Filters</AppText>
+                    </Pressable>
+                  )}
+                </Card>
               ) : (
-                /* ==========================================================
-                   ORDER LIST — INFINITE SCROLL
-                ========================================================== */
-
                 <FlatList
                   style={{
                     flex: 1,
@@ -1192,7 +810,7 @@ export default function OrdersScreen() {
                   }}
                   keyExtractor={(item) => item.id}
                   ListFooterComponent={
-                    (USE_MOCK_ORDERS && hasMoreMockOrders) ||
+                    hasMoreMockOrders ||
                     isLoadingMoreMock ||
                     isFetchingNextPage ? (
                       <View
@@ -1224,7 +842,7 @@ export default function OrdersScreen() {
                         }}
                       >
                         <AppText variant="caption" color="muted">
-                          {USE_MOCK_ORDERS && filteredOrders.length > 0
+                          {filteredOrders.length > 0
                             ? "You've reached the end of your orders."
                             : ""}
                         </AppText>
@@ -1232,41 +850,21 @@ export default function OrdersScreen() {
                     )
                   }
                   renderItem={({ item: order }) => {
-                    /**
-                     * STATUS
-                     */
-
                     const status =
                       order.status !== "paid"
                         ? ORDER_STATUS[order.status]
                         : null;
 
-                    /**
-                     * FIRST ITEM
-                     */
-
                     const firstItem = order.items[0];
-
-                    /**
-                     * TOTAL ITEMS
-                     */
 
                     const totalItems = order.items.reduce(
                       (total, item) => total + item.quantity,
                       0
                     );
 
-                    /**
-                     * PRODUCT
-                     */
-
                     const product = firstItem
                       ? productsById[firstItem.productId]
                       : undefined;
-
-                    /**
-                     * PRODUCT SUMMARY
-                     */
 
                     const productSummary = (() => {
                       if (!firstItem) {
@@ -1294,13 +892,9 @@ export default function OrdersScreen() {
                             gap: spacing.md,
                           }}
                         >
-                          {/* PRODUCT IMAGE */}
-
                           <ProductImage
                             image={product?.productImages?.[0]?.url ?? ""}
                           />
-
-                          {/* ORDER DETAILS */}
 
                           <View
                             style={{
@@ -1308,8 +902,6 @@ export default function OrdersScreen() {
                               gap: spacing.xs,
                             }}
                           >
-                            {/* REFERENCE + STATUS */}
-
                             <View
                               style={{
                                 flexDirection: "row",
@@ -1337,13 +929,9 @@ export default function OrdersScreen() {
                               />
                             </View>
 
-                            {/* CUSTOMER */}
-
                             <AppText variant="bodyLargeBold">
                               {order.customerName}
                             </AppText>
-
-                            {/* ITEMS */}
 
                             <AppText
                               variant="bodySmall"
@@ -1355,8 +943,6 @@ export default function OrdersScreen() {
                             </AppText>
                           </View>
 
-                          {/* RIGHT SIDE */}
-
                           <View
                             style={{
                               alignItems: "flex-end",
@@ -1364,13 +950,9 @@ export default function OrdersScreen() {
                               alignSelf: "stretch",
                             }}
                           >
-                            {/* DATE */}
-
                             <AppText variant="bodySmall" color="secondary">
                               {formatOrderDate(order.createdAt)}
                             </AppText>
-
-                            {/* AMOUNT */}
 
                             <AppText
                               variant="bodyLargeBold"
@@ -1386,17 +968,11 @@ export default function OrdersScreen() {
                               })}
                             </AppText>
 
-                            {/* ACTIONS */}
-
                             <Pressable
                               hitSlop={10}
                               accessibilityRole="button"
                               accessibilityLabel={`Actions for order ${order.reference}`}
-                              onPress={() => {
-                                setSelectedOrder(order);
-
-                                orderActionsBottomSheetRef.current?.present();
-                              }}
+                              onPress={() => setSelectedOrder(order)}
                             >
                               <Ionicons
                                 name="ellipsis-horizontal"
@@ -1416,9 +992,7 @@ export default function OrdersScreen() {
         </View>
       </SafeAreaView>
 
-      {/* ======================================================================
-          FILTER BOTTOM SHEET
-      ====================================================================== */}
+      {/* FILTER */}
 
       <FilterBottomSheet
         ref={filterBottomSheetRef}
@@ -1429,9 +1003,7 @@ export default function OrdersScreen() {
         }}
       />
 
-      {/* ======================================================================
-          ORDER ACTIONS BOTTOM SHEET
-      ====================================================================== */}
+      {/* ORDER ACTIONS */}
 
       <OrderActionsBottomSheet
         ref={orderActionsBottomSheetRef}

@@ -64,7 +64,7 @@ function SettingsRow({
         </View>
 
         <Ionicons
-          name="chevron-forward"
+          name="ellipsis-horizontal"
           size={20}
           color={theme.icon.default.icon}
         />

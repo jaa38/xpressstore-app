@@ -28,6 +28,7 @@ import { spacing, theme, radius } from "@/theme";
 import { useStores } from "@/hooks/store/useStores";
 import { useProducts } from "@/hooks/products/useProducts";
 import { useAddProductToStore } from "@/hooks/products/useAddProductToStore";
+import { useRemoveProductFromStore } from "@/hooks/store/useRemoveProductFromStore";
 
 import type { MerchantProduct } from "@/types/product";
 
@@ -41,10 +42,12 @@ function ProductRow({
   product,
   selected,
   onPress,
+  disabled,
 }: {
   product: MerchantProduct;
   selected: boolean;
   onPress: () => void;
+  disabled?: boolean;
 }) {
   /**
    * --------------------------------------------------------------------------
@@ -75,13 +78,15 @@ function ProductRow({
       accessibilityRole="checkbox"
       accessibilityState={{
         checked: selected,
+        disabled,
       }}
       accessibilityLabel={`${productName}. ${
-        selected ? "Selected" : "Not selected"
+        selected ? "Added to store" : "Not added to store"
       }`}
+      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
-        opacity: pressed ? 0.6 : 1,
+        opacity: pressed ? 0.6 : disabled ? 0.5 : 1,
       })}
     >
       <View
@@ -230,11 +235,19 @@ export default function StoreProductsScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * MUTATION
+   * ADD PRODUCT MUTATION
    * --------------------------------------------------------------------------
    */
 
   const addProductToStore = useAddProductToStore();
+
+  /**
+   * --------------------------------------------------------------------------
+   * REMOVE PRODUCT MUTATION
+   * --------------------------------------------------------------------------
+   */
+
+  const removeProductFromStore = useRemoveProductFromStore();
 
   /**
    * --------------------------------------------------------------------------
@@ -244,6 +257,9 @@ export default function StoreProductsScreen() {
 
   const [search, setSearch] = useState("");
 
+  /**
+   * Products selected for addition.
+   */
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
 
   const [refreshing, setRefreshing] = useState(false);
@@ -304,22 +320,62 @@ export default function StoreProductsScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * TOGGLE PRODUCT
+   * MUTATION STATE
    * --------------------------------------------------------------------------
    */
 
-  function toggleProduct(productId: number) {
+  const isAdding = addProductToStore.isPending;
+
+  const isRemoving = removeProductFromStore.isPending;
+
+  const isMutating = isAdding || isRemoving;
+
+  /**
+   * --------------------------------------------------------------------------
+   * TOGGLE PRODUCT
+   * --------------------------------------------------------------------------
+   *
+   * Existing product:
+   *   checked -> remove immediately
+   *
+   * New product:
+   *   unchecked -> add to pending selection
+   */
+
+  async function toggleProduct(productId: number) {
     /**
-     * Products already belonging to the store
-     * cannot be deselected here.
-     *
-     * Removal can be handled separately once the
-     * backend exposes a remove-product-from-store
-     * endpoint.
+     * ================================================================
+     * REMOVE EXISTING PRODUCT
+     * ================================================================
      */
+
     if (storeProductIds.has(productId)) {
+      if (isMutating) {
+        return;
+      }
+
+      try {
+        await removeProductFromStore.mutateAsync({
+          productId,
+          storeId,
+        });
+      } catch (error) {
+        console.error("Failed to remove product from store:", error);
+
+        Alert.alert(
+          "Unable to remove product",
+          "We couldn't remove this product from your storefront. Please try again."
+        );
+      }
+
       return;
     }
+
+    /**
+     * ================================================================
+     * SELECT PRODUCT FOR ADDITION
+     * ================================================================
+     */
 
     setSelectedProducts((current) => {
       if (current.includes(productId)) {
@@ -332,7 +388,7 @@ export default function StoreProductsScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * SAVE
+   * SAVE NEW PRODUCTS
    * --------------------------------------------------------------------------
    */
 
@@ -347,11 +403,6 @@ export default function StoreProductsScreen() {
     }
 
     if (selectedProducts.length === 0) {
-      Alert.alert(
-        "No products selected",
-        "Select at least one product to add to this store."
-      );
-
       return;
     }
 
@@ -371,7 +422,6 @@ export default function StoreProductsScreen() {
         [
           {
             text: "Done",
-            onPress: () => router.back(),
           },
         ]
       );
@@ -565,9 +615,7 @@ export default function StoreProductsScreen() {
           />
         }
       >
-        {/* ==================================================================
-            DESCRIPTION
-        ================================================================== */}
+        {/* DESCRIPTION */}
 
         <View
           style={{
@@ -580,9 +628,7 @@ export default function StoreProductsScreen() {
           </AppText>
         </View>
 
-        {/* ==================================================================
-            SEARCH
-        ================================================================== */}
+        {/* SEARCH */}
 
         <View
           style={{
@@ -629,9 +675,7 @@ export default function StoreProductsScreen() {
           )}
         </View>
 
-        {/* ==================================================================
-            SUMMARY
-        ================================================================== */}
+        {/* SUMMARY */}
 
         <View
           style={{
@@ -648,9 +692,7 @@ export default function StoreProductsScreen() {
           </AppText>
         </View>
 
-        {/* ==================================================================
-            PRODUCTS
-        ================================================================== */}
+        {/* PRODUCTS */}
 
         <Card
           style={{
@@ -715,6 +757,7 @@ export default function StoreProductsScreen() {
                   <ProductRow
                     product={product}
                     selected={selected}
+                    disabled={isRemoving && storeProductIds.has(productId)}
                     onPress={() => toggleProduct(productId)}
                   />
 
@@ -725,9 +768,7 @@ export default function StoreProductsScreen() {
           )}
         </Card>
 
-        {/* ==================================================================
-            PRODUCT REFRESH STATUS
-        ================================================================== */}
+        {/* PRODUCT REFRESH STATUS */}
 
         {productsFetching && !isLoading && (
           <View
@@ -766,7 +807,7 @@ export default function StoreProductsScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Add ${selectedCount} products to store`}
-              disabled={addProductToStore.isPending}
+              disabled={isMutating}
               onPress={handleSave}
               style={({ pressed }) => ({
                 minHeight: 50,
@@ -774,10 +815,10 @@ export default function StoreProductsScreen() {
                 backgroundColor: theme.button.primary.background,
                 justifyContent: "center",
                 alignItems: "center",
-                opacity: pressed || addProductToStore.isPending ? 0.7 : 1,
+                opacity: pressed || isMutating ? 0.7 : 1,
               })}
             >
-              {addProductToStore.isPending ? (
+              {isAdding ? (
                 <ActivityIndicator
                   size="small"
                   color={theme.button.primary.text}

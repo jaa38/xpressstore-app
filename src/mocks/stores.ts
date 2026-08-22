@@ -295,6 +295,73 @@ export function addMockProductToStore(
 
 /**
  * ============================================================================
+ * REMOVE PRODUCT FROM STORE
+ * ============================================================================
+ *
+ * Removes a product ID from a store.
+ *
+ * Used while mock mode is enabled.
+ *
+ * If the product is not currently in the store,
+ * the store remains unchanged.
+ * ============================================================================
+ */
+
+export function removeMockProductFromStore(
+  storeId: number,
+  productId: number
+): Store | undefined {
+  let updatedStore: Store | undefined;
+
+  mockStores = mockStores.map((store) => {
+    /**
+     * This is not the requested store.
+     */
+
+    if (store.storeId !== storeId) {
+      return store;
+    }
+
+    const products = store.products ?? [];
+
+    /**
+     * Remove the product from the store.
+     */
+
+    updatedStore = {
+      ...store,
+
+      products: products.filter((id) => id !== productId),
+
+      discounts: [...(store.discounts ?? [])],
+    };
+
+    return updatedStore;
+  });
+
+  /**
+   * Store was not found.
+   */
+
+  if (!updatedStore) {
+    return undefined;
+  }
+
+  /**
+   * Return a defensive copy.
+   */
+
+  return {
+    ...updatedStore,
+
+    products: [...(updatedStore.products ?? [])],
+
+    discounts: [...(updatedStore.discounts ?? [])],
+  };
+}
+
+/**
+ * ============================================================================
  * UPDATE STORE
  * ============================================================================
  */

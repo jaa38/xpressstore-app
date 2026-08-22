@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -56,6 +57,14 @@ function ProductRow({
   const productReference = product.productReference || "Product";
 
   /**
+   * First product image.
+   *
+   * If the product does not have an image URL, the cube icon will be displayed
+   * as the fallback.
+   */
+  const productImage = product.productImages?.[0]?.url?.trim();
+
+  /**
    * --------------------------------------------------------------------------
    * UI
    * --------------------------------------------------------------------------
@@ -83,12 +92,14 @@ function ProductRow({
           paddingVertical: spacing.md,
         }}
       >
-        {/* PRODUCT IMAGE */}
+        {/* ==================================================================
+            PRODUCT IMAGE
+        ================================================================== */}
 
         <View
           style={{
-            width: 56,
-            height: 56,
+            width: 64,
+            height: 64,
             borderRadius: radius.md,
             overflow: "hidden",
             backgroundColor: theme.background.subtle,
@@ -96,18 +107,34 @@ function ProductRow({
             alignItems: "center",
           }}
         >
-          <Ionicons
-            name="cube-outline"
-            size={24}
-            color={theme.icon.default.icon}
-          />
+          {productImage ? (
+            <Image
+              source={{
+                uri: productImage,
+              }}
+              resizeMode="cover"
+              style={{
+                width: "100%",
+                height: "100%",
+              }}
+            />
+          ) : (
+            <Ionicons
+              name="cube-outline"
+              size={28}
+              color={theme.icon.default.icon}
+            />
+          )}
         </View>
 
-        {/* PRODUCT INFORMATION */}
+        {/* ==================================================================
+            PRODUCT INFORMATION
+        ================================================================== */}
 
         <View
           style={{
             flex: 1,
+            minWidth: 0,
             gap: spacing.xs,
           }}
         >
@@ -124,7 +151,9 @@ function ProductRow({
           </AppText>
         </View>
 
-        {/* CHECKBOX */}
+        {/* ==================================================================
+            CHECKBOX
+        ================================================================== */}
 
         <View
           style={{
@@ -453,7 +482,9 @@ export default function StoreProductsScreen() {
     >
       <StatusBar style="auto" />
 
-      {/* HEADER */}
+      {/* ======================================================================
+          HEADER
+      ======================================================================= */}
 
       <View
         style={{
@@ -510,6 +541,10 @@ export default function StoreProductsScreen() {
         )}
       </View>
 
+      {/* ======================================================================
+          CONTENT
+      ======================================================================= */}
+
       <ScrollView
         style={{
           flex: 1,
@@ -530,7 +565,9 @@ export default function StoreProductsScreen() {
           />
         }
       >
-        {/* DESCRIPTION */}
+        {/* ==================================================================
+            DESCRIPTION
+        ================================================================== */}
 
         <View
           style={{
@@ -543,7 +580,9 @@ export default function StoreProductsScreen() {
           </AppText>
         </View>
 
-        {/* SEARCH */}
+        {/* ==================================================================
+            SEARCH
+        ================================================================== */}
 
         <View
           style={{
@@ -590,7 +629,9 @@ export default function StoreProductsScreen() {
           )}
         </View>
 
-        {/* SUMMARY */}
+        {/* ==================================================================
+            SUMMARY
+        ================================================================== */}
 
         <View
           style={{
@@ -607,7 +648,9 @@ export default function StoreProductsScreen() {
           </AppText>
         </View>
 
-        {/* PRODUCTS */}
+        {/* ==================================================================
+            PRODUCTS
+        ================================================================== */}
 
         <Card
           style={{
@@ -682,6 +725,10 @@ export default function StoreProductsScreen() {
           )}
         </Card>
 
+        {/* ==================================================================
+            PRODUCT REFRESH STATUS
+        ================================================================== */}
+
         {productsFetching && !isLoading && (
           <View
             style={{
@@ -696,7 +743,9 @@ export default function StoreProductsScreen() {
         )}
       </ScrollView>
 
-      {/* SAVE BAR */}
+      {/* ======================================================================
+          SAVE BAR
+      ======================================================================= */}
 
       {selectedCount > 0 && (
         <SafeAreaView

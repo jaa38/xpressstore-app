@@ -33,7 +33,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "classic-leather-sneakers.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
       },
     ],
   },
@@ -55,7 +55,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "premium-ankara-tote-bag.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7",
       },
     ],
   },
@@ -64,8 +64,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     id: 3,
     productReference: "PROD-003",
     productName: "Minimalist Wrist Watch",
-    description:
-      "Minimalist wrist watch featuring a clean and modern design.",
+    description: "Minimalist wrist watch featuring a clean and modern design.",
     unitPrice: 52500,
     currency: "NGN",
     totalInStock: 12,
@@ -77,7 +76,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "minimalist-wrist-watch.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
       },
     ],
   },
@@ -99,7 +98,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "premium-wireless-headphones.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
       },
     ],
   },
@@ -121,7 +120,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "smart-travel-backpack.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62",
       },
     ],
   },
@@ -143,7 +142,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "classic-cotton-shirt.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf",
       },
     ],
   },
@@ -165,7 +164,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "executive-office-chair.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1580480055273-228ff5388ef8",
       },
     ],
   },
@@ -174,8 +173,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     id: 8,
     productReference: "PROD-008",
     productName: "Adjustable Laptop Stand",
-    description:
-      "Adjustable laptop stand designed to improve desk ergonomics.",
+    description: "Adjustable laptop stand designed to improve desk ergonomics.",
     unitPrice: 35000,
     currency: "NGN",
     totalInStock: 16,
@@ -187,7 +185,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "adjustable-laptop-stand.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf",
       },
     ],
   },
@@ -209,7 +207,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "wireless-keyboard.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
       },
     ],
   },
@@ -231,7 +229,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "premium-crossbody-bag.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa",
       },
     ],
   },
@@ -240,8 +238,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     id: 11,
     productReference: "PROD-011",
     productName: "Fashion Sunglasses",
-    description:
-      "Modern fashion sunglasses designed for everyday wear.",
+    description: "Modern fashion sunglasses designed for everyday wear.",
     unitPrice: 25000,
     currency: "NGN",
     totalInStock: 1,
@@ -253,7 +250,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "fashion-sunglasses.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1511499767150-a48a237f0083",
       },
     ],
   },
@@ -275,7 +272,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     productImages: [
       {
         filename: "modern-canvas-backpack.jpg",
-        url: "",
+        url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62",
       },
     ],
   },
@@ -297,17 +294,13 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
  * work with the same data.
  */
 
-let mockProducts: MerchantProduct[] = MOCK_PRODUCTS.map(
-  (product) => ({
-    ...product,
-    productImages:
-      product.productImages?.map(
-        (image) => ({
-          ...image,
-        })
-      ) ?? [],
-  })
-);
+let mockProducts: MerchantProduct[] = MOCK_PRODUCTS.map((product) => ({
+  ...product,
+  productImages:
+    product.productImages?.map((image) => ({
+      ...image,
+    })) ?? [],
+}));
 
 /**
  * ============================================================================
@@ -325,13 +318,8 @@ export function getMockProducts(): MerchantProduct[] {
  * ============================================================================
  */
 
-export function getMockProduct(
-  productId: number
-): MerchantProduct | undefined {
-  return mockProducts.find(
-    (product) =>
-      product.id === productId
-  );
+export function getMockProduct(productId: number): MerchantProduct | undefined {
+  return mockProducts.find((product) => product.id === productId);
 }
 
 /**
@@ -344,34 +332,29 @@ export function updateMockProduct(
   productId: number,
   updates: Partial<MerchantProduct>
 ): MerchantProduct | undefined {
-  let updatedProduct:
-    | MerchantProduct
-    | undefined;
+  let updatedProduct: MerchantProduct | undefined;
 
-  mockProducts = mockProducts.map(
-    (product) => {
-      if (product.id !== productId) {
-        return product;
-      }
-
-      updatedProduct = {
-        ...product,
-        ...updates,
-
-        /**
-         * Keep inStock consistent with
-         * totalInStock.
-         */
-        inStock:
-          updates.totalInStock !==
-          undefined
-            ? updates.totalInStock > 0
-            : product.inStock,
-      };
-
-      return updatedProduct;
+  mockProducts = mockProducts.map((product) => {
+    if (product.id !== productId) {
+      return product;
     }
-  );
+
+    updatedProduct = {
+      ...product,
+      ...updates,
+
+      /**
+       * Keep inStock consistent with
+       * totalInStock.
+       */
+      inStock:
+        updates.totalInStock !== undefined
+          ? updates.totalInStock > 0
+          : product.inStock,
+    };
+
+    return updatedProduct;
+  });
 
   return updatedProduct;
 }
@@ -382,22 +365,12 @@ export function updateMockProduct(
  * ============================================================================
  */
 
-export function deleteMockProduct(
-  productId: number
-): boolean {
-  const previousLength =
-    mockProducts.length;
+export function deleteMockProduct(productId: number): boolean {
+  const previousLength = mockProducts.length;
 
-  mockProducts =
-    mockProducts.filter(
-      (product) =>
-        product.id !== productId
-    );
+  mockProducts = mockProducts.filter((product) => product.id !== productId);
 
-  return (
-    mockProducts.length <
-    previousLength
-  );
+  return mockProducts.length < previousLength;
 }
 
 /**
@@ -410,12 +383,9 @@ export function toggleMockProductStatus(
   productId: number,
   isActive: boolean
 ): MerchantProduct | undefined {
-  return updateMockProduct(
-    productId,
-    {
-      isActive,
-    }
-  );
+  return updateMockProduct(productId, {
+    isActive,
+  });
 }
 
 /**
@@ -425,17 +395,12 @@ export function toggleMockProductStatus(
  */
 
 export function resetMockProducts(): void {
-  mockProducts =
-    MOCK_PRODUCTS.map(
-      (product) => ({
-        ...product,
+  mockProducts = MOCK_PRODUCTS.map((product) => ({
+    ...product,
 
-        productImages:
-          product.productImages?.map(
-            (image) => ({
-              ...image,
-            })
-          ) ?? [],
-      })
-    );
+    productImages:
+      product.productImages?.map((image) => ({
+        ...image,
+      })) ?? [],
+  }));
 }

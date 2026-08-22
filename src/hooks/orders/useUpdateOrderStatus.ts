@@ -8,7 +8,6 @@ import type { Order } from "@/types/order";
 
 interface UpdateOrderStatusVariables {
   orderId: string;
-
   status: Order["status"];
 }
 
@@ -19,9 +18,19 @@ export function useUpdateOrderStatus() {
     mutationFn: ({ orderId, status }: UpdateOrderStatusVariables) =>
       updateOrderStatus(orderId, status),
 
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      /**
+       * Refresh the orders list.
+       */
       queryClient.invalidateQueries({
         queryKey: queryKeys.orders,
+      });
+
+      /**
+       * Refresh the individual order.
+       */
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.order(variables.orderId),
       });
     },
   });

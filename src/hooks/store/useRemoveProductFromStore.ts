@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/lib/queryKeys";
 
-import { USE_MOCK_STORES } from "@/mocks/config";
+import { USE_MOCK_PRODUCTS } from "@/mocks/config";
 
 import { removeMockProductFromStore } from "@/mocks/stores";
 
@@ -44,7 +44,7 @@ export function useRemoveProductFromStore() {
        * ================================================================
        */
 
-      if (USE_MOCK_STORES) {
+      if (USE_MOCK_PRODUCTS) {
         const updatedStore = removeMockProductFromStore(storeId, productId);
 
         if (!updatedStore) {

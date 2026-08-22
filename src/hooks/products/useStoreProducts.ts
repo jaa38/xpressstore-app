@@ -6,17 +6,28 @@ import { queryKeys } from "@/lib/queryKeys";
 
 import { USE_MOCK_PRODUCTS } from "@/mocks/config";
 
-import { getMockProducts } from "@/mocks/products";
+import { getMockProductsByStore } from "@/mocks/products";
 
 /**
  * ============================================================================
- * USE PRODUCTS
+ * USE STORE PRODUCTS
+ * ============================================================================
+ *
+ * Retrieves the products assigned to a specific store.
+ *
+ * MOCK MODE
+ * ----------
+ * Uses getMockProductsByStore().
+ *
+ * REAL API
+ * --------
+ * Uses productService.getProductsByStore().
  * ============================================================================
  */
 
-export function useProducts() {
+export function useStoreProducts(storeId?: number) {
   const query = useQuery({
-    queryKey: queryKeys.products,
+    queryKey: queryKeys.productsByStore(storeId as number),
 
     queryFn: async () => {
       /**
@@ -29,9 +40,9 @@ export function useProducts() {
         return {
           responseCode: "00",
 
-          responseMessage: "Products retrieved successfully.",
+          responseMessage: "Store products retrieved successfully.",
 
-          data: getMockProducts(),
+          data: getMockProductsByStore(storeId as number),
         };
       }
 
@@ -41,8 +52,10 @@ export function useProducts() {
        * ================================================================
        */
 
-      return productService.getMerchantProducts();
+      return productService.getProductsByStore(storeId as number);
     },
+
+    enabled: !!storeId,
   });
 
   return {

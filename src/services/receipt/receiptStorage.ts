@@ -1,4 +1,4 @@
-import * as FileSystem from "expo-file-system";
+import { Directory, File, Paths } from "expo-file-system";
 
 /**
  * ---------------------------------------------------------------------------
@@ -17,11 +17,8 @@ const RECEIPTS_DIRECTORY_NAME = "Receipts";
 /**
  * Ensures that the application's Receipts directory exists.
  */
-function getReceiptsDirectory(): FileSystem.Directory {
-  const directory = new FileSystem.Directory(
-    FileSystem.Paths.document,
-    RECEIPTS_DIRECTORY_NAME
-  );
+function getReceiptsDirectory(): Directory {
+  const directory = new Directory(Paths.document, RECEIPTS_DIRECTORY_NAME);
 
   if (!directory.exists) {
     directory.create();
@@ -41,16 +38,21 @@ export async function saveReceiptPdf(
 ): Promise<string> {
   const directory = getReceiptsDirectory();
 
-  const destination = new FileSystem.File(directory, fileName);
+  const sourceFile = new File(sourceUri);
 
-  if (destination.exists) {
-    destination.delete();
+  const destinationFile = new File(directory, fileName);
+
+  /**
+   * Remove an existing receipt with the same name.
+   */
+  if (destinationFile.exists) {
+    destinationFile.delete();
   }
 
-  await FileSystem.copyAsync({
-    from: sourceUri,
-    to: destination.uri,
-  });
+  /**
+   * Use the modern Expo File API.
+   */
+  sourceFile.copy(destinationFile);
 
-  return destination.uri;
+  return destinationFile.uri;
 }

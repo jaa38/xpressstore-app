@@ -475,7 +475,6 @@ export default function StoreThemeScreen() {
 
       storeDiscounts: currentStore.discounts ?? [],
 
-      storeShippingRegion: [],
     };
 
     updateStoreMutation.mutate(payload, {

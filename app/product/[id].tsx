@@ -259,7 +259,7 @@ export default function ProductDetailsScreen() {
     reset({
       productName: product.productName ?? "",
 
-      category: product.productCategories?.[0]?.toString() ?? "",
+      category: String(product.productCategories?.[0]?.id ?? ""),
 
       description: product.description ?? "",
 

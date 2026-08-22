@@ -32,6 +32,9 @@ export const queryKeys = {
 
   product: (id: number) => [...queryKeys.products, id] as const,
 
+  productsByStore: (storeId: number) =>
+    [...queryKeys.products, "store", storeId] as const,
+
   /**
    * ---------------------------------------------------------------------------
    * Product Categories

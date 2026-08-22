@@ -27,6 +27,7 @@ import { spacing, theme, radius } from "@/theme";
 
 import { useStores } from "@/hooks/store/useStores";
 import { useProducts } from "@/hooks/products/useProducts";
+import { useStoreProducts } from "@/hooks/products/useStoreProducts";
 import { useAddProductToStore } from "@/hooks/products/useAddProductToStore";
 import { useRemoveProductFromStore } from "@/hooks/store/useRemoveProductFromStore";
 
@@ -224,6 +225,11 @@ export default function StoreProductsScreen() {
    * --------------------------------------------------------------------------
    * PRODUCTS
    * --------------------------------------------------------------------------
+   *
+   * Keep the existing merchant product list for the product picker.
+   *
+   * The store-specific relationship is loaded separately through
+   * useStoreProducts().
    */
 
   const {
@@ -232,6 +238,21 @@ export default function StoreProductsScreen() {
     isFetching: productsFetching,
     refetch: refetchProducts,
   } = useProducts();
+
+  /**
+   * --------------------------------------------------------------------------
+   * STORE PRODUCTS
+   * --------------------------------------------------------------------------
+   *
+   * This is now the source of truth for which products belong to this store.
+   */
+
+  const {
+    products: storeProducts,
+    isLoading: storeProductsLoading,
+    isFetching: storeProductsFetching,
+    refetch: refetchStoreProducts,
+  } = useStoreProducts(storeId);
 
   /**
    * --------------------------------------------------------------------------
@@ -280,13 +301,15 @@ export default function StoreProductsScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * CURRENT STORE PRODUCTS
+   * CURRENT STORE PRODUCT IDS
    * --------------------------------------------------------------------------
+   *
+   * Resolve the product relationship from the dedicated store-products query.
    */
 
   const storeProductIds = useMemo(() => {
-    return new Set(store?.products ?? []);
-  }, [store?.products]);
+    return new Set(storeProducts.map((product) => product.id));
+  }, [storeProducts]);
 
   /**
    * --------------------------------------------------------------------------
@@ -445,7 +468,11 @@ export default function StoreProductsScreen() {
     setRefreshing(true);
 
     try {
-      await Promise.all([refetchStores(), refetchProducts()]);
+      await Promise.all([
+        refetchStores(),
+        refetchProducts(),
+        refetchStoreProducts(),
+      ]);
     } finally {
       setRefreshing(false);
     }
@@ -457,7 +484,8 @@ export default function StoreProductsScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const isLoading = storesLoading || productsLoading;
+  const isLoading =
+    storesLoading || productsLoading || storeProductsLoading;
 
   /**
    * --------------------------------------------------------------------------
@@ -770,7 +798,7 @@ export default function StoreProductsScreen() {
 
         {/* PRODUCT REFRESH STATUS */}
 
-        {productsFetching && !isLoading && (
+        {(productsFetching || storeProductsFetching) && !isLoading && (
           <View
             style={{
               marginTop: spacing.sm,

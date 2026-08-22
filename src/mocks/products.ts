@@ -1,5 +1,6 @@
 // src/mocks/products.ts
 
+import { getMockStore } from "@/mocks/stores";
 import type { MerchantProduct } from "@/types/product";
 
 /**
@@ -310,6 +311,44 @@ let mockProducts: MerchantProduct[] = MOCK_PRODUCTS.map((product) => ({
 
 export function getMockProducts(): MerchantProduct[] {
   return [...mockProducts];
+}
+
+/**
+ * ============================================================================
+ * GET PRODUCTS BY STORE
+ * ============================================================================
+ *
+ * Returns the products currently assigned to a store.
+ *
+ * The store owns the product relationship through its `products` array.
+ * This repository resolves those product IDs into MerchantProduct objects.
+ *
+ * This mirrors:
+ *
+ * productService.getProductsByStore(storeId)
+ * ============================================================================
+ */
+
+export function getMockProductsByStore(storeId: number): MerchantProduct[] {
+  const store = getMockStore(storeId);
+
+  if (!store) {
+    return [];
+  }
+
+  const productIds = store.products ?? [];
+
+  return productIds
+    .map((productId) => getMockProduct(productId))
+    .filter((product): product is MerchantProduct => product !== undefined)
+    .map((product) => ({
+      ...product,
+
+      productImages:
+        product.productImages?.map((image) => ({
+          ...image,
+        })) ?? [],
+    }));
 }
 
 /**

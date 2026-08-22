@@ -307,7 +307,6 @@ export default function EditStoreScreen() {
 
       storeDiscounts: store.discounts ?? [],
 
-      storeShippingRegion: [],
     };
 
     /**

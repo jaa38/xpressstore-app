@@ -4,7 +4,7 @@ import { productService } from "@/services/products/productService";
 
 import { queryKeys } from "@/lib/queryKeys";
 
-import { USE_MOCK_STORES } from "@/mocks/config";
+import { USE_MOCK_PRODUCTS } from "@/mocks/config";
 
 import { addMockProductToStore } from "@/mocks/stores";
 
@@ -43,7 +43,7 @@ export function useAddProductToStore() {
        * ================================================================
        */
 
-      if (USE_MOCK_STORES) {
+      if (USE_MOCK_PRODUCTS) {
         /**
          * Add the product to every selected store.
          */

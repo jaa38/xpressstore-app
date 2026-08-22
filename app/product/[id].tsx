@@ -8,14 +8,11 @@ import {
   Image,
   Pressable,
 } from "react-native";
-
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { Ionicons } from "@expo/vector-icons";
-
-import { useEffect, useState, useCallback } from "react";
-
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 
 import { Button } from "@/components/ui/Button";
 import { ImageActionCard } from "@/components/ui/ImageActionCard";
@@ -25,20 +22,18 @@ import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { Card } from "@/components/ui/Card";
 
 import { spacing, theme, radius } from "@/theme";
 
 import { useProduct } from "@/hooks/products/useProduct";
-
 import { useCreateCategory } from "@/hooks/categories/useCreateCategory";
 import { useCategories } from "@/hooks/categories/useCategories";
-
-import * as ImagePicker from "expo-image-picker";
-
+import { useUploadProductImage } from "@/hooks/products/useUploadProductImage";
+import { useUpdateProduct } from "@/hooks/products/useUpdateProduct";
 import { useToast } from "@/hooks/useToast";
 
 import { useForm, Controller } from "react-hook-form";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -46,17 +41,11 @@ import {
   EditProductForm,
 } from "@/schemas/editProductSchema";
 
-import { useUploadProductImage } from "@/hooks/products/useUploadProductImage";
-
 import type {
   UpdateProductRequest,
   ProductImageDto,
   MerchantProduct,
 } from "@/types/product";
-
-import { useUpdateProduct } from "@/hooks/products/useUpdateProduct";
-
-import { Card } from "@/components/ui/Card";
 
 import { buildVariantPayload } from "@/utils/products/buildProductPayload";
 
@@ -67,9 +56,7 @@ import { buildVariantPayload } from "@/utils/products/buildProductPayload";
  */
 
 import { USE_MOCK_PRODUCTS } from "@/mocks/config";
-
 import { getMockProduct, updateMockProduct } from "@/mocks/products";
-
 import { MOCK_CATEGORIES } from "@/mocks/categories";
 
 /**
@@ -97,10 +84,6 @@ export default function ProductDetailsScreen() {
    * ==========================================================================
    * API PRODUCT
    * ==========================================================================
-   *
-   * The API hook remains completely intact.
-   *
-   * In mock mode, its result is ignored.
    */
 
   const { product: apiProduct, isLoading: apiLoading } = useProduct(productId);
@@ -116,8 +99,9 @@ export default function ProductDetailsScreen() {
   );
 
   /**
-   * Keep mock product synchronized
-   * with the shared repository.
+   * ==========================================================================
+   * KEEP MOCK PRODUCT SYNCHRONIZED
+   * ==========================================================================
    */
 
   useEffect(() => {
@@ -140,7 +124,7 @@ export default function ProductDetailsScreen() {
 
   /**
    * ==========================================================================
-   * CATEGORIES API
+   * CATEGORIES
    * ==========================================================================
    */
 
@@ -172,9 +156,40 @@ export default function ProductDetailsScreen() {
 
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
+  /**
+   * Tracks changes that happen outside React Hook Form.
+   *
+   * React Hook Form cannot automatically detect:
+   *
+   * - adding images
+   * - removing images
+   * - reordering images
+   * - changing the cover image
+   */
+
+  const [galleryImagesChanged, setGalleryImagesChanged] = useState(false);
+
   const [saving, setSaving] = useState(false);
 
   const [hasSaved, setHasSaved] = useState(false);
+
+  /**
+   * ==========================================================================
+   * FORM INITIALIZATION TRACKING
+   * ==========================================================================
+   */
+
+  const hasInitializedForm = useRef(false);
+
+  /**
+   * ==========================================================================
+   * RESET FORM INITIALIZATION WHEN PRODUCT CHANGES
+   * ==========================================================================
+   */
+
+  useEffect(() => {
+    hasInitializedForm.current = false;
+  }, [productId]);
 
   /**
    * ==========================================================================
@@ -207,9 +222,11 @@ export default function ProductDetailsScreen() {
     handleSubmit,
     reset,
     setValue,
-    formState: { isDirty, isValid },
+    formState: { isDirty, isValid, errors },
   } = useForm<EditProductForm>({
     resolver: zodResolver(editProductSchema),
+
+    mode: "onChange",
 
     defaultValues: {
       productName: "",
@@ -225,6 +242,14 @@ export default function ProductDetailsScreen() {
       minOrderQty: "",
     },
   });
+
+  /**
+   * ==========================================================================
+   * CHANGE DETECTION
+   * ==========================================================================
+   */
+
+  const hasChanges = isDirty || galleryImagesChanged;
 
   /**
    * ==========================================================================
@@ -252,11 +277,25 @@ export default function ProductDetailsScreen() {
       return;
     }
 
+    if (hasInitializedForm.current) {
+      return;
+    }
+
+    /**
+     * ========================================================================
+     * PRODUCT IMAGES
+     * ========================================================================
+     */
+
     const images = product.productImages?.map((image) => image.url) ?? [];
 
-    setGalleryImages(images);
+    /**
+     * ========================================================================
+     * INITIAL FORM VALUES
+     * ========================================================================
+     */
 
-    reset({
+    const initialFormValues: EditProductForm = {
       productName: product.productName ?? "",
 
       category: String(product.productCategories?.[0]?.id ?? ""),
@@ -278,7 +317,31 @@ export default function ProductDetailsScreen() {
       productLocation: product.productLocation ?? "",
 
       minOrderQty: product.minOrderQty ?? "",
+    };
+
+    /**
+     * ========================================================================
+     * INITIALIZE FORM
+     * ========================================================================
+     */
+
+    reset(initialFormValues, {
+      keepDirty: false,
     });
+
+    /**
+     * ========================================================================
+     * INITIALIZE GALLERY
+     * ========================================================================
+     */
+
+    setGalleryImages(images);
+
+    setGalleryImagesChanged(false);
+
+    setHasSaved(false);
+
+    hasInitializedForm.current = true;
   }, [product, reset]);
 
   /**
@@ -292,7 +355,7 @@ export default function ProductDetailsScreen() {
       const subscription = BackHandler.addEventListener(
         "hardwareBackPress",
         () => {
-          if (!isDirty) {
+          if (!hasChanges) {
             return false;
           }
 
@@ -305,7 +368,7 @@ export default function ProductDetailsScreen() {
       );
 
       return () => subscription.remove();
-    }, [isDirty, router])
+    }, [hasChanges, router])
   );
 
   /**
@@ -349,15 +412,15 @@ export default function ProductDetailsScreen() {
       return;
     }
 
-    setGalleryImages((current) => {
-      const updated = [...current, asset.uri];
+    const updatedGallery = [...galleryImages, asset.uri];
 
-      setValue("image", updated[0] ?? "", {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
+    setGalleryImages(updatedGallery);
 
-      return updated;
+    setGalleryImagesChanged(true);
+
+    setValue("image", updatedGallery[0] ?? "", {
+      shouldDirty: true,
+      shouldValidate: true,
     });
   }
 
@@ -392,17 +455,17 @@ export default function ProductDetailsScreen() {
 
     const selectedImages = result.assets.map((asset) => asset.uri);
 
-    setGalleryImages((current) => {
-      const merged = [...current, ...selectedImages];
+    const merged = [...galleryImages, ...selectedImages];
 
-      const uniqueImages = [...new Set(merged)].slice(0, MAX_GALLERY_IMAGES);
+    const uniqueImages = [...new Set(merged)].slice(0, MAX_GALLERY_IMAGES);
 
-      setValue("image", uniqueImages[0] ?? "", {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
+    setGalleryImages(uniqueImages);
 
-      return uniqueImages;
+    setGalleryImagesChanged(true);
+
+    setValue("image", uniqueImages[0] ?? "", {
+      shouldDirty: true,
+      shouldValidate: true,
     });
   }
 
@@ -427,15 +490,15 @@ export default function ProductDetailsScreen() {
           style: "destructive",
 
           onPress: () => {
-            setGalleryImages((current) => {
-              const updated = current.filter((_, i) => i !== index);
+            const updatedGallery = galleryImages.filter((_, i) => i !== index);
 
-              setValue("image", updated[0] ?? "", {
-                shouldDirty: true,
-                shouldValidate: true,
-              });
+            setGalleryImages(updatedGallery);
 
-              return updated;
+            setGalleryImagesChanged(true);
+
+            setValue("image", updatedGallery[0] ?? "", {
+              shouldDirty: true,
+              shouldValidate: true,
             });
           },
         },
@@ -454,21 +517,25 @@ export default function ProductDetailsScreen() {
       return;
     }
 
-    setGalleryImages((current) => {
-      const selected = current[index];
+    const selected = galleryImages[index];
 
-      if (!selected) {
-        return current;
-      }
+    if (!selected) {
+      return;
+    }
 
-      const reordered = [selected, ...current.filter((_, i) => i !== index)];
+    const reordered = [
+      selected,
 
-      setValue("image", reordered[0] ?? "", {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
+      ...galleryImages.filter((_, i) => i !== index),
+    ];
 
-      return reordered;
+    setGalleryImages(reordered);
+
+    setGalleryImagesChanged(true);
+
+    setValue("image", reordered[0] ?? "", {
+      shouldDirty: true,
+      shouldValidate: true,
     });
   }
 
@@ -489,26 +556,10 @@ export default function ProductDetailsScreen() {
      * ========================================================================
      * MOCK MODE
      * ========================================================================
-     *
-     * For mock mode we create a local option.
-     *
-     * The value is generated from the current
-     * timestamp so it does not collide with
-     * the existing mock category IDs.
      */
 
     if (USE_MOCK_PRODUCTS) {
       const mockValue = String(Date.now());
-
-      /**
-       * Since MOCK_CATEGORIES is
-       * imported from the mock module,
-       * we cannot mutate it directly.
-       *
-       * For the current form session,
-       * selecting the generated value is
-       * enough for the mock product update.
-       */
 
       setValue("category", mockValue, {
         shouldDirty: true,
@@ -575,6 +626,26 @@ export default function ProductDetailsScreen() {
 
   /**
    * ==========================================================================
+   * FORM VALIDATION ERROR
+   * ==========================================================================
+   */
+
+  function handleInvalidSubmit() {
+    console.log("EDIT PRODUCT FORM INVALID", errors);
+
+    const firstError = Object.values(errors)[0];
+
+    showToast({
+      type: "error",
+      title: "Check Product Details",
+      message:
+        firstError?.message ??
+        "Please correct the highlighted fields before saving.",
+    });
+  }
+
+  /**
+   * ==========================================================================
    * UPDATE PRODUCT
    * ==========================================================================
    */
@@ -584,23 +655,21 @@ export default function ProductDetailsScreen() {
       setSaving(true);
 
       /**
-       * ========================================================================
-       * MOCK MODE
-       * ========================================================================
-       *
-       * IMPORTANT:
-       *
-       * We do NOT:
-       *
-       * - upload images
-       * - call updateProductMutation
-       * - call the API
-       *
-       * We update the shared mock repository.
+       * ======================================================================
+       * PREPARE IMAGES
+       * ======================================================================
+       */
+
+      let images: ProductImageDto[] = [];
+
+      /**
+       * ======================================================================
+       * MOCK MODE IMAGE PREPARATION
+       * ======================================================================
        */
 
       if (USE_MOCK_PRODUCTS) {
-        const images: ProductImageDto[] = galleryImages.map((uri, index) => ({
+        images = galleryImages.map((uri, index) => ({
           filename: uri.startsWith("http")
             ? (product?.productImages?.[index]?.filename ??
               `product-${index + 1}.jpg`)
@@ -608,137 +677,78 @@ export default function ProductDetailsScreen() {
 
           url: uri,
         }));
-
-        const updatedProduct = updateMockProduct(productId, {
-          productName: data.productName.trim(),
-
-          description: data.description.trim(),
-
-          unitPrice: Number(data.price),
-
-          totalInStock: Number(data.stock),
-
-          isActive: data.visible,
-
-          productImages: images,
-
-          youtubeLink: data.youtubeLink.trim(),
-
-          unit: data.unit.trim(),
-
-          productLocation: data.productLocation.trim(),
-
-          minOrderQty: data.minOrderQty.trim(),
-        });
-
-        if (!updatedProduct) {
-          throw new Error("Mock product not found.");
-        }
-
-        /**
-         * Keep the local screen state
-         * synchronized.
-         */
-
-        setMockProduct(updatedProduct);
-
-        showToast({
-          type: "success",
-          title: "Product Updated",
-          message: "Changes saved successfully.",
-        });
-
-        setHasSaved(true);
-
-        const updatedGallery = images.map((image) => image.url);
-
-        setGalleryImages(updatedGallery);
-
-        reset({
-          ...data,
-          image: updatedGallery[0] ?? "",
-        });
-
-        router.back();
-
-        return;
       }
 
       /**
-       * ========================================================================
-       * API MODE
-       * ========================================================================
+       * ======================================================================
+       * API MODE IMAGE UPLOAD
+       * ======================================================================
        */
 
-      let images: ProductImageDto[] = [];
+      if (!USE_MOCK_PRODUCTS) {
+        if (galleryImages.length > 0) {
+          /**
+           * Separate remote and local images.
+           */
 
-      /**
-       * ------------------------------------------------------------------------
-       * IMAGES
-       * ------------------------------------------------------------------------
-       */
+          const remoteImages = galleryImages.filter((uri) =>
+            uri.startsWith("http")
+          );
 
-      if (galleryImages.length > 0) {
-        const remoteImages = galleryImages.filter((uri) =>
-          uri.startsWith("http")
-        );
+          const localImages = galleryImages.filter(
+            (uri) => !uri.startsWith("http")
+          );
 
-        const localImages = galleryImages.filter(
-          (uri) => !uri.startsWith("http")
-        );
+          /**
+           * Upload newly selected local images.
+           */
 
-        /**
-         * Upload newly selected
-         * local images.
-         */
+          const uploadedImages: ProductImageDto[] = [];
 
-        const uploadedImages: ProductImageDto[] = [];
+          for (const imageUri of localImages) {
+            const formData = new FormData();
 
-        for (const imageUri of localImages) {
-          const formData = new FormData();
+            formData.append("file", {
+              uri: imageUri,
+              name: `product-${Date.now()}.jpg`,
+              type: "image/jpeg",
+            } as any);
 
-          formData.append("file", {
-            uri: imageUri,
-            name: `product-${Date.now()}.jpg`,
-            type: "image/jpeg",
-          } as any);
+            const response = await uploadImagesMutation.mutateAsync(formData);
 
-          const response = await uploadImagesMutation.mutateAsync(formData);
-
-          uploadedImages.push(...response.data);
-        }
-
-        /**
-         * Convert existing
-         * remote images back into
-         * ProductImageDto.
-         */
-
-        const existingImages: ProductImageDto[] = remoteImages.map((url) => ({
-          filename:
-            product?.productImages.find((image) => image.url === url)
-              ?.filename ?? "",
-
-          url,
-        }));
-
-        /**
-         * Preserve gallery order.
-         */
-
-        images = galleryImages.map((uri) => {
-          if (uri.startsWith("http")) {
-            return existingImages.find((image) => image.url === uri)!;
+            uploadedImages.push(...response.data);
           }
 
-          return uploadedImages.shift()!;
-        });
+          /**
+           * Existing remote images.
+           */
+
+          const existingImages: ProductImageDto[] = remoteImages.map((url) => ({
+            filename:
+              product?.productImages?.find((image) => image.url === url)
+                ?.filename ?? "",
+
+            url,
+          }));
+
+          /**
+           * Preserve gallery order.
+           */
+
+          images = galleryImages.map((uri) => {
+            if (uri.startsWith("http")) {
+              return existingImages.find((image) => image.url === uri)!;
+            }
+
+            return uploadedImages.shift()!;
+          });
+        }
       }
 
       /**
-       * ------------------------------------------------------------------------
-       * API PAYLOAD
-       * ------------------------------------------------------------------------
+       * ======================================================================
+       * UPDATE PAYLOAD
+       * ======================================================================
        */
 
       const payload: UpdateProductRequest = {
@@ -770,20 +780,153 @@ export default function ProductDetailsScreen() {
       };
 
       /**
-       * ------------------------------------------------------------------------
-       * API UPDATE
-       * ------------------------------------------------------------------------
+       * ======================================================================
+       * MOCK MODE
+       * ======================================================================
+       *
+       * IMPORTANT:
+       *
+       * Do NOT rely on updateProductMutation
+       * returning the updated MerchantProduct here.
+       *
+       * updateMockProduct() updates the shared
+       * repository. We then read the updated
+       * product back with getMockProduct().
+       *
+       * This also ensures fields such as:
+       *
+       * - productName
+       * - price
+       * - stock
+       * - visibility
+       * - category
+       * - description
+       *
+       * are persisted in mock mode.
        */
 
-      await updateProductMutation.mutateAsync({
-        productId,
-        payload,
+      if (USE_MOCK_PRODUCTS) {
+        /**
+         * Find the selected category.
+         */
+
+        const selectedCategory = categoryOptions.find(
+          (category) => category.value === data.category
+        );
+
+        /**
+         * Update the shared mock repository.
+         */
+
+        updateMockProduct(productId, {
+          productName: data.productName.trim(),
+
+          description: data.description.trim(),
+
+          unitPrice: Number(data.price),
+
+          totalInStock: Number(data.stock),
+
+          isActive: data.visible,
+
+          youtubeLink: data.youtubeLink.trim(),
+
+          unit: data.unit.trim(),
+
+          productLocation: data.productLocation.trim(),
+
+          minOrderQty: data.minOrderQty.trim(),
+
+          productImages: images,
+
+          productCategories: selectedCategory
+            ? [
+                {
+                  id: Number(selectedCategory.value),
+
+                  name: selectedCategory.label,
+
+                  description: "",
+
+                  isActive: true,
+                },
+              ]
+            : [],
+
+          variations: product?.variations ?? [],
+        });
+
+        /**
+         * Read the updated product
+         * back from the shared repository.
+         */
+
+        const updatedProduct = getMockProduct(productId);
+
+        if (!updatedProduct) {
+          throw new Error("Product could not be updated.");
+        }
+
+        /**
+         * Synchronize local screen state.
+         */
+
+        setMockProduct(updatedProduct);
+      } else {
+        /**
+         * ====================================================================
+         * API MODE
+         * ====================================================================
+         */
+
+        await updateProductMutation.mutateAsync({
+          productId,
+
+          payload,
+        });
+      }
+
+      /**
+       * ======================================================================
+       * UPDATED GALLERY
+       * ======================================================================
+       */
+
+      const updatedGallery = images.map((image) => image.url);
+
+      setGalleryImages(updatedGallery);
+
+      /**
+       * ======================================================================
+       * RESET FORM BASELINE
+       * ======================================================================
+       *
+       * The values that were just saved
+       * become the new baseline.
+       */
+
+      const savedFormValues: EditProductForm = {
+        ...data,
+
+        image: updatedGallery[0] ?? "",
+      };
+
+      reset(savedFormValues, {
+        keepDirty: false,
       });
 
       /**
-       * ------------------------------------------------------------------------
+       * Gallery is also now clean.
+       */
+
+      setGalleryImagesChanged(false);
+
+      setHasSaved(true);
+
+      /**
+       * ======================================================================
        * SUCCESS
-       * ------------------------------------------------------------------------
+       * ======================================================================
        */
 
       showToast({
@@ -792,16 +935,17 @@ export default function ProductDetailsScreen() {
         message: "Changes saved successfully.",
       });
 
-      setHasSaved(true);
-
-      const updatedGallery = images.map((image) => image.url);
-
-      setGalleryImages(updatedGallery);
-
-      reset({
-        ...data,
-        image: updatedGallery[0] ?? "",
-      });
+      /**
+       * ======================================================================
+       * RETURN TO PRODUCT SCREEN
+       * ======================================================================
+       *
+       * In mock mode the shared repository
+       * has already been updated.
+       *
+       * In API mode the mutation has completed
+       * and React Query handles invalidation.
+       */
 
       router.back();
     } catch (error) {
@@ -824,7 +968,7 @@ export default function ProductDetailsScreen() {
    */
 
   function confirmDiscardChanges(onDiscard: () => void) {
-    if (!isDirty || hasSaved) {
+    if (!hasChanges || hasSaved) {
       onDiscard();
 
       return;
@@ -842,6 +986,7 @@ export default function ProductDetailsScreen() {
         {
           text: "Discard",
           style: "destructive",
+
           onPress: onDiscard,
         },
       ]
@@ -981,7 +1126,9 @@ export default function ProductDetailsScreen() {
         }}
         contentContainerStyle={{
           paddingHorizontal: spacing.lg,
+
           paddingTop: spacing.lg,
+
           paddingBottom: spacing["3xl"],
         }}
         showsVerticalScrollIndicator={false}
@@ -1004,7 +1151,7 @@ export default function ProductDetailsScreen() {
 
           {/* ================================================================
               IMAGE CARD
-          ================================================================ */}
+          ================================================================= */}
 
           <Card
             style={{
@@ -1208,9 +1355,7 @@ export default function ProductDetailsScreen() {
                 </ScrollView>
               )}
 
-              {/* ============================================================
-                  PRODUCT META
-              ============================================================ */}
+              {/* PRODUCT META */}
 
               <View
                 style={{
@@ -1278,9 +1423,7 @@ export default function ProductDetailsScreen() {
             </View>
           </Card>
 
-          {/* ================================================================
-              PRODUCT NAME
-          ================================================================ */}
+          {/* PRODUCT NAME */}
 
           <Controller
             control={control}
@@ -1296,9 +1439,7 @@ export default function ProductDetailsScreen() {
             )}
           />
 
-          {/* ================================================================
-              CATEGORY
-          ================================================================ */}
+          {/* CATEGORY */}
 
           <Controller
             control={control}
@@ -1322,9 +1463,7 @@ export default function ProductDetailsScreen() {
             )}
           />
 
-          {/* ================================================================
-              CREATE CATEGORY
-          ================================================================ */}
+          {/* CREATE CATEGORY */}
 
           <View
             style={{
@@ -1347,9 +1486,7 @@ export default function ProductDetailsScreen() {
             />
           </View>
 
-          {/* ================================================================
-              PRICING & INVENTORY
-          ================================================================ */}
+          {/* PRICING & INVENTORY */}
 
           <View
             style={{
@@ -1446,9 +1583,7 @@ export default function ProductDetailsScreen() {
             />
           </View>
 
-          {/* ================================================================
-              DESCRIPTION
-          ================================================================ */}
+          {/* DESCRIPTION */}
 
           <Controller
             control={control}
@@ -1547,15 +1682,30 @@ export default function ProductDetailsScreen() {
         </View>
 
         {/* ==================================================================
-            SAVE
+            SAVE CHANGES
         ================================================================== */}
 
         <Button
-          title={saving ? "Saving..." : isDirty ? "Save Changes" : "No Changes"}
+          title={saving ? "Saving..." : "Save Changes"}
           variant="primary"
+          size="large"
           loading={saving}
-          disabled={saving || !isDirty || !isValid}
-          onPress={handleSubmit(handleUpdateProduct)}
+          disabled={saving || !hasChanges}
+          onPress={() => {
+            console.log("SAVE BUTTON PRESSED");
+
+            console.log("FORM DIRTY:", isDirty);
+
+            console.log("FORM VALID:", isValid);
+
+            console.log("FORM VALUES:", {
+              productName: "submitted by RHF",
+              price: "submitted by RHF",
+              stock: "submitted by RHF",
+            });
+
+            handleSubmit(handleUpdateProduct, handleInvalidSubmit)();
+          }}
           style={{
             marginTop: spacing.xl,
           }}

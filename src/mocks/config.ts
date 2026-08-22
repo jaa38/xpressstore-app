@@ -11,9 +11,9 @@
  * ============================================================================
  */
 
-export const USE_MOCK_STORES = false;
+export const USE_MOCK_STORES = true;
 
-export const USE_MOCK_PRODUCTS = false;
+export const USE_MOCK_PRODUCTS = true;
 
 export const USE_MOCK_CUSTOMERS = true;
 

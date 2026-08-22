@@ -10,21 +10,19 @@ import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-
 import { ImageActionCard } from "@/components/ui/ImageActionCard";
+import { Input } from "@/components/ui/Input";
+import { Dropdown } from "@/components/ui/Dropdown";
 
 import { spacing, theme } from "@/theme";
+
 import { ROUTES } from "@/navigation/routes";
 
 import * as ImagePicker from "expo-image-picker";
 
-import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/Input";
-
-import { Dropdown } from "@/components/ui/Dropdown";
+import { useState } from "react";
 
 import { AddProductHeader } from "@/components/product/AddProductHeader";
-
 import { AddProductFooter } from "@/components/product/AddProductFooter";
 
 import { useForm, Controller } from "react-hook-form";
@@ -40,10 +38,39 @@ import { useProductDraftStore } from "@/store/product/productDraftStore";
 
 import { useCategories } from "@/hooks/categories/useCategories";
 import { useCreateCategory } from "@/hooks/categories/useCreateCategory";
+
 import { useToast } from "@/hooks/useToast";
 
+/**
+ * ============================================================================
+ * MOCKS
+ * ============================================================================
+ */
+
+import { USE_MOCK_PRODUCTS } from "@/mocks/config";
+
+import { MOCK_CATEGORIES } from "@/mocks/categories";
+
+/**
+ * ============================================================================
+ * PRODUCT INFO SCREEN
+ * ============================================================================
+ */
+
 export default function InfoScreen() {
+  /**
+   * ==========================================================================
+   * PRODUCT DRAFT
+   * ==========================================================================
+   */
+
   const { product, updateProduct } = useProductDraftStore();
+
+  /**
+   * ==========================================================================
+   * FORM
+   * ==========================================================================
+   */
 
   const {
     control,
@@ -65,7 +92,34 @@ export default function InfoScreen() {
     },
   });
 
+  /**
+   * ==========================================================================
+   * CATEGORY STATE
+   * ==========================================================================
+   *
+   * API mode:
+   *   Categories come from useCategories().
+   *
+   * Mock mode:
+   *   Categories come from MOCK_CATEGORIES and are kept locally so a newly
+   *   created category can immediately appear in the dropdown.
+   */
+
+  const [mockCategories, setMockCategories] = useState(() => [
+    ...MOCK_CATEGORIES,
+  ]);
+
   const [newCategory, setNewCategory] = useState("");
+
+  /**
+   * ==========================================================================
+   * API CATEGORIES
+   * ==========================================================================
+   *
+   * The hook remains active so API mode continues to work normally.
+   *
+   * In mock mode its result is ignored.
+   */
 
   const {
     data: categories = [],
@@ -73,13 +127,49 @@ export default function InfoScreen() {
     isError: categoriesError,
   } = useCategories();
 
+  /**
+   * ==========================================================================
+   * CATEGORY SOURCE OF TRUTH
+   * ==========================================================================
+   */
+
+  const categoryOptions = USE_MOCK_PRODUCTS ? mockCategories : categories;
+
+  const isCategoryLoading = USE_MOCK_PRODUCTS ? false : categoriesLoading;
+
+  const isCategoryError = USE_MOCK_PRODUCTS ? false : categoriesError;
+
+  /**
+   * ==========================================================================
+   * CREATE CATEGORY MUTATION
+   * ==========================================================================
+   */
+
   const createCategoryMutation = useCreateCategory();
 
+  /**
+   * ==========================================================================
+   * TOAST
+   * ==========================================================================
+   */
+
   const { showToast } = useToast();
+
+  /**
+   * ==========================================================================
+   * GALLERY
+   * ==========================================================================
+   */
 
   const [galleryImages, setGalleryImages] = useState<string[]>(
     product.image ? [product.image] : []
   );
+
+  /**
+   * ==========================================================================
+   * IMAGE CONFIGURATION
+   * ==========================================================================
+   */
 
   const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
     mediaTypes: ["images"],
@@ -88,83 +178,214 @@ export default function InfoScreen() {
     quality: 0.8,
   };
 
+  /**
+   * ==========================================================================
+   * CAMERA
+   * ==========================================================================
+   */
+
   const handleCamera = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permission.granted) {
+      showToast({
+        type: "error",
+        title: "Camera Permission Required",
+        message: "Please allow camera access to take a product photo.",
+      });
+
       return;
     }
 
     const result = await ImagePicker.launchCameraAsync(IMAGE_PICKER_OPTIONS);
 
-    if (!result.canceled) {
-      const asset = result.assets?.[0];
-
-      if (asset) {
-        setValue("image", asset.uri, {
-          shouldValidate: true,
-        });
-
-        updateProduct({
-          image: asset.uri,
-        });
-
-        clearErrors("image");
-      }
+    if (result.canceled) {
+      return;
     }
+
+    const asset = result.assets?.[0];
+
+    if (!asset) {
+      return;
+    }
+
+    setValue("image", asset.uri, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+
+    updateProduct({
+      image: asset.uri,
+    });
+
+    setGalleryImages([asset.uri]);
+
+    clearErrors("image");
   };
+
+  /**
+   * ==========================================================================
+   * GALLERY
+   * ==========================================================================
+   */
 
   const handleGallery = async () => {
     const result =
       await ImagePicker.launchImageLibraryAsync(IMAGE_PICKER_OPTIONS);
 
-    if (!result.canceled) {
-      const asset = result.assets?.[0];
-
-      if (asset) {
-        setValue("image", asset.uri, {
-          shouldValidate: true,
-        });
-
-        updateProduct({
-          image: asset.uri,
-        });
-
-        clearErrors("image");
-      }
+    if (result.canceled) {
+      return;
     }
+
+    const asset = result.assets?.[0];
+
+    if (!asset) {
+      return;
+    }
+
+    setValue("image", asset.uri, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+
+    updateProduct({
+      image: asset.uri,
+    });
+
+    setGalleryImages([asset.uri]);
+
+    clearErrors("image");
   };
 
+  /**
+   * ==========================================================================
+   * IMAGE
+   * ==========================================================================
+   */
+
   const imageUri = watch("image");
+
+  /**
+   * ==========================================================================
+   * REMOVE IMAGE
+   * ==========================================================================
+   */
 
   const handleRemoveImage = () => {
     setValue("image", "", {
       shouldValidate: true,
+      shouldDirty: true,
     });
 
     updateProduct({
       image: "",
     });
+
+    setGalleryImages([]);
+
+    clearErrors("image");
   };
+
+  /**
+   * ==========================================================================
+   * GENERATE SKU
+   * ==========================================================================
+   */
 
   function generateSku() {
     const timestamp = Date.now().toString().slice(-4);
 
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
 
-    setValue("sku", `SKU-${random}-${timestamp}`);
+    setValue("sku", `SKU-${random}-${timestamp}`, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   }
 
+  /**
+   * ==========================================================================
+   * CREATE CATEGORY
+   * ==========================================================================
+   */
+
   async function handleCreateCategory() {
-    if (!newCategory.trim()) {
+    const categoryName = newCategory.trim();
+
+    if (!categoryName) {
       return;
     }
 
+    /**
+     * ========================================================================
+     * MOCK MODE
+     * ========================================================================
+     *
+     * Do not call the API.
+     *
+     * Create a local category and add it to the local category list so it
+     * immediately becomes available in the dropdown.
+     */
+
+    if (USE_MOCK_PRODUCTS) {
+      const mockCategory = {
+        value: `mock-category-${Date.now()}`,
+        label: categoryName,
+      };
+
+      setMockCategories((current) => {
+        /**
+         * Prevent duplicate category names.
+         */
+
+        const alreadyExists = current.some(
+          (category) =>
+            category.label.trim().toLowerCase() === categoryName.toLowerCase()
+        );
+
+        if (alreadyExists) {
+          return current;
+        }
+
+        return [...current, mockCategory];
+      });
+
+      /**
+       * Select the newly created category.
+       */
+
+      setValue("category", mockCategory.value, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+
+      setNewCategory("");
+
+      showToast({
+        type: "success",
+        title: "Category Created",
+        message: `${categoryName} has been added.`,
+      });
+
+      return;
+    }
+
+    /**
+     * ========================================================================
+     * API MODE
+     * ========================================================================
+     */
+
     try {
-      const category = await createCategoryMutation.mutateAsync(newCategory);
+      const category = await createCategoryMutation.mutateAsync(categoryName);
+
+      if (!category) {
+        throw new Error("Category could not be created.");
+      }
 
       setValue("category", category.value, {
         shouldValidate: true,
+        shouldDirty: true,
       });
 
       setNewCategory("");
@@ -185,18 +406,35 @@ export default function InfoScreen() {
     }
   }
 
+  /**
+   * ==========================================================================
+   * NEXT
+   * ==========================================================================
+   */
+
   function handleNext(data: ProductInfoForm) {
     updateProduct({
       productName: data.productName,
+
       description: data.description,
+
       category: data.category,
+
       brand: data.brand,
+
       sku: data.sku,
+
       image: data.image,
     });
 
     router.push(ROUTES.ADD_PRODUCT_PRICING);
   }
+
+  /**
+   * ==========================================================================
+   * UI
+   * ==========================================================================
+   */
 
   return (
     <SafeAreaView
@@ -206,7 +444,9 @@ export default function InfoScreen() {
       }}
       edges={["top"]}
     >
-      {/* HEADER */}
+      {/* ======================================================================
+          HEADER
+      ====================================================================== */}
 
       <AddProductHeader
         title="Add New Product"
@@ -218,7 +458,9 @@ export default function InfoScreen() {
 
       <Divider />
 
-      {/* CONTENT */}
+      {/* ======================================================================
+          CONTENT
+      ====================================================================== */}
 
       <View
         style={{
@@ -236,12 +478,21 @@ export default function InfoScreen() {
             paddingBottom: spacing.xl,
           }}
           showsVerticalScrollIndicator={true}
+          keyboardShouldPersistTaps="handled"
         >
           <AppText variant="body" color="secondary">
             Tell shoppers what they're buying. Add a great photo and clear name.
           </AppText>
 
-          <View style={{ marginTop: spacing.lg }}>
+          {/* ==================================================================
+              PRODUCT IMAGE
+          ================================================================== */}
+
+          <View
+            style={{
+              marginTop: spacing.lg,
+            }}
+          >
             <AppText variant="caption">Product Image</AppText>
 
             <View
@@ -289,7 +540,15 @@ export default function InfoScreen() {
                 </AppText>
               )}
 
-              <View style={{ marginTop: spacing.md }}>
+              {/* ==============================================================
+                  PRODUCT NAME
+              ============================================================== */}
+
+              <View
+                style={{
+                  marginTop: spacing.md,
+                }}
+              >
                 <Controller
                   control={control}
                   name="productName"
@@ -310,7 +569,15 @@ export default function InfoScreen() {
               </View>
             </View>
 
-            <View style={{ marginTop: spacing.md }}>
+            {/* ==================================================================
+                DESCRIPTION
+            ================================================================== */}
+
+            <View
+              style={{
+                marginTop: spacing.md,
+              }}
+            >
               <Controller
                 control={control}
                 name="description"
@@ -326,6 +593,10 @@ export default function InfoScreen() {
                 )}
               />
             </View>
+
+            {/* ==================================================================
+                CATEGORY
+            ================================================================== */}
 
             <View
               style={{
@@ -345,14 +616,14 @@ export default function InfoScreen() {
                     value={value}
                     error={
                       error?.message ??
-                      (categoriesError
+                      (isCategoryError
                         ? "Unable to load categories."
                         : undefined)
                     }
-                    disabled={categoriesLoading}
-                    options={categories}
+                    disabled={isCategoryLoading}
+                    options={categoryOptions}
                     placeholder={
-                      categoriesLoading
+                      isCategoryLoading
                         ? "Loading categories..."
                         : "Select category"
                     }
@@ -360,6 +631,10 @@ export default function InfoScreen() {
                   />
                 )}
               />
+
+              {/* ==============================================================
+                  CREATE CATEGORY
+              ============================================================== */}
 
               <View
                 style={{
@@ -377,14 +652,27 @@ export default function InfoScreen() {
                 <Button
                   title="Add Category"
                   variant="tertiary"
-                  loading={createCategoryMutation.isPending}
-                  disabled={!newCategory.trim()}
+                  loading={
+                    USE_MOCK_PRODUCTS ? false : createCategoryMutation.isPending
+                  }
+                  disabled={
+                    !newCategory.trim() ||
+                    (!USE_MOCK_PRODUCTS && createCategoryMutation.isPending)
+                  }
                   onPress={handleCreateCategory}
                 />
               </View>
             </View>
 
-            <View style={{ marginTop: spacing.md }}>
+            {/* ==================================================================
+                BRAND
+            ================================================================== */}
+
+            <View
+              style={{
+                marginTop: spacing.md,
+              }}
+            >
               <Controller
                 control={control}
                 name="brand"
@@ -399,6 +687,10 @@ export default function InfoScreen() {
                 )}
               />
             </View>
+
+            {/* ==================================================================
+                SKU
+            ================================================================== */}
 
             <View
               style={{
@@ -451,7 +743,12 @@ export default function InfoScreen() {
             </View>
           </View>
         </ScrollView>
+
         <Divider />
+
+        {/* ======================================================================
+            FOOTER
+        ====================================================================== */}
 
         <AddProductFooter
           onSaveDraft={() => {

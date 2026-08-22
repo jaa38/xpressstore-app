@@ -1,17 +1,19 @@
-import { View, ScrollView, Pressable, Image } from "react-native";
+import { View, ScrollView, Image } from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
+
 import { router } from "expo-router";
 
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
 import { Divider } from "@/components/ui/Divider";
+import { Card } from "@/components/ui/Card";
 
 import { spacing, theme } from "@/theme";
 
 import { AddProductHeader } from "@/components/product/AddProductHeader";
 import { AddProductFooter } from "@/components/product/AddProductFooter";
-import { Card } from "@/components/ui/Card";
 
 import { useProductDraftStore } from "@/store/product/productDraftStore";
 
@@ -23,13 +25,9 @@ import { useUploadProductImage } from "@/hooks/products/useUploadProductImage";
 
 import { formatCurrency } from "@/utils/formatters/currency";
 
-import type { CreateProductRequest } from "@/types/product";
-
-import type { ProductImageDto } from "@/types/product";
+import type { CreateProductRequest, ProductImageDto } from "@/types/product";
 
 import { ROUTES } from "@/navigation/routes";
-
-import type { Currency } from "@/types/currency";
 
 import { useState } from "react";
 
@@ -38,6 +36,14 @@ import { useToast } from "@/hooks/useToast";
 import { buildVariantPayload } from "@/utils/products/buildProductPayload";
 
 import { useAddProductToStore } from "@/hooks/products/useAddProductToStore";
+
+import { USE_MOCK_PRODUCTS } from "@/mocks/config";
+
+/**
+ * ============================================================================
+ * EDIT ACTIONS
+ * ============================================================================
+ */
 
 function editInfo() {
   router.replace(ROUTES.ADD_PRODUCT_INFO);
@@ -55,60 +61,145 @@ function editStorefront() {
   router.replace(ROUTES.ADD_PRODUCT_STOREFRONT);
 }
 
+/**
+ * ============================================================================
+ * REVIEW SCREEN
+ * ============================================================================
+ */
+
 export default function ReviewScreen() {
+  /**
+   * ==========================================================================
+   * PRODUCT DRAFT
+   * ==========================================================================
+   */
+
   const { product, resetProduct } = useProductDraftStore();
+
+  /**
+   * ==========================================================================
+   * MUTATIONS
+   * ==========================================================================
+   */
+
   const createProductMutation = useCreateProduct();
 
   const addProductToStoreMutation = useAddProductToStore();
 
   const uploadImagesMutation = useUploadProductImage();
 
+  /**
+   * ==========================================================================
+   * TOAST
+   * ==========================================================================
+   */
+
   const { showToast } = useToast();
 
+  /**
+   * ==========================================================================
+   * STATE
+   * ==========================================================================
+   */
+
   const [publishing, setPublishing] = useState(false);
+
+  /**
+   * ==========================================================================
+   * PUBLISH PRODUCT
+   * ==========================================================================
+   */
 
   async function publishProduct() {
     try {
       setPublishing(true);
 
       /**
-       * ------------------------------------------------------------
-       * Upload Product Images
-       * ------------------------------------------------------------
+       * ========================================================================
+       * PRODUCT IMAGES
+       * ========================================================================
+       *
+       * MOCK MODE
+       * ----------
+       *
+       * Local image URIs are stored directly in the mock repository.
+       *
+       * No image upload API is called.
+       *
+       * API MODE
+       * --------
+       *
+       * Local images are uploaded to the real API first.
        */
 
       const uploadedImages: ProductImageDto[] = [];
 
-      const imagesToUpload = [product.image, ...product.images].filter(
-        (image): image is string => Boolean(image) && !image.startsWith("http")
-      );
+      /**
+       * ========================================================================
+       * MOCK MODE — IMAGE PREPARATION
+       * ========================================================================
+       */
 
-      const uniqueImages = [...new Set(imagesToUpload)];
+      if (USE_MOCK_PRODUCTS) {
+        const mockImageUris = [product.image, ...product.images].filter(
+          (image): image is string => Boolean(image)
+        );
 
-      for (const imageUri of uniqueImages) {
-        const formData = new FormData();
+        const uniqueImages = [...new Set(mockImageUris)];
 
-        formData.append("file", {
-          uri: imageUri,
-          name: `product-${Date.now()}.jpg`,
-          type: "image/jpeg",
-        } as any);
-
-        const response = await uploadImagesMutation.mutateAsync(formData);
-
-        uploadedImages.push(...response.data);
+        uniqueImages.forEach((uri, index) => {
+          uploadedImages.push({
+            filename: `mock-product-${Date.now()}-${index}.jpg`,
+            url: uri,
+          });
+        });
       }
 
       /**
-       * ------------------------------------------------------------
-       * Build Xpress API Payload
-       * ------------------------------------------------------------
+       * ========================================================================
+       * API MODE — IMAGE UPLOAD
+       * ========================================================================
+       */
+
+      if (!USE_MOCK_PRODUCTS) {
+        const imagesToUpload = [product.image, ...product.images].filter(
+          (image): image is string =>
+            Boolean(image) && !image.startsWith("http")
+        );
+
+        const uniqueImages = [...new Set(imagesToUpload)];
+
+        for (const imageUri of uniqueImages) {
+          const formData = new FormData();
+
+          formData.append("file", {
+            uri: imageUri,
+            name: `product-${Date.now()}.jpg`,
+            type: "image/jpeg",
+          } as any);
+
+          const response = await uploadImagesMutation.mutateAsync(formData);
+
+          uploadedImages.push(...response.data);
+        }
+      }
+
+      /**
+       * ========================================================================
+       * BUILD VARIANT PAYLOAD
+       * ========================================================================
        */
 
       const variantPayload = buildVariantPayload(
         product.variants,
         product.variantsEnabled
       );
+
+      /**
+       * ========================================================================
+       * BUILD PRODUCT PAYLOAD
+       * ========================================================================
+       */
 
       const payload: CreateProductRequest = {
         id: 0,
@@ -139,17 +230,48 @@ export default function ReviewScreen() {
       };
 
       /**
-       * ------------------------------------------------------------
-       * Create Product
-       * ------------------------------------------------------------
+       * ========================================================================
+       * CREATE PRODUCT
+       * ========================================================================
+       *
+       * The useCreateProduct hook decides whether this goes to:
+       *
+       *     MOCK REPOSITORY
+       *
+       * or
+       *
+       *     REAL API
        */
 
-      const createdProduct = await createProductMutation.mutateAsync(payload);
+      const createdProduct = await createProductMutation.mutateAsync({
+        payload,
+      });
 
-      if (product.storeIds.length > 0) {
+      /**
+       * ========================================================================
+       * STORE ASSIGNMENT
+       * ========================================================================
+       *
+       * API MODE
+       * --------
+       *
+       * Assign the newly-created product to the selected stores.
+       *
+       * MOCK MODE
+       * ---------
+       *
+       * We intentionally skip this for now because store assignment has not
+       * yet been moved into the mock repository.
+       *
+       * This prevents the Review screen from making an unexpected API call
+       * while USE_MOCK_PRODUCTS=true.
+       */
+
+      if (!USE_MOCK_PRODUCTS && product.storeIds.length > 0) {
         try {
           await addProductToStoreMutation.mutateAsync({
             productId: createdProduct.data.id,
+
             storeIds: product.storeIds,
           });
         } catch (error) {
@@ -157,7 +279,9 @@ export default function ReviewScreen() {
 
           showToast({
             type: "error",
+
             title: "Product Created",
+
             message:
               "The product was created, but it could not be assigned to the selected stores.",
           });
@@ -169,42 +293,73 @@ export default function ReviewScreen() {
       }
 
       /**
-       * ------------------------------------------------------------
-       * Success
-       * ------------------------------------------------------------
+       * ========================================================================
+       * SUCCESS
+       * ========================================================================
        */
 
       showToast({
         type: "success",
+
         title: "Product Created",
-        message: "Your product has been published successfully.",
+
+        message: USE_MOCK_PRODUCTS
+          ? "Your product has been added successfully."
+          : "Your product has been published successfully.",
       });
+
+      /**
+       * Reset the draft after successful creation.
+       */
 
       resetProduct();
 
+      /**
+       * Return to Products.
+       */
+
       router.replace(ROUTES.PRODUCTS);
     } catch (error) {
+      /**
+       * ========================================================================
+       * ERROR
+       * ========================================================================
+       */
+
       console.error("CREATE PRODUCT ERROR", error);
 
       showToast({
         type: "error",
+
         title: "Unable to Create Product",
-        message: "Please try again.",
+
+        message: USE_MOCK_PRODUCTS
+          ? "Unable to create the mock product. Please try again."
+          : "Please try again.",
       });
     } finally {
       setPublishing(false);
     }
   }
 
+  /**
+   * ==========================================================================
+   * UI
+   * ==========================================================================
+   */
+
   return (
     <SafeAreaView
       style={{
         flex: 1,
+
         backgroundColor: theme.background.primary,
       }}
       edges={["top"]}
     >
-      {/* HEADER */}
+      {/* ====================================================================
+          HEADER
+      ==================================================================== */}
 
       <AddProductHeader
         title="Add New Product"
@@ -216,11 +371,14 @@ export default function ReviewScreen() {
 
       <Divider />
 
-      {/* CONTENT */}
+      {/* ====================================================================
+          CONTENT
+      ==================================================================== */}
 
       <View
         style={{
           flex: 1,
+
           backgroundColor: theme.background.primary,
         }}
       >
@@ -230,17 +388,29 @@ export default function ReviewScreen() {
           }}
           contentContainerStyle={{
             paddingHorizontal: spacing.lg,
+
             paddingTop: spacing.md,
+
             paddingBottom: spacing.xl,
           }}
           showsVerticalScrollIndicator={false}
         >
-          <View style={{ gap: spacing.md }}>
+          <View
+            style={{
+              gap: spacing.md,
+            }}
+          >
+            {/* ==============================================================
+                PRODUCT SUMMARY
+            ============================================================== */}
+
             <Card>
               <View
                 style={{
                   flexDirection: "row",
+
                   gap: spacing.md,
+
                   alignItems: "center",
                 }}
               >
@@ -248,8 +418,11 @@ export default function ReviewScreen() {
                   <View
                     style={{
                       width: 72,
+
                       height: 72,
+
                       borderRadius: 12,
+
                       overflow: "hidden",
                     }}
                   >
@@ -259,6 +432,7 @@ export default function ReviewScreen() {
                       }}
                       style={{
                         width: "100%",
+
                         height: "100%",
                       }}
                     />
@@ -267,6 +441,7 @@ export default function ReviewScreen() {
                   <View
                     style={{
                       width: 72,
+
                       height: 72,
 
                       borderRadius: 12,
@@ -274,6 +449,7 @@ export default function ReviewScreen() {
                       backgroundColor: theme.icon.branding.background,
 
                       justifyContent: "center",
+
                       alignItems: "center",
                     }}
                   >
@@ -288,7 +464,7 @@ export default function ReviewScreen() {
                 <View
                   style={{
                     flex: 1,
-                    // gap: spacing.xs,
+
                     justifyContent: "space-evenly",
                   }}
                 >
@@ -307,11 +483,17 @@ export default function ReviewScreen() {
               </View>
             </Card>
 
+            {/* ==============================================================
+                PRODUCT INFORMATION
+            ============================================================== */}
+
             <Card>
               <View
                 style={{
                   flexDirection: "row",
+
                   justifyContent: "space-between",
+
                   alignItems: "center",
                 }}
               >
@@ -323,12 +505,16 @@ export default function ReviewScreen() {
               <View
                 style={{
                   marginTop: spacing.rg,
+
                   gap: spacing.sm,
                 }}
               >
+                {/* NAME */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -341,6 +527,7 @@ export default function ReviewScreen() {
                     color="primary"
                     style={{
                       flexShrink: 1,
+
                       textAlign: "right",
                     }}
                   >
@@ -348,9 +535,12 @@ export default function ReviewScreen() {
                   </AppText>
                 </View>
 
+                {/* CATEGORY */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -363,6 +553,7 @@ export default function ReviewScreen() {
                     color="primary"
                     style={{
                       flexShrink: 1,
+
                       textAlign: "right",
                     }}
                   >
@@ -370,9 +561,12 @@ export default function ReviewScreen() {
                   </AppText>
                 </View>
 
+                {/* DESCRIPTION */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -385,16 +579,22 @@ export default function ReviewScreen() {
                     color="primary"
                     style={{
                       flexShrink: 1,
+
                       textAlign: "right",
+
                       maxWidth: "65%",
                     }}
                   >
                     {product.description || "-"}
                   </AppText>
                 </View>
+
+                {/* SHIPPING */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -409,11 +609,17 @@ export default function ReviewScreen() {
               </View>
             </Card>
 
+            {/* ==============================================================
+                PRICING
+            ============================================================== */}
+
             <Card>
               <View
                 style={{
                   flexDirection: "row",
+
                   justifyContent: "space-between",
+
                   alignItems: "center",
                 }}
               >
@@ -425,12 +631,16 @@ export default function ReviewScreen() {
               <View
                 style={{
                   marginTop: spacing.rg,
+
                   gap: spacing.sm,
                 }}
               >
+                {/* COST PRICE */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -443,6 +653,7 @@ export default function ReviewScreen() {
                     color="primary"
                     style={{
                       flexShrink: 1,
+
                       textAlign: "right",
                     }}
                   >
@@ -452,9 +663,12 @@ export default function ReviewScreen() {
                   </AppText>
                 </View>
 
+                {/* SELLING PRICE */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -467,6 +681,7 @@ export default function ReviewScreen() {
                     color="primary"
                     style={{
                       flexShrink: 1,
+
                       textAlign: "right",
                     }}
                   >
@@ -476,9 +691,12 @@ export default function ReviewScreen() {
                   </AppText>
                 </View>
 
+                {/* TAX */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -496,26 +714,38 @@ export default function ReviewScreen() {
               </View>
             </Card>
 
+            {/* ==============================================================
+                INVENTORY
+            ============================================================== */}
+
             <Card>
               <View
                 style={{
                   flexDirection: "row",
+
                   justifyContent: "space-between",
+
                   alignItems: "center",
                 }}
               >
                 <AppText variant="bodyLargeBold">Inventory</AppText>
+
                 <EditButton onPress={editPricing} />
               </View>
+
               <View
                 style={{
                   marginTop: spacing.rg,
+
                   gap: spacing.sm,
                 }}
               >
+                {/* TRACKING */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -528,6 +758,7 @@ export default function ReviewScreen() {
                     color={product.trackInventory ? "success" : "secondary"}
                     style={{
                       flexShrink: 1,
+
                       textAlign: "right",
                     }}
                   >
@@ -535,9 +766,12 @@ export default function ReviewScreen() {
                   </AppText>
                 </View>
 
+                {/* STOCK */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -550,6 +784,7 @@ export default function ReviewScreen() {
                     color="primary"
                     style={{
                       flexShrink: 1,
+
                       textAlign: "right",
                     }}
                   >
@@ -557,9 +792,12 @@ export default function ReviewScreen() {
                   </AppText>
                 </View>
 
+                {/* REORDER LEVEL */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -572,9 +810,12 @@ export default function ReviewScreen() {
                   </AppText>
                 </View>
 
+                {/* LOW STOCK */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -589,11 +830,17 @@ export default function ReviewScreen() {
               </View>
             </Card>
 
+            {/* ==============================================================
+                VARIANTS
+            ============================================================== */}
+
             <Card>
               <View
                 style={{
                   flexDirection: "row",
+
                   justifyContent: "space-between",
+
                   alignItems: "center",
                 }}
               >
@@ -601,15 +848,18 @@ export default function ReviewScreen() {
 
                 <EditButton onPress={editVariants} />
               </View>
+
               <View
                 style={{
                   marginTop: spacing.rg,
+
                   gap: spacing.sm,
                 }}
               >
                 <View
                   style={{
                     flexDirection: "column",
+
                     gap: spacing.xs,
                   }}
                 >
@@ -621,6 +871,7 @@ export default function ReviewScreen() {
                         key={variant.name}
                         style={{
                           flexDirection: "row",
+
                           justifyContent: "space-between",
                         }}
                       >
@@ -638,11 +889,17 @@ export default function ReviewScreen() {
               </View>
             </Card>
 
+            {/* ==============================================================
+                STOREFRONT
+            ============================================================== */}
+
             <Card>
               <View
                 style={{
                   flexDirection: "row",
+
                   justifyContent: "space-between",
+
                   alignItems: "center",
                 }}
               >
@@ -650,15 +907,20 @@ export default function ReviewScreen() {
 
                 <EditButton onPress={editStorefront} />
               </View>
+
               <View
                 style={{
                   marginTop: spacing.rg,
+
                   gap: spacing.sm,
                 }}
               >
+                {/* VISIBILITY */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -671,15 +933,20 @@ export default function ReviewScreen() {
                     color="primary"
                     style={{
                       flexShrink: 1,
+
                       textAlign: "right",
                     }}
                   >
                     {product.visible ? "Visible" : "Hidden"}
                   </AppText>
                 </View>
+
+                {/* SHIPPING */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -691,9 +958,13 @@ export default function ReviewScreen() {
                     {product.shippingClass}
                   </AppText>
                 </View>
+
+                {/* GALLERY IMAGES */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -705,9 +976,13 @@ export default function ReviewScreen() {
                     {product.images?.length ?? 0}
                   </AppText>
                 </View>
+
+                {/* DIMENSIONS */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -720,6 +995,7 @@ export default function ReviewScreen() {
                     color="primary"
                     style={{
                       flexShrink: 1,
+
                       textAlign: "right",
                     }}
                   >
@@ -728,9 +1004,13 @@ export default function ReviewScreen() {
                     {product.dimensions.height || "-"} cm
                   </AppText>
                 </View>
+
+                {/* NOTES */}
+
                 <View
                   style={{
                     flexDirection: "row",
+
                     justifyContent: "space-between",
                   }}
                 >
@@ -743,6 +1023,7 @@ export default function ReviewScreen() {
                     color="primary"
                     style={{
                       maxWidth: "60%",
+
                       textAlign: "right",
                     }}
                   >
@@ -753,7 +1034,11 @@ export default function ReviewScreen() {
             </Card>
           </View>
         </ScrollView>
-        {/* FOOTER */}
+
+        {/* ==================================================================
+            FOOTER
+        ================================================================== */}
+
         <AddProductFooter
           nextLabel={publishing ? "Publishing..." : "Publish Product"}
           loading={publishing}

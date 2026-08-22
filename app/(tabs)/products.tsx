@@ -31,6 +31,7 @@ import { ROUTES } from "@/navigation/routes";
 import { useProducts } from "@/hooks/products/useProducts";
 import { useDeleteProduct } from "@/hooks/products/useDeleteProduct";
 import { useToggleProductStatus } from "@/hooks/products/useToggleProductStatus";
+
 import { useToast } from "@/hooks/useToast";
 
 import { formatCurrency } from "@/utils/formatters/currency";
@@ -42,23 +43,12 @@ import { radius, spacing, theme } from "@/theme";
 
 /**
  * ============================================================================
- * MOCK CONFIGURATION
+ * MOCKS
  * ============================================================================
  */
 
 import { USE_MOCK_PRODUCTS } from "@/mocks/config";
-
-/**
- * ============================================================================
- * MOCK REPOSITORY
- * ============================================================================
- */
-
-import {
-  getMockProducts,
-  deleteMockProduct,
-  toggleMockProductStatus,
-} from "@/mocks/products";
+import { getMockProducts } from "@/mocks/products";
 
 /**
  * ============================================================================
@@ -119,11 +109,16 @@ function ProductCard({
   toggling,
 }: {
   product: MerchantProduct;
+
   onToggle: (productId: number, value: boolean) => void;
+
   onDelete: (productId: number) => void;
-  deleting: boolean;
-  toggling: boolean;
+
   onEdit: (productId: number) => void;
+
+  deleting: boolean;
+
+  toggling: boolean;
 }) {
   const actionDisabled = deleting || toggling;
 
@@ -230,27 +225,54 @@ function ProductCard({
 export default function ProductScreen() {
   /**
    * ==========================================================================
-   * PRODUCTS API
+   * PRODUCTS
    * ==========================================================================
    */
 
-  const {
-    products,
-    isLoading: apiLoading,
-    isRefetching: apiRefetching,
-    error: apiError,
-    refetch: apiRefetch,
-  } = useProducts();
+  const { products, isLoading, isRefetching, error, refetch } = useProducts();
 
   /**
    * ==========================================================================
    * MOCK PRODUCTS STATE
    * ==========================================================================
+   *
+   * The shared mock repository is the source of truth in mock mode.
+   *
+   * This state gives this screen a React state update whenever the repository
+   * changes.
    */
 
   const [mockProducts, setMockProducts] = useState<MerchantProduct[]>(() =>
-    getMockProducts()
+    USE_MOCK_PRODUCTS ? getMockProducts() : []
   );
+
+  /**
+   * ==========================================================================
+   * REFRESH MOCK PRODUCTS
+   * ==========================================================================
+   *
+   * Always read directly from the shared repository.
+   *
+   * This is important because the Edit Product screen calls:
+   *
+   *     updateMockProduct()
+   *
+   * and then:
+   *
+   *     router.back()
+   *
+   * When this screen gets focus again, we read the latest data.
+   */
+
+  const refreshMockProducts = useCallback(() => {
+    if (!USE_MOCK_PRODUCTS) {
+      return;
+    }
+
+    const latestProducts = getMockProducts();
+
+    setMockProducts(latestProducts);
+  }, []);
 
   /**
    * ==========================================================================
@@ -260,11 +282,56 @@ export default function ProductScreen() {
 
   const productList = USE_MOCK_PRODUCTS ? mockProducts : (products ?? []);
 
-  const isLoading = USE_MOCK_PRODUCTS ? false : apiLoading;
+  /**
+   * ==========================================================================
+   * REFRESH WHEN SCREEN GETS FOCUS
+   * ==========================================================================
+   *
+   * This handles:
+   *
+   * Products
+   *    ↓
+   * Edit Product
+   *    ↓
+   * Save Changes
+   *    ↓
+   * router.back()
+   *    ↓
+   * Products gets focus
+   *    ↓
+   * getMockProducts()
+   *
+   * Therefore changes to:
+   *
+   * - product name
+   * - price
+   * - stock
+   * - active status
+   * - image
+   * - category
+   * - description
+   * - etc.
+   *
+   * are reflected immediately.
+   */
 
-  const isRefetching = USE_MOCK_PRODUCTS ? false : apiRefetching;
+  useFocusEffect(
+    useCallback(() => {
+      if (USE_MOCK_PRODUCTS) {
+        refreshMockProducts();
 
-  const error = USE_MOCK_PRODUCTS ? null : apiError;
+        return;
+      }
+
+      /**
+       * API mode.
+       *
+       * React Query remains the source of truth.
+       */
+
+      refetch();
+    }, [refreshMockProducts, refetch])
+  );
 
   /**
    * ==========================================================================
@@ -290,11 +357,6 @@ export default function ProductScreen() {
    * ==========================================================================
    * INFINITE SCROLL
    * ==========================================================================
-   *
-   * The API/mock repository provides the complete product list.
-   *
-   * We progressively render products from that list instead of displaying
-   * everything at once.
    */
 
   const PRODUCTS_PER_BATCH = 10;
@@ -320,33 +382,17 @@ export default function ProductScreen() {
 
   async function onRefresh() {
     if (USE_MOCK_PRODUCTS) {
-      setMockProducts(getMockProducts());
+      refreshMockProducts();
 
       setVisibleProductCount(PRODUCTS_PER_BATCH);
 
       return;
     }
 
-    await apiRefetch();
+    await refetch();
 
     setVisibleProductCount(PRODUCTS_PER_BATCH);
   }
-
-  /**
-   * ==========================================================================
-   * REFRESH MOCK DATA WHEN SCREEN GETS FOCUS
-   * ==========================================================================
-   */
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!USE_MOCK_PRODUCTS) {
-        return;
-      }
-
-      setMockProducts(getMockProducts());
-    }, [])
-  );
 
   /**
    * ==========================================================================
@@ -434,11 +480,6 @@ export default function ProductScreen() {
 
     setIsLoadingMore(true);
 
-    /**
-     * Keep this asynchronous so the loading indicator has an opportunity
-     * to render before the next batch is added.
-     */
-
     setTimeout(() => {
       setVisibleProductCount((currentCount) =>
         Math.min(currentCount + PRODUCTS_PER_BATCH, filteredProducts.length)
@@ -459,20 +500,6 @@ export default function ProductScreen() {
       (product) => product.totalInStock <= product.lowStockAlert
     );
   }, [filteredProducts]);
-
-  /**
-   * ==========================================================================
-   * LOW STOCK BANNER
-   * ==========================================================================
-   */
-
-  useFocusEffect(
-    useCallback(() => {
-      if (lowStockProducts.length > 0) {
-        setShowLowStockBanner(true);
-      }
-    }, [lowStockProducts.length])
-  );
 
   /**
    * ==========================================================================
@@ -501,47 +528,31 @@ export default function ProductScreen() {
    */
 
   async function toggleProduct(productId: number, value: boolean) {
-    /**
-     * ========================================================================
-     * MOCK MODE
-     * ========================================================================
-     */
-
-    if (USE_MOCK_PRODUCTS) {
-      const updatedProduct = toggleMockProductStatus(productId, value);
-
-      if (!updatedProduct) {
-        showToast({
-          type: "error",
-          title: "Update Failed",
-          message: "Product could not be found.",
-        });
-
-        return;
-      }
-
-      setMockProducts(getMockProducts());
-
-      showToast({
-        type: "success",
-        title: "Product Updated",
-        message: value ? "Product is now active." : "Product has been hidden.",
-      });
-
-      return;
-    }
-
-    /**
-     * ========================================================================
-     * API MODE
-     * ========================================================================
-     */
-
     try {
       await toggleStatusMutation.mutateAsync({
         productId,
         status: value,
       });
+
+      /**
+       * ======================================================================
+       * MOCK MODE
+       * ======================================================================
+       *
+       * toggleMockProductStatus() updates the shared repository.
+       *
+       * Read it again immediately.
+       */
+
+      if (USE_MOCK_PRODUCTS) {
+        refreshMockProducts();
+      } else {
+        /**
+         * API mode.
+         */
+
+        await refetch();
+      }
 
       showToast({
         type: "success",
@@ -593,35 +604,23 @@ export default function ProductScreen() {
 
           onPress: async () => {
             try {
+              await deleteProductMutation.mutateAsync(productId);
+
               /**
                * ==============================================================
                * MOCK MODE
-               * ============================================================== */
+               * ==============================================================
+               */
 
               if (USE_MOCK_PRODUCTS) {
-                const deleted = deleteMockProduct(productId);
+                refreshMockProducts();
+              } else {
+                /**
+                 * API mode.
+                 */
 
-                if (!deleted) {
-                  throw new Error("Product not found.");
-                }
-
-                setMockProducts(getMockProducts());
-
-                showToast({
-                  type: "success",
-                  title: "Product Deleted",
-                  message: `${product.productName} has been removed successfully.`,
-                });
-
-                return;
+                await refetch();
               }
-
-              /**
-               * ==============================================================
-               * API MODE
-               * ============================================================== */
-
-              await deleteProductMutation.mutateAsync(productId);
 
               showToast({
                 type: "success",
@@ -669,7 +668,6 @@ export default function ProductScreen() {
     <SafeAreaView
       style={{
         flex: 1,
-
         backgroundColor: theme.background.primary,
       }}
     >
@@ -678,7 +676,6 @@ export default function ProductScreen() {
       <View
         style={{
           flex: 1,
-
           paddingHorizontal: spacing.lg,
         }}
       >
@@ -687,23 +684,20 @@ export default function ProductScreen() {
             flex: 1,
           }}
         >
-          {/* ==================================================================
+          {/* ================================================================
               HEADER
-          ================================================================== */}
+          ================================================================= */}
 
           <View
             style={{
               flexDirection: "row",
-
               alignItems: "center",
-
               gap: spacing.md,
             }}
           >
             <View
               style={{
                 flex: 1,
-
                 gap: spacing.xs,
               }}
             >
@@ -732,19 +726,13 @@ export default function ProductScreen() {
               onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
               style={({ pressed }) => ({
                 width: 44,
-
                 height: 44,
-
                 borderRadius: radius.full,
-
                 justifyContent: "center",
-
                 alignItems: "center",
-
                 backgroundColor: pressed
                   ? theme.action.primary.pressed
                   : theme.action.primary.background,
-
                 opacity:
                   deleteProductMutation.isPending ||
                   toggleStatusMutation.isPending
@@ -760,9 +748,9 @@ export default function ProductScreen() {
             </Pressable>
           </View>
 
-          {/* ==================================================================
+          {/* ================================================================
               LOW STOCK BANNER
-          ================================================================== */}
+          ================================================================= */}
 
           {showLowStockBanner &&
             lowStockProducts.length > 0 &&
@@ -771,13 +759,9 @@ export default function ProductScreen() {
               <Card
                 style={{
                   marginTop: spacing.md,
-
                   flexDirection: "row",
-
                   alignItems: "center",
-
                   borderColor: theme.border.warning,
-
                   backgroundColor: theme.background.warning,
                 }}
               >
@@ -790,7 +774,6 @@ export default function ProductScreen() {
                 <View
                   style={{
                     flex: 1,
-
                     marginHorizontal: spacing.md,
                   }}
                 >
@@ -822,9 +805,9 @@ export default function ProductScreen() {
               </Card>
             )}
 
-          {/* ==================================================================
+          {/* ================================================================
               SEARCH
-          ================================================================== */}
+          ================================================================= */}
 
           {hasProducts && !showProductError && (
             <View
@@ -840,14 +823,13 @@ export default function ProductScreen() {
             </View>
           )}
 
-          {/* ==================================================================
+          {/* ================================================================
               PRODUCT CONTENT
-          ================================================================== */}
+          ================================================================= */}
 
           <View
             style={{
               flex: 1,
-
               marginTop: spacing.md,
             }}
           >
@@ -856,19 +838,16 @@ export default function ProductScreen() {
                 flex: 1,
               }}
             >
-              {/* ==============================================================
+              {/* ==========================================================
                   INITIAL LOADING
-              ============================================================== */}
+              =========================================================== */}
 
               {isLoading ? (
                 <View
                   style={{
                     flex: 1,
-
                     justifyContent: "center",
-
                     alignItems: "center",
-
                     paddingVertical: spacing["3xl"],
                   }}
                 >
@@ -889,31 +868,23 @@ export default function ProductScreen() {
               ) : showProductError ? (
                 /* ==========================================================
                    ERROR
-                ========================================================== */
+                =========================================================== */
 
                 <View
                   style={{
                     flex: 1,
-
                     justifyContent: "center",
-
                     alignItems: "center",
-
                     paddingVertical: spacing["3xl"],
                   }}
                 >
                   <View
                     style={{
                       width: 56,
-
                       height: 56,
-
                       borderRadius: radius.full,
-
                       justifyContent: "center",
-
                       alignItems: "center",
-
                       backgroundColor: theme.background.error,
                     }}
                   >
@@ -928,7 +899,6 @@ export default function ProductScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
-
                       textAlign: "center",
                     }}
                   >
@@ -940,9 +910,7 @@ export default function ProductScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
-
                       textAlign: "center",
-
                       maxWidth: 320,
                     }}
                   >
@@ -952,12 +920,10 @@ export default function ProductScreen() {
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Try again"
-                    onPress={() => apiRefetch()}
+                    onPress={() => refetch()}
                     style={{
                       marginTop: spacing.md,
-
                       paddingVertical: spacing.xs,
-
                       paddingHorizontal: spacing.sm,
                     }}
                   >
@@ -967,29 +933,22 @@ export default function ProductScreen() {
               ) : isFirstTimeUser ? (
                 /* ==========================================================
                    FIRST-TIME USER
-                ========================================================== */
+                =========================================================== */
 
                 <Card
                   style={{
                     alignItems: "center",
-
                     paddingVertical: spacing.xl,
-
                     paddingHorizontal: spacing.lg,
                   }}
                 >
                   <View
                     style={{
                       width: 56,
-
                       height: 56,
-
                       borderRadius: radius.full,
-
                       alignItems: "center",
-
                       justifyContent: "center",
-
                       backgroundColor: theme.icon.branding.background,
                     }}
                   >
@@ -1004,7 +963,6 @@ export default function ProductScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
-
                       textAlign: "center",
                     }}
                   >
@@ -1016,9 +974,7 @@ export default function ProductScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
-
                       textAlign: "center",
-
                       maxWidth: 320,
                     }}
                   >
@@ -1038,29 +994,22 @@ export default function ProductScreen() {
               ) : hasNoSearchResults ? (
                 /* ==========================================================
                    SEARCH EMPTY STATE
-                ========================================================== */
+                =========================================================== */
 
                 <Card
                   style={{
                     alignItems: "center",
-
                     paddingVertical: spacing.xl,
-
                     paddingHorizontal: spacing.lg,
                   }}
                 >
                   <View
                     style={{
                       width: 56,
-
                       height: 56,
-
                       borderRadius: radius.full,
-
                       alignItems: "center",
-
                       justifyContent: "center",
-
                       backgroundColor: theme.icon.default.background,
                     }}
                   >
@@ -1075,7 +1024,6 @@ export default function ProductScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
-
                       textAlign: "center",
                     }}
                   >
@@ -1087,7 +1035,6 @@ export default function ProductScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
-
                       textAlign: "center",
                     }}
                   >
@@ -1108,7 +1055,7 @@ export default function ProductScreen() {
               ) : (
                 /* ==========================================================
                    PRODUCT LIST
-                ========================================================== */
+                =========================================================== */
 
                 <FlatList
                   style={{
@@ -1154,7 +1101,6 @@ export default function ProductScreen() {
                       <View
                         style={{
                           paddingVertical: spacing.lg,
-
                           alignItems: "center",
                         }}
                       >
@@ -1181,7 +1127,6 @@ export default function ProductScreen() {
                       <View
                         style={{
                           paddingVertical: spacing.lg,
-
                           alignItems: "center",
                         }}
                       >

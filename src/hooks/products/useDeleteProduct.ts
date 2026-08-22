@@ -1,20 +1,48 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { productService } from "@/services/products/productService";
+import { USE_MOCK_PRODUCTS } from "@/mocks/config";
+import { deleteMockProduct } from "@/mocks/products";
 
-import { queryKeys } from "@/lib/queryKeys";
+import { productService } from "@/services/products/productService";
 
 export function useDeleteProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: ["delete-product"],
+    mutationFn: async (productId: number) => {
+      /**
+       * ================================================================
+       * MOCK MODE
+       * ================================================================
+       */
 
-    mutationFn: (productId: number) => productService.deleteProduct(productId),
+      if (USE_MOCK_PRODUCTS) {
+        const deleted = deleteMockProduct(productId);
 
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.products,
+        if (!deleted) {
+          throw new Error("Product not found.");
+        }
+
+        return {
+          success: true,
+        };
+      }
+
+      /**
+       * ================================================================
+       * API MODE
+       * ================================================================
+       */
+
+      return productService.deleteProduct(productId);
+    },
+
+    onSuccess: () => {
+      /**
+       * Keep React Query synchronized after mutation.
+       */
+      queryClient.invalidateQueries({
+        queryKey: ["products"],
       });
     },
   });

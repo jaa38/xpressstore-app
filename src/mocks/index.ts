@@ -1,10 +1,36 @@
-// src/mocks/index.ts
-
 export {
   USE_MOCK_PRODUCTS,
   USE_MOCK_CUSTOMERS,
   USE_MOCK_PAYMENT_LINKS,
   USE_MOCK_ORDERS,
+  USE_MOCK_STORES,
+  USE_MOCK_TRANSACTIONS,
 } from "./config";
 
-export { MOCK_ORDERS, getMockOrders, getMockOrderById } from "./orders";
+export {
+  MOCK_ORDERS,
+  getMockOrders,
+  getMockOrderById,
+} from "./orders";
+
+export {
+  MOCK_STORES,
+  getMockStores,
+  getMockStore,
+  getMockStoreSummaries,
+  createMockStore,
+  updateMockStore,
+  deleteMockStore,
+  resetMockStores,
+  addMockProductToStore,
+  removeMockProductFromStore,
+  updateMockStoreLayout,
+  getMockShippingRegions,
+  saveMockShippingRegions,
+  createMockShippingRegion,
+  updateMockShippingRegion,
+  deleteMockShippingRegion,
+  resetMockShippingRegions,
+  validateMockStoreName,
+  validateMockStoreReference,
+} from "./stores";

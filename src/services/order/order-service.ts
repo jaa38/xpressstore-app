@@ -7,13 +7,23 @@ import type { Order } from "@/types/order";
 import type { Currency } from "@/types/currency";
 
 import { orderRepository } from "@/repositories/orders/sqliteOrderRepository";
+
+import { USE_MOCK_ORDERS } from "@/mocks/config";
+import { updateMockOrderStatus } from "@/mocks/orders";
+
 /**
- * ---------------------------------------------------------------------------
- * GraphQL DTOs
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * GRAPHQL DTOs
+ * ============================================================================
  *
  * These types represent the fields documented by the XpressStore
  * storeTransactions GraphQL query.
+ */
+
+/**
+ * ---------------------------------------------------------------------------
+ * Product
+ * ---------------------------------------------------------------------------
  */
 
 interface StoreTransactionProductDto {
@@ -32,11 +42,23 @@ interface StoreTransactionProductDto {
   comment: string;
 }
 
+/**
+ * ---------------------------------------------------------------------------
+ * Discount
+ * ---------------------------------------------------------------------------
+ */
+
 interface StoreTransactionDiscountDto {
   code: string;
 
   discountAmount: number;
 }
+
+/**
+ * ---------------------------------------------------------------------------
+ * Delivery
+ * ---------------------------------------------------------------------------
+ */
 
 interface StoreTransactionDeliveryDto {
   customerAddress: string;
@@ -45,6 +67,12 @@ interface StoreTransactionDeliveryDto {
 
   region: string;
 }
+
+/**
+ * ---------------------------------------------------------------------------
+ * Store Transaction
+ * ---------------------------------------------------------------------------
+ */
 
 interface StoreTransactionDto {
   id: number;
@@ -104,6 +132,12 @@ interface StoreTransactionDto {
   productPurchased: StoreTransactionProductDto[];
 }
 
+/**
+ * ---------------------------------------------------------------------------
+ * GraphQL Result
+ * ---------------------------------------------------------------------------
+ */
+
 interface StoreTransactionsResult {
   storeTransactions: {
     items: StoreTransactionDto[];
@@ -116,6 +150,12 @@ interface StoreTransactionsResult {
   };
 }
 
+/**
+ * ============================================================================
+ * ORDERS PAGE
+ * ============================================================================
+ */
+
 export interface OrdersPage {
   orders: Order[];
 
@@ -127,9 +167,9 @@ export interface OrdersPage {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * GraphQL Query
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * GRAPHQL QUERY
+ * ============================================================================
  *
  * Source:
  * 11_graphql.md
@@ -205,9 +245,9 @@ const STORE_TRANSACTIONS_QUERY = `
 `;
 
 /**
- * ---------------------------------------------------------------------------
- * GraphQL Filter
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * GRAPHQL FILTER
+ * ============================================================================
  */
 
 interface StoreTransactionFilter {
@@ -229,9 +269,9 @@ interface StoreTransactionFilter {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Order Status Mapper
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * ORDER STATUS MAPPER
+ * ============================================================================
  *
  * The GraphQL response exposes:
  *
@@ -276,9 +316,9 @@ function mapOrderStatus(transaction: StoreTransactionDto): Order["status"] {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Payment Channel Mapper
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * PAYMENT CHANNEL MAPPER
+ * ============================================================================
  *
  * The documented storeTransactions GraphQL response does not expose a
  * dedicated paymentChannel/paymentType field.
@@ -328,9 +368,9 @@ function mapPaymentChannel(
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Order Mapper
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * ORDER MAPPER
+ * ============================================================================
  */
 
 function mapOrder(transaction: StoreTransactionDto): Order {
@@ -396,6 +436,12 @@ function mapOrder(transaction: StoreTransactionDto): Order {
   };
 }
 
+/**
+ * ============================================================================
+ * CURRENCY MAPPER
+ * ============================================================================
+ */
+
 function mapCurrency(value: string): Currency {
   switch (value?.toUpperCase()) {
     case "NGN":
@@ -416,24 +462,9 @@ function mapCurrency(value: string): Currency {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Get Orders
- * ---------------------------------------------------------------------------
- *
- * GraphQL:
- *
- * storeTransactions
- *
- * The API documentation demonstrates:
- *
- * page: 1
- * limit: 20
- */
-
-/**
- * ---------------------------------------------------------------------------
- * Get Orders Page
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * GET ORDERS PAGE
+ * ============================================================================
  *
  * GraphQL:
  *
@@ -450,6 +481,7 @@ function mapCurrency(value: string): Currency {
  * pageNumber
  * pageSize
  */
+
 export async function getOrdersPage(page = 1, limit = 20): Promise<OrdersPage> {
   const filter: StoreTransactionFilter = {
     customerEmail: null,
@@ -501,7 +533,7 @@ export async function getOrdersPage(page = 1, limit = 20): Promise<OrdersPage> {
   } catch (error) {
     /**
      * -----------------------------------------------------------------------
-     * Offline fallback
+     * OFFLINE FALLBACK
      * -----------------------------------------------------------------------
      *
      * If the API is unavailable, use the locally persisted orders.
@@ -509,6 +541,7 @@ export async function getOrdersPage(page = 1, limit = 20): Promise<OrdersPage> {
      * The repository returns orders sorted newest-first, so we can reproduce
      * the server-side pagination locally.
      */
+
     const cachedOrders = await orderRepository.getOrders();
 
     if (cachedOrders.length === 0) {
@@ -534,9 +567,9 @@ export async function getOrdersPage(page = 1, limit = 20): Promise<OrdersPage> {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Get Order By ID
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * GET ORDER BY ID
+ * ============================================================================
  *
  * Uses the transactionId filter documented by the
  * XpressStore GraphQL API.
@@ -591,9 +624,10 @@ export async function getOrderById(id: string): Promise<Order> {
   } catch (error) {
     /**
      * -----------------------------------------------------------------------
-     * Offline fallback
+     * OFFLINE FALLBACK
      * -----------------------------------------------------------------------
      */
+
     const cachedOrder = await orderRepository.getOrderById(id);
 
     if (!cachedOrder) {
@@ -605,9 +639,9 @@ export async function getOrderById(id: string): Promise<Order> {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Update Order Delivery
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * UPDATE ORDER DELIVERY
+ * ============================================================================
  *
  * REST:
  *
@@ -633,13 +667,14 @@ export async function updateOrderDelivery(
 
   /**
    * -------------------------------------------------------------------------
-   * Keep the local order cache consistent with the server.
+   * KEEP LOCAL ORDER CACHE CONSISTENT
    * -------------------------------------------------------------------------
    *
-   * The documented Store API only exposes the delivery toggle. It does not
-   * return the updated order, so we update the locally persisted order using
-   * the requested delivery state.
+   * The documented Store API only exposes the delivery toggle.
+   * It does not return the updated order, so we update the locally
+   * persisted order using the requested delivery state.
    */
+
   const cachedOrder = await orderRepository.getOrderById(transactionId);
 
   if (!cachedOrder) {
@@ -658,26 +693,48 @@ export async function updateOrderDelivery(
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Update Order Status
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * UPDATE ORDER STATUS
+ * ============================================================================
  *
- * The documented API currently provides a delivery
- * toggle for store orders.
+ * MOCK MODE
+ * -----------
+ * Updates the local mock order without making an API request.
  *
- * Therefore:
+ * API MODE
+ * --------
+ * Uses the documented XpressStore API.
  *
- * delivered -> ToggleDelivery(true)
- *
- * Other statuses are not changed through this function
- * because the documented API does not provide a matching
- * endpoint for them.
+ * The documented API currently provides ToggleDelivery for moving
+ * an order to delivered.
  */
 
 export async function updateOrderStatus(
   orderId: string,
   status: Order["status"]
 ): Promise<void> {
+  /**
+   * -------------------------------------------------------------------------
+   * MOCK MODE
+   * -------------------------------------------------------------------------
+   *
+   * Keep mock data active when USE_MOCK_ORDERS is true.
+   *
+   * No API request is made.
+   */
+
+  if (USE_MOCK_ORDERS) {
+    updateMockOrderStatus(orderId, status);
+
+    return;
+  }
+
+  /**
+   * -------------------------------------------------------------------------
+   * API MODE
+   * -------------------------------------------------------------------------
+   */
+
   if (status === "delivered") {
     await updateOrderDelivery(orderId, true);
 

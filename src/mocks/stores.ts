@@ -1,8 +1,12 @@
 import type {
+  CreateShippingRegionRequest,
+  CreateStoreRequest,
   ShippingRegion,
   Store,
   StoreLayout,
   StoreSummary,
+  StoreAvailabilityResponse,
+  UpdateShippingRegionRequest,
   UpdateStoreRequest,
 } from "@/types/store";
 
@@ -152,6 +156,20 @@ export const MOCK_STORES: Store[] = [
 
 /**
  * ============================================================================
+ * MOCK STORE SHIPPING REGIONS
+ * ============================================================================
+ *
+ * Stores the shipping-region IDs assigned to each mock store.
+ *
+ * This keeps the relationship separate from the Store response model because
+ * the current Store API model does not expose shipping regions directly.
+ * ============================================================================
+ */
+
+let mockStoreShippingRegions: Record<number, number[]> = {};
+
+/**
+ * ============================================================================
  * IN-MEMORY STORE STATE
  * ============================================================================
  *
@@ -203,6 +221,69 @@ export function getMockStore(storeId: number): Store | undefined {
 
     discounts: [...(store.discounts ?? [])],
   };
+}
+
+/**
+ * ============================================================================
+ * CREATE STORE
+ * ============================================================================
+ */
+
+export function createMockStore(payload: CreateStoreRequest): Store {
+  const nextStoreId =
+    mockStores.length > 0
+      ? Math.max(...mockStores.map((store) => store.storeId)) + 1
+      : 1;
+
+  const newStore: Store = {
+    storeId: nextStoreId,
+
+    storeName: payload.storeName,
+
+    storeReference: payload.storeReference,
+
+    storeLink: payload.storeLink,
+
+    currency: payload.currency,
+
+    welcomeMessage: payload.welcomeMessage,
+
+    description: payload.description,
+
+    isActive: true,
+
+    themeColor: "#0F4082",
+
+    layout: "grid",
+
+    products: [...(payload.storeProducts ?? [])],
+
+    discounts: [...(payload.storeDiscounts ?? [])],
+  };
+
+  mockStores = [...mockStores, newStore];
+
+  mockStoreShippingRegions[nextStoreId] = [
+    ...(payload.storeShippingRegion ?? []),
+  ];
+
+  return {
+    ...newStore,
+
+    products: [...(newStore.products ?? [])],
+
+    discounts: [...(newStore.discounts ?? [])],
+  };
+}
+
+/**
+ * ============================================================================
+ * GET STORE SHIPPING REGIONS
+ * ============================================================================
+ */
+
+export function getMockStoreShippingRegions(storeId: number): number[] {
+  return [...(mockStoreShippingRegions[storeId] ?? [])];
 }
 
 /**
@@ -530,7 +611,48 @@ export function getMockStoreSummaries(): StoreSummary[] {
  * ============================================================================
  */
 
-let mockShippingRegions: ShippingRegion[] = [];
+const MOCK_SHIPPING_REGIONS: ShippingRegion[] = [
+  {
+    id: 1,
+    region: "Lagos",
+    state: "Lagos",
+    shippingFee: 3000,
+  },
+
+  {
+    id: 2,
+    region: "South West",
+    state: "Ogun",
+    shippingFee: 4500,
+  },
+
+  {
+    id: 3,
+    region: "FCT",
+    state: "Abuja",
+    shippingFee: 5000,
+  },
+
+  {
+    id: 4,
+    region: "South East",
+    state: "Anambra",
+    shippingFee: 5500,
+  },
+
+  {
+    id: 5,
+    region: "South South",
+    state: "Rivers",
+    shippingFee: 6000,
+  },
+];
+
+let mockShippingRegions: ShippingRegion[] = MOCK_SHIPPING_REGIONS.map(
+  (region) => ({
+    ...region,
+  })
+);
 
 /**
  * ============================================================================
@@ -554,4 +676,146 @@ export function saveMockShippingRegions(regions: ShippingRegion[]): void {
   mockShippingRegions = regions.map((region) => ({
     ...region,
   }));
+}
+
+/**
+ * ============================================================================
+ * CREATE SHIPPING REGION
+ * ============================================================================
+ */
+
+export function createMockShippingRegion(
+  payload: CreateShippingRegionRequest
+): ShippingRegion {
+  const nextId =
+    mockShippingRegions.length > 0
+      ? Math.max(...mockShippingRegions.map((region) => region.id)) + 1
+      : 1;
+
+  const newRegion: ShippingRegion = {
+    id: nextId,
+
+    region: payload.region,
+
+    state: payload.state,
+
+    shippingFee: payload.shippingFee,
+  };
+
+  mockShippingRegions = [...mockShippingRegions, newRegion];
+
+  return {
+    ...newRegion,
+  };
+}
+
+/**
+ * ============================================================================
+ * UPDATE SHIPPING REGION
+ * ============================================================================
+ */
+
+export function updateMockShippingRegion(
+  payload: UpdateShippingRegionRequest
+): ShippingRegion | undefined {
+  let updatedRegion: ShippingRegion | undefined;
+
+  mockShippingRegions = mockShippingRegions.map((region) => {
+    if (region.id !== payload.id) {
+      return region;
+    }
+
+    updatedRegion = {
+      ...region,
+
+      region: payload.region,
+
+      state: payload.state,
+
+      shippingFee: payload.shippingFee,
+    };
+
+    return updatedRegion;
+  });
+
+  if (!updatedRegion) {
+    return undefined;
+  }
+
+  return {
+    ...updatedRegion,
+  };
+}
+
+/**
+ * ============================================================================
+ * DELETE SHIPPING REGION
+ * ============================================================================
+ */
+
+export function deleteMockShippingRegion(regionId: number): boolean {
+  const originalLength = mockShippingRegions.length;
+
+  mockShippingRegions = mockShippingRegions.filter(
+    (region) => region.id !== regionId
+  );
+
+  return mockShippingRegions.length !== originalLength;
+}
+
+/**
+ * ============================================================================
+ * RESET SHIPPING REGIONS
+ * ============================================================================
+ */
+
+export function resetMockShippingRegions(): void {
+  mockShippingRegions = MOCK_SHIPPING_REGIONS.map((region) => ({
+    ...region,
+  }));
+}
+
+/**
+ * ============================================================================
+ * VALIDATE STORE NAME
+ * ============================================================================
+ */
+
+export function validateMockStoreName(
+  storeName: string
+): StoreAvailabilityResponse {
+  const normalizedName = storeName.trim().toLowerCase();
+
+  const isAvailable =
+    normalizedName.length > 0 &&
+    !mockStores.some(
+      (store) => store.storeName.trim().toLowerCase() === normalizedName
+    );
+
+  return {
+    isAvailable,
+  };
+}
+
+/**
+ * ============================================================================
+ * VALIDATE STORE REFERENCE
+ * ============================================================================
+ */
+
+export function validateMockStoreReference(
+  reference: string
+): StoreAvailabilityResponse {
+  const normalizedReference = reference.trim().toLowerCase();
+
+  const isAvailable =
+    normalizedReference.length > 0 &&
+    !mockStores.some(
+      (store) =>
+        store.storeReference.trim().toLowerCase() === normalizedReference
+    );
+
+  return {
+    isAvailable,
+  };
 }

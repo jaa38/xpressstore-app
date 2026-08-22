@@ -297,3 +297,29 @@ export function getMockOrders(): Order[] {
 export function getMockOrderById(id: string): Order | undefined {
   return MOCK_ORDERS.find((order) => order.id === id);
 }
+
+/**
+ * ============================================================================
+ * UPDATE MOCK ORDER STATUS
+ * ============================================================================
+ *
+ * Updates an order in local mock data.
+ *
+ * This allows the application to exercise order-status mutations while
+ * USE_MOCK_ORDERS is enabled without making an API request.
+ */
+export function updateMockOrderStatus(
+  orderId: string,
+  status: Order["status"]
+): Order {
+  const order = MOCK_ORDERS.find((item) => item.id === orderId);
+
+  if (!order) {
+    throw new Error("Order not found.");
+  }
+
+  order.status = status;
+  order.updatedAt = new Date().toISOString();
+
+  return order;
+}

@@ -15,23 +15,17 @@ import { WebView } from "react-native-webview";
 import { AppText } from "@/components/ui/AppText";
 
 import { ReceiptActionButton } from "@/components/receipt/ReceiptActionButton";
-
 import { ReceiptErrorState } from "@/components/receipt/ReceiptErrorState";
-
 import { ReceiptHeader } from "@/components/receipt/ReceiptHeader";
-
 import { ReceiptMetadataCard } from "@/components/receipt/ReceiptMetadataCard";
-
 import { ReceiptSkeleton } from "@/components/receipt/ReceiptSkeleton";
-
 import { ReceiptActionBar } from "@/components/receipt/ReceiptActionBar";
 
 import { radius, spacing, theme } from "@/theme";
 
-import { useOrders } from "@/hooks/orders/useOrders";
+import { useOrder } from "@/hooks/orders/useOrder";
 
 import { generateReceipt } from "@/services/receipt/generateReceipt";
-
 import { receiptFromOrder } from "@/services/receipt/receiptFromOrder";
 
 import {
@@ -40,41 +34,66 @@ import {
   shareOrderReceipt,
 } from "@/services/receipt/orderReceiptActions";
 
-import { getMockOrderById, USE_MOCK_ORDERS } from "@/mocks";
+/**
+ * ============================================================================
+ * ORDER RECEIPT SCREEN
+ * ============================================================================
+ *
+ * Order source:
+ *
+ *   useOrder(id)
+ *       │
+ *       ├── USE_MOCK_ORDERS = true
+ *       │      └── getMockOrderById(id)
+ *       │
+ *       └── USE_MOCK_ORDERS = false
+ *              └── getOrderById(id)
+ *                     ├── GraphQL API
+ *                     └── SQLite fallback
+ *
+ * This keeps the receipt screen independent of:
+ *
+ * - mock data implementation
+ * - pagination
+ * - useOrders()
+ * - API/SQLite implementation details
+ *
+ * The receipt only needs an Order.
+ * ============================================================================
+ */
 
 export default function OrderReceiptScreen() {
+  /**
+   * -------------------------------------------------------------------------
+   * ROUTE PARAM
+   * -------------------------------------------------------------------------
+   */
+
   const { id } = useLocalSearchParams<{
     id: string;
   }>();
 
   /**
    * -------------------------------------------------------------------------
-   * API ORDERS
-   * -------------------------------------------------------------------------
-   */
-
-  const { data } = useOrders();
-
-  /**
-   * -------------------------------------------------------------------------
    * ORDER
    * -------------------------------------------------------------------------
    *
-   * Mock mode:
-   *   Read from src/mocks/orders.ts
+   * useOrder() is the single source of truth for retrieving an individual
+   * order.
    *
-   * API mode:
-   *   Read from useOrders()
-   * -------------------------------------------------------------------------
+   * Mock mode remains controlled by USE_MOCK_ORDERS inside the hook.
    */
 
-  const order = USE_MOCK_ORDERS
-    ? getMockOrderById(id)
-    : data?.pages.flatMap((page) => page.orders).find((item) => item.id === id);
+  const {
+    data: order,
+    isLoading: isOrderLoading,
+    isError: isOrderError,
+    error: orderError,
+  } = useOrder(id);
 
   /**
    * -------------------------------------------------------------------------
-   * STATE
+   * RECEIPT STATE
    * -------------------------------------------------------------------------
    */
 
@@ -94,9 +113,27 @@ export default function OrderReceiptScreen() {
    * -------------------------------------------------------------------------
    * LOAD RECEIPT
    * -------------------------------------------------------------------------
+   *
+   * Once the order has been retrieved, convert it into the receipt model
+   * and generate the receipt document.
+   * -------------------------------------------------------------------------
    */
 
   const loadReceipt = useCallback(async () => {
+    /**
+     * The order is still being loaded by React Query.
+     *
+     * Do not attempt receipt generation yet.
+     */
+    if (isOrderLoading) {
+      return;
+    }
+
+    /**
+     * No order was found.
+     *
+     * The screen itself will render the "Receipt Not Found" state.
+     */
     if (!order) {
       setLoading(false);
 
@@ -104,22 +141,32 @@ export default function OrderReceiptScreen() {
     }
 
     setLoading(true);
+
     setHasError(false);
 
     try {
+      /**
+       * Convert the application Order model into
+       * the receipt-specific model.
+       */
       const receipt = receiptFromOrder(order);
 
+      /**
+       * Generate the receipt document.
+       */
       const generatedReceipt = await generateReceipt(receipt);
 
       setReceiptUri(generatedReceipt.uri);
     } catch (error) {
-      console.error(error);
+      console.error("Failed to generate receipt.", error);
 
       setHasError(true);
+
+      setReceiptUri(undefined);
     } finally {
       setLoading(false);
     }
-  }, [order]);
+  }, [isOrderLoading, order]);
 
   /**
    * -------------------------------------------------------------------------
@@ -133,11 +180,43 @@ export default function OrderReceiptScreen() {
 
   /**
    * -------------------------------------------------------------------------
-   * ORDER NOT FOUND
+   * ORDER LOADING
+   * -------------------------------------------------------------------------
+   *
+   * This is separate from receipt generation loading.
+   *
+   * First:
+   *
+   *   Load order
+   *
+   * Then:
+   *
+   *   Generate receipt
    * -------------------------------------------------------------------------
    */
 
-  if (!order) {
+  if (isOrderLoading) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: theme.background.primary,
+        }}
+      >
+        <StatusBar style="auto" />
+
+        <ReceiptSkeleton />
+      </SafeAreaView>
+    );
+  }
+
+  /**
+   * -------------------------------------------------------------------------
+   * ORDER ERROR / NOT FOUND
+   * -------------------------------------------------------------------------
+   */
+
+  if (isOrderError || !order) {
     return (
       <SafeAreaView
         style={{
@@ -145,8 +224,11 @@ export default function OrderReceiptScreen() {
           justifyContent: "center",
           alignItems: "center",
           backgroundColor: theme.background.primary,
+          paddingHorizontal: spacing.xl,
         }}
       >
+        <StatusBar style="auto" />
+
         <Ionicons
           name="receipt-outline"
           size={64}
@@ -157,6 +239,7 @@ export default function OrderReceiptScreen() {
           variant="h2"
           style={{
             marginTop: spacing.lg,
+            textAlign: "center",
           }}
         >
           Receipt Not Found
@@ -168,10 +251,11 @@ export default function OrderReceiptScreen() {
           color="secondary"
           style={{
             marginTop: spacing.sm,
-            paddingHorizontal: spacing.xl,
           }}
         >
-          The requested receipt could not be generated.
+          {orderError instanceof Error
+            ? orderError.message
+            : "The requested receipt could not be generated."}
         </AppText>
       </SafeAreaView>
     );
@@ -179,7 +263,7 @@ export default function OrderReceiptScreen() {
 
   /**
    * -------------------------------------------------------------------------
-   * LOADING
+   * RECEIPT LOADING
    * -------------------------------------------------------------------------
    */
 
@@ -213,7 +297,9 @@ export default function OrderReceiptScreen() {
     >
       <StatusBar style="auto" />
 
-      {/* HEADER */}
+      {/* ===================================================================
+          HEADER
+      =================================================================== */}
 
       <View
         style={{
@@ -252,15 +338,21 @@ export default function OrderReceiptScreen() {
         </View>
       </View>
 
-      {/* RECEIPT HEADER */}
+      {/* ===================================================================
+          RECEIPT HEADER
+      =================================================================== */}
 
       <ReceiptHeader order={order} />
 
-      {/* RECEIPT METADATA */}
+      {/* ===================================================================
+          RECEIPT METADATA
+      =================================================================== */}
 
       <ReceiptMetadataCard order={order} />
 
-      {/* RECEIPT PREVIEW */}
+      {/* ===================================================================
+          RECEIPT PREVIEW
+      =================================================================== */}
 
       <View
         style={{
@@ -294,10 +386,14 @@ export default function OrderReceiptScreen() {
         )}
       </View>
 
-      {/* ACTIONS */}
+      {/* ===================================================================
+          RECEIPT ACTIONS
+      =================================================================== */}
 
       <ReceiptActionBar>
-        {/* PRINT */}
+        {/* -----------------------------------------------------------------
+            PRINT
+        ----------------------------------------------------------------- */}
 
         <ReceiptActionButton
           icon="print-outline"
@@ -319,7 +415,9 @@ export default function OrderReceiptScreen() {
           }}
         />
 
-        {/* DOWNLOAD */}
+        {/* -----------------------------------------------------------------
+            DOWNLOAD
+        ----------------------------------------------------------------- */}
 
         <ReceiptActionButton
           icon="download-outline"
@@ -341,7 +439,9 @@ export default function OrderReceiptScreen() {
           }}
         />
 
-        {/* SHARE */}
+        {/* -----------------------------------------------------------------
+            SHARE
+        ----------------------------------------------------------------- */}
 
         <ReceiptActionButton
           icon="share-social-outline"

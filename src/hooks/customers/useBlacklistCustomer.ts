@@ -6,6 +6,7 @@ import { blacklistCustomer } from "@/services/customer/customer-service";
 
 interface BlacklistCustomerVariables {
   id: string;
+
   isBlackListed: boolean;
 }
 

@@ -1,4 +1,4 @@
-import { productService } from "@/services/products/productService";
+import { productService } from "@/services/products/product-service";
 
 import { categoryRepository } from "@/repositories/categories/sqliteCategoryRepository";
 

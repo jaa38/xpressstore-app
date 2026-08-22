@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { productService } from "@/services/products/productService";
+import { productService } from "@/services/products/product-service";
 
 import { queryKeys } from "@/lib/queryKeys";
 

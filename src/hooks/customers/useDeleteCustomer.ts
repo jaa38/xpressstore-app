@@ -11,12 +11,19 @@ export function useDeleteCustomer() {
     mutationFn: deleteCustomer,
 
     onSuccess: (_, customerId) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.customers,
+      /**
+       * Remove the individual
+       * customer query.
+       */
+      queryClient.removeQueries({
+        queryKey: queryKeys.customer(customerId),
       });
 
+      /**
+       * Refresh customer collection.
+       */
       queryClient.invalidateQueries({
-        queryKey: queryKeys.customer(customerId),
+        queryKey: queryKeys.customers,
       });
     },
   });

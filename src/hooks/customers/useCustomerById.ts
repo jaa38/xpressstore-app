@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { queryKeys } from "@/lib/queryKeys";
+
 import { getCustomerById } from "@/services/customer/customer-service";
 
 export function useCustomerById(id: string) {

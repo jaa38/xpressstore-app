@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { StatusBar } from "expo-status-bar";
 
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -42,21 +42,10 @@ import { ROUTES } from "@/navigation/routes";
 import type { Customer } from "@/types/customer";
 import type { CustomerSort } from "@/types/customer-sort";
 
-import {
-  getMockCustomers,
-  deleteMockCustomer,
-  toggleMockCustomerBlacklist,
-} from "@/mocks/customers";
-
-import { USE_MOCK_CUSTOMERS } from "@/mocks/config";
-
 /**
  * ============================================================================
  * INFINITE SCROLL CONFIGURATION
  * ============================================================================
- *
- * Number of customers displayed initially and added each time the user
- * reaches the bottom of the list.
  */
 
 const CUSTOMERS_PER_BATCH = 10;
@@ -199,15 +188,11 @@ function CustomerCard({
             gap: spacing.sm,
           }}
         >
-          {/* CUSTOMER ICON */}
-
           <Ionicons
             name="person-circle"
             size={56}
             color={theme.icon.default.icon}
           />
-
-          {/* CUSTOMER DETAILS */}
 
           <View
             style={{
@@ -251,8 +236,6 @@ function CustomerCard({
               {customer.phone}
             </AppText>
           </View>
-
-          {/* VIEW / EDIT */}
 
           <View
             style={{
@@ -309,19 +292,11 @@ function CustomerCard({
           </View>
         </View>
 
-        {/* ================================================================
-            DIVIDER
-        ================================================================ */}
-
         <Divider
           style={{
             marginVertical: spacing.rg,
           }}
         />
-
-        {/* ================================================================
-            CUSTOMER ACTIONS
-        ================================================================ */}
 
         <View
           style={{
@@ -389,68 +364,20 @@ function CustomerCard({
 export default function CustomersScreen() {
   /**
    * --------------------------------------------------------------------------
-   * API CUSTOMERS
+   * CUSTOMER DATA
    * --------------------------------------------------------------------------
+   *
+   * The screen does not know whether the data comes from the API or mocks.
+   * That decision belongs inside the customer service.
    */
 
   const {
-    data: apiCustomers,
-    isLoading: apiLoading,
-    isRefetching: apiRefetching,
-    error: apiError,
-    refetch: apiRefetch,
+    data: customers = [],
+    isLoading,
+    isRefetching,
+    error,
+    refetch,
   } = useCustomers();
-
-  /**
-   * --------------------------------------------------------------------------
-   * MOCK CUSTOMER STATE
-   * --------------------------------------------------------------------------
-   */
-
-  const [mockCustomers, setMockCustomers] = useState<Customer[]>(() =>
-    getMockCustomers()
-  );
-
-  /**
-   * --------------------------------------------------------------------------
-   * MOCK INFINITE SCROLL STATE
-   * --------------------------------------------------------------------------
-   */
-
-  const [visibleCustomerCount, setVisibleCustomerCount] =
-    useState(CUSTOMERS_PER_BATCH);
-
-  const [isLoadingMoreMock, setIsLoadingMoreMock] = useState(false);
-
-  /**
-   * --------------------------------------------------------------------------
-   * KEEP MOCK DATA SYNCHRONIZED WHEN SCREEN FOCUSES
-   * --------------------------------------------------------------------------
-   */
-
-  useFocusEffect(
-    useCallback(() => {
-      if (USE_MOCK_CUSTOMERS) {
-        setMockCustomers(getMockCustomers());
-      }
-    }, [])
-  );
-
-  /**
-   * --------------------------------------------------------------------------
-   * CUSTOMER SOURCE
-   * --------------------------------------------------------------------------
-   */
-
-  const customerList = USE_MOCK_CUSTOMERS
-    ? mockCustomers
-    : (apiCustomers ?? []);
-
-  const isLoading = USE_MOCK_CUSTOMERS ? false : apiLoading;
-
-  const isRefetching = USE_MOCK_CUSTOMERS ? false : apiRefetching;
-
-  const error = USE_MOCK_CUSTOMERS ? null : apiError;
 
   /**
    * --------------------------------------------------------------------------
@@ -484,20 +411,25 @@ export default function CustomersScreen() {
 
   /**
    * --------------------------------------------------------------------------
+   * INFINITE SCROLL
+   * --------------------------------------------------------------------------
+   */
+
+  const [visibleCustomerCount, setVisibleCustomerCount] =
+    useState(CUSTOMERS_PER_BATCH);
+
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  /**
+   * --------------------------------------------------------------------------
    * REFRESH
    * --------------------------------------------------------------------------
    */
 
   const onRefresh = async () => {
-    if (USE_MOCK_CUSTOMERS) {
-      setMockCustomers(getMockCustomers());
+    setVisibleCustomerCount(CUSTOMERS_PER_BATCH);
 
-      setVisibleCustomerCount(CUSTOMERS_PER_BATCH);
-
-      return;
-    }
-
-    await apiRefetch();
+    await refetch();
   };
 
   /**
@@ -510,17 +442,17 @@ export default function CustomersScreen() {
     const query = search.trim().toLowerCase();
 
     if (!query) {
-      return customerList;
+      return customers;
     }
 
-    return customerList.filter((customer) => {
+    return customers.filter((customer) => {
       return (
         customer.name.toLowerCase().includes(query) ||
         customer.phone.toLowerCase().includes(query) ||
         customer.email.toLowerCase().includes(query)
       );
     });
-  }, [customerList, search]);
+  }, [customers, search]);
 
   /**
    * --------------------------------------------------------------------------
@@ -535,7 +467,6 @@ export default function CustomersScreen() {
       case "firstNameAsc":
         return data.sort((a, b) => {
           const aName = a.name.split(" ")[0] ?? "";
-
           const bName = b.name.split(" ")[0] ?? "";
 
           return aName.localeCompare(bName);
@@ -544,7 +475,6 @@ export default function CustomersScreen() {
       case "firstNameDesc":
         return data.sort((a, b) => {
           const aName = a.name.split(" ")[0] ?? "";
-
           const bName = b.name.split(" ")[0] ?? "";
 
           return bName.localeCompare(aName);
@@ -569,10 +499,8 @@ export default function CustomersScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * RESET INFINITE SCROLL
+   * RESET PAGINATION
    * --------------------------------------------------------------------------
-   *
-   * Search and sorting should start from the beginning of the list.
    */
 
   useEffect(() => {
@@ -583,17 +511,9 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    * DISPLAYED CUSTOMERS
    * --------------------------------------------------------------------------
-   *
-   * Mock mode progressively reveals customers.
-   *
-   * API mode currently displays all customers returned by useCustomers().
    */
 
   const displayedCustomers = useMemo(() => {
-    if (!USE_MOCK_CUSTOMERS) {
-      return sortedCustomers;
-    }
-
     return sortedCustomers.slice(0, visibleCustomerCount);
   }, [sortedCustomers, visibleCustomerCount]);
 
@@ -603,66 +523,46 @@ export default function CustomersScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const hasMoreMockCustomers =
-    displayedCustomers.length < sortedCustomers.length;
+  const hasMoreCustomers = displayedCustomers.length < sortedCustomers.length;
 
   /**
    * --------------------------------------------------------------------------
    * LOAD MORE CUSTOMERS
    * --------------------------------------------------------------------------
+   *
+   * The current customer hook returns the complete collection.
+   *
+   * We therefore preserve the existing UI behaviour by progressively
+   * revealing customers locally.
    */
 
   const loadMoreCustomers = useCallback(() => {
-    if (!USE_MOCK_CUSTOMERS) {
-      /**
-       * API MODE
-       *
-       * The current useCustomers() hook returns the customer collection
-       * directly, so there is no API pagination to trigger here.
-       *
-       * When the API hook is converted to useInfiniteQuery, this is where
-       * fetchNextPage() should be called.
-       */
-
+    if (isLoadingMore || !hasMoreCustomers) {
       return;
     }
 
-    if (isLoadingMoreMock || !hasMoreMockCustomers) {
-      return;
-    }
-
-    setIsLoadingMoreMock(true);
-
-    /**
-     * Simulate a small network delay for mock infinite scrolling.
-     */
+    setIsLoadingMore(true);
 
     setTimeout(() => {
       setVisibleCustomerCount((currentCount) =>
         Math.min(currentCount + CUSTOMERS_PER_BATCH, sortedCustomers.length)
       );
 
-      setIsLoadingMoreMock(false);
+      setIsLoadingMore(false);
     }, 150);
-  }, [isLoadingMoreMock, hasMoreMockCustomers, sortedCustomers.length]);
+  }, [isLoadingMore, hasMoreCustomers, sortedCustomers.length]);
 
   /**
    * --------------------------------------------------------------------------
-   * CUSTOMER HISTORY / FIRST-TIME STATE
+   * CUSTOMER STATES
    * --------------------------------------------------------------------------
    */
 
-  const hasCustomers = customerList.length > 0;
+  const hasCustomers = customers.length > 0;
 
   const isFirstTimeUser = !isLoading && !hasCustomers && search.trim() === "";
 
   const showCustomerError = !isLoading && !!error && hasCustomers;
-
-  /**
-   * --------------------------------------------------------------------------
-   * SEARCH EMPTY STATE
-   * --------------------------------------------------------------------------
-   */
 
   const hasNoSearchResults =
     !isLoading &&
@@ -718,9 +618,7 @@ export default function CustomersScreen() {
 
     Alert.alert(
       "Delete Customer",
-
       `Are you sure you want to permanently delete "${customer.name}"?`,
-
       [
         {
           text: "Cancel",
@@ -732,44 +630,6 @@ export default function CustomersScreen() {
           style: "destructive",
 
           onPress: () => {
-            /**
-             * MOCK MODE
-             */
-
-            if (USE_MOCK_CUSTOMERS) {
-              try {
-                deleteMockCustomer(customer.id);
-
-                setMockCustomers(getMockCustomers());
-
-                /**
-                 * Keep the list position valid after deletion.
-                 */
-
-                setVisibleCustomerCount((currentCount) =>
-                  Math.min(currentCount, getMockCustomers().length)
-                );
-
-                Alert.alert(
-                  "Customer Deleted",
-                  `"${customer.name}" has been deleted.`
-                );
-              } catch (error) {
-                Alert.alert(
-                  "Delete Failed",
-                  error instanceof Error
-                    ? error.message
-                    : "Unable to delete customer."
-                );
-              }
-
-              return;
-            }
-
-            /**
-             * API MODE
-             */
-
             deleteCustomerMutation.mutate(customer.id, {
               onSuccess: () => {
                 Alert.alert(
@@ -781,7 +641,9 @@ export default function CustomersScreen() {
               onError: (mutationError) => {
                 Alert.alert(
                   "Delete Failed",
-                  mutationError.message ?? "Unable to delete customer."
+                  mutationError instanceof Error
+                    ? mutationError.message
+                    : "Unable to delete customer."
                 );
               },
             });
@@ -819,52 +681,14 @@ export default function CustomersScreen() {
 
         {
           text: isBlacklisted ? "Remove" : "Blacklist",
-
           style: isBlacklisted ? "default" : "destructive",
 
           onPress: () => {
-            /**
-             * MOCK MODE
-             */
-
-            if (USE_MOCK_CUSTOMERS) {
-              try {
-                toggleMockCustomerBlacklist(customer.id, !isBlacklisted);
-
-                setMockCustomers(getMockCustomers());
-
-                Alert.alert(
-                  isBlacklisted
-                    ? "Customer Removed from Blacklist"
-                    : "Customer Blacklisted",
-
-                  isBlacklisted
-                    ? `"${customer.name}" has been removed from the blacklist.`
-                    : `"${customer.name}" has been blacklisted.`
-                );
-              } catch (error) {
-                Alert.alert(
-                  "Blacklist Failed",
-                  error instanceof Error
-                    ? error.message
-                    : "Unable to update blacklist status."
-                );
-              }
-
-              return;
-            }
-
-            /**
-             * API MODE
-             */
-
             blacklistCustomerMutation.mutate(
               {
                 id: customer.id,
-
                 isBlackListed: !isBlacklisted,
               },
-
               {
                 onSuccess: () => {
                   Alert.alert(
@@ -973,8 +797,6 @@ export default function CustomersScreen() {
               gap: spacing.md,
             }}
           >
-            {/* BACK */}
-
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Go back"
@@ -992,8 +814,6 @@ export default function CustomersScreen() {
                 color={theme.text.primary}
               />
             </Pressable>
-
-            {/* TITLE */}
 
             <View
               style={{
@@ -1013,8 +833,6 @@ export default function CustomersScreen() {
                       : `${filteredCustomers.length} customers`}
               </AppText>
             </View>
-
-            {/* ADD */}
 
             <Pressable
               accessibilityRole="button"
@@ -1085,10 +903,6 @@ export default function CustomersScreen() {
               marginTop: spacing.md,
             }}
           >
-            {/* ============================================================
-                INITIAL LOADING
-            ============================================================ */}
-
             {isLoading ? (
               <View
                 style={{
@@ -1113,10 +927,6 @@ export default function CustomersScreen() {
                 </AppText>
               </View>
             ) : showCustomerError ? (
-              /* ==========================================================
-                 ERROR
-              ========================================================== */
-
               <View
                 style={{
                   flex: 1,
@@ -1167,7 +977,7 @@ export default function CustomersScreen() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Try again"
-                  onPress={() => apiRefetch()}
+                  onPress={() => refetch()}
                   style={{
                     marginTop: spacing.md,
                     paddingVertical: spacing.xs,
@@ -1178,10 +988,6 @@ export default function CustomersScreen() {
                 </Pressable>
               </View>
             ) : isFirstTimeUser ? (
-              /* ==========================================================
-                 FIRST-TIME USER
-              ========================================================== */
-
               <Card
                 style={{
                   alignItems: "center",
@@ -1250,10 +1056,6 @@ export default function CustomersScreen() {
                 </AppText>
               </Card>
             ) : hasNoSearchResults ? (
-              /* ==========================================================
-                 NO SEARCH RESULTS
-              ========================================================== */
-
               <Card
                 style={{
                   alignItems: "center",
@@ -1311,10 +1113,6 @@ export default function CustomersScreen() {
                 </Pressable>
               </Card>
             ) : (
-              /* ==========================================================
-                 CUSTOMER LIST
-              ========================================================== */
-
               <FlatList
                 style={{
                   flex: 1,
@@ -1359,11 +1157,7 @@ export default function CustomersScreen() {
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={
                   <>
-                    {/* ==================================================
-                        LOADING MORE
-                    ================================================== */}
-
-                    {isLoadingMoreMock && (
+                    {isLoadingMore && (
                       <View
                         style={{
                           paddingVertical: spacing.lg,
@@ -1387,12 +1181,8 @@ export default function CustomersScreen() {
                       </View>
                     )}
 
-                    {/* ==================================================
-                        END OF LIST
-                    ================================================== */}
-
-                    {!isLoadingMoreMock &&
-                      !hasMoreMockCustomers &&
+                    {!isLoadingMore &&
+                      !hasMoreCustomers &&
                       displayedCustomers.length > 0 && (
                         <View
                           style={{

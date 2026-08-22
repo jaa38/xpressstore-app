@@ -145,8 +145,11 @@ export function createMockCustomer(
 
   const newCustomer: Customer = {
     ...customer,
+
     id: `customer-${Date.now()}`,
+
     created_at: now,
+
     updated_at: now,
   };
 
@@ -173,10 +176,6 @@ export function updateMockCustomer(
     return undefined;
   }
 
-  /**
-   * TypeScript needs an explicit guard here because Array[index]
-   * can be undefined even after checking the index.
-   */
   const existingCustomer = MOCK_CUSTOMERS[customerIndex];
 
   if (!existingCustomer) {
@@ -185,12 +184,14 @@ export function updateMockCustomer(
 
   const updatedCustomer: Customer = {
     ...existingCustomer,
+
     ...updates,
 
     /**
      * These values must never be changed by an edit.
      */
     id: existingCustomer.id,
+
     created_at: existingCustomer.created_at,
 
     /**
@@ -227,22 +228,6 @@ export function deleteMockCustomer(id: string): boolean {
 /**
  * ============================================================================
  * TOGGLE BLACKLIST CUSTOMER
- * ============================================================================
- *
- * The optional `isBlackListed` argument allows screens to explicitly specify
- * the desired state.
- *
- * Examples:
- *
- * toggleMockCustomerBlacklist("customer-001")
- *
- * or:
- *
- * toggleMockCustomerBlacklist("customer-001", true)
- *
- * or:
- *
- * toggleMockCustomerBlacklist("customer-001", false)
  * ============================================================================
  */
 
@@ -292,31 +277,7 @@ export function setMockCustomerBlacklist(
   id: string,
   isBlackListed: boolean
 ): Customer | undefined {
-  const customerIndex = MOCK_CUSTOMERS.findIndex(
-    (customer) => customer.id === id
-  );
-
-  if (customerIndex === -1) {
-    return undefined;
-  }
-
-  const existingCustomer = MOCK_CUSTOMERS[customerIndex];
-
-  if (!existingCustomer) {
-    return undefined;
-  }
-
-  const updatedCustomer: Customer = {
-    ...existingCustomer,
-
-    isBlackListed,
-
-    updated_at: new Date().toISOString(),
-  };
-
-  MOCK_CUSTOMERS[customerIndex] = updatedCustomer;
-
-  return updatedCustomer;
+  return toggleMockCustomerBlacklist(id, isBlackListed);
 }
 
 /**
@@ -375,10 +336,15 @@ export function getMockCustomerStats() {
 
   return {
     totalCustomers,
+
     totalOrders,
+
     totalSpent,
+
     blacklistedCustomers,
+
     individualCustomers,
+
     businessCustomers,
   };
 }

@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { USE_MOCK_PRODUCTS } from "@/mocks/config";
 import { toggleMockProductStatus } from "@/mocks/products";
 
-import { productService } from "@/services/products/productService";
+import { productService } from "@/services/products/product-service";
 
 interface ToggleProductStatusVariables {
   productId: number;

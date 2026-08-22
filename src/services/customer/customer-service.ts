@@ -2,6 +2,17 @@ import { apiClient } from "@/api/client";
 
 import { API_ENDPOINTS } from "@/api/endpoints";
 
+import { USE_MOCK_CUSTOMERS } from "@/mocks/config";
+
+import {
+  getMockCustomers,
+  getMockCustomerById,
+  createMockCustomer,
+  updateMockCustomer,
+  deleteMockCustomer,
+  toggleMockCustomerBlacklist,
+} from "@/mocks/customers";
+
 import { customerRepository } from "@/repositories/customers/sqliteCustomerRepository";
 
 import type { ApiResponse } from "@/types/api";
@@ -13,21 +24,11 @@ import type {
 } from "@/types/customer";
 
 /**
- * ---------------------------------------------------------------------------
- * API Customer DTO
- * ---------------------------------------------------------------------------
- *
- * This represents the customer returned by the Xpress API.
- *
- * The backend currently exposes:
- *
- * - id
- * - firstName
- * - lastName
- * - email
- * - phoneNumber
- * - isBlackListed
+ * ============================================================================
+ * API CUSTOMER DTO
+ * ============================================================================
  */
+
 interface CustomerApiDto {
   id: number;
 
@@ -43,22 +44,21 @@ interface CustomerApiDto {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Create Customer Response
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * CREATE CUSTOMER RESPONSE
+ * ============================================================================
  */
+
 interface CreateCustomerResponse {
   id: number;
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Split Customer Name
- * ---------------------------------------------------------------------------
- *
- * The API expects firstName and lastName separately while the application
- * currently stores a single `name` field.
+ * ============================================================================
+ * SPLIT CUSTOMER NAME
+ * ============================================================================
  */
+
 function splitCustomerName(name: string | undefined) {
   const normalizedName = name?.trim() ?? "";
 
@@ -75,13 +75,11 @@ function splitCustomerName(name: string | undefined) {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Required Customer Field
- * ---------------------------------------------------------------------------
- *
- * Some of the existing application payload types contain optional fields.
- * The API requires specific fields, so validate them at the service boundary.
+ * ============================================================================
+ * REQUIRED CUSTOMER FIELD
+ * ============================================================================
  */
+
 function requireCustomerField(
   value: string | undefined,
   fieldName: string
@@ -96,17 +94,11 @@ function requireCustomerField(
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Customer Mapper
- * ---------------------------------------------------------------------------
- *
- * Maps the Xpress API customer DTO into the application's existing Customer
- * model.
- *
- * Some fields currently displayed by the UI are not returned by the customer
- * API. Those fields are therefore given safe defaults rather than inventing
- * values from another data source.
+ * ============================================================================
+ * CUSTOMER MAPPER
+ * ============================================================================
  */
+
 function mapCustomer(row: CustomerApiDto): Customer {
   const name = [row.firstName, row.lastName].filter(Boolean).join(" ").trim();
 
@@ -119,19 +111,17 @@ function mapCustomer(row: CustomerApiDto): Customer {
 
     email: row.email ?? "",
 
-    /**
-     * Returned directly by the Xpress Customer API.
-     */
     isBlackListed: row.isBlackListed,
 
     /**
-     * The current customer API does not expose customerType.
+     * The current customer API does not
+     * expose customerType.
      */
     customerType: "individual",
 
     /**
-     * Address information is not returned by the documented
-     * customer endpoints.
+     * Address information is not returned
+     * by the documented customer API.
      */
     country: "",
 
@@ -142,8 +132,8 @@ function mapCustomer(row: CustomerApiDto): Customer {
     street: "",
 
     /**
-     * Orders and total spending are not returned by the documented
-     * GetCustomer response.
+     * Orders and total spending are not
+     * returned by the documented API.
      */
     orders: 0,
 
@@ -156,19 +146,38 @@ function mapCustomer(row: CustomerApiDto): Customer {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Get Customers
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * GET CUSTOMERS
+ * ============================================================================
  *
- * GET /Invoices/GetCustomer
+ * MOCK:
+ *   Mock data
  *
- * Online:
+ * API:
  *   API -> map -> SQLite -> return
  *
- * Offline:
+ * OFFLINE:
  *   SQLite -> return
+ * ============================================================================
  */
+
 export async function getCustomers(): Promise<Customer[]> {
+  /**
+   * -------------------------------------------------------------------------
+   * MOCK MODE
+   * -------------------------------------------------------------------------
+   */
+
+  if (USE_MOCK_CUSTOMERS) {
+    return getMockCustomers();
+  }
+
+  /**
+   * -------------------------------------------------------------------------
+   * API MODE
+   * -------------------------------------------------------------------------
+   */
+
   try {
     const response = await apiClient.get<ApiResponse<CustomerApiDto[]>>(
       API_ENDPOINTS.customers.getAll
@@ -177,7 +186,7 @@ export async function getCustomers(): Promise<Customer[]> {
     const customers = (response.data.data ?? []).map(mapCustomer);
 
     /**
-     * Persist the latest successful server response locally.
+     * Persist successful API response.
      */
     await customerRepository.saveCustomers(customers);
 
@@ -190,9 +199,6 @@ export async function getCustomers(): Promise<Customer[]> {
 
     const cachedCustomers = await customerRepository.getCustomers();
 
-    /**
-     * Do not hide the original API error when there is no local data.
-     */
     if (cachedCustomers.length === 0) {
       throw error;
     }
@@ -202,24 +208,34 @@ export async function getCustomers(): Promise<Customer[]> {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Get Customer By ID
- * ---------------------------------------------------------------------------
- *
- * The documented API currently provides GetCustomer for the merchant's
- * customer collection but does not document a dedicated GetCustomerById
- * endpoint.
- *
- * Therefore we retrieve the customer collection and locate the requested
- * customer locally.
- *
- * Online:
- *   API -> map -> SQLite -> find -> return
- *
- * Offline:
- *   SQLite -> find -> return
+ * ============================================================================
+ * GET CUSTOMER BY ID
+ * ============================================================================
  */
+
 export async function getCustomerById(id: string): Promise<Customer> {
+  /**
+   * -------------------------------------------------------------------------
+   * MOCK MODE
+   * -------------------------------------------------------------------------
+   */
+
+  if (USE_MOCK_CUSTOMERS) {
+    const customer = getMockCustomerById(id);
+
+    if (!customer) {
+      throw new Error("Customer not found.");
+    }
+
+    return customer;
+  }
+
+  /**
+   * -------------------------------------------------------------------------
+   * API MODE
+   * -------------------------------------------------------------------------
+   */
+
   try {
     const response = await apiClient.get<ApiResponse<CustomerApiDto[]>>(
       API_ENDPOINTS.customers.getAll
@@ -228,7 +244,7 @@ export async function getCustomerById(id: string): Promise<Customer> {
     const customers = (response.data.data ?? []).map(mapCustomer);
 
     /**
-     * Persist the complete successful API response locally.
+     * Persist complete API response.
      */
     await customerRepository.saveCustomers(customers);
 
@@ -256,24 +272,18 @@ export async function getCustomerById(id: string): Promise<Customer> {
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Create Customer
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * CREATE CUSTOMER
+ * ============================================================================
  *
- * POST /Invoices/CreateCustomer
+ * MOCK:
+ *   Local mock collection
  *
- * Backend request:
- *
- * {
- *   firstName,
- *   lastName,
- *   email,
- *   phoneNumber
- * }
- *
- * The API does not return the complete Customer object, so the application
- * model is constructed from the submitted values and the returned ID.
+ * API:
+ *   POST /Invoices/CreateCustomer
+ * ============================================================================
  */
+
 export async function createCustomer(
   customer: CreateCustomerPayload
 ): Promise<Customer> {
@@ -282,6 +292,44 @@ export async function createCustomer(
   const phone = requireCustomerField(customer.phone, "Phone number");
 
   const email = customer.email?.trim() ?? "";
+
+  /**
+   * -------------------------------------------------------------------------
+   * MOCK MODE
+   * -------------------------------------------------------------------------
+   */
+
+  if (USE_MOCK_CUSTOMERS) {
+    return createMockCustomer({
+      name,
+
+      phone,
+
+      email,
+
+      customerType: customer.customerType ?? "individual",
+
+      country: customer.country ?? "",
+
+      state: customer.state ?? "",
+
+      city: customer.city ?? "",
+
+      street: customer.street ?? "",
+
+      isBlackListed: false,
+
+      orders: 0,
+
+      spent: 0,
+    });
+  }
+
+  /**
+   * -------------------------------------------------------------------------
+   * API MODE
+   * -------------------------------------------------------------------------
+   */
 
   const { firstName, lastName } = splitCustomerName(name);
 
@@ -334,36 +382,24 @@ export async function createCustomer(
     updated_at: "",
   };
 
-  /**
-   * Persist the newly created customer locally.
-   */
   await customerRepository.saveCustomer(createdCustomer);
 
   return createdCustomer;
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Update Customer
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * UPDATE CUSTOMER
+ * ============================================================================
  *
- * POST /Invoices/UpdateCustomer
+ * MOCK:
+ *   Updates mock collection.
  *
- * Backend request:
- *
- * {
- *   id,
- *   firstName,
- *   lastName,
- *   email,
- *   phoneNumber
- * }
- *
- * The UpdateCustomer API returns null data.
- *
- * We therefore preserve application-only fields from the existing local
- * customer where available.
+ * API:
+ *   POST /Invoices/UpdateCustomer
+ * ============================================================================
  */
+
 export async function updateCustomer(
   id: string,
   customer: UpdateCustomerPayload
@@ -373,6 +409,44 @@ export async function updateCustomer(
   const phone = requireCustomerField(customer.phone, "Phone number");
 
   const email = customer.email?.trim() ?? "";
+
+  /**
+   * -------------------------------------------------------------------------
+   * MOCK MODE
+   * -------------------------------------------------------------------------
+   */
+
+  if (USE_MOCK_CUSTOMERS) {
+    const updatedCustomer = updateMockCustomer(id, {
+      name,
+
+      phone,
+
+      email,
+
+      customerType: customer.customerType ?? "individual",
+
+      country: customer.country ?? "",
+
+      state: customer.state ?? "",
+
+      city: customer.city ?? "",
+
+      street: customer.street ?? "",
+    });
+
+    if (!updatedCustomer) {
+      throw new Error("Customer not found.");
+    }
+
+    return updatedCustomer;
+  }
+
+  /**
+   * -------------------------------------------------------------------------
+   * API MODE
+   * -------------------------------------------------------------------------
+   */
 
   const { firstName, lastName } = splitCustomerName(name);
 
@@ -389,7 +463,7 @@ export async function updateCustomer(
   });
 
   /**
-   * Read the existing local record so application-only fields are preserved.
+   * Preserve application-only fields.
    */
   const existingCustomer = await customerRepository.getCustomerById(id);
 
@@ -421,61 +495,113 @@ export async function updateCustomer(
 
     created_at: existingCustomer?.created_at ?? "",
 
-    updated_at: existingCustomer?.updated_at ?? "",
+    updated_at: new Date().toISOString(),
   };
 
-  /**
-   * Persist the successful update locally.
-   */
   await customerRepository.saveCustomer(updatedCustomer);
 
   return updatedCustomer;
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Blacklist Customer
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * BLACKLIST CUSTOMER
+ * ============================================================================
  *
- * POST /Invoices/BlackListCustomer/{customerId}?IsBlackListed={boolean}
+ * MOCK:
+ *   Updates local mock state.
  *
- * true  -> blacklist customer
- * false -> remove blacklist
+ * API:
+ *   POST /Invoices/BlackListCustomer/{id}
+ * ============================================================================
  */
+
 export async function blacklistCustomer(
   id: string,
   isBlackListed: boolean
 ): Promise<void> {
+  /**
+   * -------------------------------------------------------------------------
+   * MOCK MODE
+   * -------------------------------------------------------------------------
+   */
+
+  if (USE_MOCK_CUSTOMERS) {
+    const updatedCustomer = toggleMockCustomerBlacklist(id, isBlackListed);
+
+    if (!updatedCustomer) {
+      throw new Error("Customer not found.");
+    }
+
+    return;
+  }
+
+  /**
+   * -------------------------------------------------------------------------
+   * API MODE
+   * -------------------------------------------------------------------------
+   */
+
   await apiClient.post<ApiResponse<null>>(
     API_ENDPOINTS.customers.blacklist(Number(id), isBlackListed)
   );
 
   /**
-   * Update the local copy after the API confirms success.
+   * Update local cache only after
+   * API confirms success.
    */
   const existingCustomer = await customerRepository.getCustomerById(id);
 
   if (existingCustomer) {
     await customerRepository.saveCustomer({
       ...existingCustomer,
+
       isBlackListed,
+
       updated_at: new Date().toISOString(),
     });
   }
 }
 
 /**
- * ---------------------------------------------------------------------------
- * Delete Customer
- * ---------------------------------------------------------------------------
+ * ============================================================================
+ * DELETE CUSTOMER
+ * ============================================================================
  *
- * The current Xpress API documentation does NOT provide a delete-customer
- * endpoint.
+ * The current Xpress API documentation does
+ * not provide a delete-customer endpoint.
  *
- * Customer removal should therefore NOT make a DELETE request.
+ * MOCK:
+ *   Actually removes mock customer.
  *
- * The closest supported backend operation is blacklistCustomer().
+ * API:
+ *   Maps delete to blacklist because that
+ *   is the closest documented operation.
+ * ============================================================================
  */
+
 export async function deleteCustomer(id: string): Promise<void> {
+  /**
+   * -------------------------------------------------------------------------
+   * MOCK MODE
+   * -------------------------------------------------------------------------
+   */
+
+  if (USE_MOCK_CUSTOMERS) {
+    const deleted = deleteMockCustomer(id);
+
+    if (!deleted) {
+      throw new Error("Customer not found.");
+    }
+
+    return;
+  }
+
+  /**
+   * -------------------------------------------------------------------------
+   * API MODE
+   * -------------------------------------------------------------------------
+   */
+
   await blacklistCustomer(id, true);
 }

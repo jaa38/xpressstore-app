@@ -11,9 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { useCallback, useState } from "react";
-
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import * as Clipboard from "expo-clipboard";
 
@@ -29,18 +27,9 @@ import { spacing, radius, theme } from "@/theme";
 import { useCustomerById } from "@/hooks/customers/useCustomerById";
 import { useBlacklistCustomer } from "@/hooks/customers/useBlacklistCustomer";
 
-import {
-  getMockCustomerById,
-  toggleMockCustomerBlacklist,
-} from "@/mocks/customers";
-
-import { USE_MOCK_CUSTOMERS } from "@/mocks/config";
-
 import { countryOptions } from "@/constants/address/countries";
 
 import { useToast } from "@/hooks/useToast";
-
-import type { Customer } from "@/types/customer";
 
 export default function CustomerDetailsScreen() {
   const { id } = useLocalSearchParams<{
@@ -52,63 +41,35 @@ export default function CustomerDetailsScreen() {
   const { showToast } = useToast();
 
   /**
-   * --------------------------------------------------------------------------
-   * API CUSTOMER
-   * --------------------------------------------------------------------------
+   * ==========================================================================
+   * CUSTOMER
+   * ==========================================================================
+   *
+   * The hook/service decides whether this customer comes from:
+   *
+   * - mock data
+   * - API
+   * - local cache
+   *
+   * This screen does not need to know.
    */
 
-  const { data: apiCustomer, isLoading: apiLoading } = useCustomerById(id);
+  const { data: customer, isLoading } = useCustomerById(id);
 
   /**
-   * --------------------------------------------------------------------------
-   * MOCK CUSTOMER
-   * --------------------------------------------------------------------------
-   */
-
-  const [mockCustomer, setMockCustomer] = useState<Customer | undefined>(() =>
-    USE_MOCK_CUSTOMERS ? getMockCustomerById(id) : undefined
-  );
-
-  /**
-   * --------------------------------------------------------------------------
-   * CUSTOMER SOURCE
-   * --------------------------------------------------------------------------
-   */
-
-  const customer = USE_MOCK_CUSTOMERS ? mockCustomer : apiCustomer;
-
-  const isLoading = USE_MOCK_CUSTOMERS ? false : apiLoading;
-
-  /**
-   * --------------------------------------------------------------------------
-   * SYNCHRONIZE MOCK CUSTOMER
-   * --------------------------------------------------------------------------
-   */
-
-  useFocusEffect(
-    useCallback(() => {
-      if (USE_MOCK_CUSTOMERS) {
-        setMockCustomer(getMockCustomerById(id));
-      }
-    }, [id])
-  );
-
-  /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * BLACKLIST MUTATION
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const blacklistCustomerMutation = useBlacklistCustomer();
 
-  const isUpdatingBlacklist = USE_MOCK_CUSTOMERS
-    ? false
-    : blacklistCustomerMutation.isPending;
+  const isUpdatingBlacklist = blacklistCustomerMutation.isPending;
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * COUNTRY
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const countryLabel =
@@ -116,9 +77,9 @@ export default function CustomerDetailsScreen() {
       ?.label ?? customer?.country;
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * CONTACT ACTIONS
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   async function handleCall(phone: string) {
@@ -175,9 +136,9 @@ export default function CustomerDetailsScreen() {
   }
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * BLACKLIST CUSTOMER
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   function handleBlacklistToggle() {
@@ -207,37 +168,6 @@ export default function CustomerDetailsScreen() {
 
           onPress: async () => {
             try {
-              /**
-               * MOCK MODE
-               */
-
-              if (USE_MOCK_CUSTOMERS) {
-                const updatedCustomer = toggleMockCustomerBlacklist(
-                  customer.id,
-                  nextStatus
-                );
-
-                setMockCustomer(updatedCustomer);
-
-                showToast({
-                  type: "success",
-
-                  title: nextStatus
-                    ? "Customer Blacklisted"
-                    : "Customer Unblacklisted",
-
-                  message: nextStatus
-                    ? `"${customer.name}" has been blacklisted.`
-                    : `"${customer.name}" has been removed from the blacklist.`,
-                });
-
-                return;
-              }
-
-              /**
-               * API MODE
-               */
-
               await blacklistCustomerMutation.mutateAsync({
                 id: customer.id,
 
@@ -276,9 +206,9 @@ export default function CustomerDetailsScreen() {
   }
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * LOADING STATE
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   if (isLoading) {
@@ -305,9 +235,9 @@ export default function CustomerDetailsScreen() {
   }
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * CUSTOMER NOT FOUND
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   if (!customer) {
@@ -345,9 +275,9 @@ export default function CustomerDetailsScreen() {
   }
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * CUSTOMER INITIALS
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const initials = customer.name
@@ -357,9 +287,9 @@ export default function CustomerDetailsScreen() {
     .join("");
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * UI
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   return (
@@ -384,9 +314,9 @@ export default function CustomerDetailsScreen() {
           paddingBottom: spacing["2xl"],
         }}
       >
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
         {/* CUSTOMER PROFILE */}
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
 
         <Card>
           <View
@@ -446,7 +376,6 @@ export default function CustomerDetailsScreen() {
                     customer.customerType === "business"
                       ? theme.badge.secondary.text
                       : theme.badge.primary.text,
-
                   textTransform: "capitalize",
                 }}
               >
@@ -474,9 +403,9 @@ export default function CustomerDetailsScreen() {
           </View>
         </Card>
 
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
         {/* CONTACT INFORMATION */}
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
 
         <View>
           <AppText variant="h3">Contact Information</AppText>
@@ -626,9 +555,9 @@ export default function CustomerDetailsScreen() {
           </Card>
         </View>
 
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
         {/* CUSTOMER SUMMARY */}
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
 
         <View>
           <AppText variant="h3">Customer Summary</AppText>
@@ -699,9 +628,9 @@ export default function CustomerDetailsScreen() {
           </Card>
         </View>
 
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
         {/* ADDRESS INFORMATION */}
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
 
         <View>
           <AppText variant="h3">Address Information</AppText>
@@ -879,9 +808,9 @@ export default function CustomerDetailsScreen() {
           </Card>
         </View>
 
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
         {/* QUICK ACTIONS */}
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
 
         <View
           style={{
@@ -923,9 +852,9 @@ export default function CustomerDetailsScreen() {
           />
         </View>
 
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
         {/* BLACKLIST ACTION */}
-        {/* ------------------------------------------------------------------ */}
+        {/* ================================================================== */}
 
         <Button
           title={

@@ -4,6 +4,7 @@ import {
   FlatList,
   RefreshControl,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -530,7 +531,7 @@ export default function OrdersScreen() {
                   marginTop: spacing.md,
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: spacing.md,
+                  gap: spacing.sm,
                 }}
               >
                 <View
@@ -539,9 +540,9 @@ export default function OrdersScreen() {
                   }}
                 >
                   <SearchBar
-                    placeholder="Search orders"
                     value={searchQuery}
                     onChangeText={setSearchQuery}
+                    placeholder="Search orders"
                   />
                 </View>
 
@@ -561,11 +562,16 @@ export default function OrdersScreen() {
             ============================================================ */}
 
             {!isFirstTimeUser && !showOrderError && (
-              <View
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
                 style={{
-                  flexDirection: "row",
                   marginTop: spacing.md,
+                  flexGrow: 0,
+                }}
+                contentContainerStyle={{
                   gap: spacing.sm,
+                  paddingRight: spacing.lg,
                 }}
               >
                 <UICard
@@ -599,7 +605,7 @@ export default function OrdersScreen() {
                   variant={selectedFilter === "failed" ? "active" : "default"}
                   onPress={() => setSelectedFilter("failed")}
                 />
-              </View>
+              </ScrollView>
             )}
 
             {/* ============================================================

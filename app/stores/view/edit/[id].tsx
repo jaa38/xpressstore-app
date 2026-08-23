@@ -595,35 +595,46 @@ export default function EditStoreScreen() {
         <View
           style={{
             paddingHorizontal: spacing.lg,
-
             paddingBottom: spacing.md,
           }}
         >
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-            hitSlop={10}
-            onPress={() => router.back()}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={theme.icon.default.icon}
-            />
-          </Pressable>
-
           <View
             style={{
-              marginTop: spacing.md,
-
-              gap: spacing.xs,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing.md,
             }}
           >
-            <AppText variant="h1">Edit Store</AppText>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              hitSlop={10}
+              onPress={() => router.back()}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={theme.icon.default.icon}
+              />
+            </Pressable>
 
-            <AppText variant="body" color="secondary">
-              Update your storefront information and settings.
-            </AppText>
+            <View
+              style={{
+                flex: 1,
+              }}
+            >
+              <AppText variant="h1">Edit Store</AppText>
+
+              <AppText
+                variant="body"
+                color="secondary"
+                style={{
+                  marginTop: spacing.xs,
+                }}
+              >
+                Update your storefront information and settings.
+              </AppText>
+            </View>
           </View>
         </View>
 
@@ -1093,7 +1104,7 @@ export default function EditStoreScreen() {
         >
           <Button
             title="Cancel"
-            variant="secondary"
+            variant='tertiary'
             onPress={() => router.back()}
             disabled={updateStoreMutation.isPending}
             style={{

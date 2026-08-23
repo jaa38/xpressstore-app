@@ -414,13 +414,34 @@ export default function OrdersScreen() {
    * -------------------------------------------------------------------------
    */
 
-  const headerSubtitle = isLoading
-    ? "Loading orders..."
-    : isFirstTimeUser
-      ? "Start accepting orders"
-      : ordersThisWeek.length === 1
-        ? "1 order this week"
-        : `${ordersThisWeek.length} orders this week`;
+  const headerSubtitle = useMemo(() => {
+    if (isLoading) {
+      return "Loading orders...";
+    }
+
+    if (isFirstTimeUser) {
+      return "Start accepting orders";
+    }
+
+    const statusLabels: Record<OrderFilter, string> = {
+      all: "order",
+      paid: "paid order",
+      delivered: "delivered order",
+      returned: "returned order",
+      failed: "failed order",
+    };
+
+    const filteredOrdersThisWeek =
+      selectedFilter === "all"
+        ? ordersThisWeek
+        : ordersThisWeek.filter((order) => order.status === selectedFilter);
+
+    const count = filteredOrdersThisWeek.length;
+
+    const label = statusLabels[selectedFilter];
+
+    return `${count} ${label}${count === 1 ? "" : "s"} this week`;
+  }, [isLoading, isFirstTimeUser, ordersThisWeek, selectedFilter]);
 
   /**
    * -------------------------------------------------------------------------

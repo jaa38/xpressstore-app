@@ -806,7 +806,7 @@ export default function PaymentLinksScreen() {
             <Card
               variant="active"
               style={{
-                marginTop: spacing.lg,
+                marginTop: spacing.md,
               }}
             >
               <View

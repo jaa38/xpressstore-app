@@ -306,7 +306,6 @@ export default function EditStoreScreen() {
       storeProducts: store.products ?? [],
 
       storeDiscounts: store.discounts ?? [],
-
     };
 
     /**
@@ -596,8 +595,6 @@ export default function EditStoreScreen() {
         <View
           style={{
             paddingHorizontal: spacing.lg,
-
-            paddingTop: spacing.md,
 
             paddingBottom: spacing.md,
           }}

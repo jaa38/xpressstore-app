@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { paymentLinkService } from "@/services/payment-links/paymentLinkService";
+import { paymentLinkService } from "@/services/payment-links/paymentLink-service";
 
 export function useValidatePaymentLinkReference() {
   return useMutation({

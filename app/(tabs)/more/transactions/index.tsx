@@ -190,18 +190,12 @@ export default function TransactionsScreen() {
 
     const incomingPage = transactionsData.pageNumber ?? currentPage;
 
-    /**
-     * First page replaces the current list.
-     */
     if (incomingPage === 1) {
       setLoadedTransactions(incomingTransactions);
 
       return;
     }
 
-    /**
-     * Subsequent pages are appended without duplicates.
-     */
     setLoadedTransactions((previousTransactions) => {
       const existingIds = new Set(
         previousTransactions.map((transaction) => transaction.id)

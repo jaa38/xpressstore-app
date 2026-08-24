@@ -2,7 +2,11 @@ import { Stack } from "expo-router";
 
 export default function MoreLayout() {
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
       <Stack.Screen
         name="index"
         options={{
@@ -54,6 +58,60 @@ export default function MoreLayout() {
 
       <Stack.Screen
         name="transactions"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      {/* Categories */}
+
+      <Stack.Screen
+        name="categories"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      {/* Discount Codes */}
+
+      <Stack.Screen
+        name="discount-codes"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      {/* Notifications */}
+
+      <Stack.Screen
+        name="notifications"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      {/* Settings */}
+
+      <Stack.Screen
+        name="settings"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      {/* Support */}
+
+      <Stack.Screen
+        name="support"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      {/* About */}
+
+      <Stack.Screen
+        name="about"
         options={{
           headerShown: false,
         }}

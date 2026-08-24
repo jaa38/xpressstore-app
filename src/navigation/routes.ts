@@ -107,6 +107,10 @@ export const ROUTES = {
 
   BUSINESS: "/(tabs)/more/business",
 
+  CATEGORIES: "/(tabs)/more/categories",
+
+  DISCOUNT_CODES: "/(tabs)/more/discount-codes",
+
   PAYMENT_SETTINGS: "/(tabs)/more/payment-settings",
 
   TRANSACTIONS: "/(tabs)/more/transactions",

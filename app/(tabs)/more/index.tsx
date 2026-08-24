@@ -1,19 +1,22 @@
-import { View, ScrollView, Pressable } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
+
 import { StatusBar } from "expo-status-bar";
 
-import { AppText } from "@/components/ui/AppText";
-
-import { spacing, theme } from "@/theme";
-import { Card } from "@/components/ui/Card";
 import { Ionicons } from "@expo/vector-icons";
-import { Button } from "@/components/ui/Button";
 
 import { router } from "expo-router";
-import { ROUTES } from "@/navigation/routes";
-import { Alert } from "react-native";
+
+import { AppText } from "@/components/ui/AppText";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Divider } from "@/components/ui/Divider";
 import { UICard } from "@/components/ui/UICard";
+
+import { spacing, theme } from "@/theme";
+
+import { ROUTES } from "@/navigation/routes";
 
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -47,17 +50,23 @@ export default function MoreScreen() {
         style={{
           flex: 1,
           paddingHorizontal: spacing.lg,
-          // paddingTop: spacing.md,
         }}
         showsVerticalScrollIndicator={false}
       >
+        {/* ================================================================= */}
+        {/* HEADER */}
+        {/* ================================================================= */}
+
         <AppText variant="h1">Profile</AppText>
 
         <AppText variant="body" color="secondary">
           Manage your business and account
         </AppText>
 
-        {/* Screen content */}
+        {/* ================================================================= */}
+        {/* PROFILE CARD */}
+        {/* ================================================================= */}
+
         <Card
           style={{
             marginTop: spacing.md,
@@ -97,6 +106,10 @@ export default function MoreScreen() {
           </View>
         </Card>
 
+        {/* ================================================================= */}
+        {/* AVAILABLE BALANCE */}
+        {/* ================================================================= */}
+
         <Card
           style={{
             marginTop: spacing.md,
@@ -120,21 +133,39 @@ export default function MoreScreen() {
           <Button title="Withdraw" />
         </Card>
 
-        {/* Categories */}
-        <View style={{ marginTop: spacing.lg, gap: spacing.md }}>
-          {/* Business */}
-          <View style={{ flexDirection: "column", gap: spacing.sm }}>
+        {/* ================================================================= */}
+        {/* CATEGORIES */}
+        {/* ================================================================= */}
+
+        <View
+          style={{
+            marginTop: spacing.lg,
+            gap: spacing.md,
+          }}
+        >
+          {/* ================================================================= */}
+          {/* BUSINESS */}
+          {/* ================================================================= */}
+
+          <View
+            style={{
+              flexDirection: "column",
+              gap: spacing.sm,
+            }}
+          >
             <AppText variant="bodyBold" color="muted">
               Business
             </AppText>
 
-            {/* Business Information */}
             <Card
               style={{
                 gap: spacing.rg,
               }}
             >
-              {/* Business */}
+              {/* ----------------------------------------------------------- */}
+              {/* BUSINESS INFORMATION */}
+              {/* ----------------------------------------------------------- */}
+
               <Pressable
                 onPress={() => router.push(ROUTES.BUSINESS)}
                 style={{
@@ -166,7 +197,10 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* Customers */}
+              {/* ----------------------------------------------------------- */}
+              {/* CUSTOMERS */}
+              {/* ----------------------------------------------------------- */}
+
               <Pressable
                 onPress={() => router.push(ROUTES.CUSTOMERS)}
                 style={{
@@ -198,7 +232,80 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* Payment Links */}
+              {/* ----------------------------------------------------------- */}
+              {/* CATEGORIES */}
+              {/* ----------------------------------------------------------- */}
+
+              <Pressable
+                onPress={() => router.push(ROUTES.CATEGORIES)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="grid-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
+
+                <View style={{ flex: 1 }}>
+                  <AppText variant="bodyBold">Categories</AppText>
+
+                  <AppText variant="bodySmall" color="muted">
+                    Organise your products into categories
+                  </AppText>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
+
+              <Divider />
+
+              {/* ----------------------------------------------------------- */}
+              {/* DISCOUNT CODES */}
+              {/* ----------------------------------------------------------- */}
+
+              <Pressable
+                onPress={() => router.push(ROUTES.DISCOUNT_CODES)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="pricetag-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
+
+                <View style={{ flex: 1 }}>
+                  <AppText variant="bodyBold">Discount Codes</AppText>
+
+                  <AppText variant="bodySmall" color="muted">
+                    Create and manage promotional discount codes
+                  </AppText>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
+
+              <Divider />
+
+              {/* ----------------------------------------------------------- */}
+              {/* PAYMENT LINKS */}
+              {/* ----------------------------------------------------------- */}
+
               <Pressable
                 onPress={() => router.push(ROUTES.PAYMENT_LINKS)}
                 style={{
@@ -230,7 +337,10 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* Transactions */}
+              {/* ----------------------------------------------------------- */}
+              {/* TRANSACTIONS */}
+              {/* ----------------------------------------------------------- */}
+
               <Pressable
                 onPress={() => router.push(ROUTES.TRANSACTIONS)}
                 style={{
@@ -262,8 +372,16 @@ export default function MoreScreen() {
             </Card>
           </View>
 
-          {/* Payments */}
-          <View style={{ flexDirection: "column", gap: spacing.sm }}>
+          {/* ================================================================= */}
+          {/* PAYMENTS */}
+          {/* ================================================================= */}
+
+          <View
+            style={{
+              flexDirection: "column",
+              gap: spacing.sm,
+            }}
+          >
             <AppText variant="bodyBold" color="muted">
               Payments
             </AppText>
@@ -273,7 +391,10 @@ export default function MoreScreen() {
                 gap: spacing.rg,
               }}
             >
-              {/* Payment Settings*/}
+              {/* ----------------------------------------------------------- */}
+              {/* PAYMENT SETTINGS */}
+              {/* ----------------------------------------------------------- */}
+
               <Pressable
                 onPress={() => router.push(ROUTES.PAYMENT_SETTINGS)}
                 style={{
@@ -305,7 +426,10 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* Settlements */}
+              {/* ----------------------------------------------------------- */}
+              {/* SETTLEMENT */}
+              {/* ----------------------------------------------------------- */}
+
               <Pressable
                 onPress={() => router.push(ROUTES.SETTLEMENTS)}
                 style={{
@@ -337,8 +461,16 @@ export default function MoreScreen() {
             </Card>
           </View>
 
-          {/* Account */}
-          <View style={{ flexDirection: "column", gap: spacing.sm }}>
+          {/* ================================================================= */}
+          {/* ACCOUNT */}
+          {/* ================================================================= */}
+
+          <View
+            style={{
+              flexDirection: "column",
+              gap: spacing.sm,
+            }}
+          >
             <AppText variant="bodyBold" color="muted">
               Account
             </AppText>
@@ -348,7 +480,10 @@ export default function MoreScreen() {
                 gap: spacing.rg,
               }}
             >
-              {/* Security */}
+              {/* ----------------------------------------------------------- */}
+              {/* SECURITY */}
+              {/* ----------------------------------------------------------- */}
+
               <Pressable
                 onPress={() => router.push(ROUTES.SECURITY)}
                 style={{
@@ -380,8 +515,12 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* Notifications */}
-              <View
+              {/* ----------------------------------------------------------- */}
+              {/* NOTIFICATIONS */}
+              {/* ----------------------------------------------------------- */}
+
+              <Pressable
+                onPress={() => router.push(ROUTES.NOTIFICATIONS)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -407,12 +546,16 @@ export default function MoreScreen() {
                   size={20}
                   color={theme.listItem.default.chevron}
                 />
-              </View>
+              </Pressable>
 
               <Divider />
 
-              {/* Settings */}
-              <View
+              {/* ----------------------------------------------------------- */}
+              {/* SETTINGS */}
+              {/* ----------------------------------------------------------- */}
+
+              <Pressable
+                onPress={() => router.push(ROUTES.SETTINGS)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -429,7 +572,7 @@ export default function MoreScreen() {
                   <AppText variant="bodyBold">Settings</AppText>
 
                   <AppText variant="bodySmall" color="muted">
-                    Manage your app prefrences
+                    Manage your app preferences
                   </AppText>
                 </View>
 
@@ -438,11 +581,20 @@ export default function MoreScreen() {
                   size={20}
                   color={theme.listItem.default.chevron}
                 />
-              </View>
+              </Pressable>
             </Card>
           </View>
 
-          <View style={{ flexDirection: "column", gap: spacing.sm }}>
+          {/* ================================================================= */}
+          {/* SUPPORT */}
+          {/* ================================================================= */}
+
+          <View
+            style={{
+              flexDirection: "column",
+              gap: spacing.sm,
+            }}
+          >
             <AppText variant="bodyBold" color="muted">
               Support
             </AppText>
@@ -452,8 +604,12 @@ export default function MoreScreen() {
                 gap: spacing.rg,
               }}
             >
-              {/* Support */}
+              {/* ----------------------------------------------------------- */}
+              {/* SUPPORT */}
+              {/* ----------------------------------------------------------- */}
+
               <Pressable
+                onPress={() => router.push(ROUTES.SUPPORT)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -483,8 +639,12 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* About */}
-              <View
+              {/* ----------------------------------------------------------- */}
+              {/* ABOUT */}
+              {/* ----------------------------------------------------------- */}
+
+              <Pressable
+                onPress={() => router.push(ROUTES.ABOUT)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -510,15 +670,18 @@ export default function MoreScreen() {
                   size={20}
                   color={theme.listItem.default.chevron}
                 />
-              </View>
+              </Pressable>
             </Card>
           </View>
         </View>
 
+        {/* ================================================================= */}
+        {/* SIGN OUT */}
+        {/* ================================================================= */}
+
         <View
           style={{
             paddingBottom: spacing.lg,
-
             paddingTop: spacing.md,
           }}
         >

@@ -1,0 +1,399 @@
+import { Pressable, ScrollView, View } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { StatusBar } from "expo-status-bar";
+
+import { Ionicons } from "@expo/vector-icons";
+
+import { router } from "expo-router";
+
+import { AppText } from "@/components/ui/AppText";
+import { Card } from "@/components/ui/Card";
+import { Divider } from "@/components/ui/Divider";
+import { Button } from "@/components/ui/Button";
+
+import { spacing, theme, radius } from "@/theme";
+
+export default function CategoriesScreen() {
+  /**
+   * -------------------------------------------------------------------------
+   * SCREEN STATE
+   * -------------------------------------------------------------------------
+   *
+   * Categories are not connected to a backend yet, so there is currently
+   * no loading/error state to display.
+   *
+   * This screen therefore presents the category management experience as
+   * an empty state until category persistence is implemented.
+   */
+
+  const categories: unknown[] = [];
+
+  const hasCategories = categories.length > 0;
+
+  /**
+   * -------------------------------------------------------------------------
+   * ACTIONS
+   * -------------------------------------------------------------------------
+   */
+
+  const handleAddCategory = () => {
+    // TODO: Navigate to Add Category when implemented.
+  };
+
+  const handleViewCategories = () => {
+    // TODO: Navigate to Categories List when implemented.
+  };
+
+  /**
+   * -------------------------------------------------------------------------
+   * UI
+   * -------------------------------------------------------------------------
+   */
+
+  return (
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: theme.background.primary,
+      }}
+    >
+      <StatusBar style="auto" />
+
+      <View
+        style={{
+          flex: 1,
+          paddingHorizontal: spacing.lg,
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+          }}
+        >
+          {/* =================================================================
+              HEADER
+          ================================================================= */}
+
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing.md,
+            }}
+          >
+            {/* Back Button */}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              onPress={() => router.back()}
+              style={{
+                width: 44,
+                height: 44,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={theme.text.primary}
+              />
+            </Pressable>
+
+            {/* Title */}
+
+            <View
+              style={{
+                flex: 1,
+                gap: spacing.xs,
+              }}
+            >
+              <AppText variant="h1">Categories</AppText>
+
+              <AppText variant="body" color="secondary">
+                {hasCategories
+                  ? `${categories.length} ${
+                      categories.length === 1
+                        ? "category"
+                        : "categories"
+                    }`
+                  : "Organise your products into categories."}
+              </AppText>
+            </View>
+          </View>
+
+          {/* =================================================================
+              CONTENT
+          ================================================================= */}
+
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingTop: spacing.lg,
+              paddingBottom: spacing["2xl"],
+            }}
+          >
+            {/* ===============================================================
+                CATEGORY MANAGEMENT
+            =============================================================== */}
+
+            <AppText
+              variant="bodyBold"
+              color="muted"
+              style={{
+                marginBottom: spacing.sm,
+              }}
+            >
+              Manage Categories
+            </AppText>
+
+            <Card
+              style={{
+                gap: spacing.rg,
+              }}
+            >
+              {/* -------------------------------------------------------------
+                  ALL CATEGORIES
+              ------------------------------------------------------------- */}
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="View all categories"
+                onPress={handleViewCategories}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: radius.md,
+                    backgroundColor: theme.background.subtle,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Ionicons
+                    name="grid-outline"
+                    size={22}
+                    color={theme.listItem.default.icon}
+                  />
+                </View>
+
+                <View
+                  style={{
+                    flex: 1,
+                    gap: spacing.xs,
+                  }}
+                >
+                  <AppText variant="bodyBold">
+                    All Categories
+                  </AppText>
+
+                  <AppText
+                    variant="bodySmall"
+                    color="muted"
+                  >
+                    View and manage your product categories
+                  </AppText>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
+
+              <Divider />
+
+              {/* -------------------------------------------------------------
+                  ADD CATEGORY
+              ------------------------------------------------------------- */}
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Add category"
+                onPress={handleAddCategory}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: radius.md,
+                    backgroundColor: theme.background.brand,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Ionicons
+                    name="add-outline"
+                    size={24}
+                    color={theme.icon.branding.icon}
+                  />
+                </View>
+
+                <View
+                  style={{
+                    flex: 1,
+                    gap: spacing.xs,
+                  }}
+                >
+                  <AppText variant="bodyBold">
+                    Add Category
+                  </AppText>
+
+                  <AppText
+                    variant="bodySmall"
+                    color="muted"
+                  >
+                    Create a new product category
+                  </AppText>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
+            </Card>
+
+            {/* ===============================================================
+                FIRST-TIME EMPTY STATE
+            =============================================================== */}
+
+            {!hasCategories && (
+              <Card
+                style={{
+                  marginTop: spacing.lg,
+                  alignItems: "center",
+                  paddingVertical: spacing.xl,
+                  paddingHorizontal: spacing.lg,
+                }}
+              >
+                {/* ICON */}
+
+                <View
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: radius.full,
+                    backgroundColor:
+                      theme.icon.branding.background,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Ionicons
+                    name="albums-outline"
+                    size={32}
+                    color={theme.icon.branding.icon}
+                  />
+                </View>
+
+                {/* TITLE */}
+
+                <AppText
+                  variant="bodyLargeBold"
+                  style={{
+                    marginTop: spacing.md,
+                    textAlign: "center",
+                  }}
+                >
+                  No categories yet
+                </AppText>
+
+                {/* DESCRIPTION */}
+
+                <AppText
+                  variant="body"
+                  color="secondary"
+                  style={{
+                    marginTop: spacing.xs,
+                    textAlign: "center",
+                    maxWidth: 320,
+                  }}
+                >
+                  Organise your products into categories
+                  to make your storefront easier for
+                  customers to browse.
+                </AppText>
+
+                {/* CTA */}
+
+                <Button
+                  title="Add Category"
+                  variant="primary"
+                  leftIcon={
+                    <Ionicons
+                      name="add"
+                      size={20}
+                      color={theme.action.primary.text}
+                    />
+                  }
+                  style={{
+                    marginTop: spacing.lg,
+                  }}
+                  onPress={handleAddCategory}
+                />
+
+                {/* SUPPORTING TEXT */}
+
+                <AppText
+                  variant="caption"
+                  color="muted"
+                  style={{
+                    marginTop: spacing.sm,
+                    textAlign: "center",
+                  }}
+                >
+                  Categories can be assigned to your
+                  products when creating or editing them.
+                </AppText>
+              </Card>
+            )}
+
+            {/* ===============================================================
+                INFORMATION
+            =============================================================== */}
+
+            <View
+              style={{
+                marginTop: spacing.xl,
+                alignItems: "center",
+                paddingHorizontal: spacing.lg,
+              }}
+            >
+              <AppText
+                variant="bodySmall"
+                color="secondary"
+                style={{
+                  textAlign: "center",
+                  maxWidth: 320,
+                }}
+              >
+                Categories help customers find the
+                products they are looking for quickly.
+              </AppText>
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}

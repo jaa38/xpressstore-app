@@ -1,5 +1,6 @@
 export {
   USE_MOCK_PRODUCTS,
+  USE_MOCK_CATEGORIES,
   USE_MOCK_CUSTOMERS,
   USE_MOCK_PAYMENT_LINKS,
   USE_MOCK_ORDERS,
@@ -8,10 +9,15 @@ export {
 } from "./config";
 
 export {
-  MOCK_ORDERS,
-  getMockOrders,
-  getMockOrderById,
-} from "./orders";
+  MOCK_CATEGORIES,
+  getMockCategories,
+  getMockCategoryById,
+  createMockCategory,
+  updateMockCategory,
+  deleteMockCategory,
+} from "./categories";
+
+export { MOCK_ORDERS, getMockOrders, getMockOrderById } from "./orders";
 
 export {
   MOCK_STORES,

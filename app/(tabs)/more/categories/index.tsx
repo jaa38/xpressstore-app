@@ -39,11 +39,11 @@ export default function CategoriesScreen() {
    */
 
   const handleAddCategory = () => {
-    // TODO: Navigate to Add Category when implemented.
+    router.push("/(tabs)/more/categories/add");
   };
 
   const handleViewCategories = () => {
-    // TODO: Navigate to Categories List when implemented.
+    router.push("/(tabs)/more/categories/all");
   };
 
   /**
@@ -116,9 +116,7 @@ export default function CategoriesScreen() {
               <AppText variant="body" color="secondary">
                 {hasCategories
                   ? `${categories.length} ${
-                      categories.length === 1
-                        ? "category"
-                        : "categories"
+                      categories.length === 1 ? "category" : "categories"
                     }`
                   : "Organise your products into categories."}
               </AppText>
@@ -194,14 +192,9 @@ export default function CategoriesScreen() {
                     gap: spacing.xs,
                   }}
                 >
-                  <AppText variant="bodyBold">
-                    All Categories
-                  </AppText>
+                  <AppText variant="bodyBold">All Categories</AppText>
 
-                  <AppText
-                    variant="bodySmall"
-                    color="muted"
-                  >
+                  <AppText variant="bodySmall" color="muted">
                     View and manage your product categories
                   </AppText>
                 </View>
@@ -253,14 +246,9 @@ export default function CategoriesScreen() {
                     gap: spacing.xs,
                   }}
                 >
-                  <AppText variant="bodyBold">
-                    Add Category
-                  </AppText>
+                  <AppText variant="bodyBold">Add Category</AppText>
 
-                  <AppText
-                    variant="bodySmall"
-                    color="muted"
-                  >
+                  <AppText variant="bodySmall" color="muted">
                     Create a new product category
                   </AppText>
                 </View>
@@ -293,8 +281,7 @@ export default function CategoriesScreen() {
                     width: 64,
                     height: 64,
                     borderRadius: radius.full,
-                    backgroundColor:
-                      theme.icon.branding.background,
+                    backgroundColor: theme.icon.branding.background,
                     justifyContent: "center",
                     alignItems: "center",
                   }}
@@ -329,9 +316,8 @@ export default function CategoriesScreen() {
                     maxWidth: 320,
                   }}
                 >
-                  Organise your products into categories
-                  to make your storefront easier for
-                  customers to browse.
+                  Organise your products into categories to make your storefront
+                  easier for customers to browse.
                 </AppText>
 
                 {/* CTA */}
@@ -362,8 +348,8 @@ export default function CategoriesScreen() {
                     textAlign: "center",
                   }}
                 >
-                  Categories can be assigned to your
-                  products when creating or editing them.
+                  Categories can be assigned to your products when creating or
+                  editing them.
                 </AppText>
               </Card>
             )}
@@ -387,8 +373,8 @@ export default function CategoriesScreen() {
                   maxWidth: 320,
                 }}
               >
-                Categories help customers find the
-                products they are looking for quickly.
+                Categories help customers find the products they are looking for
+                quickly.
               </AppText>
             </View>
           </ScrollView>

@@ -8,12 +8,6 @@ export function useCategories() {
   return useQuery({
     queryKey: queryKeys.productCategories,
 
-    queryFn: async () => {
-      const categories = await getCategories();
-
-      return categories.sort((a, b) =>
-        a.label.localeCompare(b.label)
-      );
-    },
+    queryFn: getCategories,
   });
 }

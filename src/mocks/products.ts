@@ -18,9 +18,7 @@ import type { Currency } from "@/types/currency";
  */
 
 function getMockCategory(categoryId: number): ProductCategoryDto {
-  const category = MOCK_CATEGORIES.find(
-    (item) => Number(item.value) === categoryId
-  );
+  const category = MOCK_CATEGORIES.find((item) => item.id === categoryId);
 
   if (!category) {
     return {
@@ -32,8 +30,8 @@ function getMockCategory(categoryId: number): ProductCategoryDto {
   }
 
   return {
-    id: Number(category.value),
-    name: category.label,
+    id: category.id,
+    name: category.name,
     description: "",
     isActive: true,
   };

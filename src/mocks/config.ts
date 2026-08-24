@@ -15,6 +15,8 @@ export const USE_MOCK_STORES = true;
 
 export const USE_MOCK_PRODUCTS = true;
 
+export const USE_MOCK_CATEGORIES = true;
+
 export const USE_MOCK_CUSTOMERS = true;
 
 export const USE_MOCK_PAYMENT_LINKS = true;

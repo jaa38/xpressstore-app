@@ -57,7 +57,6 @@ import { buildVariantPayload } from "@/utils/products/buildProductPayload";
 
 import { USE_MOCK_PRODUCTS } from "@/mocks/config";
 import { getMockProduct, updateMockProduct } from "@/mocks/products";
-import { MOCK_CATEGORIES } from "@/mocks/categories";
 
 /**
  * ============================================================================
@@ -140,11 +139,16 @@ export default function ProductDetailsScreen() {
    * ==========================================================================
    */
 
-  const categoryOptions = USE_MOCK_PRODUCTS ? MOCK_CATEGORIES : categories;
+  const categoryOptions = categories
+    .filter((category) => category.isActive)
+    .map((category) => ({
+      label: category.name,
+      value: String(category.id),
+    }));
 
-  const categoryLoading = USE_MOCK_PRODUCTS ? false : categoriesLoading;
+  const categoryLoading = categoriesLoading;
 
-  const categoryError = USE_MOCK_PRODUCTS ? false : categoriesError;
+  const categoryError = categoriesError;
 
   /**
    * ==========================================================================
@@ -584,13 +588,15 @@ export default function ProductDetailsScreen() {
      */
 
     try {
-      const category = await createCategoryMutation.mutateAsync(categoryName);
+      const category = await createCategoryMutation.mutateAsync({
+        name: categoryName,
+      });
 
       if (!category) {
         throw new Error("Category could not be created.");
       }
 
-      setValue("category", category.value, {
+      setValue("category", String(category.id), {
         shouldDirty: true,
         shouldValidate: true,
       });
@@ -600,7 +606,7 @@ export default function ProductDetailsScreen() {
       showToast({
         type: "success",
         title: "Category Created",
-        message: `${category.label} has been added.`,
+        message: `${category.name} has been added.`,
       });
     } catch (error) {
       console.log("CREATE CATEGORY ERROR", error);

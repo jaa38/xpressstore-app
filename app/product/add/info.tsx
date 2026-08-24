@@ -43,16 +43,6 @@ import { useToast } from "@/hooks/useToast";
 
 /**
  * ============================================================================
- * MOCKS
- * ============================================================================
- */
-
-import { USE_MOCK_PRODUCTS } from "@/mocks/config";
-
-import { MOCK_CATEGORIES } from "@/mocks/categories";
-
-/**
- * ============================================================================
  * PRODUCT INFO SCREEN
  * ============================================================================
  */
@@ -92,23 +82,6 @@ export default function InfoScreen() {
     },
   });
 
-  /**
-   * ==========================================================================
-   * CATEGORY STATE
-   * ==========================================================================
-   *
-   * API mode:
-   *   Categories come from useCategories().
-   *
-   * Mock mode:
-   *   Categories come from MOCK_CATEGORIES and are kept locally so a newly
-   *   created category can immediately appear in the dropdown.
-   */
-
-  const [mockCategories, setMockCategories] = useState(() => [
-    ...MOCK_CATEGORIES,
-  ]);
-
   const [newCategory, setNewCategory] = useState("");
 
   /**
@@ -133,11 +106,16 @@ export default function InfoScreen() {
    * ==========================================================================
    */
 
-  const categoryOptions = USE_MOCK_PRODUCTS ? mockCategories : categories;
+  const categoryOptions = categories
+    .filter((category) => category.isActive)
+    .map((category) => ({
+      label: category.name,
+      value: String(category.id),
+    }));
 
-  const isCategoryLoading = USE_MOCK_PRODUCTS ? false : categoriesLoading;
+  const isCategoryLoading = categoriesLoading;
 
-  const isCategoryError = USE_MOCK_PRODUCTS ? false : categoriesError;
+  const isCategoryError = categoriesError;
 
   /**
    * ==========================================================================
@@ -316,74 +294,16 @@ export default function InfoScreen() {
       return;
     }
 
-    /**
-     * ========================================================================
-     * MOCK MODE
-     * ========================================================================
-     *
-     * Do not call the API.
-     *
-     * Create a local category and add it to the local category list so it
-     * immediately becomes available in the dropdown.
-     */
-
-    if (USE_MOCK_PRODUCTS) {
-      const mockCategory = {
-        value: `mock-category-${Date.now()}`,
-        label: categoryName,
-      };
-
-      setMockCategories((current) => {
-        /**
-         * Prevent duplicate category names.
-         */
-
-        const alreadyExists = current.some(
-          (category) =>
-            category.label.trim().toLowerCase() === categoryName.toLowerCase()
-        );
-
-        if (alreadyExists) {
-          return current;
-        }
-
-        return [...current, mockCategory];
-      });
-
-      /**
-       * Select the newly created category.
-       */
-
-      setValue("category", mockCategory.value, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
-
-      setNewCategory("");
-
-      showToast({
-        type: "success",
-        title: "Category Created",
-        message: `${categoryName} has been added.`,
-      });
-
-      return;
-    }
-
-    /**
-     * ========================================================================
-     * API MODE
-     * ========================================================================
-     */
-
     try {
-      const category = await createCategoryMutation.mutateAsync(categoryName);
+      const category = await createCategoryMutation.mutateAsync({
+        name: categoryName,
+      });
 
       if (!category) {
         throw new Error("Category could not be created.");
       }
 
-      setValue("category", category.value, {
+      setValue("category", String(category.id), {
         shouldValidate: true,
         shouldDirty: true,
       });
@@ -393,7 +313,7 @@ export default function InfoScreen() {
       showToast({
         type: "success",
         title: "Category Created",
-        message: `${category.label} has been added.`,
+        message: `${category.name} has been added.`,
       });
     } catch (error) {
       console.log("CREATE CATEGORY ERROR", error);
@@ -401,7 +321,7 @@ export default function InfoScreen() {
       showToast({
         type: "error",
         title: "Unable to Create Category",
-        message: "Please try again.",
+        message: error instanceof Error ? error.message : "Please try again.",
       });
     }
   }
@@ -652,12 +572,9 @@ export default function InfoScreen() {
                 <Button
                   title="Add Category"
                   variant="tertiary"
-                  loading={
-                    USE_MOCK_PRODUCTS ? false : createCategoryMutation.isPending
-                  }
+                  loading={createCategoryMutation.isPending}
                   disabled={
-                    !newCategory.trim() ||
-                    (!USE_MOCK_PRODUCTS && createCategoryMutation.isPending)
+                    !newCategory.trim() || createCategoryMutation.isPending
                   }
                   onPress={handleCreateCategory}
                 />

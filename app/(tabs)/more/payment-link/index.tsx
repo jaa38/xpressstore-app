@@ -33,7 +33,11 @@ import { spacing, theme, radius } from "@/theme";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
-import type { PaymentLink, PaymentLinkStatus } from "@/types/paymentLink";
+import type {
+  PaymentLink,
+  PaymentLinkStatus,
+  PaymentLinkTransaction,
+} from "@/types/paymentLink";
 
 import { ROUTES } from "@/navigation/routes";
 
@@ -46,13 +50,6 @@ import { getPaymentLinkTransactionStatus } from "@/utils/paymentLinks/getPayment
 import { PaymentLinkCard } from "@/components/payment-links/PaymentLinkCard";
 
 import { PaymentLinkBottomSheet } from "@/components/bottom-sheet/PaymentLinkBottomSheet";
-
-import { USE_MOCK_PAYMENT_LINKS } from "@/mocks/config";
-
-import {
-  getMockPaymentLinks,
-  getMockPaymentLinkTransactionMap,
-} from "@/mocks/paymentLinks";
 
 /**
  * ============================================================================
@@ -70,10 +67,7 @@ const PAYMENT_LINKS_PER_BATCH = 10;
 
 function getPaymentLinkStatus(
   link: PaymentLink,
-  transactionsByPaymentLinkId: Map<
-    number,
-    import("@/types/paymentLink").PaymentLinkTransaction[]
-  >
+  transactionsByPaymentLinkId: Map<number, PaymentLinkTransaction[]>
 ): PaymentLinkStatus {
   const transactions = transactionsByPaymentLinkId.get(link.id) ?? [];
 
@@ -152,6 +146,28 @@ const STATUS_SECTIONS = [
 
 /**
  * ============================================================================
+ * LIST ITEM TYPES
+ * ============================================================================
+ */
+
+type PaymentLinkListItem =
+  | {
+      type: "warning";
+
+      key: string;
+    }
+  | {
+      type: "section";
+
+      key: string;
+
+      status: PaymentLinkStatus;
+
+      link: PaymentLink;
+    };
+
+/**
+ * ============================================================================
  * SCREEN
  * ============================================================================
  */
@@ -177,13 +193,19 @@ export default function PaymentLinksScreen() {
     PAYMENT_LINKS_PER_BATCH
   );
 
-  const [isLoadingMoreMock, setIsLoadingMoreMock] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const paymentLinkBottomSheetRef = useRef<BottomSheetModal>(null);
 
   /**
    * --------------------------------------------------------------------------
-   * REAL PAYMENT LINKS API
+   * PAYMENT LINKS
+   * --------------------------------------------------------------------------
+   *
+   * Mock/API selection is handled by paymentLinkService.
+   *
+   * The screen does not know whether the data comes from
+   * the backend or local mock storage.
    * --------------------------------------------------------------------------
    */
 
@@ -196,50 +218,36 @@ export default function PaymentLinksScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * REAL PAYMENT LINK TRANSACTIONS
+   * PAYMENT LINK TRANSACTIONS
    * --------------------------------------------------------------------------
    */
 
   const realLinks = paymentLinks ?? [];
 
   const {
-    transactionsByPaymentLinkId: realTransactionsByPaymentLinkId,
-
+    transactionsByPaymentLinkId,
     isLoading: transactionsLoading,
-
     hasError: transactionsError,
-
     refetch: refetchTransactions,
   } = usePaymentLinkTransactionMap(realLinks);
 
   /**
    * --------------------------------------------------------------------------
-   * MOCK DATA
-   * --------------------------------------------------------------------------
-   */
-
-  const mockLinks = useMemo(() => getMockPaymentLinks(), []);
-
-  const mockTransactions = useMemo(
-    () => getMockPaymentLinkTransactionMap(),
-    []
-  );
-
-  /**
-   * --------------------------------------------------------------------------
    * ACTIVE DATA SOURCE
    * --------------------------------------------------------------------------
+   *
+   * There is intentionally no mock-specific logic here.
+   *
+   * usePaymentLinks() and usePaymentLinkTransactionMap()
+   * already receive their data through paymentLinkService.
+   * --------------------------------------------------------------------------
    */
 
-  const links = USE_MOCK_PAYMENT_LINKS ? mockLinks : realLinks;
+  const links = realLinks;
 
-  const transactionsByPaymentLinkId = USE_MOCK_PAYMENT_LINKS
-    ? mockTransactions
-    : realTransactionsByPaymentLinkId;
+  const isLoading = paymentLinksLoading;
 
-  const isLoading = USE_MOCK_PAYMENT_LINKS ? false : paymentLinksLoading;
-
-  const error = USE_MOCK_PAYMENT_LINKS ? null : paymentLinksError;
+  const error = paymentLinksError;
 
   /**
    * --------------------------------------------------------------------------
@@ -248,24 +256,12 @@ export default function PaymentLinksScreen() {
    */
 
   const onRefresh = async () => {
-    if (USE_MOCK_PAYMENT_LINKS) {
-      setRefreshing(true);
-
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        setVisiblePaymentLinkCount(PAYMENT_LINKS_PER_BATCH);
-      } finally {
-        setRefreshing(false);
-      }
-
-      return;
-    }
-
     setRefreshing(true);
 
     try {
       await Promise.all([refetchPaymentLinks(), refetchTransactions()]);
+
+      setVisiblePaymentLinkCount(PAYMENT_LINKS_PER_BATCH);
     } finally {
       setRefreshing(false);
     }
@@ -298,7 +294,7 @@ export default function PaymentLinksScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * RESET INFINITE SCROLL
+   * RESET PAGINATION
    * --------------------------------------------------------------------------
    */
 
@@ -404,22 +400,21 @@ export default function PaymentLinksScreen() {
    */
 
   const showTransactionError =
-    hasPaymentLinks &&
-    !USE_MOCK_PAYMENT_LINKS &&
-    !transactionsLoading &&
-    transactionsError;
+    hasPaymentLinks && !transactionsLoading && transactionsError;
 
   /**
    * --------------------------------------------------------------------------
    * DISPLAYED LINKS
    * --------------------------------------------------------------------------
+   *
+   * Pagination is currently simulated locally.
+   *
+   * This allows the UI to support incremental loading while
+   * the backend remains non-paginated.
+   * --------------------------------------------------------------------------
    */
 
   const displayedLinks = useMemo(() => {
-    if (!USE_MOCK_PAYMENT_LINKS) {
-      return filteredLinks;
-    }
-
     return filteredLinks.slice(0, visiblePaymentLinkCount);
   }, [filteredLinks, visiblePaymentLinkCount]);
 
@@ -438,39 +433,24 @@ export default function PaymentLinksScreen() {
    */
 
   const loadMorePaymentLinks = () => {
-    if (!USE_MOCK_PAYMENT_LINKS) {
-      /**
-       * API MODE
-       *
-       * The current usePaymentLinks()
-       * hook does not expose pagination.
-       *
-       * When it is migrated to
-       * useInfiniteQuery(), call
-       * fetchNextPage() here.
-       */
-
+    if (isLoadingMore || !hasMorePaymentLinks) {
       return;
     }
 
-    if (isLoadingMoreMock || !hasMorePaymentLinks) {
-      return;
-    }
-
-    setIsLoadingMoreMock(true);
+    setIsLoadingMore(true);
 
     setTimeout(() => {
       setVisiblePaymentLinkCount((currentCount) =>
         Math.min(currentCount + PAYMENT_LINKS_PER_BATCH, filteredLinks.length)
       );
 
-      setIsLoadingMoreMock(false);
+      setIsLoadingMore(false);
     }, 150);
   };
 
   /**
    * --------------------------------------------------------------------------
-   * RESET PAGINATION WHEN SEARCH / FILTER CHANGES
+   * SEARCH / STATUS CHANGE
    * --------------------------------------------------------------------------
    */
 
@@ -501,6 +481,7 @@ export default function PaymentLinksScreen() {
       [
         {
           text: "OK",
+
           style: "default",
         },
       ]
@@ -512,21 +493,17 @@ export default function PaymentLinksScreen() {
    * LIST DATA
    * --------------------------------------------------------------------------
    *
-   * We keep the status sections visually grouped while using FlatList.
+   * Payment links are grouped by status.
    *
    * Each section becomes a list item containing:
    *
-   * - optional section header
+   * - optional transaction warning
    * - PaymentLinkCard
+   * --------------------------------------------------------------------------
    */
 
-  const paymentLinkListData = useMemo(() => {
-    const result: Array<{
-      type: "warning" | "section";
-      key: string;
-      status?: PaymentLinkStatus;
-      link?: PaymentLink;
-    }> = [];
+  const paymentLinkListData = useMemo<PaymentLinkListItem[]>(() => {
+    const result: PaymentLinkListItem[] = [];
 
     /**
      * Transaction warning
@@ -535,6 +512,7 @@ export default function PaymentLinksScreen() {
     if (showTransactionError) {
       result.push({
         type: "warning",
+
         key: "transaction-warning",
       });
     }
@@ -552,6 +530,7 @@ export default function PaymentLinksScreen() {
 
       return {
         section,
+
         sectionLinks,
       };
     }).filter(({ sectionLinks }) => sectionLinks.length > 0);
@@ -561,11 +540,14 @@ export default function PaymentLinksScreen() {
      */
 
     visibleStatusSections.forEach(({ section, sectionLinks }) => {
-      sectionLinks.forEach((link, index) => {
+      sectionLinks.forEach((link) => {
         result.push({
           type: "section",
+
           key: `${section.status}-${link.id}`,
+
           status: section.status,
+
           link,
         });
       });
@@ -580,16 +562,7 @@ export default function PaymentLinksScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const renderPaymentLinkItem = ({
-    item,
-  }: {
-    item: {
-      type: "warning" | "section";
-      key: string;
-      status?: PaymentLinkStatus;
-      link?: PaymentLink;
-    };
-  }) => {
+  const renderPaymentLinkItem = ({ item }: { item: PaymentLinkListItem }) => {
     /**
      * TRANSACTION WARNING
      */
@@ -648,12 +621,8 @@ export default function PaymentLinksScreen() {
      * PAYMENT LINK
      */
 
-    if (!item.link) {
-      return null;
-    }
-
     const section = STATUS_SECTIONS.find(
-      (section) => section.status === item.status
+      (statusSection) => statusSection.status === item.status
     );
 
     if (!section) {
@@ -722,9 +691,11 @@ export default function PaymentLinksScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Go back"
+              hitSlop={10}
               onPress={() => router.back()}
               style={{
                 width: 44,
+
                 height: 44,
 
                 justifyContent: "center",
@@ -766,9 +737,11 @@ export default function PaymentLinksScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Create payment link"
+              hitSlop={8}
               onPress={() => router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION)}
               style={({ pressed }) => ({
                 width: 44,
+
                 height: 44,
 
                 borderRadius: radius.full,
@@ -832,6 +805,7 @@ export default function PaymentLinksScreen() {
                   <View
                     style={{
                       width: 56,
+
                       height: 56,
 
                       borderRadius: radius.full,
@@ -1037,6 +1011,7 @@ export default function PaymentLinksScreen() {
                   <View
                     style={{
                       width: 56,
+
                       height: 56,
 
                       borderRadius: radius.full,
@@ -1112,6 +1087,7 @@ export default function PaymentLinksScreen() {
                   <View
                     style={{
                       width: 64,
+
                       height: 64,
 
                       borderRadius: radius.full,
@@ -1197,6 +1173,7 @@ export default function PaymentLinksScreen() {
                   <View
                     style={{
                       width: 56,
+
                       height: 56,
 
                       borderRadius: radius.full,
@@ -1302,7 +1279,7 @@ export default function PaymentLinksScreen() {
                           LOADING MORE
                       ================================================== */}
 
-                      {isLoadingMoreMock && (
+                      {isLoadingMore && (
                         <View
                           style={{
                             paddingVertical: spacing.lg,
@@ -1331,7 +1308,7 @@ export default function PaymentLinksScreen() {
                           END OF LIST
                       ================================================== */}
 
-                      {!isLoadingMoreMock &&
+                      {!isLoadingMore &&
                         !hasMorePaymentLinks &&
                         displayedLinks.length > 0 && (
                           <View

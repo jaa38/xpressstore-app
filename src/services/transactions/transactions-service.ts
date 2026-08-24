@@ -2,6 +2,10 @@ import { graphqlRequest } from "@/api/graphql-client";
 
 import { transactionRepository } from "@/repositories/transactions/sqliteTransactionRepository";
 
+import { USE_MOCK_TRANSACTIONS } from "@/mocks/config";
+
+import { MOCK_TRANSACTIONS } from "@/mocks/transactions";
+
 import type { Currency } from "@/types/currency";
 import type { Transaction } from "@/types/transaction";
 
@@ -10,14 +14,19 @@ import type { Transaction } from "@/types/transaction";
  * GraphQL DTO
  * ============================================================================
  *
- * Matches the documented `transactions` GraphQL query in:
+ * Matches the documented `transactions` GraphQL query.
  *
- * docs/api/11_graphql.md
+ * The general transaction API exposes:
  *
- * This is the general payment transaction API.
+ * - status through paymentResponseCode/paymentResponseMessage
+ * - customer information
+ * - payment type
+ * - amount
+ * - references
+ * - dates
  *
- * It is intentionally separate from the storeTransactions DTO used by
- * order-service.ts.
+ * UI-specific concepts such as channel/type/amount ranges are not invented
+ * as GraphQL filters here.
  */
 
 interface TransactionDto {
@@ -96,6 +105,12 @@ interface TransactionsResult {
   };
 }
 
+/**
+ * ============================================================================
+ * Transactions Page
+ * ============================================================================
+ */
+
 export interface TransactionsPage {
   transactions: Transaction[];
 
@@ -110,9 +125,6 @@ export interface TransactionsPage {
  * ============================================================================
  * GraphQL Query
  * ============================================================================
- *
- * Source:
- * docs/api/11_graphql.md
  */
 
 const TRANSACTIONS_QUERY = `
@@ -169,8 +181,13 @@ const TRANSACTIONS_QUERY = `
 
 /**
  * ============================================================================
- * GraphQL Filter
+ * Documented API Filters
  * ============================================================================
+ *
+ * These are the filters that belong to the transaction API contract.
+ *
+ * UI-only filters should not be added here unless the backend documentation
+ * explicitly supports them.
  */
 
 export interface TransactionsQueryFilters {
@@ -214,20 +231,12 @@ export interface TransactionFilter {
  * Status Mapper
  * ============================================================================
  *
- * The general transactions query does not document a dedicated status field.
+ * The API does not expose a dedicated `status` field.
  *
- * The available response fields include:
- *
- * - paymentResponseCode
- * - paymentResponseMessage
- *
- * Therefore we should not invent a backend status mapping beyond what the
- * documented response supports.
- *
- * Xpress uses response code `00` for successful responses elsewhere in the
- * documented API.
- *
+ * Successful transactions are identified using paymentResponseCode `00`.
  * Non-successful responses are treated as failed.
+ *
+ * Pending remains a UI/domain status and is supported by the mock data.
  */
 
 function mapTransactionStatus(
@@ -246,16 +255,6 @@ function mapTransactionStatus(
  * ============================================================================
  * Payment Channel Mapper
  * ============================================================================
- *
- * The documented general transaction response exposes `paymentType`.
- *
- * Transaction UI channels:
- *
- * - bank
- * - card
- * - qr
- * - transfer
- * - ussd
  */
 
 function mapPaymentChannel(paymentType: string): Transaction["channel"] {
@@ -381,17 +380,8 @@ function buildTransactionFilter(
 
 /**
  * ============================================================================
- * Offline Pagination
+ * Generic Pagination
  * ============================================================================
- *
- * The transaction repository currently exposes all locally stored
- * transactions but does not expose a paginated/filtering query.
- *
- * Therefore the service applies pagination to the locally persisted
- * transactions when the network request fails.
- *
- * This keeps the repository contract simple and avoids inventing
- * unsupported repository behaviour.
  */
 
 function paginateTransactions(
@@ -411,8 +401,6 @@ function paginateTransactions(
 
   const totalCount = transactions.length;
 
-  const totalPages = totalCount === 0 ? 0 : Math.ceil(totalCount / safeLimit);
-
   return {
     transactions: paginatedTransactions,
 
@@ -426,6 +414,124 @@ function paginateTransactions(
 
 /**
  * ============================================================================
+ * MOCK STATUS MAPPER
+ * ============================================================================
+ *
+ * Maps the documented API status values to the application's Transaction
+ * status values.
+ *
+ * Documented API-style values:
+ *
+ * - Successful
+ * - Pending
+ * - Failed
+ */
+
+function matchesMockStatus(transaction: Transaction, status: string): boolean {
+  const normalizedStatus = status.trim().toLowerCase();
+
+  switch (normalizedStatus) {
+    case "successful":
+    case "success":
+    case "paid":
+      return transaction.status === "paid";
+
+    case "pending":
+      return transaction.status === "pending";
+
+    case "failed":
+    case "failure":
+      return transaction.status === "failed";
+
+    default:
+      return true;
+  }
+}
+
+/**
+ * ============================================================================
+ * MOCK TRANSACTION PAGE
+ * ============================================================================
+ *
+ * This deliberately follows the documented API contract rather than trying
+ * to make every UI filter a server-side API filter.
+ *
+ * Supported here:
+ *
+ * - page
+ * - limit
+ * - status
+ * - startDate
+ * - endDate
+ *
+ * UI-specific filters such as:
+ *
+ * - channel
+ * - type
+ * - amount
+ * - search
+ *
+ * remain client-side in the screen.
+ */
+
+function getMockTransactionsPage(
+  page: number,
+  limit: number,
+  filter: Partial<TransactionFilter>
+): TransactionsPage {
+  let transactions = [...MOCK_TRANSACTIONS];
+
+  /**
+   * --------------------------------------------------------------------------
+   * STATUS
+   * --------------------------------------------------------------------------
+   */
+
+  if (filter.status) {
+    transactions = transactions.filter((transaction) =>
+      matchesMockStatus(transaction, filter.status as string)
+    );
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * START DATE
+   * --------------------------------------------------------------------------
+   */
+
+  if (filter.startDate) {
+    const startDate = new Date(filter.startDate);
+
+    transactions = transactions.filter(
+      (transaction) => new Date(transaction.createdAt) >= startDate
+    );
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * END DATE
+   * --------------------------------------------------------------------------
+   */
+
+  if (filter.endDate) {
+    const endDate = new Date(filter.endDate);
+
+    transactions = transactions.filter(
+      (transaction) => new Date(transaction.createdAt) <= endDate
+    );
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * PAGINATION
+   * --------------------------------------------------------------------------
+   */
+
+  return paginateTransactions(transactions, page, limit);
+}
+
+/**
+ * ============================================================================
  * Get Transactions Page
  * ============================================================================
  */
@@ -435,15 +541,29 @@ export async function getTransactionsPage(
   limit = 20,
   filter: Partial<TransactionFilter> = {}
 ): Promise<TransactionsPage> {
+  /**
+   * ==========================================================================
+   * MOCK MODE
+   * ==========================================================================
+   *
+   * The screen does not know this is mock data.
+   *
+   * It receives the same TransactionsPage contract as the real API.
+   */
+
+  if (USE_MOCK_TRANSACTIONS) {
+    return getMockTransactionsPage(page, limit, filter);
+  }
+
+  /**
+   * ==========================================================================
+   * REAL API
+   * ==========================================================================
+   */
+
   const requestFilter = buildTransactionFilter(filter);
 
   try {
-    /**
-     * ------------------------------------------------------------------------
-     * Online
-     * ------------------------------------------------------------------------
-     */
-
     const response = await graphqlRequest<TransactionsResult>({
       query: TRANSACTIONS_QUERY,
 
@@ -462,11 +582,6 @@ export async function getTransactionsPage(
      * ------------------------------------------------------------------------
      * Persist successful API response
      * ------------------------------------------------------------------------
-     *
-     * Only successfully mapped transactions are persisted.
-     *
-     * The repository performs an upsert, so existing transactions are updated
-     * without creating duplicates.
      */
 
     await transactionRepository.saveTransactions(transactions);
@@ -483,10 +598,8 @@ export async function getTransactionsPage(
   } catch (error) {
     /**
      * ------------------------------------------------------------------------
-     * Offline fallback
+     * Offline SQLite fallback
      * ------------------------------------------------------------------------
-     *
-     * If the network request fails, use the locally persisted transactions.
      */
 
     console.warn(
@@ -500,18 +613,6 @@ export async function getTransactionsPage(
       throw error;
     }
 
-    /**
-     * --------------------------------------------------------------
-     * Apply local pagination.
-     * --------------------------------------------------------------
-     *
-     * The current repository does not support filtering, so we preserve
-     * the repository contract and paginate the locally available records.
-     *
-     * If filtering requirements for offline mode are introduced later,
-     * filtering can be added to the repository/service explicitly.
-     */
-
     return paginateTransactions(cachedTransactions, page, limit);
   }
 }
@@ -520,18 +621,31 @@ export async function getTransactionsPage(
  * ============================================================================
  * Get Transaction By ID
  * ============================================================================
- *
- * Uses the documented GraphQL `transactionId` filter to retrieve a single
- * transaction.
- *
- * The latest successful response is persisted locally.
- *
- * If the API request fails, the locally persisted transaction is returned.
  */
 
 export async function getTransactionById(
   transactionId: string
 ): Promise<Transaction> {
+  /**
+   * Mock mode
+   */
+
+  if (USE_MOCK_TRANSACTIONS) {
+    const transaction = MOCK_TRANSACTIONS.find(
+      (item) => item.id === transactionId
+    );
+
+    if (!transaction) {
+      throw new Error("Transaction not found.");
+    }
+
+    return transaction;
+  }
+
+  /**
+   * Real API
+   */
+
   try {
     const response = await graphqlRequest<TransactionsResult>({
       query: TRANSACTIONS_QUERY,
@@ -555,21 +669,10 @@ export async function getTransactionById(
 
     const transaction = mapTransaction(transactionDto);
 
-    /**
-     * Persist the latest server response
-     * locally for future offline access.
-     */
-
     await transactionRepository.saveTransaction(transaction);
 
     return transaction;
   } catch (error) {
-    /**
-     * ------------------------------------------------------------------------
-     * Offline fallback
-     * ------------------------------------------------------------------------
-     */
-
     const cachedTransaction =
       await transactionRepository.getTransactionById(transactionId);
 
@@ -590,7 +693,7 @@ export async function getTransactionById(
  * Get Transactions
  * ============================================================================
  *
- * Backwards-compatible array API used by the current Transactions hook.
+ * Backwards-compatible array API.
  */
 
 export async function getTransactions(): Promise<Transaction[]> {

@@ -31,11 +31,25 @@ export function useTransactions(
   return useQuery<TransactionsQueryResult, Error>({
     queryKey,
 
-    queryFn: () =>
-      queryWithCache(
+    queryFn: async () => {
+      // console.log("====================================");
+      // console.log("TRANSACTIONS QUERY RUNNING");
+      // console.log("PAGE:", page);
+      // console.log("LIMIT:", limit);
+      // console.log("FILTER:", filter);
+
+      const result = await queryWithCache(
         queryKey,
         async () => {
+          console.log("CALLING getTransactionsPage()");
+
           const response = await getTransactionsPage(page, limit, filter);
+
+          console.log("SERVICE RESPONSE:");
+          console.log("TOTAL:", response.totalCount);
+          console.log("PAGE:", response.pageNumber);
+          console.log("SIZE:", response.pageSize);
+          console.log("TRANSACTIONS:", response.transactions.length);
 
           return {
             transactions: response.transactions,
@@ -50,8 +64,15 @@ export function useTransactions(
         {
           maxAge: TRANSACTIONS_CACHE_MAX_AGE,
         }
-      ),
+      );
 
-    placeholderData: (previousData) => previousData,
+      // console.log("QUERY RESULT:");
+      // console.log("TOTAL:", result.totalCount);
+      // console.log("PAGE:", result.pageNumber);
+      // console.log("TRANSACTIONS:", result.transactions.length);
+      // console.log("====================================");
+
+      return result;
+    },
   });
 }

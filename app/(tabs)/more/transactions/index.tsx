@@ -46,11 +46,9 @@ import { defaultTransactionFilters } from "@/constants/defaultTransactionFilters
 
 import type { TransactionFilters } from "@/types/transactionFilters";
 
+import type { Transaction } from "@/types/transaction";
+
 import { ROUTES } from "@/navigation/routes";
-
-import { MOCK_TRANSACTIONS } from "@/mocks/transactions";
-
-import { USE_MOCK_TRANSACTIONS } from "@/mocks/config";
 
 /**
  * ===========================================================================
@@ -59,14 +57,6 @@ import { USE_MOCK_TRANSACTIONS } from "@/mocks/config";
  */
 
 const PAGE_SIZE = 20;
-
-/**
- * ===========================================================================
- * MOCK LOAD SIZE
- * ===========================================================================
- */
-
-const MOCK_LOAD_SIZE = 20;
 
 /**
  * ===========================================================================
@@ -95,27 +85,21 @@ export default function TransactionsScreen() {
 
   /**
    * -------------------------------------------------------------------------
-   * ACCUMULATED API TRANSACTIONS
+   * ACCUMULATED TRANSACTIONS
    * -------------------------------------------------------------------------
+   *
+   * The screen does not know whether these transactions came from:
+   *
+   * - mock data
+   * - GraphQL
+   * - SQLite fallback
+   *
+   * That decision belongs to the transaction service.
    */
 
-  const [loadedApiTransactions, setLoadedApiTransactions] = useState<any[]>([]);
-
-  /**
-   * -------------------------------------------------------------------------
-   * MOCK VISIBLE COUNT
-   * -------------------------------------------------------------------------
-   */
-
-  const [mockVisibleCount, setMockVisibleCount] = useState(PAGE_SIZE);
-
-  /**
-   * -------------------------------------------------------------------------
-   * LOAD MORE STATE
-   * -------------------------------------------------------------------------
-   */
-
-  const [isLoadingMoreMock, setIsLoadingMoreMock] = useState(false);
+  const [loadedTransactions, setLoadedTransactions] = useState<Transaction[]>(
+    []
+  );
 
   /**
    * -------------------------------------------------------------------------
@@ -129,6 +113,17 @@ export default function TransactionsScreen() {
    * =========================================================================
    * SERVER FILTERS
    * =========================================================================
+   *
+   * Only filters supported by the documented transactions API are sent to
+   * the service.
+   *
+   * Client-only filters such as:
+   *
+   * - channel
+   * - type
+   * - amount range
+   *
+   * are intentionally handled below by client-side filtering.
    */
 
   const serverFilters = useMemo<TransactionsQueryFilters>(() => {
@@ -150,32 +145,44 @@ export default function TransactionsScreen() {
 
   /**
    * =========================================================================
-   * REAL API
+   * TRANSACTIONS
    * =========================================================================
+   *
+   * Mock/API isolation happens inside transactions-service.ts.
+   *
+   * The screen simply consumes the resulting query.
    */
 
   const {
     data: transactionsData,
 
-    isLoading: apiIsLoading,
+    isLoading,
 
-    isFetching: apiIsFetching,
+    isFetching,
 
-    isRefetching: apiIsRefetching,
+    isRefetching,
 
-    error: apiError,
+    error,
 
-    refetch: apiRefetch,
+    refetch,
   } = useTransactions(currentPage, PAGE_SIZE, serverFilters);
 
   /**
    * =========================================================================
-   * API PAGE ACCUMULATION
+   * PAGE ACCUMULATION
    * =========================================================================
+   *
+   * The API is paginated.
+   *
+   * The screen accumulates pages so FlatList can behave like an infinite
+   * scrolling list.
+   *
+   * This also works when the service is operating in mock mode because the
+   * mock service exposes the same paginated response contract.
    */
 
   useEffect(() => {
-    if (USE_MOCK_TRANSACTIONS || !transactionsData) {
+    if (!transactionsData) {
       return;
     }
 
@@ -183,13 +190,19 @@ export default function TransactionsScreen() {
 
     const incomingPage = transactionsData.pageNumber ?? currentPage;
 
+    /**
+     * First page replaces the current list.
+     */
     if (incomingPage === 1) {
-      setLoadedApiTransactions(incomingTransactions);
+      setLoadedTransactions(incomingTransactions);
 
       return;
     }
 
-    setLoadedApiTransactions((previousTransactions) => {
+    /**
+     * Subsequent pages are appended without duplicates.
+     */
+    setLoadedTransactions((previousTransactions) => {
       const existingIds = new Set(
         previousTransactions.map((transaction) => transaction.id)
       );
@@ -204,23 +217,15 @@ export default function TransactionsScreen() {
 
   /**
    * =========================================================================
-   * DATA SOURCE
+   * DATA
    * =========================================================================
    */
 
-  const apiTransactions = USE_MOCK_TRANSACTIONS ? [] : loadedApiTransactions;
+  const transactions = loadedTransactions;
 
-  const transactions = USE_MOCK_TRANSACTIONS
-    ? MOCK_TRANSACTIONS
-    : apiTransactions;
+  const totalCount = transactionsData?.totalCount ?? 0;
 
-  const totalCount = USE_MOCK_TRANSACTIONS
-    ? MOCK_TRANSACTIONS.length
-    : (transactionsData?.totalCount ?? 0);
-
-  const pageNumber = USE_MOCK_TRANSACTIONS
-    ? currentPage
-    : (transactionsData?.pageNumber ?? currentPage);
+  const pageNumber = transactionsData?.pageNumber ?? currentPage;
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -232,44 +237,93 @@ export default function TransactionsScreen() {
    * =========================================================================
    */
 
-  const isLoading = USE_MOCK_TRANSACTIONS ? false : apiIsLoading;
-
-  const isRefetching = USE_MOCK_TRANSACTIONS ? false : apiIsRefetching;
-
-  const isLoadingMore = USE_MOCK_TRANSACTIONS
-    ? isLoadingMoreMock
-    : apiIsFetching && !apiIsLoading && !apiIsRefetching;
-
-  const error = USE_MOCK_TRANSACTIONS ? null : apiError;
+  const isLoadingMore = isFetching && !isLoading && !isRefetching;
 
   /**
    * =========================================================================
    * CLIENT-SIDE FILTERING
    * =========================================================================
+   *
+   * The documented API does not expose all UI filters.
+   *
+   * Therefore these remain client-side:
+   *
+   * - channel
+   * - transaction type
+   * - amount range
+   * - customer-name search
+   * - amount search
+   *
+   * Server-supported filters are already passed through `serverFilters`.
    */
 
   const filteredTransactions = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     return transactions.filter((transaction) => {
+      /**
+       * ----------------------------------------------------------------------
+       * Status
+       * ----------------------------------------------------------------------
+       *
+       * Status is already used by the server filter, but we keep this local
+       * check so the displayed data always reflects the active UI state.
+       */
+
       const matchesStatus =
         filters.status === "all" || transaction.status === filters.status;
+
+      /**
+       * ----------------------------------------------------------------------
+       * Channel
+       * ----------------------------------------------------------------------
+       */
 
       const matchesChannel =
         filters.channel === "all" || transaction.channel === filters.channel;
 
+      /**
+       * ----------------------------------------------------------------------
+       * Transaction Type
+       * ----------------------------------------------------------------------
+       */
+
       const matchesType =
         filters.type === "all" || transaction.type === filters.type;
+
+      /**
+       * ----------------------------------------------------------------------
+       * Minimum Amount
+       * ----------------------------------------------------------------------
+       */
 
       const matchesAmount =
         filters.amount.min == null || transaction.amount >= filters.amount.min;
 
+      /**
+       * ----------------------------------------------------------------------
+       * Maximum Amount
+       * ----------------------------------------------------------------------
+       */
+
       const matchesMaximumAmount =
         filters.amount.max == null || transaction.amount <= filters.amount.max;
+
+      /**
+       * ----------------------------------------------------------------------
+       * Amount Search
+       * ----------------------------------------------------------------------
+       */
 
       const transactionAmount = formatCurrency(transaction.amount, {
         currency: transaction.currency,
       });
+
+      /**
+       * ----------------------------------------------------------------------
+       * Search
+       * ----------------------------------------------------------------------
+       */
 
       const matchesSearch =
         query.length === 0 ||
@@ -299,30 +353,11 @@ export default function TransactionsScreen() {
 
   /**
    * =========================================================================
-   * MOCK PAGINATION
-   * =========================================================================
-   */
-
-  const displayedTransactions = useMemo(() => {
-    if (!USE_MOCK_TRANSACTIONS) {
-      return filteredTransactions;
-    }
-
-    return filteredTransactions.slice(0, mockVisibleCount);
-  }, [filteredTransactions, mockVisibleCount]);
-
-  /**
-   * =========================================================================
    * HAS MORE
    * =========================================================================
    */
 
-  const hasMoreMockTransactions =
-    mockVisibleCount < filteredTransactions.length;
-
-  const hasMoreTransactions = USE_MOCK_TRANSACTIONS
-    ? hasMoreMockTransactions
-    : hasNextPage;
+  const hasMoreTransactions = hasNextPage;
 
   /**
    * =========================================================================
@@ -332,12 +367,6 @@ export default function TransactionsScreen() {
 
   const resetPagination = () => {
     setCurrentPage(1);
-
-    setMockVisibleCount(PAGE_SIZE);
-
-    if (!USE_MOCK_TRANSACTIONS) {
-      setLoadedApiTransactions([]);
-    }
   };
 
   /**
@@ -346,34 +375,10 @@ export default function TransactionsScreen() {
    * =========================================================================
    */
 
-  const loadMoreTransactions = async () => {
-    if (isLoadingMore || !hasMoreTransactions) {
+  const loadMoreTransactions = () => {
+    if (isFetching || !hasMoreTransactions) {
       return;
     }
-
-    /**
-     * MOCK MODE
-     */
-
-    if (USE_MOCK_TRANSACTIONS) {
-      setIsLoadingMoreMock(true);
-
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 250));
-
-        setMockVisibleCount((currentCount) =>
-          Math.min(currentCount + MOCK_LOAD_SIZE, filteredTransactions.length)
-        );
-      } finally {
-        setIsLoadingMoreMock(false);
-      }
-
-      return;
-    }
-
-    /**
-     * API MODE
-     */
 
     setCurrentPage((page) => page + 1);
   };
@@ -385,25 +390,9 @@ export default function TransactionsScreen() {
    */
 
   const onRefresh = async () => {
-    /**
-     * MOCK MODE
-     */
-
-    if (USE_MOCK_TRANSACTIONS) {
-      setMockVisibleCount(PAGE_SIZE);
-
-      return;
-    }
-
-    /**
-     * API MODE
-     */
-
     setCurrentPage(1);
 
-    setLoadedApiTransactions([]);
-
-    await apiRefetch();
+    await refetch();
   };
 
   /**
@@ -480,8 +469,11 @@ export default function TransactionsScreen() {
 
   const summaryStatusColors: Record<TransactionFilters["status"], Color> = {
     all: "strong",
+
     paid: "success",
+
     pending: "warning",
+
     failed: "error",
   };
 
@@ -529,6 +521,7 @@ export default function TransactionsScreen() {
     },
   ] satisfies {
     key: TransactionFilters["status"];
+
     title: string;
   }[];
 
@@ -541,6 +534,7 @@ export default function TransactionsScreen() {
   const handleStatusChange = (status: TransactionFilters["status"]) => {
     const nextFilters: TransactionFilters = {
       ...filters,
+
       status,
     };
 
@@ -579,6 +573,7 @@ export default function TransactionsScreen() {
     <SafeAreaView
       style={{
         flex: 1,
+
         backgroundColor: theme.background.primary,
       }}
     >
@@ -587,6 +582,7 @@ export default function TransactionsScreen() {
       <View
         style={{
           flex: 1,
+
           paddingHorizontal: spacing.lg,
         }}
       >
@@ -600,7 +596,9 @@ export default function TransactionsScreen() {
           <View
             style={{
               flexDirection: "row",
+
               alignItems: "center",
+
               gap: spacing.md,
             }}
           >
@@ -610,8 +608,11 @@ export default function TransactionsScreen() {
               onPress={() => router.back()}
               style={{
                 width: 44,
+
                 height: 44,
+
                 justifyContent: "center",
+
                 alignItems: "center",
               }}
             >
@@ -625,6 +626,7 @@ export default function TransactionsScreen() {
             <View
               style={{
                 flex: 1,
+
                 gap: spacing.xs,
               }}
             >
@@ -654,24 +656,33 @@ export default function TransactionsScreen() {
               <View
                 style={{
                   flexDirection: "row",
+
                   alignItems: "center",
                 }}
               >
                 <View
                   style={{
                     flex: 1,
+
                     flexDirection: "row",
+
                     alignItems: "center",
+
                     gap: spacing.md,
                   }}
                 >
                   <View
                     style={{
                       width: 56,
+
                       height: 56,
+
                       borderRadius: radius.full,
+
                       justifyContent: "center",
+
                       alignItems: "center",
+
                       backgroundColor: theme.icon.branding.background,
                     }}
                   >
@@ -700,8 +711,11 @@ export default function TransactionsScreen() {
                 <View
                   style={{
                     width: 1,
+
                     alignSelf: "stretch",
+
                     marginHorizontal: spacing.md,
+
                     backgroundColor: theme.divider.strong,
                   }}
                 />
@@ -709,8 +723,11 @@ export default function TransactionsScreen() {
                 <View
                   style={{
                     minWidth: 84,
+
                     justifyContent: "center",
+
                     alignItems: "center",
+
                     gap: spacing.xs,
                   }}
                 >
@@ -735,8 +752,11 @@ export default function TransactionsScreen() {
               <View
                 style={{
                   flexDirection: "row",
+
                   alignItems: "center",
+
                   gap: spacing.sm,
+
                   marginTop: spacing.md,
                 }}
               >
@@ -769,7 +789,9 @@ export default function TransactionsScreen() {
               <View
                 style={{
                   flexDirection: "row",
+
                   marginTop: spacing.md,
+
                   gap: spacing.sm,
                 }}
               >
@@ -791,6 +813,7 @@ export default function TransactionsScreen() {
             <View
               style={{
                 flex: 1,
+
                 marginTop: spacing.md,
               }}
             >
@@ -798,8 +821,11 @@ export default function TransactionsScreen() {
                 <View
                   style={{
                     flex: 1,
+
                     justifyContent: "center",
+
                     alignItems: "center",
+
                     paddingVertical: spacing["3xl"],
                   }}
                 >
@@ -821,17 +847,24 @@ export default function TransactionsScreen() {
                 <Card
                   style={{
                     alignItems: "center",
+
                     paddingVertical: spacing.xl,
+
                     paddingHorizontal: spacing.lg,
                   }}
                 >
                   <View
                     style={{
                       width: 64,
+
                       height: 64,
+
                       borderRadius: radius.full,
+
                       alignItems: "center",
+
                       justifyContent: "center",
+
                       backgroundColor: theme.icon.branding.background,
                     }}
                   >
@@ -846,6 +879,7 @@ export default function TransactionsScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
+
                       textAlign: "center",
                     }}
                   >
@@ -857,7 +891,9 @@ export default function TransactionsScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
+
                       textAlign: "center",
+
                       maxWidth: 320,
                     }}
                   >
@@ -881,6 +917,7 @@ export default function TransactionsScreen() {
                     color="muted"
                     style={{
                       marginTop: spacing.sm,
+
                       textAlign: "center",
                     }}
                   >
@@ -892,18 +929,26 @@ export default function TransactionsScreen() {
                 <View
                   style={{
                     flex: 1,
+
                     justifyContent: "center",
+
                     alignItems: "center",
+
                     paddingVertical: spacing["3xl"],
                   }}
                 >
                   <View
                     style={{
                       width: 56,
+
                       height: 56,
+
                       borderRadius: radius.full,
+
                       justifyContent: "center",
+
                       alignItems: "center",
+
                       backgroundColor: theme.background.error,
                     }}
                   >
@@ -918,6 +963,7 @@ export default function TransactionsScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
+
                       textAlign: "center",
                     }}
                   >
@@ -929,7 +975,9 @@ export default function TransactionsScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
+
                       textAlign: "center",
+
                       maxWidth: 320,
                     }}
                   >
@@ -939,10 +987,12 @@ export default function TransactionsScreen() {
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Try again"
-                    onPress={() => apiRefetch()}
+                    onPress={() => refetch()}
                     style={{
                       marginTop: spacing.md,
+
                       paddingVertical: spacing.xs,
+
                       paddingHorizontal: spacing.sm,
                     }}
                   >
@@ -953,17 +1003,24 @@ export default function TransactionsScreen() {
                 <Card
                   style={{
                     alignItems: "center",
+
                     paddingVertical: spacing.xl,
+
                     paddingHorizontal: spacing.lg,
                   }}
                 >
                   <View
                     style={{
                       width: 56,
+
                       height: 56,
+
                       borderRadius: radius.full,
+
                       alignItems: "center",
+
                       justifyContent: "center",
+
                       backgroundColor: theme.icon.default.background,
                     }}
                   >
@@ -978,6 +1035,7 @@ export default function TransactionsScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
+
                       textAlign: "center",
                     }}
                   >
@@ -989,6 +1047,7 @@ export default function TransactionsScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
+
                       textAlign: "center",
                     }}
                   >
@@ -1024,7 +1083,7 @@ export default function TransactionsScreen() {
                 </Card>
               ) : (
                 <FlatList
-                  data={displayedTransactions}
+                  data={filteredTransactions}
                   keyExtractor={(transaction) => transaction.id}
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
@@ -1055,6 +1114,7 @@ export default function TransactionsScreen() {
                     <View
                       style={{
                         paddingVertical: spacing.lg,
+
                         alignItems: "center",
                       }}
                     >
@@ -1076,7 +1136,7 @@ export default function TransactionsScreen() {
                           </AppText>
                         </>
                       ) : !hasMoreTransactions ? (
-                        displayedTransactions.length > 0 && (
+                        filteredTransactions.length > 0 && (
                           <AppText variant="caption" color="muted">
                             You've reached the end of your transactions.
                           </AppText>

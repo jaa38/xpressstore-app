@@ -114,9 +114,7 @@ export const paymentLinkService = {
     if (USE_MOCK_PAYMENT_LINKS) {
       return {
         responseCode: "00",
-
         responseMessage: "Payment link transactions loaded from mock data.",
-
         data: getMockPaymentLinkTransactions(paymentPageId),
       };
     }

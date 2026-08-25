@@ -16,8 +16,25 @@ export function useCreateCategory() {
     mutationFn: ({ name, description }: CreateCategoryVariables) =>
       createCategory(name, description),
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      /**
+       * ==========================================================================
+       * REFRESH CATEGORIES
+       * ==========================================================================
+       *
+       * The categories screen uses:
+       *
+       * ["product-categories"]
+       *
+       * Refresh the query after a successful creation so the newly-created
+       * category appears immediately when returning to the categories screen.
+       */
+
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.productCategories,
+      });
+
+      await queryClient.refetchQueries({
         queryKey: queryKeys.productCategories,
       });
     },

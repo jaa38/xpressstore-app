@@ -169,6 +169,13 @@ export const ROUTES = {
   PAYMENT_LINK_QR_CODE: "/(tabs)/more/payment-link/qr-code",
 
   /**
+   * CATEGORIES
+   */
+
+  // Add Category
+  ADD_CATEGORY: "/categories/add",
+
+  /**
    * CUSTOMERS
    */
 

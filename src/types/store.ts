@@ -37,11 +37,6 @@ export interface Store {
 
   themeColor?: string;
 
-  /**
-   * Local storefront product layout preference.
-   *
-   * The backend API does not currently expose this field.
-   */
   layout: StoreLayout;
 
   callBackUrl?: string;
@@ -62,7 +57,12 @@ export interface Store {
 
   products?: number[];
 
-  discounts?: number[];
+  /**
+   * Discount IDs assigned to this store.
+   *
+   * Discount IDs are strings according to the Discount API.
+   */
+  discounts?: string[];
 }
 
 /**
@@ -102,7 +102,7 @@ export interface CreateStoreRequest {
 
   description?: string;
 
-  storeDiscounts?: number[];
+  storeDiscounts?: string[];
 
   storeShippingRegion?: number[];
 
@@ -152,7 +152,7 @@ export interface UpdateStoreRequest {
 
   storeProducts?: number[];
 
-  storeDiscounts?: number[];
+  storeDiscounts?: string[];
 
   storeShippingRegion?: number[];
 }

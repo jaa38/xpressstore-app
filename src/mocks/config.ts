@@ -24,3 +24,5 @@ export const USE_MOCK_PAYMENT_LINKS = true;
 export const USE_MOCK_ORDERS = true;
 
 export const USE_MOCK_TRANSACTIONS = true;
+
+export const USE_MOCK_DISCOUNTS = true;

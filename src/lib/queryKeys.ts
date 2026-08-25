@@ -100,4 +100,14 @@ export const queryKeys = {
     [...queryKeys.orders, "page", page, pageSize] as const,
 
   order: (id: string) => [...queryKeys.orders, id] as const,
+
+  /**
+   * ---------------------------------------------------------------------------
+   * Discounts
+   * ---------------------------------------------------------------------------
+   */
+
+  discounts: ["discounts"] as const,
+
+  discount: (id: string) => [...queryKeys.discounts, id] as const,
 };

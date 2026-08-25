@@ -109,7 +109,17 @@ export const ROUTES = {
 
   CATEGORIES: "/(tabs)/more/categories",
 
+  /**
+   * DISCOUNT CODES
+   */
+
   DISCOUNT_CODES: "/(tabs)/more/discount-codes",
+
+  ADD_DISCOUNT_CODE: "/discount-codes/add",
+
+  DISCOUNT_CODE_DETAILS: "/discount-codes/view/[id]",
+
+  DISCOUNT_CODE_EDIT: "/discount-codes/edit/[id]",
 
   PAYMENT_SETTINGS: "/(tabs)/more/payment-settings",
 

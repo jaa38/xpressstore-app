@@ -78,10 +78,11 @@ interface ShippingRegionRow {
  */
 
 /**
- * Safely parse a JSON array stored in SQLite.
+ * ============================================================================
+ * NUMBER ARRAY
+ * ============================================================================
  *
- * Store products and discounts are represented by number[]
- * in the application model but persisted as TEXT in SQLite.
+ * Used for product IDs.
  */
 function parseNumberArray(value: string | null): number[] | undefined {
   if (!value) {
@@ -104,6 +105,46 @@ function parseNumberArray(value: string | null): number[] | undefined {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * ============================================================================
+ * STRING ARRAY
+ * ============================================================================
+ *
+ * Used for discount IDs.
+ *
+ * Discount IDs are strings according to the Discount API.
+ */
+function parseStringArray(value: string | null): string[] | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+
+    if (!Array.isArray(parsed)) {
+      return undefined;
+    }
+
+    const strings = parsed.filter(
+      (item): item is string =>
+        typeof item === "string" && item.trim().length > 0
+    );
+
+    return strings;
+  } catch {
+    return undefined;
+  }
+}
+
+function serializeStringArray(value?: string[]): string | null {
+  if (!value) {
+    return null;
+  }
+
+  return JSON.stringify(value);
 }
 
 /**
@@ -169,7 +210,7 @@ function mapRowToStore(row: StoreRow): Store {
 
     products: parseNumberArray(row.products),
 
-    discounts: parseNumberArray(row.discounts),
+    discounts: parseStringArray(row.discounts),
   };
 }
 
@@ -539,7 +580,7 @@ class SQLiteStoreRepository implements StoreRepository {
 
       serializeNumberArray(store.products),
 
-      serializeNumberArray(store.discounts),
+      serializeStringArray(store.discounts),
 
       Date.now()
     );

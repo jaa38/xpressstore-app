@@ -126,6 +126,23 @@ export const API_ENDPOINTS = {
 
     deleteCategory: (categoryId: number) =>
       `/Product/DeleteProductCategory/${categoryId}`,
+
+    /**
+     * Discounts
+     */
+    discounts: "/Product/GetAllMerchantDiscounts",
+
+    createDiscount: "/Product/CreateDiscount",
+
+    updateDiscount: "/Product/UpdateDiscount",
+
+    updateDiscountStatus: (discountId: string, status: boolean) =>
+      `/Product/UpdateDiscountStatus?Id=${encodeURIComponent(
+        discountId
+      )}&status=${status}`,
+
+    deleteDiscount: (discountId: string) =>
+      `/Product/DeleteDiscount?Id=${encodeURIComponent(discountId)}`,
   },
 
   /**

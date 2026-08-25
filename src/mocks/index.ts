@@ -6,6 +6,7 @@ export {
   USE_MOCK_ORDERS,
   USE_MOCK_STORES,
   USE_MOCK_TRANSACTIONS,
+  USE_MOCK_DISCOUNTS,
 } from "./config";
 
 export {
@@ -28,15 +29,34 @@ export {
   updateMockStore,
   deleteMockStore,
   resetMockStores,
+
   addMockProductToStore,
   removeMockProductFromStore,
+
+  addMockDiscountToStore,
+  removeMockDiscountFromStore,
+  setMockStoreDiscounts,
+
   updateMockStoreLayout,
+
   getMockShippingRegions,
   saveMockShippingRegions,
   createMockShippingRegion,
   updateMockShippingRegion,
   deleteMockShippingRegion,
   resetMockShippingRegions,
+
   validateMockStoreName,
   validateMockStoreReference,
 } from "./stores";
+
+export {
+  MOCK_DISCOUNTS,
+  getMockDiscounts,
+  getMockDiscountById,
+  createMockDiscount,
+  updateMockDiscount,
+  updateMockDiscountStatus,
+  deleteMockDiscount,
+  resetMockDiscounts,
+} from "./discounts";

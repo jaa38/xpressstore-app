@@ -476,12 +476,12 @@ export default function HomeScreen() {
                 marginTop: spacing.md,
               }}
             >
-              {/* PAYMENT LINK */}
+              {/* ADD PAYMENT LINK */}
 
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Payment Link"
-                onPress={() => router.push("/more/payment-link")}
+                onPress={() => router.push("/payment-link/add/information")}
                 style={({ pressed }) => [
                   {
                     flex: 1,
@@ -509,12 +509,12 @@ export default function HomeScreen() {
                 <AppText variant="button">Payment Link</AppText>
               </Pressable>
 
-              {/* STOREFRONT */}
+              {/* ADD STOREFRONT */}
 
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Storefront"
-                onPress={() => router.push("/store")}
+                onPress={() => router.push("/stores/add/information")}
                 style={({ pressed }) => [
                   {
                     flex: 1,

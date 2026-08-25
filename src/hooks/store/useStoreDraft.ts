@@ -42,9 +42,11 @@ export interface StoreDraft {
   storeShippingRegion: number[];
 
   /**
-   * Reserved for future discount selection.
+   * Discount IDs selected for the store.
+   *
+   * Discount IDs are strings according to the Discount API.
    */
-  storeDiscounts: number[];
+  storeDiscounts: string[];
 }
 
 interface StoreDraftState {

@@ -124,10 +124,7 @@ export default function AddCategoryScreen() {
         }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScreenHeader
-          title="Add Category"
-          subtitle="Create a category for your products."
-        />
+        <ScreenHeader title="Add Category" />
 
         <ScrollView
           keyboardShouldPersistTaps="handled"
@@ -144,48 +141,20 @@ export default function AddCategoryScreen() {
 
           <View
             style={{
-              alignItems: "center",
-              marginBottom: spacing.xl,
+              alignItems: "flex-start",
+              marginBottom: spacing.lg,
             }}
           >
-            <View
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 32,
-                backgroundColor: theme.icon.branding.background,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Ionicons
-                name="albums-outline"
-                size={32}
-                color={theme.icon.branding.icon}
-              />
-            </View>
-
-            <AppText
-              variant="h3"
-              style={{
-                marginTop: spacing.md,
-                textAlign: "center",
-              }}
-            >
-              Create a Category
-            </AppText>
-
             <AppText
               variant="body"
               color="secondary"
               style={{
                 marginTop: spacing.xs,
-                textAlign: "center",
+                textAlign: "left",
                 maxWidth: 320,
               }}
             >
-              Add a category to help organise your products and make them easier
-              for customers to browse.
+              Add a category to help organise your products
             </AppText>
           </View>
 

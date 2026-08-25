@@ -60,7 +60,7 @@ export const MOCK_STORES: Store[] = [
      */
     products: [1, 2, 3, 4],
 
-    discounts: [],
+    discounts: ["disc-001"],
   },
 
   {
@@ -105,7 +105,7 @@ export const MOCK_STORES: Store[] = [
      */
     products: [4, 6, 8, 10],
 
-    discounts: [],
+    discounts: ["disc-002"],
   },
 
   {
@@ -150,7 +150,7 @@ export const MOCK_STORES: Store[] = [
      */
     products: [5, 7, 12],
 
-    discounts: [],
+    discounts: ["disc-003"],
   },
 ];
 
@@ -405,6 +405,171 @@ export function removeMockProductFromStore(
   });
 
   return updatedStore;
+}
+
+/**
+ * ============================================================================
+ * ADD DISCOUNT TO STORE
+ * ============================================================================
+ *
+ * Adds a discount ID to a store.
+ *
+ * Discount IDs are strings because they follow the Discount API contract.
+ *
+ * A discount will not be added twice.
+ * ============================================================================
+ */
+
+export function addMockDiscountToStore(
+  storeId: number,
+  discountId: string
+): Store | undefined {
+  let updatedStore: Store | undefined;
+
+  mockStores = mockStores.map((store) => {
+    if (store.storeId !== storeId) {
+      return store;
+    }
+
+    const discounts = store.discounts ?? [];
+
+    /**
+     * Discount already assigned.
+     *
+     * Do not create a duplicate relationship.
+     */
+    if (discounts.includes(discountId)) {
+      updatedStore = {
+        ...store,
+
+        products: [...(store.products ?? [])],
+
+        discounts: [...discounts],
+      };
+
+      return updatedStore;
+    }
+
+    updatedStore = {
+      ...store,
+
+      products: [...(store.products ?? [])],
+
+      discounts: [...discounts, discountId],
+    };
+
+    return updatedStore;
+  });
+
+  if (!updatedStore) {
+    return undefined;
+  }
+
+  return {
+    ...updatedStore,
+
+    products: [...(updatedStore.products ?? [])],
+
+    discounts: [...(updatedStore.discounts ?? [])],
+  };
+}
+
+/**
+ * ============================================================================
+ * REMOVE DISCOUNT FROM STORE
+ * ============================================================================
+ *
+ * Removes a discount ID from a store.
+ * ============================================================================
+ */
+
+export function removeMockDiscountFromStore(
+  storeId: number,
+  discountId: string
+): Store | undefined {
+  let updatedStore: Store | undefined;
+
+  mockStores = mockStores.map((store) => {
+    if (store.storeId !== storeId) {
+      return store;
+    }
+
+    const discounts = store.discounts ?? [];
+
+    updatedStore = {
+      ...store,
+
+      products: [...(store.products ?? [])],
+
+      discounts: discounts.filter((id) => id !== discountId),
+    };
+
+    return updatedStore;
+  });
+
+  if (!updatedStore) {
+    return undefined;
+  }
+
+  return {
+    ...updatedStore,
+
+    products: [...(updatedStore.products ?? [])],
+
+    discounts: [...(updatedStore.discounts ?? [])],
+  };
+}
+
+/**
+ * ============================================================================
+ * SET STORE DISCOUNTS
+ * ============================================================================
+ *
+ * Replaces the complete discount assignment for a store.
+ *
+ * This mirrors the UpdateStore API's:
+ *
+ * storeDiscounts?: string[]
+ *
+ * Duplicate IDs are removed.
+ * ============================================================================
+ */
+
+export function setMockStoreDiscounts(
+  storeId: number,
+  discountIds: string[]
+): Store | undefined {
+  let updatedStore: Store | undefined;
+
+  const uniqueDiscountIds = [...new Set(discountIds)];
+
+  mockStores = mockStores.map((store) => {
+    if (store.storeId !== storeId) {
+      return store;
+    }
+
+    updatedStore = {
+      ...store,
+
+      products: [...(store.products ?? [])],
+
+      discounts: [...uniqueDiscountIds],
+    };
+
+    return updatedStore;
+  });
+
+  if (!updatedStore) {
+    return undefined;
+  }
+
+  return {
+    ...updatedStore,
+
+    products: [...(updatedStore.products ?? [])],
+
+    discounts: [...(updatedStore.discounts ?? [])],
+  };
 }
 
 /**

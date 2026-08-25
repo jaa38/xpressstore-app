@@ -15,6 +15,12 @@ import {
   CreatedProduct,
 } from "@/types/product";
 
+import type {
+  CreateDiscountRequest,
+  Discount,
+  UpdateDiscountRequest,
+} from "@/types/discount";
+
 export const productService = {
   /**
    * ---------------------------------------------------------------------------
@@ -201,6 +207,91 @@ export const productService = {
   async deleteCategory(categoryId: number) {
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.products.deleteCategory(categoryId)
+    );
+
+    return data;
+  },
+
+  /**
+   * ============================================================================
+   * DISCOUNTS
+   * ============================================================================
+   */
+
+  /**
+   * ============================================================================
+   * GET ALL MERCHANT DISCOUNTS
+   * ============================================================================
+   */
+
+  async getDiscounts(): Promise<ApiResponse<Discount[]>> {
+    const { data } = await authClient.get<ApiResponse<Discount[]>>(
+      API_ENDPOINTS.products.discounts
+    );
+
+    return data;
+  },
+
+  /**
+   * ============================================================================
+   * CREATE DISCOUNT
+   * ============================================================================
+   */
+
+  async createDiscount(
+    payload: CreateDiscountRequest
+  ): Promise<ApiResponse<null>> {
+    const { data } = await authClient.post<ApiResponse<null>>(
+      API_ENDPOINTS.products.createDiscount,
+      payload
+    );
+
+    return data;
+  },
+
+  /**
+   * ============================================================================
+   * UPDATE DISCOUNT
+   * ============================================================================
+   */
+
+  async updateDiscount(
+    payload: UpdateDiscountRequest
+  ): Promise<ApiResponse<null>> {
+    const { data } = await authClient.post<ApiResponse<null>>(
+      API_ENDPOINTS.products.updateDiscount,
+      payload
+    );
+
+    return data;
+  },
+
+  /**
+   * ============================================================================
+   * UPDATE DISCOUNT STATUS
+   * ============================================================================
+   */
+
+  async updateDiscountStatus(
+    discountId: string,
+    status: boolean
+  ): Promise<ApiResponse<null>> {
+    const { data } = await authClient.post<ApiResponse<null>>(
+      API_ENDPOINTS.products.updateDiscountStatus(discountId, status)
+    );
+
+    return data;
+  },
+
+  /**
+   * ============================================================================
+   * DELETE DISCOUNT
+   * ============================================================================
+   */
+
+  async deleteDiscount(discountId: string): Promise<ApiResponse<null>> {
+    const { data } = await authClient.post<ApiResponse<null>>(
+      API_ENDPOINTS.products.deleteDiscount(discountId)
     );
 
     return data;

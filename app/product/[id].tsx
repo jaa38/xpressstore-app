@@ -547,45 +547,26 @@ export default function ProductDetailsScreen() {
    * ==========================================================================
    * CREATE CATEGORY
    * ==========================================================================
+   *
+   * Category mock/API selection is intentionally handled by
+   * useCreateCategory().
+   *
+   * USE_MOCK_PRODUCTS must NOT control category creation.
+   *
+   * This keeps:
+   *
+   * USE_MOCK_PRODUCTS
+   *   → product data source
+   *
+   * USE_MOCK_CATEGORIES
+   *   → category data source
    */
-
   async function handleCreateCategory() {
     const categoryName = newCategory.trim();
 
     if (!categoryName) {
       return;
     }
-
-    /**
-     * ========================================================================
-     * MOCK MODE
-     * ========================================================================
-     */
-
-    if (USE_MOCK_PRODUCTS) {
-      const mockValue = String(Date.now());
-
-      setValue("category", mockValue, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-
-      setNewCategory("");
-
-      showToast({
-        type: "success",
-        title: "Category Created",
-        message: `${categoryName} has been added.`,
-      });
-
-      return;
-    }
-
-    /**
-     * ========================================================================
-     * API MODE
-     * ========================================================================
-     */
 
     try {
       const category = await createCategoryMutation.mutateAsync({
@@ -596,12 +577,34 @@ export default function ProductDetailsScreen() {
         throw new Error("Category could not be created.");
       }
 
+      /**
+       * ------------------------------------------------------------------------
+       * SELECT NEW CATEGORY
+       * ------------------------------------------------------------------------
+       *
+       * The mutation returns the actual created category whether it came from:
+       *
+       * - mock data
+       * - real API
+       */
       setValue("category", String(category.id), {
         shouldDirty: true,
         shouldValidate: true,
       });
 
+      /**
+       * ------------------------------------------------------------------------
+       * CLEAR INPUT
+       * ------------------------------------------------------------------------
+       */
+
       setNewCategory("");
+
+      /**
+       * ------------------------------------------------------------------------
+       * SUCCESS
+       * ------------------------------------------------------------------------
+       */
 
       showToast({
         type: "success",
@@ -614,7 +617,7 @@ export default function ProductDetailsScreen() {
       showToast({
         type: "error",
         title: "Unable to Create Category",
-        message: "Please try again.",
+        message: error instanceof Error ? error.message : "Please try again.",
       });
     }
   }

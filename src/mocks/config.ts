@@ -15,7 +15,7 @@ export const USE_MOCK_STORES = true;
 
 export const USE_MOCK_PRODUCTS = true;
 
-export const USE_MOCK_CATEGORIES = false;
+export const USE_MOCK_CATEGORIES = true;
 
 export const USE_MOCK_CUSTOMERS = true;
 

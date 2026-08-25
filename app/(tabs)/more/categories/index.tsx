@@ -453,33 +453,13 @@ export default function CategoriesScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * MOCK DATA
-   * --------------------------------------------------------------------------
-   */
-
-  const [mockCategories, setMockCategories] = useState<ProductCategoryDto[]>(
-    () => (USE_MOCK_PRODUCTS ? getMockCategories() : [])
-  );
-
-  const refreshMockCategories = useCallback(() => {
-    if (!USE_MOCK_PRODUCTS) {
-      return;
-    }
-
-    setMockCategories(getMockCategories());
-  }, []);
-
-  /**
-   * --------------------------------------------------------------------------
    * SOURCE OF TRUTH
    * --------------------------------------------------------------------------
    */
 
   const categoryList = useMemo(() => {
-    const source = USE_MOCK_PRODUCTS ? mockCategories : categories;
-
-    return source.filter((category) => category.isActive);
-  }, [categories, mockCategories]);
+    return categories.filter((category) => category.isActive);
+  }, [categories]);
 
   /**
    * --------------------------------------------------------------------------
@@ -489,13 +469,8 @@ export default function CategoriesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (USE_MOCK_PRODUCTS) {
-        refreshMockCategories();
-        return;
-      }
-
       refetch();
-    }, [refreshMockCategories, refetch])
+    }, [refetch])
   );
 
   /**
@@ -635,11 +610,7 @@ export default function CategoriesScreen() {
             try {
               await deleteCategoryMutation.mutateAsync(categoryId);
 
-              if (USE_MOCK_PRODUCTS) {
-                refreshMockCategories();
-              } else {
-                await refetch();
-              }
+              await refetch();
 
               showToast({
                 type: "success",
@@ -668,11 +639,6 @@ export default function CategoriesScreen() {
    */
 
   const onRefresh = async () => {
-    if (USE_MOCK_PRODUCTS) {
-      refreshMockCategories();
-      return;
-    }
-
     await refetch();
   };
 

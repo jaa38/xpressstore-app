@@ -4,37 +4,63 @@ import { createCategory } from "@/services/category/category-service";
 
 import { queryKeys } from "@/lib/queryKeys";
 
+import { USE_MOCK_CATEGORIES } from "@/mocks/config";
+import { createMockCategory } from "@/mocks/categories";
+
+import type { ProductCategoryDto } from "@/types/product";
+
+/**
+ * ============================================================================
+ * TYPES
+ * ============================================================================
+ */
+
 interface CreateCategoryVariables {
   name: string;
   description?: string;
 }
 
+/**
+ * ============================================================================
+ * CREATE CATEGORY
+ * ============================================================================
+ */
+
 export function useCreateCategory() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({ name, description }: CreateCategoryVariables) =>
-      createCategory(name, description),
-
-    onSuccess: async () => {
+  return useMutation<ProductCategoryDto, Error, CreateCategoryVariables>({
+    mutationFn: async ({
+      name,
+      description,
+    }) => {
       /**
-       * ==========================================================================
-       * REFRESH CATEGORIES
-       * ==========================================================================
-       *
-       * The categories screen uses:
-       *
-       * ["product-categories"]
-       *
-       * Refresh the query after a successful creation so the newly-created
-       * category appears immediately when returning to the categories screen.
+       * ----------------------------------------------------------------------
+       * MOCK MODE
+       * ----------------------------------------------------------------------
        */
 
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.productCategories,
-      });
+      if (USE_MOCK_CATEGORIES) {
+        return createMockCategory(
+          name,
+          description
+        );
+      }
 
-      await queryClient.refetchQueries({
+      /**
+       * ----------------------------------------------------------------------
+       * API MODE
+       * ----------------------------------------------------------------------
+       */
+
+      return createCategory(
+        name,
+        description
+      );
+    },
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: queryKeys.productCategories,
       });
     },

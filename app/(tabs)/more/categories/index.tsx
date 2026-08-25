@@ -1,4 +1,9 @@
-import { Pressable, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,27 +20,29 @@ import { Button } from "@/components/ui/Button";
 
 import { spacing, theme, radius } from "@/theme";
 
+import { useCategories } from "@/hooks/categories/useCategories";
+
 export default function CategoriesScreen() {
   /**
-   * -------------------------------------------------------------------------
-   * SCREEN STATE
-   * -------------------------------------------------------------------------
-   *
-   * Categories are not connected to a backend yet, so there is currently
-   * no loading/error state to display.
-   *
-   * This screen therefore presents the category management experience as
-   * an empty state until category persistence is implemented.
+   * ==========================================================================
+   * CATEGORIES
+   * ==========================================================================
    */
 
-  const categories: unknown[] = [];
+  const {
+    data: categories = [],
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+  } = useCategories();
 
   const hasCategories = categories.length > 0;
 
   /**
-   * -------------------------------------------------------------------------
+   * ==========================================================================
    * ACTIONS
-   * -------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   const handleAddCategory = () => {
@@ -47,9 +54,210 @@ export default function CategoriesScreen() {
   };
 
   /**
-   * -------------------------------------------------------------------------
-   * UI
-   * -------------------------------------------------------------------------
+   * ==========================================================================
+   * LOADING
+   * ==========================================================================
+   */
+
+  if (isLoading) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: theme.background.primary,
+        }}
+      >
+        <StatusBar style="auto" />
+
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: spacing.lg,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              minHeight: 64,
+            }}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              onPress={() => router.back()}
+              style={{
+                width: 44,
+                height: 44,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={theme.text.primary}
+              />
+            </Pressable>
+
+            <AppText
+              variant="h1"
+              style={{
+                marginLeft: spacing.sm,
+              }}
+            >
+              Categories
+            </AppText>
+          </View>
+
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <ActivityIndicator
+              size="large"
+              color={theme.action.primary.background}
+            />
+
+            <AppText
+              variant="body"
+              color="secondary"
+              style={{
+                marginTop: spacing.md,
+              }}
+            >
+              Loading categories...
+            </AppText>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  /**
+   * ==========================================================================
+   * ERROR
+   * ==========================================================================
+   */
+
+  if (isError) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: theme.background.primary,
+        }}
+      >
+        <StatusBar style="auto" />
+
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: spacing.lg,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              minHeight: 64,
+            }}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              onPress={() => router.back()}
+              style={{
+                width: 44,
+                height: 44,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={theme.text.primary}
+              />
+            </Pressable>
+
+            <AppText
+              variant="h1"
+              style={{
+                marginLeft: spacing.sm,
+              }}
+            >
+              Categories
+            </AppText>
+          </View>
+
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              paddingHorizontal: spacing.lg,
+            }}
+          >
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: radius.full,
+                backgroundColor: theme.state.error.background,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons
+                name="alert-circle-outline"
+                size={32}
+                color={theme.state.error.icon}
+              />
+            </View>
+
+            <AppText
+              variant="bodyLargeBold"
+              style={{
+                marginTop: spacing.md,
+                textAlign: "center",
+              }}
+            >
+              Unable to load categories
+            </AppText>
+
+            <AppText
+              variant="body"
+              color="secondary"
+              style={{
+                marginTop: spacing.xs,
+                textAlign: "center",
+              }}
+            >
+              Something went wrong while loading your categories.
+            </AppText>
+
+            <Button
+              title="Try Again"
+              variant="primary"
+              onPress={() => refetch()}
+              style={{
+                marginTop: spacing.lg,
+              }}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  /**
+   * ==========================================================================
+   * SCREEN
+   * ==========================================================================
    */
 
   return (
@@ -83,8 +291,6 @@ export default function CategoriesScreen() {
               gap: spacing.md,
             }}
           >
-            {/* Back Button */}
-
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Go back"
@@ -103,8 +309,6 @@ export default function CategoriesScreen() {
               />
             </Pressable>
 
-            {/* Title */}
-
             <View
               style={{
                 flex: 1,
@@ -116,7 +320,9 @@ export default function CategoriesScreen() {
               <AppText variant="body" color="secondary">
                 {hasCategories
                   ? `${categories.length} ${
-                      categories.length === 1 ? "category" : "categories"
+                      categories.length === 1
+                        ? "category"
+                        : "categories"
                     }`
                   : "Organise your products into categories."}
               </AppText>
@@ -192,10 +398,21 @@ export default function CategoriesScreen() {
                     gap: spacing.xs,
                   }}
                 >
-                  <AppText variant="bodyBold">All Categories</AppText>
+                  <AppText variant="bodyBold">
+                    All Categories
+                  </AppText>
 
-                  <AppText variant="bodySmall" color="muted">
-                    View and manage your product categories
+                  <AppText
+                    variant="bodySmall"
+                    color="muted"
+                  >
+                    {hasCategories
+                      ? `View and manage your ${categories.length} ${
+                          categories.length === 1
+                            ? "category"
+                            : "categories"
+                        }`
+                      : "View and manage your product categories"}
                   </AppText>
                 </View>
 
@@ -246,9 +463,14 @@ export default function CategoriesScreen() {
                     gap: spacing.xs,
                   }}
                 >
-                  <AppText variant="bodyBold">Add Category</AppText>
+                  <AppText variant="bodyBold">
+                    Add Category
+                  </AppText>
 
-                  <AppText variant="bodySmall" color="muted">
+                  <AppText
+                    variant="bodySmall"
+                    color="muted"
+                  >
                     Create a new product category
                   </AppText>
                 </View>
@@ -262,7 +484,7 @@ export default function CategoriesScreen() {
             </Card>
 
             {/* ===============================================================
-                FIRST-TIME EMPTY STATE
+                EMPTY STATE
             =============================================================== */}
 
             {!hasCategories && (
@@ -274,14 +496,13 @@ export default function CategoriesScreen() {
                   paddingHorizontal: spacing.lg,
                 }}
               >
-                {/* ICON */}
-
                 <View
                   style={{
                     width: 64,
                     height: 64,
                     borderRadius: radius.full,
-                    backgroundColor: theme.icon.branding.background,
+                    backgroundColor:
+                      theme.icon.branding.background,
                     justifyContent: "center",
                     alignItems: "center",
                   }}
@@ -293,8 +514,6 @@ export default function CategoriesScreen() {
                   />
                 </View>
 
-                {/* TITLE */}
-
                 <AppText
                   variant="bodyLargeBold"
                   style={{
@@ -305,8 +524,6 @@ export default function CategoriesScreen() {
                   No categories yet
                 </AppText>
 
-                {/* DESCRIPTION */}
-
                 <AppText
                   variant="body"
                   color="secondary"
@@ -316,11 +533,9 @@ export default function CategoriesScreen() {
                     maxWidth: 320,
                   }}
                 >
-                  Organise your products into categories to make your storefront
-                  easier for customers to browse.
+                  Organise your products into categories to make
+                  your storefront easier for customers to browse.
                 </AppText>
-
-                {/* CTA */}
 
                 <Button
                   title="Add Category"
@@ -338,8 +553,6 @@ export default function CategoriesScreen() {
                   onPress={handleAddCategory}
                 />
 
-                {/* SUPPORTING TEXT */}
-
                 <AppText
                   variant="caption"
                   color="muted"
@@ -348,8 +561,8 @@ export default function CategoriesScreen() {
                     textAlign: "center",
                   }}
                 >
-                  Categories can be assigned to your products when creating or
-                  editing them.
+                  Categories can be assigned to your products when
+                  creating or editing them.
                 </AppText>
               </Card>
             )}
@@ -373,8 +586,8 @@ export default function CategoriesScreen() {
                   maxWidth: 320,
                 }}
               >
-                Categories help customers find the products they are looking for
-                quickly.
+                Categories help customers find the products they
+                are looking for quickly.
               </AppText>
             </View>
           </ScrollView>

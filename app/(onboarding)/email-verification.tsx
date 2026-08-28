@@ -1,8 +1,8 @@
-import { useState } from "react";
-
 import { Alert, Pressable, View } from "react-native";
 
-import { Link, router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, Link, router } from "expo-router";
+
+import { useState } from "react";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -11,9 +11,16 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
+
 import { Button } from "@/components/ui/Button";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+
 import { OTPInput } from "@/components/ui/OTPInput";
+
+import { ProgressBar } from "@/components/ui/ProgressBar";
+
+import { spacing, theme } from "@/theme";
+
+import { ROUTES } from "@/navigation/routes";
 
 import { useVerifyEmailOtp } from "@/hooks/auth/useVerifyEmailOtp";
 
@@ -21,57 +28,140 @@ import { useResendOtp } from "@/hooks/auth/useResendOtp";
 
 import { getApiErrorMessage } from "@/api/errors";
 
-import { spacing, theme } from "@/theme";
-
-import { ROUTES } from "@/navigation/routes";
-
 export default function EmailVerificationScreen() {
+  /**
+   * --------------------------------------------------------------------------
+   * ROUTE PARAMETERS
+   * --------------------------------------------------------------------------
+   */
+
   const { email } = useLocalSearchParams<{
-    email: string;
+    email?: string;
   }>();
 
+  /**
+   * --------------------------------------------------------------------------
+   * STATE
+   * --------------------------------------------------------------------------
+   */
+
   const [verificationCode, setVerificationCode] = useState("");
+
+  /**
+   * --------------------------------------------------------------------------
+   * MUTATIONS
+   * --------------------------------------------------------------------------
+   */
 
   const verifyEmailOtp = useVerifyEmailOtp();
 
   const resendOtp = useResendOtp();
 
+  /**
+   * --------------------------------------------------------------------------
+   * OTP
+   * --------------------------------------------------------------------------
+   */
+
   function handleVerify(code: string) {
     setVerificationCode(code);
   }
 
-  async function handleSubmitOTP() {
-    try {
-      await verifyEmailOtp.mutateAsync({
-        email,
-        otp: verificationCode,
-      });
+  /**
+   * --------------------------------------------------------------------------
+   * VERIFY EMAIL
+   * --------------------------------------------------------------------------
+   */
 
+  async function handleSubmitOTP() {
+    const normalizedEmail = email?.trim();
+
+    if (!normalizedEmail) {
       Alert.alert(
-        "Email Verified",
-        "Your account has been verified successfully."
+        "Verification Failed",
+        "Your email address is missing. Please return to signup and try again."
       );
 
-      router.replace(ROUTES.BUSINESS_DETAILS);
+      return;
+    }
+
+    if (!verificationCode.trim()) {
+      Alert.alert(
+        "Verification Code Required",
+        "Please enter the verification code sent to your email."
+      );
+
+      return;
+    }
+
+    try {
+      await verifyEmailOtp.mutateAsync({
+        email: normalizedEmail,
+
+        otp: verificationCode.trim(),
+      });
+
+      /**
+       * -----------------------------------------------------------------------
+       * EMAIL VERIFIED
+       * -----------------------------------------------------------------------
+       *
+       * The VerifyUserEmail endpoint returns an authenticated session.
+       * The hook persists the JWT, refresh token and user before we continue.
+       */
+
+      router.replace({
+        pathname: ROUTES.PASSWORD,
+        params: {
+          email: normalizedEmail,
+        },
+      });
     } catch (error) {
       Alert.alert("Verification Failed", getApiErrorMessage(error));
     }
   }
 
-  async function handleResendOTP() {
-    try {
-      await resendOtp.mutateAsync(email);
+  /**
+   * --------------------------------------------------------------------------
+   * RESEND OTP
+   * --------------------------------------------------------------------------
+   */
 
-      Alert.alert("Success", "Verification code sent.");
+  async function handleResendOTP() {
+    const normalizedEmail = email?.trim();
+
+    if (!normalizedEmail) {
+      Alert.alert(
+        "Unable to Resend",
+        "Your email address is missing. Please return to signup and try again."
+      );
+
+      return;
+    }
+
+    try {
+      await resendOtp.mutateAsync(normalizedEmail);
+
+      Alert.alert(
+        "OTP Sent",
+        "A new verification code has been sent to your email address."
+      );
     } catch (error) {
-      Alert.alert("Unable to Resend", getApiErrorMessage(error));
+      Alert.alert("Resend Failed", getApiErrorMessage(error));
     }
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * SCREEN
+   * --------------------------------------------------------------------------
+   */
 
   return (
     <SafeAreaView
       style={{
         flex: 1,
+
         backgroundColor: theme.background.primary,
       }}
     >
@@ -80,17 +170,25 @@ export default function EmailVerificationScreen() {
       <View
         style={{
           flex: 1,
+
           paddingHorizontal: spacing.lg,
         }}
       >
         <View
           style={{
             flex: 1,
+
             justifyContent: "space-between",
           }}
         >
+          {/* ================================================================
+              TOP SECTION
+          ================================================================= */}
+
           <View>
-            {/* HEADER */}
+            {/* ==============================================================
+                HEADER
+            =============================================================== */}
 
             <View
               style={{
@@ -103,8 +201,15 @@ export default function EmailVerificationScreen() {
                 justifyContent: "space-between",
               }}
             >
+              {/* BACK */}
+
               <Link href={ROUTES.SIGNUP} asChild>
-                <Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Go back"
+                  accessibilityHint="Returns to the signup screen"
+                  hitSlop={8}
+                >
                   <Ionicons
                     name="chevron-back"
                     size={24}
@@ -113,7 +218,17 @@ export default function EmailVerificationScreen() {
                 </Pressable>
               </Link>
 
+              {/* PROGRESS */}
+
               <View
+                accessible
+                accessibilityRole="progressbar"
+                accessibilityLabel="Email verification progress"
+                accessibilityValue={{
+                  min: 0,
+                  max: 100,
+                  now: 33.33,
+                }}
                 style={{
                   flex: 1,
 
@@ -128,15 +243,19 @@ export default function EmailVerificationScreen() {
                   marginHorizontal: spacing.sm,
                 }}
               >
-                <ProgressBar progress={25} />
+                <ProgressBar progress={33.33} />
               </View>
 
+              {/* STEP */}
+
               <AppText variant="bodySmall" color="muted">
-                Step 1 of 4
+                Step 2 of 6
               </AppText>
             </View>
 
-            {/* CONTENT */}
+            {/* ==============================================================
+                CONTENT
+            =============================================================== */}
 
             <View
               style={{
@@ -145,68 +264,94 @@ export default function EmailVerificationScreen() {
                 gap: spacing.xl,
               }}
             >
+              {/* TITLE */}
+
               <View
                 style={{
                   gap: spacing.xs,
                 }}
               >
-                <AppText variant="h1" color="heading">
-                  Email Verification
+                <AppText
+                  accessibilityRole="header"
+                  variant="h1"
+                  color="heading"
+                >
+                  Verify your email
                 </AppText>
 
                 <AppText variant="body" color="secondary">
-                  We've sent a 8-digit verification code to:
-                  {"\n\n"}
-                  <AppText variant="bodyBold" color="primary">
-                    {email}
-                  </AppText>
+                  Enter the verification code we sent to your email address.
                 </AppText>
               </View>
 
-              <OTPInput length={8} onComplete={handleVerify} />
+              {/* EMAIL */}
+
+              <View
+                style={{
+                  padding: spacing.md,
+
+                  borderRadius: 12,
+
+                  backgroundColor: theme.background.subtle,
+
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons
+                  name="mail-outline"
+                  size={24}
+                  color={theme.icon.branding.icon}
+                />
+
+                <AppText
+                  variant="bodyBold"
+                  style={{
+                    marginTop: spacing.xs,
+
+                    textAlign: "center",
+                  }}
+                >
+                  {email || "your email address"}
+                </AppText>
+              </View>
+
+              {/* OTP */}
+
+              <View
+                style={{
+                  alignItems: "center",
+                }}
+              >
+                <OTPInput length={8} onComplete={handleVerify} />
+              </View>
+
+              {/* RESEND */}
 
               <View
                 style={{
                   flexDirection: "row",
 
+                  justifyContent: "center",
+
                   alignItems: "center",
 
-                  justifyContent: "space-between",
-
-                  backgroundColor: theme.background.brand,
-
-                  paddingVertical: spacing.rg,
-
-                  paddingHorizontal: spacing.md,
-
-                  borderRadius: 10,
+                  gap: spacing.xs,
                 }}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-
-                    alignItems: "center",
-
-                    gap: spacing.sm,
-                  }}
-                >
-                  <Ionicons
-                    name="information-circle"
-                    size={24}
-                    color={theme.icon.success.icon}
-                  />
-
-                  <AppText variant="body" color="primary">
-                    Didn't receive OTP?
-                  </AppText>
-                </View>
+                <AppText variant="bodySmall" color="muted">
+                  Didn't receive OTP?
+                </AppText>
 
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Resend OTP"
                   disabled={resendOtp.isPending}
                   onPress={handleResendOTP}
                 >
-                  <AppText variant="bodyBold" color="link">
+                  <AppText
+                    variant="label"
+                    color={resendOtp.isPending ? "muted" : "link"}
+                  >
                     {resendOtp.isPending ? "Sending..." : "Resend OTP"}
                   </AppText>
                 </Pressable>
@@ -214,7 +359,9 @@ export default function EmailVerificationScreen() {
             </View>
           </View>
 
-          {/* FOOTER */}
+          {/* ================================================================
+              BOTTOM SECTION
+          ================================================================= */}
 
           <View
             style={{
@@ -225,9 +372,7 @@ export default function EmailVerificationScreen() {
               title={verifyEmailOtp.isPending ? "Verifying..." : "Verify Email"}
               variant="primary"
               size="large"
-              disabled={
-                verificationCode.length !== 8 || verifyEmailOtp.isPending
-              }
+              disabled={!verificationCode.trim() || verifyEmailOtp.isPending}
               onPress={handleSubmitOTP}
             />
           </View>

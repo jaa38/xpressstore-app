@@ -16,15 +16,19 @@ export const ROUTES = {
   EMAIL_VERIFICATION: "/(onboarding)/email-verification",
 
   // Step 2
-  BUSINESS_DETAILS: "/(onboarding)/business-details",
+  PASSWORD: "/(onboarding)/password",
 
   // Step 3
-  ID_VERIFICATION: "/(onboarding)/id-verification",
+  BUSINESS_DETAILS: "/(onboarding)/business-details",
 
   // Step 4
-  BIOMETRIC_VERIFICATION: "/(onboarding)/biometric-verification",
+  ID_VERIFICATION: "/(onboarding)/id-verification",
 
+  // Step 5
   DOCUMENT_UPLOAD: "/(onboarding)/document-upload",
+
+  // Step 6
+  BIOMETRIC_VERIFICATION: "/(onboarding)/biometric-verification",
 
   /**
    * AUTH

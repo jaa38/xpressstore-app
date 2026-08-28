@@ -28,56 +28,78 @@ import { useOnboardingStore } from "@/store/onboarding/onboardingStore";
 
 import { getApiErrorMessage } from "@/api/errors";
 
+import { useKycRequirements } from "@/hooks/kyc/useKycRequirements";
+
 export default function DocumentUploadScreen() {
   const uploadDocument = useUploadDocument();
 
   const createMerchantKyc = useCreateMerchantKyc();
 
-  const { merchantId, kycTierId, bvn, uploadedDocument, setUploadedDocument } =
+  const { merchantId, kycTierId, bvn, setUploadedDocument } =
     useOnboardingStore();
+
+  const numericKycTierId = kycTierId ? Number(kycTierId) : null;
+
+  const { requirements, isLoading: isLoadingRequirements } =
+    useKycRequirements(numericKycTierId);
 
   const [selectedFile, setSelectedFile] =
     useState<DocumentPicker.DocumentPickerAsset | null>(null);
 
   async function pickDocument() {
-  const result = await DocumentPicker.getDocumentAsync({
-    type: [
-      "application/pdf",
-      "image/jpeg",
-      "image/png",
-    ],
-    copyToCacheDirectory: true,
-  });
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ["application/pdf", "image/jpeg", "image/png"],
+      copyToCacheDirectory: true,
+    });
 
-  if (result.canceled || !result.assets?.length) {
-    return;
+    if (result.canceled || !result.assets?.length) {
+      return;
+    }
+
+    const file = result.assets[0];
+
+    if (!file) {
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5 MB
+
+    if ((file.size ?? 0) > maxSize) {
+      Alert.alert("File Too Large", "Maximum upload size is 5 MB.");
+
+      return;
+    }
+
+    setSelectedFile(file);
   }
-
-  const file = result.assets[0];
-
-  if (!file) {
-    return;
-  }
-
-  const maxSize = 5 * 1024 * 1024; // 5 MB
-
-  if ((file.size ?? 0) > maxSize) {
-    Alert.alert(
-      "File Too Large",
-      "Maximum upload size is 5 MB."
-    );
-
-    return;
-  }
-
-  setSelectedFile(file);
-}
 
   async function handleContinue() {
     if (!merchantId || !kycTierId) {
       Alert.alert(
         "Missing Information",
         "Please complete the previous onboarding steps."
+      );
+
+      return;
+    }
+
+    if (isLoadingRequirements) {
+      Alert.alert(
+        "Please Wait",
+        "We're loading the documents required for your verification tier."
+      );
+
+      return;
+    }
+
+    const requiredDocument = requirements.find(
+      (requirement) => requirement.required
+    );
+
+    if (!requiredDocument) {
+      Alert.alert(
+        "Verification Requirement",
+        "We couldn't determine the document required for this verification tier."
       );
 
       return;
@@ -103,14 +125,18 @@ export default function DocumentUploadScreen() {
 
       const uploaded = await uploadDocument.mutateAsync(formData);
 
+      if (!uploaded.data?.url) {
+        throw new Error("The document upload did not return a document URL.");
+      }
+
       setUploadedDocument(uploaded.data);
 
       await createMerchantKyc.mutateAsync({
-        merchantId: merchantId ?? "",
+        merchantId,
 
-        kycTierId: kycTierId ?? "",
+        kycTierId,
 
-        documentType: "BVN",
+        documentType: requiredDocument.documentType,
 
         documentUrl: uploaded.data.url,
 
@@ -168,11 +194,11 @@ export default function DocumentUploadScreen() {
               marginHorizontal: spacing.sm,
             }}
           >
-            <ProgressBar progress={90} />
+            <ProgressBar progress={83.33} />
           </View>
 
           <AppText variant="bodySmall" color="muted">
-            Step 4 of 5
+            Step 6 of 7
           </AppText>
         </View>
 
@@ -189,6 +215,22 @@ export default function DocumentUploadScreen() {
           <AppText variant="body" color="secondary">
             Upload a clear copy of your identity document.
           </AppText>
+
+          {!isLoadingRequirements && requirements.length > 0 && (
+            <AppText
+              variant="bodySmall"
+              color="secondary"
+              style={{
+                marginTop: spacing.xs,
+              }}
+            >
+              Required document:{" "}
+              {requirements
+                .filter((requirement) => requirement.required)
+                .map((requirement) => requirement.displayName)
+                .join(", ")}
+            </AppText>
+          )}
         </View>
 
         <Card
@@ -272,16 +314,19 @@ export default function DocumentUploadScreen() {
         >
           <Button
             title={
-              uploadDocument.isPending
-                ? "Uploading document..."
-                : createMerchantKyc.isPending
-                  ? "Submitting..."
-                  : "Continue"
+              isLoadingRequirements
+                ? "Loading requirements..."
+                : uploadDocument.isPending
+                  ? "Uploading document..."
+                  : createMerchantKyc.isPending
+                    ? "Submitting..."
+                    : "Continue"
             }
             variant="primary"
             size="large"
             disabled={
               !selectedFile ||
+              isLoadingRequirements ||
               uploadDocument.isPending ||
               createMerchantKyc.isPending
             }

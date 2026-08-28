@@ -4,6 +4,7 @@ export const API_ENDPOINTS = {
    * Authentication (Auth Base URL)
    * ---------------------------------------------------------------------------
    */
+
   auth: {
     login: "/StoreFront/Login",
 
@@ -13,17 +14,17 @@ export const API_ENDPOINTS = {
 
     resendOtp: "/StoreFront/UpdateUserEmailVerification",
 
-    forgotPassword: "/StoreFront/ForgotPassword",
+    updatePassword: "/StoreFront/UpdateUserPassword",
 
-    changePassword: "/StoreFront/ChangePassword",
+    forgotPassword: "/Account/ForgetPassword",
 
-    fetchUser: "/StoreFront/GetUser",
+    changePassword: "/Account/ChangePasswordMobile",
+
+    fetchUser: "/Merchants/FetchStorefrontUser",
 
     updateBusinessDetails: "/StoreFront/UpdateMerchantBusinessDetails",
 
     updateBusinessType: "/StoreFront/UpdateMerchantBusinessType",
-
-    verifyPasswordResetOtp: "/api/v2/Account/VerifyForgetPasswordOTP",
   },
 
   /**

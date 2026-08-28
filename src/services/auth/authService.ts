@@ -10,7 +10,9 @@ import {
   LoginRequest,
   LoginResponse,
   RegisterRequest,
+  UpdatePasswordRequest,
   VerifyEmailOtpRequest,
+  VerifyEmailOtpResponse,
   VerifyPasswordResetOtpRequest,
 } from "@/types/auth";
 
@@ -81,8 +83,9 @@ export const authService = {
    * Verify Email OTP
    * ---------------------------------------------------------------------------
    */
+
   async verifyEmailOtp(payload: VerifyEmailOtpRequest) {
-    const { data } = await authClient.post<ApiResponse<void>>(
+    const { data } = await authClient.post<ApiResponse<VerifyEmailOtpResponse>>(
       API_ENDPOINTS.auth.verifyEmail,
       payload
     );
@@ -104,6 +107,27 @@ export const authService = {
           Email: email,
         },
       }
+    );
+
+    return data;
+  },
+
+  /**
+   * ---------------------------------------------------------------------------
+   * Update Password
+   * ---------------------------------------------------------------------------
+   *
+   * Sets the merchant password after email verification.
+   *
+   * Endpoint:
+   * POST /StoreFront/UpdateUserPassword
+   *
+   * This endpoint does not require authentication.
+   */
+  async updatePassword(payload: UpdatePasswordRequest) {
+    const { data } = await authClient.post<ApiResponse<void>>(
+      API_ENDPOINTS.auth.updatePassword,
+      payload
     );
 
     return data;

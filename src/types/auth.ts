@@ -76,8 +76,15 @@ export interface AuthSession {
 
 export interface RegisterRequest {
   email: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+}
 
+export interface UpdatePasswordRequest {
+  email: string;
   password: string;
+  confirmPassword: string;
 }
 
 /**

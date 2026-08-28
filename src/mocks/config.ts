@@ -11,6 +11,12 @@
  * ============================================================================
  */
 
+/**
+ * ---------------------------------------------------------------------------
+ * Dashboard / Store
+ * ---------------------------------------------------------------------------
+ */
+
 export const USE_MOCK_STORES = true;
 
 export const USE_MOCK_PRODUCTS = true;
@@ -26,3 +32,19 @@ export const USE_MOCK_ORDERS = true;
 export const USE_MOCK_TRANSACTIONS = true;
 
 export const USE_MOCK_DISCOUNTS = true;
+
+/**
+ * ---------------------------------------------------------------------------
+ * Onboarding
+ * ---------------------------------------------------------------------------
+ */
+
+export const USE_MOCK_ONBOARDING = true;
+
+export const USE_MOCK_EMAIL_VERIFICATION = true;
+
+export const USE_MOCK_BVN = true;
+
+export const USE_MOCK_KYC = true;
+
+export const USE_MOCK_DOCUMENT_UPLOAD = true;

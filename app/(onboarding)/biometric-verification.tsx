@@ -129,7 +129,7 @@ export default function BiometricVerificationScreen() {
           </View>
 
           <AppText variant="bodySmall" color="muted">
-            Step 4 of 4
+            Step 6 of 6
           </AppText>
         </View>
 

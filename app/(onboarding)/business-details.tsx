@@ -27,6 +27,8 @@ import { useUpdateBusinessType } from "@/hooks/merchant/useUpdateBusinessType";
 
 import { useBusinessCategories } from "@/hooks/lookup/useBusinessCategories";
 
+import { useOnboardingStore } from "@/store/onboarding/onboardingStore";
+
 type BusinessDetailsForm = {
   businessType: string;
 
@@ -38,6 +40,8 @@ type BusinessDetailsForm = {
 };
 
 export default function BusinessDetailsScreen() {
+  const merchantId = useOnboardingStore((state) => state.merchantId);
+
   const { control, handleSubmit, watch } = useForm<BusinessDetailsForm>({
     defaultValues: {
       businessType: "",
@@ -66,38 +70,46 @@ export default function BusinessDetailsScreen() {
   const updateBusinessType = useUpdateBusinessType();
 
   async function onSubmit(data: BusinessDetailsForm) {
-  try {
-    await updateBusinessDetails.mutateAsync({
-      merchantId: "",
+    if (!merchantId) {
+      Alert.alert(
+        "Session Error",
+        "We couldn't identify your merchant account. Please restart onboarding."
+      );
 
-      businessName: data.businessName,
+      return;
+    }
 
-      tradingName: data.businessName,
+    try {
+      await updateBusinessDetails.mutateAsync({
+        merchantId,
 
-      businessEmail: "",
+        businessName: data.businessName,
 
-      businessPhoneNumber: "",
-    });
+        tradingName: data.businessName,
 
-    await updateBusinessType.mutateAsync({
-      merchantId: "",
+        businessEmail: "",
 
-      businessTypeId:
-        data.businessType === "registered" ? 2 : 1,
+        businessPhoneNumber: "",
+      });
 
-      businessRegistrationTypeId: 1,
-    });
+      await updateBusinessType.mutateAsync({
+        merchantId,
 
-    router.push(ROUTES.ID_VERIFICATION);
-  } catch (error) {
-    console.error("Failed to update merchant:", error);
+        businessTypeId: data.businessType === "registered" ? 2 : 1,
 
-    Alert.alert(
-      "Unable to Continue",
-      "We couldn't save your business information. Please try again."
-    );
+        businessRegistrationTypeId: 1,
+      });
+
+      router.push(ROUTES.ID_VERIFICATION);
+    } catch (error) {
+      console.error("Failed to update merchant:", error);
+
+      Alert.alert(
+        "Unable to Continue",
+        "We couldn't save your business information. Please try again."
+      );
+    }
   }
-}
 
   return (
     <SafeAreaView

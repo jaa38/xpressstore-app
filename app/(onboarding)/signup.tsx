@@ -1,5 +1,4 @@
 import { Alert, Pressable, View } from "react-native";
-import { useState } from "react";
 
 import { Link, router } from "expo-router";
 
@@ -28,38 +27,35 @@ import { useRegister } from "@/hooks/auth/useRegister";
 
 import { getApiErrorMessage } from "@/api/errors";
 
-function PasswordRule({ passed, text }: { passed: boolean; text: string }) {
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        gap: spacing.xs,
-      }}
-    >
-      <Ionicons
-        name={passed ? "checkmark-circle" : "ellipse-outline"}
-        size={16}
-        color={passed ? theme.icon.success.icon : theme.text.muted}
-      />
-
-      <AppText variant="caption" color={passed ? "success" : "muted"}>
-        {text}
-      </AppText>
-    </View>
-  );
-}
+/**
+ * ============================================================================
+ * SIGNUP SCREEN
+ * ============================================================================
+ *
+ * Step 1 of the merchant onboarding flow.
+ *
+ * The Xpress SSO API requires:
+ *
+ * - email
+ * - firstName
+ * - lastName
+ * - phoneNumber
+ *
+ * Password is NOT collected at this stage.
+ * Password creation is handled separately through the
+ * UpdateUserPassword endpoint after email verification.
+ * ============================================================================
+ */
 
 export default function SignupScreen() {
-  const [showPassword, setShowPassword] = useState(false);
-
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  /**
+   * --------------------------------------------------------------------------
+   * FORM
+   * --------------------------------------------------------------------------
+   */
 
   const {
     control,
-    watch,
     handleSubmit,
     formState: { errors, isValid },
   } = useForm<SignupSchema>({
@@ -68,35 +64,40 @@ export default function SignupScreen() {
     mode: "onChange",
 
     defaultValues: {
+      firstName: "",
+
+      lastName: "",
+
       email: "",
 
-      password: "",
-
-      confirmPassword: "",
+      phoneNumber: "",
     },
   });
 
+  /**
+   * --------------------------------------------------------------------------
+   * REGISTER MUTATION
+   * --------------------------------------------------------------------------
+   */
+
   const register = useRegister();
 
-  const password = watch("password") || "";
-
-  const passwordRules = {
-    minLength: password.length >= 8,
-
-    uppercase: /[A-Z]/.test(password),
-
-    lowercase: /[a-z]/.test(password),
-
-    number: /[0-9]/.test(password),
-
-    special: /[^A-Za-z0-9]/.test(password),
-  };
+  /**
+   * --------------------------------------------------------------------------
+   * SUBMIT
+   * --------------------------------------------------------------------------
+   */
 
   async function onSubmit(data: SignupSchema) {
     try {
       await register.mutateAsync({
-        email: data.email,
-        password: data.password,
+        email: data.email.trim(),
+
+        firstName: data.firstName.trim(),
+
+        lastName: data.lastName.trim(),
+
+        phoneNumber: data.phoneNumber.trim(),
       });
 
       Alert.alert(
@@ -106,14 +107,21 @@ export default function SignupScreen() {
 
       router.push({
         pathname: ROUTES.EMAIL_VERIFICATION,
+
         params: {
-          email: data.email,
+          email: data.email.trim(),
         },
       });
     } catch (error) {
       Alert.alert("Sign Up Failed", getApiErrorMessage(error));
     }
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * SCREEN
+   * --------------------------------------------------------------------------
+   */
 
   return (
     <SafeAreaView
@@ -139,10 +147,14 @@ export default function SignupScreen() {
             justifyContent: "space-between",
           }}
         >
-          {/* TOP SECTION */}
+          {/* ==================================================================
+              TOP SECTION
+          ================================================================== */}
 
           <View>
-            {/* HEADER */}
+            {/* ==================================================================
+                HEADER
+            ================================================================== */}
 
             <View
               style={{
@@ -155,11 +167,14 @@ export default function SignupScreen() {
                 justifyContent: "space-between",
               }}
             >
+              {/* BACK */}
+
               <Link href={ROUTES.WELCOME} asChild>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Go back"
                   accessibilityHint="Returns to the welcome screen"
+                  hitSlop={8}
                 >
                   <Ionicons
                     name="chevron-back"
@@ -169,14 +184,18 @@ export default function SignupScreen() {
                 </Pressable>
               </Link>
 
+              {/* PROGRESS */}
+
               <View
                 accessible
                 accessibilityRole="progressbar"
                 accessibilityLabel="Signup progress"
                 accessibilityValue={{
                   min: 0,
+
                   max: 100,
-                  now: 25,
+
+                  now: 16.67,
                 }}
                 style={{
                   flex: 1,
@@ -192,15 +211,19 @@ export default function SignupScreen() {
                   marginHorizontal: spacing.sm,
                 }}
               >
-                <ProgressBar progress={25} />
+                <ProgressBar progress={16.67} />
               </View>
 
+              {/* STEP */}
+
               <AppText variant="bodySmall" color="muted">
-                Step 1 of 4
+                Step 1 of 6
               </AppText>
             </View>
 
-            {/* CONTENT */}
+            {/* ==================================================================
+                CONTENT
+            ================================================================== */}
 
             <View
               style={{
@@ -209,6 +232,8 @@ export default function SignupScreen() {
                 gap: spacing.lg,
               }}
             >
+              {/* TITLE */}
+
               <View
                 style={{
                   gap: spacing.xs,
@@ -223,11 +248,53 @@ export default function SignupScreen() {
                 </AppText>
 
                 <AppText variant="body" color="secondary">
-                  Sign up with your email to get started.
+                  Enter your details to get started.
                 </AppText>
               </View>
 
-              {/* EMAIL */}
+              {/* ==================================================================
+                  FIRST NAME
+              ================================================================== */}
+
+              <Controller
+                control={control}
+                name="firstName"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label="First Name"
+                    placeholder="Enter your first name"
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.firstName?.message}
+                  />
+                )}
+              />
+
+              {/* ==================================================================
+                  LAST NAME
+              ================================================================== */}
+
+              <Controller
+                control={control}
+                name="lastName"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label="Last Name"
+                    placeholder="Enter your last name"
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.lastName?.message}
+                  />
+                )}
+              />
+
+              {/* ==================================================================
+                  EMAIL
+              ================================================================== */}
 
               <Controller
                 control={control}
@@ -238,6 +305,7 @@ export default function SignupScreen() {
                     placeholder="Enter your email"
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    autoCorrect={false}
                     value={value}
                     onChangeText={onChange}
                     error={errors.email?.message}
@@ -245,122 +313,42 @@ export default function SignupScreen() {
                 )}
               />
 
-              {/* PASSWORD */}
+              {/* ==================================================================
+                  PHONE NUMBER
+              ================================================================== */}
 
               <Controller
                 control={control}
-                name="password"
+                name="phoneNumber"
                 render={({ field: { onChange, value } }) => (
                   <Input
-                    label="Password"
-                    placeholder="Enter your password"
-                    secureTextEntry={!showPassword}
+                    label="Phone Number"
+                    placeholder="+234 801 234 5678"
+                    keyboardType="phone-pad"
+                    autoCapitalize="none"
+                    autoCorrect={false}
                     value={value}
                     onChangeText={onChange}
-                    error={errors.password?.message}
-                    rightIcon={
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={
-                          showPassword ? "Hide password" : "Show password"
-                        }
-                        accessibilityState={{
-                          selected: showPassword,
-                        }}
-                        onPress={() => setShowPassword(!showPassword)}
-                      >
-                        <Ionicons
-                          name={
-                            showPassword ? "eye-off-outline" : "eye-outline"
-                          }
-                          size={20}
-                          color={theme.icon.default.icon}
-                        />
-                      </Pressable>
-                    }
-                  />
-                )}
-              />
-
-              {/* RULES */}
-
-              <View
-                accessible
-                accessibilityLabel="Password requirements"
-                style={{
-                  gap: spacing.xs,
-                }}
-              >
-                <AppText variant="caption" color="muted">
-                  Password must contain:
-                </AppText>
-
-                <PasswordRule
-                  passed={passwordRules.minLength}
-                  text="At least 8 characters"
-                />
-
-                <PasswordRule
-                  passed={passwordRules.uppercase}
-                  text="One uppercase letter"
-                />
-
-                <PasswordRule
-                  passed={passwordRules.lowercase}
-                  text="One lowercase letter"
-                />
-
-                <PasswordRule passed={passwordRules.number} text="One number" />
-
-                <PasswordRule
-                  passed={passwordRules.special}
-                  text="One special character"
-                />
-              </View>
-
-              {/* CONFIRM PASSWORD */}
-
-              <Controller
-                control={control}
-                name="confirmPassword"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label="Confirm Password"
-                    placeholder="Confirm your password"
-                    secureTextEntry={!showConfirmPassword}
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.confirmPassword?.message}
-                    rightIcon={
-                      <Pressable
-                        onPress={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                      >
-                        <Ionicons
-                          name={
-                            showConfirmPassword
-                              ? "eye-off-outline"
-                              : "eye-outline"
-                          }
-                          size={20}
-                          color={theme.icon.default.icon}
-                        />
-                      </Pressable>
-                    }
+                    error={errors.phoneNumber?.message}
                   />
                 )}
               />
             </View>
           </View>
 
-          {/* BOTTOM SECTION */}
+          {/* ==================================================================
+              BOTTOM SECTION
+          ================================================================== */}
 
           <View
             style={{
               paddingBottom: spacing.lg,
             }}
           >
+            {/* ==================================================================
+                CONTINUE
+            ================================================================== */}
+
             <Button
               title={register.isPending ? "Creating Account..." : "Get Started"}
               variant="primary"
@@ -368,6 +356,10 @@ export default function SignupScreen() {
               disabled={!isValid || register.isPending}
               onPress={handleSubmit(onSubmit)}
             />
+
+            {/* ==================================================================
+                LOGIN
+            ================================================================== */}
 
             <View
               style={{

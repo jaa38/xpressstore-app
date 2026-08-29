@@ -239,7 +239,7 @@ export const theme = {
     },
 
     stats: {
-      background: colors.primary[300],
+      background: colors.neutral.white,
       text: colors.primary[100],
     },
 

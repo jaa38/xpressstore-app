@@ -140,6 +140,99 @@ export default function HomeScreen() {
 
   /**
    * --------------------------------------------------------------------------
+   * WEEKLY REVENUE
+   * --------------------------------------------------------------------------
+   *
+   * Revenue is calculated from successful credit transactions.
+   *
+   * This week:
+   * Monday -> today
+   *
+   * Previous week:
+   * Previous Monday -> previous Sunday
+   */
+
+  const weeklyRevenue = useMemo(() => {
+    const now = new Date();
+
+    /**
+     * Current week starts on Monday.
+     */
+    const currentWeekStart = new Date(now);
+
+    const day = currentWeekStart.getDay();
+
+    const daysSinceMonday = day === 0 ? 6 : day - 1;
+
+    currentWeekStart.setDate(currentWeekStart.getDate() - daysSinceMonday);
+
+    currentWeekStart.setHours(0, 0, 0, 0);
+
+    /**
+     * Previous week starts seven days before
+     * the current week.
+     */
+    const previousWeekStart = new Date(currentWeekStart);
+
+    previousWeekStart.setDate(previousWeekStart.getDate() - 7);
+
+    /**
+     * End of previous week.
+     */
+    const previousWeekEnd = new Date(currentWeekStart);
+
+    previousWeekEnd.setMilliseconds(-1);
+
+    /**
+     * Successful credit transactions only.
+     */
+    const revenueTransactions = transactions.filter(
+      (transaction) =>
+        transaction.type === "credit" && transaction.status === "paid"
+    );
+
+    /**
+     * This week's revenue.
+     */
+    const thisWeekRevenue = revenueTransactions
+      .filter((transaction) => {
+        const transactionDate = new Date(transaction.createdAt);
+
+        return transactionDate >= currentWeekStart;
+      })
+      .reduce((total, transaction) => total + Number(transaction.amount), 0);
+
+    /**
+     * Previous week's revenue.
+     */
+    const previousWeekRevenue = revenueTransactions
+      .filter((transaction) => {
+        const transactionDate = new Date(transaction.createdAt);
+
+        return (
+          transactionDate >= previousWeekStart &&
+          transactionDate <= previousWeekEnd
+        );
+      })
+      .reduce((total, transaction) => total + Number(transaction.amount), 0);
+
+    /**
+     * Percentage change.
+     */
+    const revenueChangePercent =
+      previousWeekRevenue === 0
+        ? 0
+        : ((thisWeekRevenue - previousWeekRevenue) / previousWeekRevenue) * 100;
+
+    return {
+      thisWeekRevenue,
+      previousWeekRevenue,
+      revenueChangePercent,
+    };
+  }, [transactions]);
+
+  /**
+   * --------------------------------------------------------------------------
    * REFRESH
    * --------------------------------------------------------------------------
    */
@@ -191,8 +284,7 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const showDashboardStats =
-    !dashboardLoading && !!dashboard && hasTransactions;
+  const showDashboardStats = !dashboardLoading && !!dashboard;
 
   /**
    * --------------------------------------------------------------------------
@@ -296,29 +388,11 @@ export default function HomeScreen() {
 
           {showDashboardStats && dashboard && (
             <DashboardStatsCard
-              title="Total Revenue"
-              amount={formatCurrency(dashboard.summary.totalRevenue, {
+              title="This Week's Revenue"
+              amount={formatCurrency(weeklyRevenue.thisWeekRevenue, {
                 currency: "NGN",
               })}
-              trend={`${dashboard.summary.revenueChangePercent}%`}
-              metrics={[
-                {
-                  label: "Revenue",
-                  value: formatCurrency(dashboard.summary.totalRevenue, {
-                    currency: "NGN",
-                  }),
-                },
-
-                {
-                  label: "Transactions",
-                  value: dashboard.summary.totalTransactions.toString(),
-                },
-
-                {
-                  label: "Pending",
-                  value: dashboard.summary.pendingSettlements.toString(),
-                },
-              ]}
+              trend={weeklyRevenue.revenueChangePercent}
             />
           )}
 

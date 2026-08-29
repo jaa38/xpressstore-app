@@ -7,12 +7,51 @@ import { AppText } from "@/components/ui/AppText";
 import { radius, spacing, theme } from "@/theme";
 
 type TrendBadgeProps = {
-  value: string;
+  value: number;
 };
 
-export function TrendBadge({
-  value,
-}: TrendBadgeProps) {
+export function TrendBadge({ value }: TrendBadgeProps) {
+  /**
+   * --------------------------------------------------------------------------
+   * TREND STATE
+   * --------------------------------------------------------------------------
+   */
+
+  const isIncrease = value > 0;
+  const isDecrease = value < 0;
+
+  /**
+   * --------------------------------------------------------------------------
+   * ICON
+   * --------------------------------------------------------------------------
+   */
+
+  const iconName = isIncrease
+    ? "trending-up"
+    : isDecrease
+      ? "trending-down"
+      : "remove";
+
+  /**
+   * --------------------------------------------------------------------------
+   * TREND COLOR
+   * --------------------------------------------------------------------------
+   */
+
+  const trendColor = isIncrease
+    ? theme.text.success
+    : isDecrease
+      ? theme.text.error
+      : theme.text.secondary;
+
+  /**
+   * --------------------------------------------------------------------------
+   * FORMATTED VALUE
+   * --------------------------------------------------------------------------
+   */
+
+  const formattedValue = `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
+
   return (
     <View
       style={{
@@ -25,21 +64,18 @@ export function TrendBadge({
 
         borderRadius: radius.xl,
 
+        // Keep the badge background white.
         backgroundColor: theme.card.stats.background,
       }}
     >
-      <Ionicons
-        name="trending-up"
-        size={16}
-        color={theme.card.dashboard.text}
-      />
+      <Ionicons name={iconName} size={16} color={trendColor} />
 
       <AppText
         style={{
-          color: theme.card.dashboard.text,
+          color: trendColor,
         }}
       >
-        {value}
+        {formattedValue}
       </AppText>
     </View>
   );

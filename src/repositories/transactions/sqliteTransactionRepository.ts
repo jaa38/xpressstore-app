@@ -12,14 +12,25 @@ import type { TransactionRepository } from "./transactionRepository";
 
 interface TransactionRow {
   id: string;
+
+  merchant_id: string;
+
   customer: string;
+
   type: string;
+
   status: string;
+
   channel: string;
+
   amount: number;
+
   currency: string | null;
+
   reference: string;
+
   created_at: string;
+
   synced_at: number;
 }
 
@@ -29,12 +40,7 @@ interface TransactionRow {
  * ============================================================================
  */
 
-/**
- * Map a SQLite currency value into the application's Currency type.
- */
-function mapCurrency(
-  value: string | null
-): Transaction["currency"] {
+function mapCurrency(value: string | null): Transaction["currency"] {
   switch (value?.trim().toUpperCase()) {
     case "NGN":
       return "NGN";
@@ -53,23 +59,11 @@ function mapCurrency(
   }
 }
 
-/**
- * Map a SQLite value into the application's transaction type.
- */
-function mapTransactionType(
-  value: string
-): Transaction["type"] {
-  return value?.trim().toLowerCase() === "debit"
-    ? "debit"
-    : "credit";
+function mapTransactionType(value: string): Transaction["type"] {
+  return value?.trim().toLowerCase() === "debit" ? "debit" : "credit";
 }
 
-/**
- * Map a SQLite value into the application's transaction status.
- */
-function mapTransactionStatus(
-  value: string
-): Transaction["status"] {
+function mapTransactionStatus(value: string): Transaction["status"] {
   switch (value?.trim().toLowerCase()) {
     case "paid":
       return "paid";
@@ -83,12 +77,7 @@ function mapTransactionStatus(
   }
 }
 
-/**
- * Map a SQLite value into the application's payment channel.
- */
-function mapPaymentChannel(
-  value: string
-): Transaction["channel"] {
+function mapPaymentChannel(value: string): Transaction["channel"] {
   switch (value?.trim().toLowerCase()) {
     case "bank":
       return "bank";
@@ -111,12 +100,7 @@ function mapPaymentChannel(
   }
 }
 
-/**
- * Map a SQLite transaction row into the application domain model.
- */
-function mapTransactionRow(
-  row: TransactionRow
-): Transaction {
+function mapTransactionRow(row: TransactionRow): Transaction {
   return {
     id: row.id,
 
@@ -140,38 +124,40 @@ function mapTransactionRow(
 
 /**
  * ============================================================================
- * SQLite Repository
+ * SQLite Transaction Repository
  * ============================================================================
  */
 
-class SQLiteTransactionRepository
-  implements TransactionRepository
-{
+class SQLiteTransactionRepository implements TransactionRepository {
   /**
    * --------------------------------------------------------------------------
    * Get Transactions
    * --------------------------------------------------------------------------
    */
 
-  async getTransactions(): Promise<Transaction[]> {
+  async getTransactions(merchantId: string): Promise<Transaction[]> {
     const database = await getDatabase();
 
-    const rows =
-      await database.getAllAsync<TransactionRow>(`
-        SELECT
-          id,
-          customer,
-          type,
-          status,
-          channel,
-          amount,
-          currency,
-          reference,
-          created_at,
-          synced_at
-        FROM transactions
-        ORDER BY created_at DESC
-      `);
+    const rows = await database.getAllAsync<TransactionRow>(
+      `
+          SELECT
+            id,
+            merchant_id,
+            customer,
+            type,
+            status,
+            channel,
+            amount,
+            currency,
+            reference,
+            created_at,
+            synced_at
+          FROM transactions
+          WHERE merchant_id = ?
+          ORDER BY created_at DESC
+        `,
+      merchantId
+    );
 
     return rows.map(mapTransactionRow);
   }
@@ -183,15 +169,16 @@ class SQLiteTransactionRepository
    */
 
   async getTransactionById(
+    merchantId: string,
     id: string
   ): Promise<Transaction | null> {
     const database = await getDatabase();
 
-    const row =
-      await database.getFirstAsync<TransactionRow>(
-        `
+    const row = await database.getFirstAsync<TransactionRow>(
+      `
           SELECT
             id,
+            merchant_id,
             customer,
             type,
             status,
@@ -202,11 +189,13 @@ class SQLiteTransactionRepository
             created_at,
             synced_at
           FROM transactions
-          WHERE id = ?
+          WHERE merchant_id = ?
+            AND id = ?
           LIMIT 1
         `,
-        id
-      );
+      merchantId,
+      id
+    );
 
     if (!row) {
       return null;
@@ -222,20 +211,16 @@ class SQLiteTransactionRepository
    */
 
   async saveTransactions(
+    merchantId: string,
     transactions: Transaction[]
   ): Promise<void> {
     const database = await getDatabase();
 
-    await database.withTransactionAsync(
-      async () => {
-        for (const transaction of transactions) {
-          await this.upsertTransaction(
-            database,
-            transaction
-          );
-        }
+    await database.withTransactionAsync(async () => {
+      for (const transaction of transactions) {
+        await this.upsertTransaction(database, merchantId, transaction);
       }
-    );
+    });
   }
 
   /**
@@ -245,18 +230,14 @@ class SQLiteTransactionRepository
    */
 
   async saveTransaction(
+    merchantId: string,
     transaction: Transaction
   ): Promise<void> {
     const database = await getDatabase();
 
-    await database.withTransactionAsync(
-      async () => {
-        await this.upsertTransaction(
-          database,
-          transaction
-        );
-      }
-    );
+    await database.withTransactionAsync(async () => {
+      await this.upsertTransaction(database, merchantId, transaction);
+    });
   }
 
   /**
@@ -266,15 +247,15 @@ class SQLiteTransactionRepository
    */
 
   private async upsertTransaction(
-    database: Awaited<
-      ReturnType<typeof getDatabase>
-    >,
+    database: Awaited<ReturnType<typeof getDatabase>>,
+    merchantId: string,
     transaction: Transaction
   ): Promise<void> {
     await database.runAsync(
       `
         INSERT INTO transactions (
           id,
+          merchant_id,
           customer,
           type,
           status,
@@ -295,10 +276,12 @@ class SQLiteTransactionRepository
           ?,
           ?,
           ?,
+          ?,
           ?
         )
         ON CONFLICT(id)
         DO UPDATE SET
+          merchant_id = excluded.merchant_id,
           customer = excluded.customer,
           type = excluded.type,
           status = excluded.status,
@@ -310,6 +293,7 @@ class SQLiteTransactionRepository
           synced_at = excluded.synced_at
       `,
       transaction.id,
+      merchantId,
       transaction.customer,
       transaction.type,
       transaction.status,
@@ -328,32 +312,36 @@ class SQLiteTransactionRepository
    * --------------------------------------------------------------------------
    */
 
-  async deleteTransaction(
-    id: string
-  ): Promise<void> {
+  async deleteTransaction(merchantId: string, id: string): Promise<void> {
     const database = await getDatabase();
 
     await database.runAsync(
       `
         DELETE FROM transactions
-        WHERE id = ?
+        WHERE merchant_id = ?
+          AND id = ?
       `,
+      merchantId,
       id
     );
   }
 
   /**
    * --------------------------------------------------------------------------
-   * Clear Transactions
+   * Clear Merchant Transactions
    * --------------------------------------------------------------------------
    */
 
-  async clearTransactions(): Promise<void> {
+  async clearTransactions(merchantId: string): Promise<void> {
     const database = await getDatabase();
 
-    await database.runAsync(`
-      DELETE FROM transactions
-    `);
+    await database.runAsync(
+      `
+        DELETE FROM transactions
+        WHERE merchant_id = ?
+      `,
+      merchantId
+    );
   }
 }
 
@@ -363,5 +351,4 @@ class SQLiteTransactionRepository
  * ============================================================================
  */
 
-export const transactionRepository =
-  new SQLiteTransactionRepository();
+export const transactionRepository = new SQLiteTransactionRepository();

@@ -17,6 +17,8 @@
  * ---------------------------------------------------------------------------
  */
 
+export const USE_MOCK_DASHBOARD = true;
+
 export const USE_MOCK_STORES = true;
 
 export const USE_MOCK_PRODUCTS = true;

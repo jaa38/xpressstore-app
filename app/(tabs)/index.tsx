@@ -34,55 +34,6 @@ import { USE_MOCK_TRANSACTIONS } from "@/mocks/config";
 
 /**
  * ============================================================================
- * MOCK CONFIGURATION
- * ============================================================================
- *
- * Dashboard and merchant profile continue to use the existing Home screen
- * mock configuration.
- *
- * Transactions now use the centralized transaction mock configuration:
- *
- * src/mocks/config.ts
- *
- * USE_MOCK_TRANSACTIONS
- *
- * This keeps transaction mock mode consistent across:
- *
- * - Home
- * - Transactions
- * - Transaction Details
- * ============================================================================
- */
-
-const USE_MOCK_DASHBOARD = true;
-
-/**
- * ============================================================================
- * MOCK MERCHANT PROFILE
- * ============================================================================
- */
-
-const MOCK_PROFILE = {
-  businessName: "Jeremiah Fashion Store",
-};
-
-/**
- * ============================================================================
- * MOCK DASHBOARD
- * ============================================================================
- */
-
-const MOCK_DASHBOARD = {
-  summary: {
-    totalRevenue: 4850000,
-    totalTransactions: 128,
-    pendingSettlements: 7,
-    revenueChangePercent: 12.5,
-  },
-};
-
-/**
- * ============================================================================
  * HOME SCREEN
  * ============================================================================
  */
@@ -153,9 +104,9 @@ export default function HomeScreen() {
    * src/mocks/config.ts
    */
 
-  const profile = USE_MOCK_DASHBOARD ? MOCK_PROFILE : apiProfile;
+  const profile = apiProfile;
 
-  const dashboard = USE_MOCK_DASHBOARD ? MOCK_DASHBOARD : apiDashboard;
+  const dashboard = apiDashboard;
 
   const transactions = USE_MOCK_TRANSACTIONS
     ? MOCK_TRANSACTIONS
@@ -167,9 +118,9 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const profileLoading = USE_MOCK_DASHBOARD ? false : profileLoadingApi;
+  const profileLoading = profileLoadingApi;
 
-  const dashboardLoading = USE_MOCK_DASHBOARD ? false : dashboardLoadingApi;
+  const dashboardLoading = dashboardLoadingApi;
 
   /**
    * --------------------------------------------------------------------------
@@ -199,41 +150,17 @@ export default function HomeScreen() {
     setRefreshing(true);
 
     try {
-      /**
-       * ----------------------------------------------------------------------
-       * MOCK MODE
-       * ----------------------------------------------------------------------
-       *
-       * If all currently displayed data is mocked, there is nothing to
-       * actually refetch.
-       *
-       * Keep the refresh interaction so the UI behaves consistently with
-       * the API version.
-       */
-
-      if (USE_MOCK_DASHBOARD && USE_MOCK_TRANSACTIONS) {
+      if (USE_MOCK_TRANSACTIONS) {
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         return;
       }
 
-      /**
-       * ----------------------------------------------------------------------
-       * API MODE
-       * ----------------------------------------------------------------------
-       *
-       * Refetch only the data sources that are currently using the API.
-       */
-
-      const refetchPromises: Promise<unknown>[] = [];
-
-      if (!USE_MOCK_DASHBOARD) {
-        refetchPromises.push(refetchProfile(), refetchDashboard());
-      }
-
-      if (!USE_MOCK_TRANSACTIONS) {
-        refetchPromises.push(refetchTransactions());
-      }
+      const refetchPromises: Promise<unknown>[] = [
+        refetchProfile(),
+        refetchDashboard(),
+        refetchTransactions(),
+      ];
 
       await Promise.all(refetchPromises);
     } finally {
@@ -537,11 +464,7 @@ export default function HomeScreen() {
                   },
                 ]}
               >
-                <Ionicons
-                  name="add"
-                  size={24}
-                  color={theme.text.primary}
-                />
+                <Ionicons name="add" size={24} color={theme.text.primary} />
 
                 <AppText variant="button">Storefront</AppText>
               </Pressable>

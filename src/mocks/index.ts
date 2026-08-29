@@ -26,6 +26,7 @@ export {
   USE_MOCK_KYC,
   USE_MOCK_DOCUMENT_UPLOAD,
   USE_MOCK_BUSINESS_CATEGORIES,
+  USE_MOCK_DASHBOARD,
 } from "./config";
 
 /**
@@ -147,3 +148,15 @@ export {
   MOCK_BUSINESS_CATEGORIES,
   getMockBusinessCategories,
 } from "./businessCategories";
+
+/**
+ * ---------------------------------------------------------------------------
+ * Dashboard
+ * ---------------------------------------------------------------------------
+ */
+
+export {
+  getMockDashboard,
+  updateMockDashboardBusinessName,
+  resetMockDashboard,
+} from "./dashboard";

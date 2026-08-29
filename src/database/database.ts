@@ -8,7 +8,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
  * ============================================================================
  */
 
-export const DATABASE_VERSION = 9;
+export const DATABASE_VERSION = 10;
 
 /**
  * ============================================================================
@@ -301,6 +301,33 @@ export async function runMigrations(database: SQLiteDatabase): Promise<void> {
       ADD COLUMN layout TEXT NOT NULL DEFAULT 'grid';
 
       PRAGMA user_version = 9;
+    `);
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * Migration 10
+   * --------------------------------------------------------------------------
+   *
+   * Merchant-isolated transaction storage.
+   *
+   * Transactions must belong to a merchant so locally cached data from one
+   * merchant can never be returned to another merchant.
+   *
+   * Existing transactions are assigned to the legacy mock merchant.
+   */
+  if (currentVersion < 10) {
+    await database.execAsync(`
+      ALTER TABLE transactions
+      ADD COLUMN merchant_id TEXT NOT NULL DEFAULT 'mock-merchant-001';
+
+      CREATE INDEX IF NOT EXISTS idx_transactions_merchant_id
+      ON transactions(merchant_id);
+
+      CREATE INDEX IF NOT EXISTS idx_transactions_merchant_created_at
+      ON transactions(merchant_id, created_at);
+
+      PRAGMA user_version = 10;
     `);
   }
 }

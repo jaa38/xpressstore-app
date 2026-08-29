@@ -9,6 +9,8 @@ import type { Transaction } from "@/types/transaction";
 
 import { queryWithCache } from "@/database/query";
 
+import { useAuth } from "@/providers/AuthProvider";
+
 export interface TransactionsQueryResult {
   transactions: Transaction[];
 
@@ -26,26 +28,82 @@ export function useTransactions(
   limit = 20,
   filter: Partial<TransactionFilter> = {}
 ) {
-  const queryKey = ["transactions", page, limit, filter] as const;
+  /**
+   * --------------------------------------------------------------------------
+   * AUTHENTICATED MERCHANT
+   * --------------------------------------------------------------------------
+   */
+
+  const { user } = useAuth();
+
+  const merchantId = user?.merchantDetails?.merchantId ?? null;
+
+  /**
+   * --------------------------------------------------------------------------
+   * MERCHANT-SCOPED QUERY KEY
+   * --------------------------------------------------------------------------
+   *
+   * IMPORTANT:
+   *
+   * Merchant ID is part of the query key.
+   *
+   * This prevents React Query from sharing transaction data between
+   * different merchants.
+   *
+   * Example:
+   *
+   * ["transactions", "mock-merchant-001", 1, 20, {}]
+   *
+   * is different from:
+   *
+   * ["transactions", "mock-merchant-002", 1, 20, {}]
+   */
+
+  const queryKey = ["transactions", merchantId, page, limit, filter] as const;
+
+  /**
+   * --------------------------------------------------------------------------
+   * QUERY
+   * --------------------------------------------------------------------------
+   */
 
   return useQuery<TransactionsQueryResult, Error>({
     queryKey,
 
+    /**
+     * Do not execute the transaction query until an authenticated merchant
+     * exists.
+     */
+    enabled: !!merchantId,
+
     queryFn: async () => {
-      // console.log("====================================");
-      // console.log("TRANSACTIONS QUERY RUNNING");
-      // console.log("PAGE:", page);
-      // console.log("LIMIT:", limit);
-      // console.log("FILTER:", filter);
+      /**
+       * The query should never execute without a merchant ID because
+       * `enabled` prevents that. This guard also protects the service layer
+       * from accidentally receiving an undefined merchant.
+       */
+
+      if (!merchantId) {
+        throw new Error(
+          "Unable to load transactions without an authenticated merchant."
+        );
+      }
 
       const result = await queryWithCache(
         queryKey,
+
         async () => {
-          console.log("CALLING getTransactionsPage()");
+          console.log("CALLING getTransactionsPage()", {
+            merchantId,
+            page,
+            limit,
+            filter,
+          });
 
           const response = await getTransactionsPage(page, limit, filter);
 
           console.log("SERVICE RESPONSE:");
+          console.log("MERCHANT:", merchantId);
           console.log("TOTAL:", response.totalCount);
           console.log("PAGE:", response.pageNumber);
           console.log("SIZE:", response.pageSize);
@@ -61,16 +119,11 @@ export function useTransactions(
             pageSize: response.pageSize,
           };
         },
+
         {
           maxAge: TRANSACTIONS_CACHE_MAX_AGE,
         }
       );
-
-      // console.log("QUERY RESULT:");
-      // console.log("TOTAL:", result.totalCount);
-      // console.log("PAGE:", result.pageNumber);
-      // console.log("TRANSACTIONS:", result.transactions.length);
-      // console.log("====================================");
 
       return result;
     },

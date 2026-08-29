@@ -66,7 +66,8 @@ export const queryKeys = {
    * Dashboard
    * ---------------------------------------------------------------------------
    */
-  dashboard: ["dashboard"] as const,
+
+  dashboard: (merchantId: string) => ["dashboard", merchantId] as const,
 
   /**
    * ---------------------------------------------------------------------------

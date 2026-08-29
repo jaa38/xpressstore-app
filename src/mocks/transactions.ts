@@ -1,5 +1,11 @@
 import type { Transaction } from "@/types/transaction";
 
+/**
+ * ============================================================================
+ * MOCK TRANSACTIONS
+ * ============================================================================
+ */
+
 export const MOCK_TRANSACTIONS: Transaction[] = [
   {
     id: "txn_001",
@@ -351,7 +357,8 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
  * - paymentMethod
  * - status
  *
- * The mock model only contains enough information to faithfully reproduce:
+ * The local Transaction model only contains enough information to faithfully
+ * reproduce:
  *
  * - reference
  * - transactionId
@@ -359,8 +366,6 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
  * - endDate
  * - status
  * - paymentMethod
- *
- * Unsupported fields are intentionally not invented.
  * ============================================================================
  */
 
@@ -384,7 +389,97 @@ export interface MockTransactionsQueryFilters {
 
 /**
  * ============================================================================
- * MOCK TRANSACTIONS PAGE
+ * MERCHANT-ISOLATED MOCK TRANSACTIONS
+ * ============================================================================
+ *
+ * Each merchant has its own transaction collection.
+ *
+ * This is important because mock data must behave like real account-scoped
+ * data. A merchant should never see another merchant's transactions.
+ *
+ * The first mock merchant receives the existing demo transactions.
+ * New merchants start with an empty transaction collection.
+ * ============================================================================
+ */
+
+const mockTransactionsByMerchant: Record<string, Transaction[]> = {
+  "mock-merchant-001": [...MOCK_TRANSACTIONS],
+};
+
+/**
+ * ============================================================================
+ * GET MERCHANT TRANSACTIONS
+ * ============================================================================
+ */
+
+export function getMockTransactionsForMerchant(
+  merchantId: string
+): Transaction[] {
+  return [
+    ...(mockTransactionsByMerchant[merchantId] ?? []),
+  ];
+}
+
+/**
+ * ============================================================================
+ * SET MERCHANT TRANSACTIONS
+ * ============================================================================
+ */
+
+export function setMockTransactionsForMerchant(
+  merchantId: string,
+  transactions: Transaction[]
+): void {
+  mockTransactionsByMerchant[merchantId] = [
+    ...transactions,
+  ];
+}
+
+/**
+ * ============================================================================
+ * CLEAR MERCHANT TRANSACTIONS
+ * ============================================================================
+ */
+
+export function clearMockTransactionsForMerchant(
+  merchantId: string
+): void {
+  delete mockTransactionsByMerchant[merchantId];
+}
+
+/**
+ * ============================================================================
+ * MOCK TRANSACTION STATUS
+ * ============================================================================
+ */
+
+function matchesMockStatus(
+  transaction: Transaction,
+  status: string
+): boolean {
+  const normalizedStatus = status.trim().toLowerCase();
+
+  switch (normalizedStatus) {
+    case "successful":
+    case "success":
+    case "paid":
+      return transaction.status === "paid";
+
+    case "pending":
+      return transaction.status === "pending";
+
+    case "failed":
+    case "failure":
+      return transaction.status === "failed";
+
+    default:
+      return true;
+  }
+}
+
+/**
+ * ============================================================================
+ * MOCK TRANSACTION PAGE
  * ============================================================================
  *
  * Mirrors the response shape of:
@@ -395,152 +490,183 @@ export interface MockTransactionsQueryFilters {
  *   pageNumber
  *   pageSize
  * }
+ *
+ * Supported mock filters:
+ *
+ * - status
+ * - startDate
+ * - endDate
+ * - reference
+ * - transactionId
+ * - paymentMethod
+ * ============================================================================
  */
+
 export async function getMockTransactionsPage(
   page = 1,
   limit = 20,
-  filter: MockTransactionsQueryFilters = {}
+  filter: MockTransactionsQueryFilters = {},
+  merchantId = "mock-merchant-001"
 ) {
   const safePage = Math.max(1, page);
 
   const safeLimit = Math.max(1, limit);
 
-  const normalizedStatus = filter.status?.trim().toLowerCase() ?? null;
+  const merchantTransactions =
+    getMockTransactionsForMerchant(merchantId);
+
+  const normalizedStatus =
+    filter.status?.trim().toLowerCase() ?? null;
 
   const normalizedPaymentMethod =
     filter.paymentMethod?.trim().toLowerCase() ?? null;
 
-  const normalizedReference = filter.reference?.trim().toLowerCase() ?? null;
+  const normalizedReference =
+    filter.reference?.trim().toLowerCase() ?? null;
 
   const normalizedTransactionId =
     filter.transactionId?.trim().toLowerCase() ?? null;
 
-  const filteredTransactions = MOCK_TRANSACTIONS.filter((transaction) => {
-    /**
-     * ----------------------------------------------------------------------
-     * Status
-     * ----------------------------------------------------------------------
-     *
-     * The documented API uses "Successful".
-     *
-     * Our UI model uses "paid".
-     */
-    if (normalizedStatus) {
-      const transactionStatus = transaction.status.toLowerCase();
+  const filteredTransactions =
+    merchantTransactions.filter((transaction) => {
+      /**
+       * ----------------------------------------------------------------------
+       * Status
+       * ----------------------------------------------------------------------
+       */
 
-      const expectedStatus =
-        normalizedStatus === "successful" ? "paid" : normalizedStatus;
+      if (normalizedStatus) {
+        if (
+          !matchesMockStatus(
+            transaction,
+            normalizedStatus
+          )
+        ) {
+          return false;
+        }
+      }
 
-      if (transactionStatus !== expectedStatus) {
+      /**
+       * ----------------------------------------------------------------------
+       * Reference
+       * ----------------------------------------------------------------------
+       */
+
+      if (
+        normalizedReference &&
+        !transaction.reference
+          .toLowerCase()
+          .includes(normalizedReference)
+      ) {
         return false;
       }
-    }
 
-    /**
-     * ----------------------------------------------------------------------
-     * Reference
-     * ----------------------------------------------------------------------
-     */
+      /**
+       * ----------------------------------------------------------------------
+       * Transaction ID
+       * ----------------------------------------------------------------------
+       */
 
-    if (
-      normalizedReference &&
-      !transaction.reference.toLowerCase().includes(normalizedReference)
-    ) {
-      return false;
-    }
-
-    /**
-     * ----------------------------------------------------------------------
-     * Transaction ID
-     * ----------------------------------------------------------------------
-     */
-
-    if (
-      normalizedTransactionId &&
-      !transaction.id.toLowerCase().includes(normalizedTransactionId)
-    ) {
-      return false;
-    }
-
-    /**
-     * ----------------------------------------------------------------------
-     * Payment Method
-     * ----------------------------------------------------------------------
-     *
-     * The UI transaction model calls this `channel`.
-     *
-     * The backend contract calls it `paymentMethod`.
-     */
-    if (
-      normalizedPaymentMethod &&
-      transaction.channel.toLowerCase() !== normalizedPaymentMethod
-    ) {
-      return false;
-    }
-
-    /**
-     * ----------------------------------------------------------------------
-     * Start Date
-     * ----------------------------------------------------------------------
-     */
-
-    if (filter.startDate) {
-      const transactionDate = new Date(transaction.createdAt);
-
-      const startDate = new Date(filter.startDate);
-
-      if (transactionDate < startDate) {
+      if (
+        normalizedTransactionId &&
+        !transaction.id
+          .toLowerCase()
+          .includes(normalizedTransactionId)
+      ) {
         return false;
       }
-    }
 
-    /**
-     * ----------------------------------------------------------------------
-     * End Date
-     * ----------------------------------------------------------------------
-     */
+      /**
+       * ----------------------------------------------------------------------
+       * Payment Method
+       * ----------------------------------------------------------------------
+       */
 
-    if (filter.endDate) {
-      const transactionDate = new Date(transaction.createdAt);
-
-      const endDate = new Date(filter.endDate);
-
-      if (transactionDate > endDate) {
+      if (
+        normalizedPaymentMethod &&
+        transaction.channel.toLowerCase() !==
+          normalizedPaymentMethod
+      ) {
         return false;
       }
-    }
 
-    /**
-     * ----------------------------------------------------------------------
-     * Unsupported documented fields
-     * ----------------------------------------------------------------------
-     *
-     * customerEmail and cardBrand are part of the documented backend
-     * contract, but the current local Transaction model does not contain
-     * those values.
-     *
-     * Therefore we intentionally do not invent mock filtering behaviour
-     * for them.
-     */
+      /**
+       * ----------------------------------------------------------------------
+       * Start Date
+       * ----------------------------------------------------------------------
+       */
 
-    return true;
-  });
+      if (filter.startDate) {
+        const transactionDate = new Date(
+          transaction.createdAt
+        );
 
-  const startIndex = (safePage - 1) * safeLimit;
+        const startDate = new Date(
+          filter.startDate
+        );
 
-  const endIndex = startIndex + safeLimit;
+        if (transactionDate < startDate) {
+          return false;
+        }
+      }
 
-  const transactions = filteredTransactions.slice(startIndex, endIndex);
+      /**
+       * ----------------------------------------------------------------------
+       * End Date
+       * ----------------------------------------------------------------------
+       */
+
+      if (filter.endDate) {
+        const transactionDate = new Date(
+          transaction.createdAt
+        );
+
+        const endDate = new Date(
+          filter.endDate
+        );
+
+        if (transactionDate > endDate) {
+          return false;
+        }
+      }
+
+      /**
+       * ----------------------------------------------------------------------
+       * Unsupported documented fields
+       * ----------------------------------------------------------------------
+       *
+       * customerEmail and cardBrand are part of the backend contract,
+       * but the local Transaction model does not contain those values.
+       *
+       * We therefore intentionally do not invent filtering behaviour.
+       */
+
+      return true;
+    });
+
+  const startIndex =
+    (safePage - 1) * safeLimit;
+
+  const endIndex =
+    startIndex + safeLimit;
+
+  const transactions =
+    filteredTransactions.slice(
+      startIndex,
+      endIndex
+    );
 
   return {
     responseCode: "00",
 
-    responseMessage: "Transactions loaded from mock data.",
+    responseMessage:
+      "Transactions loaded from mock data.",
 
     data: {
       transactions,
 
-      totalCount: filteredTransactions.length,
+      totalCount:
+        filteredTransactions.length,
 
       pageNumber: safePage,
 

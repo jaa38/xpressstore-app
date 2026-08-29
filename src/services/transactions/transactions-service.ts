@@ -4,10 +4,17 @@ import { transactionRepository } from "@/repositories/transactions/sqliteTransac
 
 import { USE_MOCK_TRANSACTIONS } from "@/mocks/config";
 
-import { MOCK_TRANSACTIONS } from "@/mocks/transactions";
+import {
+  MOCK_TRANSACTIONS,
+  getMockTransactionsForMerchant,
+} from "@/mocks/transactions";
 
 import type { Currency } from "@/types/currency";
 import type { Transaction } from "@/types/transaction";
+
+import { getCurrentUser } from "@/storage/authStorage";
+
+import type { AuthUser } from "@/types/auth";
 
 /**
  * ============================================================================
@@ -543,16 +550,67 @@ export async function getTransactionsPage(
 ): Promise<TransactionsPage> {
   /**
    * ==========================================================================
-   * MOCK MODE
+   * CURRENT MERCHANT
    * ==========================================================================
    *
-   * The screen does not know this is mock data.
-   *
-   * It receives the same TransactionsPage contract as the real API.
+   * Every transaction request is scoped to the currently authenticated
+   * merchant.
+   */
+
+  const merchantId = await getCurrentMerchantId();
+
+  /**
+   * ==========================================================================
+   * MOCK MODE
+   * ==========================================================================
    */
 
   if (USE_MOCK_TRANSACTIONS) {
-    return getMockTransactionsPage(page, limit, filter);
+    const merchantTransactions = getMockTransactionsForMerchant(merchantId);
+
+    let transactions = [...merchantTransactions];
+
+    /**
+     * ------------------------------------------------------------------------
+     * STATUS
+     * ------------------------------------------------------------------------
+     */
+
+    if (filter.status) {
+      transactions = transactions.filter((transaction) =>
+        matchesMockStatus(transaction, filter.status as string)
+      );
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * START DATE
+     * ------------------------------------------------------------------------
+     */
+
+    if (filter.startDate) {
+      const startDate = new Date(filter.startDate);
+
+      transactions = transactions.filter(
+        (transaction) => new Date(transaction.createdAt) >= startDate
+      );
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * END DATE
+     * ------------------------------------------------------------------------
+     */
+
+    if (filter.endDate) {
+      const endDate = new Date(filter.endDate);
+
+      transactions = transactions.filter(
+        (transaction) => new Date(transaction.createdAt) <= endDate
+      );
+    }
+
+    return paginateTransactions(transactions, page, limit);
   }
 
   /**
@@ -580,11 +638,11 @@ export async function getTransactionsPage(
 
     /**
      * ------------------------------------------------------------------------
-     * Persist successful API response
+     * Persist API transactions for this merchant only.
      * ------------------------------------------------------------------------
      */
 
-    await transactionRepository.saveTransactions(transactions);
+    await transactionRepository.saveTransactions(merchantId, transactions);
 
     return {
       transactions,
@@ -607,7 +665,8 @@ export async function getTransactionsPage(
       error
     );
 
-    const cachedTransactions = await transactionRepository.getTransactions();
+    const cachedTransactions =
+      await transactionRepository.getTransactions(merchantId);
 
     if (cachedTransactions.length === 0) {
       throw error;
@@ -626,14 +685,18 @@ export async function getTransactionsPage(
 export async function getTransactionById(
   transactionId: string
 ): Promise<Transaction> {
+  const merchantId = await getCurrentMerchantId();
+
   /**
+   * --------------------------------------------------------------------------
    * Mock mode
+   * --------------------------------------------------------------------------
    */
 
   if (USE_MOCK_TRANSACTIONS) {
-    const transaction = MOCK_TRANSACTIONS.find(
-      (item) => item.id === transactionId
-    );
+    const transactions = getMockTransactionsForMerchant(merchantId);
+
+    const transaction = transactions.find((item) => item.id === transactionId);
 
     if (!transaction) {
       throw new Error("Transaction not found.");
@@ -643,7 +706,9 @@ export async function getTransactionById(
   }
 
   /**
+   * --------------------------------------------------------------------------
    * Real API
+   * --------------------------------------------------------------------------
    */
 
   try {
@@ -669,12 +734,14 @@ export async function getTransactionById(
 
     const transaction = mapTransaction(transactionDto);
 
-    await transactionRepository.saveTransaction(transaction);
+    await transactionRepository.saveTransaction(merchantId, transaction);
 
     return transaction;
   } catch (error) {
-    const cachedTransaction =
-      await transactionRepository.getTransactionById(transactionId);
+    const cachedTransaction = await transactionRepository.getTransactionById(
+      merchantId,
+      transactionId
+    );
 
     if (!cachedTransaction) {
       throw error;
@@ -700,4 +767,18 @@ export async function getTransactions(): Promise<Transaction[]> {
   const response = await getTransactionsPage(1, 20);
 
   return response.transactions;
+}
+
+async function getCurrentMerchantId(): Promise<string> {
+  const user = await getCurrentUser<AuthUser>();
+
+  const merchantId = user?.merchantDetails?.merchantId;
+
+  if (!merchantId) {
+    throw new Error(
+      "Unable to load transactions because no merchant is authenticated."
+    );
+  }
+
+  return merchantId;
 }

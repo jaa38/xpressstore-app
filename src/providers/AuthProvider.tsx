@@ -4,8 +4,10 @@ import {
   clearSession,
   getAccessToken,
   getCurrentUser,
-  saveAccessToken
+  saveAccessToken,
 } from "@/storage/authStorage";
+
+import { useOnboardingStore } from "@/store/onboarding/onboardingStore";
 
 import { AuthUser } from "@/types/auth";
 
@@ -111,6 +113,23 @@ export function AuthProvider({ children }: Props) {
 
   async function logout() {
     try {
+      /**
+       * -----------------------------------------------------------------------
+       * Clear onboarding state
+       * -----------------------------------------------------------------------
+       *
+       * Onboarding data belongs to the currently authenticated merchant.
+       *
+       * Clear it before ending the session so another merchant cannot inherit
+       * the previous merchant's onboarding state.
+       */
+      useOnboardingStore.getState().reset();
+
+      /**
+       * -----------------------------------------------------------------------
+       * Clear authentication session
+       * -----------------------------------------------------------------------
+       */
       await clearSession();
     } finally {
       setUser(null);

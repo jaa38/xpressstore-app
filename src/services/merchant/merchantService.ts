@@ -15,6 +15,12 @@ import {
   UpdateSettlementAccountRequest,
 } from "@/types/merchant";
 
+import {
+  USE_MOCK_ONBOARDING,
+  updateMockBusinessDetails,
+  updateMockBusinessType,
+} from "@/mocks";
+
 export const merchantService = {
   /**
    * ---------------------------------------------------------------------------
@@ -34,9 +40,17 @@ export const merchantService = {
    * Update Business Details
    * ---------------------------------------------------------------------------
    */
-  async updateBusinessDetails(
-    payload: UpdateBusinessDetailsRequest
-  ) {
+  async updateBusinessDetails(payload: UpdateBusinessDetailsRequest) {
+    if (USE_MOCK_ONBOARDING) {
+      updateMockBusinessDetails(payload);
+
+      return {
+        responseCode: "00",
+        responseMessage: "Business details updated successfully",
+        data: undefined,
+      };
+    }
+
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.auth.updateBusinessDetails,
       payload
@@ -50,9 +64,18 @@ export const merchantService = {
    * Update Business Type
    * ---------------------------------------------------------------------------
    */
-  async updateBusinessType(
-    payload: UpdateBusinessTypeRequest
-  ) {
+  
+  async updateBusinessType(payload: UpdateBusinessTypeRequest) {
+    if (USE_MOCK_ONBOARDING) {
+      updateMockBusinessType(payload);
+
+      return {
+        responseCode: "00",
+        responseMessage: "Business type updated successfully",
+        data: undefined,
+      };
+    }
+
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.auth.updateBusinessType,
       payload
@@ -67,16 +90,14 @@ export const merchantService = {
    * ---------------------------------------------------------------------------
    */
   async getSettlementAccounts() {
-    const { data } = await authClient.get<
-      ApiResponse<SettlementAccount[]>
-    >(API_ENDPOINTS.merchants.settlementAccounts);
+    const { data } = await authClient.get<ApiResponse<SettlementAccount[]>>(
+      API_ENDPOINTS.merchants.settlementAccounts
+    );
 
     return data;
   },
 
-  async updateSettlementAccount(
-    payload: UpdateSettlementAccountRequest
-  ) {
+  async updateSettlementAccount(payload: UpdateSettlementAccountRequest) {
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.merchants.updateSettlementAccount,
       payload
@@ -85,13 +106,9 @@ export const merchantService = {
     return data;
   },
 
-  async deleteSettlementAccount(
-    settlementAccountId: string
-  ) {
+  async deleteSettlementAccount(settlementAccountId: string) {
     const { data } = await authClient.delete<ApiResponse<void>>(
-      API_ENDPOINTS.merchants.deleteSettlementAccount(
-        settlementAccountId
-      )
+      API_ENDPOINTS.merchants.deleteSettlementAccount(settlementAccountId)
     );
 
     return data;
@@ -103,16 +120,14 @@ export const merchantService = {
    * ---------------------------------------------------------------------------
    */
   async getPaymentMethods() {
-    const { data } = await authClient.get<
-      ApiResponse<PaymentMethod[]>
-    >(API_ENDPOINTS.merchants.paymentMethods);
+    const { data } = await authClient.get<ApiResponse<PaymentMethod[]>>(
+      API_ENDPOINTS.merchants.paymentMethods
+    );
 
     return data;
   },
 
-  async updatePaymentMethod(
-    payload: UpdatePaymentMethodRequest
-  ) {
+  async updatePaymentMethod(payload: UpdatePaymentMethodRequest) {
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.merchants.updatePaymentMethod,
       payload
@@ -126,9 +141,7 @@ export const merchantService = {
    * Push Notifications
    * ---------------------------------------------------------------------------
    */
-  async registerPushNotification(
-    payload: RegisterPushNotificationRequest
-  ) {
+  async registerPushNotification(payload: RegisterPushNotificationRequest) {
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.merchants.registerPushNotification,
       payload

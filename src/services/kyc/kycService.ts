@@ -15,13 +15,33 @@ import type {
   KycRequirement,
 } from "@/types/kyc";
 
+import {
+  USE_MOCK_BVN,
+  USE_MOCK_KYC,
+  USE_MOCK_DOCUMENT_UPLOAD,
+  verifyMockBVN,
+  getMockKycTiers,
+  getMockKycRequirements,
+  uploadMockDocument,
+  createMockMerchantKyc,
+} from "@/mocks";
+
 export const kycService = {
   /**
    * ---------------------------------------------------------------------------
    * Verify BVN
    * ---------------------------------------------------------------------------
    */
+
   async verifyBVN(payload: VerifyBVNRequest) {
+    if (USE_MOCK_BVN) {
+      return {
+        responseCode: "00",
+        responseMessage: "BVN verified successfully",
+        data: verifyMockBVN(payload.bvn),
+      };
+    }
+
     const { data } = await authClient.get<ApiResponse<BVNDetails>>(
       API_ENDPOINTS.kyc.verifyBVN,
       {
@@ -57,7 +77,22 @@ export const kycService = {
    * Upload Document
    * ---------------------------------------------------------------------------
    */
+
   async uploadDocument(payload: FormData) {
+    if (USE_MOCK_DOCUMENT_UPLOAD) {
+      const file = payload.get("file") as {
+        name?: string;
+      } | null;
+
+      const filename = file?.name ?? "mock-document.pdf";
+
+      return {
+        responseCode: "00",
+        responseMessage: "Document uploaded successfully",
+        data: uploadMockDocument(filename),
+      };
+    }
+
     const { data } = await authClient.post<ApiResponse<UploadDocumentResponse>>(
       API_ENDPOINTS.kyc.uploadDocument,
       payload,
@@ -76,7 +111,16 @@ export const kycService = {
    * Create Merchant KYC
    * ---------------------------------------------------------------------------
    */
+
   async createMerchantKyc(payload: MerchantKycRequest) {
+    if (USE_MOCK_KYC) {
+      return {
+        responseCode: "00",
+        responseMessage: "Merchant KYC created successfully",
+        data: createMockMerchantKyc(payload),
+      };
+    }
+
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.kyc.createStorefront,
       payload
@@ -108,7 +152,16 @@ export const kycService = {
    * Get KYC Tiers
    * ---------------------------------------------------------------------------
    */
+
   async getKycTiers() {
+    if (USE_MOCK_KYC) {
+      return {
+        responseCode: "00",
+        responseMessage: "KYC tiers retrieved successfully",
+        data: getMockKycTiers(),
+      };
+    }
+
     const { data } = await authClient.get<ApiResponse<KycTier[]>>(
       API_ENDPOINTS.kyc.tiers
     );
@@ -121,7 +174,16 @@ export const kycService = {
    * Get KYC Requirements
    * ---------------------------------------------------------------------------
    */
+
   async getKycRequirements(kycTierId: number) {
+    if (USE_MOCK_KYC) {
+      return {
+        responseCode: "00",
+        responseMessage: "KYC requirements retrieved successfully",
+        data: getMockKycRequirements(kycTierId),
+      };
+    }
+
     const { data } = await authClient.get<ApiResponse<KycRequirement[]>>(
       API_ENDPOINTS.kyc.requirements,
       {

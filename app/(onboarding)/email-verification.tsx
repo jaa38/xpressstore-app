@@ -322,7 +322,7 @@ export default function EmailVerificationScreen() {
                   alignItems: "center",
                 }}
               >
-                <OTPInput length={8} onComplete={handleVerify} />
+                <OTPInput onComplete={handleVerify} />
               </View>
 
               {/* RESEND */}

@@ -23,24 +23,36 @@ import {
   verifyPasswordResetOtp,
 } from "@/api/auth/password-recovery-api";
 
+import {
+  USE_MOCK_AUTH,
+  registerMockUser,
+  loginMockUser,
+  verifyMockEmailOtp,
+  resendMockOtp,
+  updateMockPassword,
+  forgotMockPassword,
+  verifyMockPasswordResetOtp,
+  resetMockPassword,
+} from "@/mocks";
+
 export const authService = {
   /**
-   * ---------------------------------------------------------------------------
-   * Login
-   * ---------------------------------------------------------------------------
+   * =========================================================================
+   * LOGIN
+   * =========================================================================
    */
-  // async login(payload: LoginRequest) {
-  //   const encodedPayload = encodeLoginRequest(payload);
-
-  //   const { data } = await authClient.post<ApiResponse<LoginResponse>>(
-  //     API_ENDPOINTS.auth.login,
-  //     encodedPayload
-  //   );
-
-  //   return data;
-  // },
 
   async login(payload: LoginRequest) {
+    if (USE_MOCK_AUTH) {
+      const data = loginMockUser(payload.email, payload.password);
+
+      return {
+        responseCode: "00",
+        responseMessage: "Login successful",
+        data,
+      };
+    }
+
     const encodedPayload = encodeLoginRequest(payload);
 
     console.log("=================================");
@@ -64,12 +76,24 @@ export const authService = {
 
     return data;
   },
+
   /**
-   * ---------------------------------------------------------------------------
-   * Register
-   * ---------------------------------------------------------------------------
+   * =========================================================================
+   * REGISTER
+   * =========================================================================
    */
+
   async register(payload: RegisterRequest) {
+    if (USE_MOCK_AUTH) {
+      registerMockUser(payload);
+
+      return {
+        responseCode: "00",
+        responseMessage: "Registration successful. Verification code sent.",
+        data: undefined,
+      };
+    }
+
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.auth.register,
       payload
@@ -79,12 +103,22 @@ export const authService = {
   },
 
   /**
-   * ---------------------------------------------------------------------------
-   * Verify Email OTP
-   * ---------------------------------------------------------------------------
+   * =========================================================================
+   * VERIFY EMAIL OTP
+   * =========================================================================
    */
 
   async verifyEmailOtp(payload: VerifyEmailOtpRequest) {
+    if (USE_MOCK_AUTH) {
+      const data = verifyMockEmailOtp(payload.email, payload.otp);
+
+      return {
+        responseCode: "00",
+        responseMessage: "Email verified successfully",
+        data,
+      };
+    }
+
     const { data } = await authClient.post<ApiResponse<VerifyEmailOtpResponse>>(
       API_ENDPOINTS.auth.verifyEmail,
       payload
@@ -94,11 +128,22 @@ export const authService = {
   },
 
   /**
-   * ---------------------------------------------------------------------------
-   * Resend Verification Email
-   * ---------------------------------------------------------------------------
+   * =========================================================================
+   * RESEND EMAIL OTP
+   * =========================================================================
    */
+
   async resendOtp(email: string) {
+    if (USE_MOCK_AUTH) {
+      resendMockOtp(email);
+
+      return {
+        responseCode: "00",
+        responseMessage: "Verification code sent successfully",
+        data: undefined,
+      };
+    }
+
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.auth.resendOtp,
       null,
@@ -113,18 +158,28 @@ export const authService = {
   },
 
   /**
-   * ---------------------------------------------------------------------------
-   * Update Password
-   * ---------------------------------------------------------------------------
+   * =========================================================================
+   * UPDATE PASSWORD
+   * =========================================================================
    *
-   * Sets the merchant password after email verification.
-   *
-   * Endpoint:
-   * POST /StoreFront/UpdateUserPassword
-   *
-   * This endpoint does not require authentication.
+   * Used by the signup/onboarding password flow.
    */
+
   async updatePassword(payload: UpdatePasswordRequest) {
+    if (USE_MOCK_AUTH) {
+      updateMockPassword(
+        payload.email,
+        payload.password,
+        payload.confirmPassword
+      );
+
+      return {
+        responseCode: "00",
+        responseMessage: "Password updated successfully",
+        data: undefined,
+      };
+    }
+
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.auth.updatePassword,
       payload
@@ -134,28 +189,90 @@ export const authService = {
   },
 
   /**
-   * ---------------------------------------------------------------------------
-   * Forgot Password
-   * ---------------------------------------------------------------------------
+   * =========================================================================
+   * FORGOT PASSWORD
+   * =========================================================================
    */
-  forgotPassword(payload: ForgotPasswordRequest) {
+
+  async forgotPassword(payload: ForgotPasswordRequest) {
+    if (USE_MOCK_AUTH) {
+      const data = forgotMockPassword(payload.email);
+
+      return {
+        responseCode: "00",
+        responseMessage: "Password reset code sent successfully",
+        data,
+      };
+    }
+
     return forgotPassword(payload);
   },
 
   /**
-   * ---------------------------------------------------------------------------
-   * Verify Password Reset OTP
-   * ---------------------------------------------------------------------------
+   * =========================================================================
+   * VERIFY PASSWORD RESET OTP
+   * =========================================================================
    */
-  verifyPasswordResetOtp(payload: VerifyPasswordResetOtpRequest) {
+
+  async verifyPasswordResetOtp(payload: VerifyPasswordResetOtpRequest) {
+    if (USE_MOCK_AUTH) {
+      const data = verifyMockPasswordResetOtp(payload.email, payload.otp);
+
+      return {
+        responseCode: "00",
+        responseMessage: "Password reset code verified successfully",
+        data,
+      };
+    }
+
     return verifyPasswordResetOtp(payload);
   },
 
   /**
-   * ---------------------------------------------------------------------------
-   * Change Password
-   * ---------------------------------------------------------------------------
+   * =========================================================================
+   * RESET PASSWORD
+   * =========================================================================
+   *
+   * Used after successful password-reset OTP verification.
+   *
+   * Mock:
+   *   resetMockPassword()
+   *
+   * Real API:
+   *   updatePassword()
    */
+
+  async resetPassword(payload: UpdatePasswordRequest) {
+    if (USE_MOCK_AUTH) {
+      resetMockPassword(
+        payload.email,
+        payload.password,
+        payload.confirmPassword
+      );
+
+      return {
+        responseCode: "00",
+        responseMessage: "Password reset successfully",
+        data: undefined,
+      };
+    }
+
+    const { data } = await authClient.post<ApiResponse<void>>(
+      API_ENDPOINTS.auth.updatePassword,
+      payload
+    );
+
+    return data;
+  },
+
+  /**
+   * =========================================================================
+   * CHANGE PASSWORD
+   * =========================================================================
+   *
+   * Used for an already authenticated user changing their password.
+   */
+
   async changePassword(payload: ChangePasswordRequest) {
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.auth.changePassword,
@@ -166,10 +283,11 @@ export const authService = {
   },
 
   /**
-   * ---------------------------------------------------------------------------
-   * Fetch Current User
-   * ---------------------------------------------------------------------------
+   * =========================================================================
+   * FETCH CURRENT USER
+   * =========================================================================
    */
+
   async getCurrentUser(token: string) {
     const { data } = await authClient.get<ApiResponse<AuthUser>>(
       API_ENDPOINTS.auth.fetchUser,

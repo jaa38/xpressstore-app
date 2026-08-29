@@ -10,13 +10,27 @@ import {
   IndustryCategory,
 } from "@/types/lookup";
 
+import {
+  USE_MOCK_BUSINESS_CATEGORIES,
+  getMockBusinessCategories,
+} from "@/mocks";
+
 export const lookupService = {
   /**
    * ---------------------------------------------------------------------------
    * Business Categories
    * ---------------------------------------------------------------------------
    */
+  
   async getBusinessCategories() {
+    if (USE_MOCK_BUSINESS_CATEGORIES) {
+      return {
+        responseCode: "00",
+        responseMessage: "Business categories retrieved successfully",
+        data: getMockBusinessCategories(),
+      };
+    }
+
     const { data } = await authClient.get<ApiResponse<BusinessCategory[]>>(
       API_ENDPOINTS.lookup.businessCategories
     );

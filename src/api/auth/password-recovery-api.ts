@@ -20,6 +20,7 @@ export interface ForgotPasswordResponse {
  * Request Password Reset Email
  * ------------------------------------------------------------------
  */
+
 export async function forgotPassword(payload: ForgotPasswordRequest) {
   const { data } = await authClient.post<ApiResponse<ForgotPasswordResponse>>(
     "/api/v2/Account/ForgetPassword",

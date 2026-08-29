@@ -480,7 +480,7 @@ export default function HomeScreen() {
 
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Payment Link"
+                accessibilityLabel="Nww Payment Link"
                 onPress={() => router.push("/payment-link/add/information")}
                 style={({ pressed }) => [
                   {
@@ -504,7 +504,7 @@ export default function HomeScreen() {
                   },
                 ]}
               >
-                <Ionicons name="link" size={24} color={theme.text.primary} />
+                <Ionicons name="add" size={24} color={theme.text.primary} />
 
                 <AppText variant="button">Payment Link</AppText>
               </Pressable>
@@ -538,7 +538,7 @@ export default function HomeScreen() {
                 ]}
               >
                 <Ionicons
-                  name="storefront-outline"
+                  name="add"
                   size={24}
                   color={theme.text.primary}
                 />

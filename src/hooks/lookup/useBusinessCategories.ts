@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import { lookupService } from "@/services/lookup/lookupService";
 
+import type { BusinessCategory } from "@/types/lookup";
+
 export function useBusinessCategories() {
   const query = useQuery({
     queryKey: ["business-categories"],
@@ -9,8 +11,11 @@ export function useBusinessCategories() {
     queryFn: () => lookupService.getBusinessCategories(),
   });
 
+  const categories: BusinessCategory[] =
+    query.data?.data ?? [];
+
   return {
-    categories: query.data?.data ?? [],
+    categories,
 
     isLoading: query.isLoading,
 

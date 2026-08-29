@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { View, Pressable } from "react-native";
 
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -24,32 +24,89 @@ import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { useLocalSearchParams } from "expo-router";
-
 import { useVerifyPasswordResetOtp } from "@/hooks/auth/useVerifyPasswordResetOtp";
 
 import { useToast } from "@/hooks/useToast";
 
 import { getApiErrorMessage } from "@/api/errors";
 
+/**
+ * ============================================================================
+ * VERIFY PASSWORD RESET OTP
+ * ============================================================================
+ *
+ * Step in the password recovery flow.
+ *
+ * Flow:
+ *
+ * Forgot Password
+ *      ↓
+ * Email
+ *      ↓
+ * Verify 6-digit OTP
+ *      ↓
+ * Create New Password
+ *
+ * Mock OTP:
+ *
+ * 654321
+ * ============================================================================
+ */
+
+/**
+ * ---------------------------------------------------------------------------
+ * VALIDATION
+ * ---------------------------------------------------------------------------
+ */
+
 const verifyOtpSchema = z.object({
-  otp: z.string().length(8, "Verification code must be 8 digits"),
+  otp: z.string().length(6, "Verification code must be 6 digits"),
 });
 
 type VerifyOtpSchema = z.infer<typeof verifyOtpSchema>;
 
 export default function VerifyOtpScreen() {
+  /**
+   * --------------------------------------------------------------------------
+   * MUTATION
+   * --------------------------------------------------------------------------
+   */
+
   const verifyOtpMutation = useVerifyPasswordResetOtp();
 
+  /**
+   * --------------------------------------------------------------------------
+   * TOAST
+   * --------------------------------------------------------------------------
+   */
+
   const { showToast } = useToast();
+
+  /**
+   * --------------------------------------------------------------------------
+   * TIMER
+   * --------------------------------------------------------------------------
+   */
 
   const [secondsRemaining, setSecondsRemaining] = useState(600);
 
   const [canResend, setCanResend] = useState(false);
 
+  /**
+   * --------------------------------------------------------------------------
+   * ROUTE PARAMS
+   * --------------------------------------------------------------------------
+   */
+
   const { email } = useLocalSearchParams<{
     email: string;
   }>();
+
+  /**
+   * --------------------------------------------------------------------------
+   * FORM
+   * --------------------------------------------------------------------------
+   */
 
   const {
     control,
@@ -65,6 +122,12 @@ export default function VerifyOtpScreen() {
     },
   });
 
+  /**
+   * --------------------------------------------------------------------------
+   * COUNTDOWN
+   * --------------------------------------------------------------------------
+   */
+
   useEffect(() => {
     if (secondsRemaining <= 0) {
       setCanResend(true);
@@ -79,6 +142,12 @@ export default function VerifyOtpScreen() {
     return () => clearInterval(interval);
   }, [secondsRemaining]);
 
+  /**
+   * --------------------------------------------------------------------------
+   * FORMAT TIMER
+   * --------------------------------------------------------------------------
+   */
+
   function formatTime(seconds: number) {
     const mins = Math.floor(seconds / 60);
 
@@ -86,6 +155,12 @@ export default function VerifyOtpScreen() {
 
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * VERIFY OTP
+   * --------------------------------------------------------------------------
+   */
 
   async function onSubmit(data: VerifyOtpSchema) {
     try {
@@ -96,12 +171,15 @@ export default function VerifyOtpScreen() {
 
       showToast({
         type: "success",
+
         title: "Code Verified",
+
         message: "Create your new password.",
       });
 
       router.replace({
         pathname: ROUTES.NEW_PASSWORD,
+
         params: {
           email,
         },
@@ -109,11 +187,24 @@ export default function VerifyOtpScreen() {
     } catch (error) {
       showToast({
         type: "error",
+
         title: "Verification Failed",
+
         message: getApiErrorMessage(error),
       });
     }
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * RESEND CODE
+   * --------------------------------------------------------------------------
+   *
+   * Resets the local countdown.
+   *
+   * API/mock resend can be connected here when required.
+   * --------------------------------------------------------------------------
+   */
 
   async function handleResendCode() {
     try {
@@ -121,7 +212,8 @@ export default function VerifyOtpScreen() {
 
       /**
        * TODO:
-       * Call resend OTP API
+       *
+       * Call resend password reset OTP API.
        */
 
       setSecondsRemaining(600);
@@ -132,10 +224,17 @@ export default function VerifyOtpScreen() {
     }
   }
 
+  /**
+   * --------------------------------------------------------------------------
+   * SCREEN
+   * --------------------------------------------------------------------------
+   */
+
   return (
     <SafeAreaView
       style={{
         flex: 1,
+
         backgroundColor: theme.background.primary,
       }}
     >
@@ -144,30 +243,39 @@ export default function VerifyOtpScreen() {
       <View
         style={{
           flex: 1,
+
           paddingHorizontal: spacing.lg,
         }}
       >
         <View
           style={{
             flex: 1,
+
             justifyContent: "space-between",
           }}
         >
-          {/* TOP */}
+          {/* ==================================================================
+              TOP
+          ================================================================== */}
 
           <View
             style={{
               marginTop: spacing.lg,
+
               gap: spacing.lg,
             }}
           >
-            {/* BACK */}
+            {/* ==================================================================
+                BACK
+            ================================================================== */}
 
             <Pressable
               onPress={() => router.back()}
               style={{
                 width: 44,
+
                 height: 44,
+
                 justifyContent: "center",
               }}
             >
@@ -178,7 +286,9 @@ export default function VerifyOtpScreen() {
               />
             </Pressable>
 
-            {/* ICON */}
+            {/* ==================================================================
+                ICON
+            ================================================================== */}
 
             <View
               style={{
@@ -188,11 +298,15 @@ export default function VerifyOtpScreen() {
               <View
                 style={{
                   width: 72,
+
                   height: 72,
+
                   borderRadius: 36,
+
                   backgroundColor: theme.icon.branding.background,
 
                   justifyContent: "center",
+
                   alignItems: "center",
                 }}
               >
@@ -204,7 +318,9 @@ export default function VerifyOtpScreen() {
               </View>
             </View>
 
-            {/* HEADER */}
+            {/* ==================================================================
+                HEADER
+            ================================================================== */}
 
             <View
               style={{
@@ -216,7 +332,7 @@ export default function VerifyOtpScreen() {
               </AppText>
 
               <AppText variant="body" color="secondary" align="center">
-                We sent an 8-digit verification code to:
+                We sent a 6-digit verification code to:
               </AppText>
 
               <AppText variant="label" color="link" align="center">
@@ -224,7 +340,9 @@ export default function VerifyOtpScreen() {
               </AppText>
             </View>
 
-            {/* OTP */}
+            {/* ==================================================================
+                OTP
+            ================================================================== */}
 
             <Controller
               control={control}
@@ -236,7 +354,7 @@ export default function VerifyOtpScreen() {
                   }}
                 >
                   <OTPInput
-                    length={8}
+                    length={6}
                     value={value}
                     onComplete={(code) => {
                       onChange(code);
@@ -252,7 +370,9 @@ export default function VerifyOtpScreen() {
               )}
             />
 
-            {/* TIMER */}
+            {/* ==================================================================
+                TIMER
+            ================================================================== */}
 
             <AppText
               variant="label"
@@ -262,13 +382,18 @@ export default function VerifyOtpScreen() {
               Code expires in {formatTime(secondsRemaining)}
             </AppText>
 
-            {/* RESEND */}
+            {/* ==================================================================
+                RESEND
+            ================================================================== */}
 
             <View
               style={{
                 flexDirection: "row",
+
                 justifyContent: "center",
+
                 alignItems: "center",
+
                 gap: spacing.xs,
               }}
             >
@@ -284,7 +409,9 @@ export default function VerifyOtpScreen() {
             </View>
           </View>
 
-          {/* BOTTOM */}
+          {/* ==================================================================
+              BOTTOM
+          ================================================================== */}
 
           <View
             style={{

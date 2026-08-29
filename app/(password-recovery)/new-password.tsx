@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { View, Pressable, Alert } from "react-native";
 
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -24,9 +24,26 @@ import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { useChangePassword } from "@/hooks/auth/useChangePassword";
+import { useResetPassword } from "@/hooks/auth/useResetPassword";
 
 import { getApiErrorMessage } from "@/api/errors";
+
+/**
+ * ============================================================================
+ * CREATE NEW PASSWORD
+ * ============================================================================
+ *
+ * Password recovery flow:
+ *
+ * Forgot Password
+ *       ↓
+ * Verify OTP
+ *       ↓
+ * Create New Password
+ *       ↓
+ * Login
+ * ============================================================================
+ */
 
 const newPasswordSchema = z
   .object({
@@ -48,11 +65,41 @@ const newPasswordSchema = z
 type NewPasswordSchema = z.infer<typeof newPasswordSchema>;
 
 export default function NewPasswordScreen() {
+  /**
+   * --------------------------------------------------------------------------
+   * PASSWORD VISIBILITY
+   * --------------------------------------------------------------------------
+   */
+
   const [showPassword, setShowPassword] = useState(false);
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const changePassword = useChangePassword();
+  /**
+   * --------------------------------------------------------------------------
+   * ROUTE PARAMS
+   * --------------------------------------------------------------------------
+   *
+   * The email was passed from verify-otp.tsx.
+   */
+
+  const { email } = useLocalSearchParams<{
+    email?: string;
+  }>();
+
+  /**
+   * --------------------------------------------------------------------------
+   * RESET PASSWORD MUTATION
+   * --------------------------------------------------------------------------
+   */
+
+  const resetPassword = useResetPassword();
+
+  /**
+   * --------------------------------------------------------------------------
+   * FORM
+   * --------------------------------------------------------------------------
+   */
 
   const {
     control,
@@ -65,32 +112,85 @@ export default function NewPasswordScreen() {
 
     defaultValues: {
       password: "",
+
       confirmPassword: "",
     },
   });
 
+  /**
+   * --------------------------------------------------------------------------
+   * SUBMIT
+   * --------------------------------------------------------------------------
+   */
+
   async function onSubmit(data: NewPasswordSchema) {
+    const normalizedEmail = email?.trim();
+
+    /**
+     * ------------------------------------------------------------------------
+     * EMAIL VALIDATION
+     * ------------------------------------------------------------------------
+     */
+
+    if (!normalizedEmail) {
+      Alert.alert(
+        "Reset Password Failed",
+        "Your email address is missing. Please restart the password recovery process."
+      );
+
+      return;
+    }
+
     try {
-      await changePassword.mutateAsync({
-        oldPassword: "", // Not required during password reset
-        newPassword: data.password,
+      /**
+       * ----------------------------------------------------------------------
+       * RESET PASSWORD
+       * ----------------------------------------------------------------------
+       */
+
+      await resetPassword.mutateAsync({
+        email: normalizedEmail,
+
+        password: data.password,
+
+        confirmPassword: data.confirmPassword,
       });
+
+      /**
+       * ----------------------------------------------------------------------
+       * SUCCESS
+       * ----------------------------------------------------------------------
+       */
 
       Alert.alert(
         "Password Updated",
-        "Your password has been reset successfully."
-      );
+        "Your password has been reset successfully.",
+        [
+          {
+            text: "OK",
 
-      router.replace(ROUTES.LOGIN);
+            onPress: () => {
+              router.replace(ROUTES.LOGIN);
+            },
+          },
+        ]
+      );
     } catch (error) {
       Alert.alert("Reset Password Failed", getApiErrorMessage(error));
     }
   }
 
+  /**
+   * --------------------------------------------------------------------------
+   * SCREEN
+   * --------------------------------------------------------------------------
+   */
+
   return (
     <SafeAreaView
       style={{
         flex: 1,
+
         backgroundColor: theme.background.primary,
       }}
     >
@@ -99,30 +199,39 @@ export default function NewPasswordScreen() {
       <View
         style={{
           flex: 1,
+
           paddingHorizontal: spacing.lg,
         }}
       >
         <View
           style={{
             flex: 1,
+
             justifyContent: "space-between",
           }}
         >
-          {/* TOP */}
+          {/* ==================================================================
+              TOP
+          ================================================================== */}
 
           <View
             style={{
               marginTop: spacing.lg,
+
               gap: spacing.lg,
             }}
           >
-            {/* BACK */}
+            {/* ==================================================================
+                BACK
+            ================================================================== */}
 
             <Pressable
               onPress={() => router.back()}
               style={{
                 width: 44,
+
                 height: 44,
+
                 justifyContent: "center",
               }}
             >
@@ -133,7 +242,9 @@ export default function NewPasswordScreen() {
               />
             </Pressable>
 
-            {/* ICON */}
+            {/* ==================================================================
+                ICON
+            ================================================================== */}
 
             <View
               style={{
@@ -143,12 +254,15 @@ export default function NewPasswordScreen() {
               <View
                 style={{
                   width: 72,
+
                   height: 72,
+
                   borderRadius: 36,
 
                   backgroundColor: theme.icon.branding.background,
 
                   justifyContent: "center",
+
                   alignItems: "center",
                 }}
               >
@@ -160,7 +274,9 @@ export default function NewPasswordScreen() {
               </View>
             </View>
 
-            {/* HEADER */}
+            {/* ==================================================================
+                HEADER
+            ================================================================== */}
 
             <View
               style={{
@@ -176,7 +292,9 @@ export default function NewPasswordScreen() {
               </AppText>
             </View>
 
-            {/* PASSWORD */}
+            {/* ==================================================================
+                PASSWORD
+            ================================================================== */}
 
             <Controller
               control={control}
@@ -202,7 +320,9 @@ export default function NewPasswordScreen() {
               )}
             />
 
-            {/* CONFIRM PASSWORD */}
+            {/* ==================================================================
+                CONFIRM PASSWORD
+            ================================================================== */}
 
             <Controller
               control={control}
@@ -236,7 +356,9 @@ export default function NewPasswordScreen() {
               )}
             />
 
-            {/* PASSWORD RULES */}
+            {/* ==================================================================
+                PASSWORD RULES
+            ================================================================== */}
 
             <View
               style={{
@@ -265,7 +387,9 @@ export default function NewPasswordScreen() {
             </View>
           </View>
 
-          {/* BOTTOM */}
+          {/* ==================================================================
+              BOTTOM
+          ================================================================== */}
 
           <View
             style={{
@@ -273,12 +397,10 @@ export default function NewPasswordScreen() {
             }}
           >
             <Button
-              title={
-                changePassword.isPending ? "Updating..." : "Reset Password"
-              }
+              title={resetPassword.isPending ? "Updating..." : "Reset Password"}
               variant="primary"
               size="large"
-              disabled={!isValid || changePassword.isPending}
+              disabled={!isValid || resetPassword.isPending}
               onPress={handleSubmit(onSubmit)}
             />
           </View>

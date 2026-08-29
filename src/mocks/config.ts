@@ -48,3 +48,13 @@ export const USE_MOCK_BVN = true;
 export const USE_MOCK_KYC = true;
 
 export const USE_MOCK_DOCUMENT_UPLOAD = true;
+
+export const USE_MOCK_BUSINESS_CATEGORIES = true;
+
+/**
+ * ---------------------------------------------------------------------------
+ * Authentication
+ * ---------------------------------------------------------------------------
+ */
+
+export const USE_MOCK_AUTH = true;

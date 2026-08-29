@@ -170,7 +170,7 @@ export default function BusinessDetailsScreen() {
           </View>
 
           <AppText variant="bodySmall" color="muted">
-            Step 2 of 4
+            Step 3 of 6
           </AppText>
         </View>
 

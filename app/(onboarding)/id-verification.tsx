@@ -143,11 +143,11 @@ export default function IdVerificationScreen() {
               marginHorizontal: spacing.sm,
             }}
           >
-            <ProgressBar progress={75} />
+            <ProgressBar progress={66.67} />
           </View>
 
           <AppText variant="bodySmall" color="muted">
-            Step 3 of 4
+            Step 4 of 6
           </AppText>
         </View>
 

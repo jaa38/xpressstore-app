@@ -283,11 +283,11 @@ export default function PasswordScreen() {
                   marginHorizontal: spacing.sm,
                 }}
               >
-                <ProgressBar progress={50} />
+                <ProgressBar progress={33.33} />
               </View>
 
               <AppText variant="bodySmall" color="muted">
-                Step 3 of 6
+                Step 2 of 6
               </AppText>
             </View>
 

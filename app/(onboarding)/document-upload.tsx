@@ -198,7 +198,7 @@ export default function DocumentUploadScreen() {
           </View>
 
           <AppText variant="bodySmall" color="muted">
-            Step 6 of 7
+            Step 5 of 6
           </AppText>
         </View>
 
@@ -254,12 +254,6 @@ export default function DocumentUploadScreen() {
               : theme.background.surface,
           }}
         >
-          <Ionicons
-            name="document-outline"
-            size={72}
-            color={theme.icon.branding.icon}
-          />
-
           {selectedFile ? (
             <>
               <Ionicons

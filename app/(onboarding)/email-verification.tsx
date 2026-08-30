@@ -243,13 +243,13 @@ export default function EmailVerificationScreen() {
                   marginHorizontal: spacing.sm,
                 }}
               >
-                <ProgressBar progress={33.33} />
+                <ProgressBar progress={16.67} />
               </View>
 
               {/* STEP */}
 
               <AppText variant="bodySmall" color="muted">
-                Step 2 of 6
+                Step 1 of 6
               </AppText>
             </View>
 

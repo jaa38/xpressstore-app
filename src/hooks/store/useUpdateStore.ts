@@ -8,7 +8,7 @@ import { USE_MOCK_STORES } from "@/mocks/config";
 
 import { updateMockStore } from "@/mocks/stores";
 
-import type { UpdateStoreRequest } from "@/types/store";
+import type { Store, UpdateStoreRequest } from "@/types/store";
 
 export function useUpdateStore() {
   const queryClient = useQueryClient();
@@ -46,16 +46,87 @@ export function useUpdateStore() {
 
     onSuccess: (_data, variables) => {
       /**
-       * Refresh the store list.
+       * --------------------------------------------------------------------------
+       * UPDATE STORE LIST CACHE
+       * --------------------------------------------------------------------------
+       *
+       * The update endpoint returns void, so use the values from the
+       * successful request to update the cached store list.
+       */
+
+      queryClient.setQueryData(
+        queryKeys.stores,
+        (
+          current:
+            | {
+                responseCode: string;
+                responseMessage: string;
+                data: Store[];
+              }
+            | undefined
+        ) => {
+          if (!current) {
+            return current;
+          }
+
+          return {
+            ...current,
+
+            data: current.data.map((store) =>
+              store.storeId === variables.id
+                ? {
+                    ...store,
+                    isActive: variables.isActive,
+                  }
+                : store
+            ),
+          };
+        }
+      );
+
+      /**
+       * --------------------------------------------------------------------------
+       * UPDATE INDIVIDUAL STORE CACHE
+       * --------------------------------------------------------------------------
+       */
+
+      queryClient.setQueryData(
+        queryKeys.store(variables.id),
+        (
+          current:
+            | {
+                responseCode: string;
+                responseMessage: string;
+                data: Store;
+              }
+            | undefined
+        ) => {
+          if (!current) {
+            return current;
+          }
+
+          return {
+            ...current,
+
+            data: {
+              ...current.data,
+              isActive: variables.isActive,
+            },
+          };
+        }
+      );
+
+      /**
+       * --------------------------------------------------------------------------
+       * REFETCH FROM API
+       * --------------------------------------------------------------------------
+       *
+       * Keep the server as the final source of truth.
        */
 
       queryClient.invalidateQueries({
         queryKey: queryKeys.stores,
       });
-
-      /**
-       * Refresh the individual store.
-       */
 
       queryClient.invalidateQueries({
         queryKey: queryKeys.store(variables.id),

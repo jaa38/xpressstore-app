@@ -17,7 +17,7 @@ import * as Clipboard from "expo-clipboard";
 
 import { router, useLocalSearchParams } from "expo-router";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AppText } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
@@ -34,6 +34,10 @@ import {
   getStoreProductsRoute,
   getStoreThemeRoute,
 } from "@/navigation/routes";
+
+import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
+
+import { useUpdateStore } from "@/hooks/store/useUpdateStore";
 
 /**
  * ============================================================================
@@ -128,11 +132,140 @@ export default function StorefrontView() {
 
   /**
    * --------------------------------------------------------------------------
+   * UPDATE STORE
+   * --------------------------------------------------------------------------
+   */
+
+  const updateStoreMutation = useUpdateStore();
+
+  /**
+   * --------------------------------------------------------------------------
    * REFRESHING
    * --------------------------------------------------------------------------
    */
 
   const [refreshing, setRefreshing] = useState(false);
+
+  /**
+   * --------------------------------------------------------------------------
+   * STOREFRONT STATUS
+   * --------------------------------------------------------------------------
+   *
+   * Local UI state mirrors the store's API state.
+   *
+   * The state is updated after the user confirms the native popup.
+   */
+
+  const [isStorefrontEnabled, setIsStorefrontEnabled] = useState(
+    store?.isActive ?? false
+  );
+
+  useEffect(() => {
+    if (store) {
+      setIsStorefrontEnabled(store.isActive);
+    }
+  }, [store]);
+
+  /**
+   * --------------------------------------------------------------------------
+   * TOGGLE STOREFRONT STATUS
+   * --------------------------------------------------------------------------
+   *
+   * The native React Native Alert is shown before changing the storefront
+   * status.
+   *
+   * Cancel:
+   * - Nothing changes.
+   *
+   * Confirm:
+   * - Update local UI state.
+   * - Persist the new status through Update Store.
+   *
+   * Failure:
+   * - Restore the previous state.
+   */
+
+  function handleToggleStorefront(value: boolean) {
+    if (!store || updateStoreMutation.isPending) {
+      return;
+    }
+
+    const title = value ? "Make Storefront Live?" : "Take Storefront Offline?";
+
+    const message = value
+      ? "Customers will be able to view your storefront and shop from it."
+      : "Customers will no longer be able to view or shop from your storefront.";
+
+    Alert.alert(title, message, [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: value ? "Go Live" : "Take Offline",
+        style: value ? "default" : "destructive",
+
+        onPress: async () => {
+          setIsStorefrontEnabled(value);
+
+          try {
+            await updateStoreMutation.mutateAsync({
+              id: store.storeId,
+
+              storeName: store.storeName,
+
+              currency: store.currency,
+
+              storeReference: store.storeReference,
+
+              storeLink: store.storeLink,
+
+              isActive: value,
+
+              themeColor: store.themeColor,
+
+              welcomeMessage: store.welcomeMessage,
+
+              description: store.description,
+
+              callBackUrl: store.callBackUrl,
+
+              successMessage: store.successMessage,
+
+              whatsAppNumber: store.whatsAppNumber,
+
+              phoneNumber: store.phoneNumber,
+
+              email: store.email,
+
+              instagram: store.instagram,
+
+              facebook: store.facebook,
+
+              twitter: store.twitter,
+
+              storeProducts: store.products,
+
+              storeDiscounts: store.discounts,
+            });
+          } catch (error) {
+            /**
+             * Restore the previous state if the update fails.
+             */
+
+            setIsStorefrontEnabled(!value);
+
+            console.log("UPDATE STOREFRONT STATUS ERROR", error);
+
+            Alert.alert(
+              "Update Failed",
+              "We couldn't update your storefront status. Please try again."
+            );
+          }
+        },
+      },
+    ]);
+  }
 
   /**
    * --------------------------------------------------------------------------
@@ -486,8 +619,8 @@ export default function StorefrontView() {
             </AppText>
 
             <UICard
-              title={store?.isActive ? "Live" : "Offline"}
-              variant={store?.isActive ? "active" : "status"}
+              title={isStorefrontEnabled ? "Live" : "Offline"}
+              variant={isStorefrontEnabled ? "active" : "status"}
             />
           </View>
 
@@ -551,44 +684,68 @@ export default function StorefrontView() {
         </Card>
 
         {/* ==================================================================
+            STOREFRONT TOGGLE
+        ================================================================== */}
+
+        <Card
+          style={{
+            marginTop: spacing.md,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <View
+            style={{
+              gap: spacing.xs,
+              flex: 1,
+            }}
+          >
+            <AppText variant="bodyBold" color="primary">
+              Storefront Status
+            </AppText>
+          </View>
+
+          <ToggleSwitch
+            value={isStorefrontEnabled}
+            onChange={handleToggleStorefront}
+            disabled={updateStoreMutation.isPending}
+          />
+        </Card>
+
+        {/* ==================================================================
             PREVIEW STORE
         ================================================================== */}
 
-        <View
-          style={{
-            marginTop: spacing.lg,
-          }}
-        >
-          <Card>
+        <Card style={{ marginTop: spacing.md }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <View
               style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
+                gap: spacing.xs,
               }}
             >
-              <View
-                style={{
-                  gap: spacing.xs,
-                }}
-              >
-                <AppText variant="bodyBold" color="primary">
-                  Preview Store
-                </AppText>
+              <AppText variant="bodyBold" color="primary">
+                Preview Store
+              </AppText>
 
-                <AppText variant="bodySmall" color="secondary">
-                  See what customers see
-                </AppText>
-              </View>
-
-              <Ionicons
-                name="globe-outline"
-                size={24}
-                color={theme.icon.default.icon}
-              />
+              <AppText variant="bodySmall" color="secondary">
+                See what customers see
+              </AppText>
             </View>
-          </Card>
-        </View>
+
+            <Ionicons
+              name="globe-outline"
+              size={24}
+              color={theme.icon.default.icon}
+            />
+          </View>
+        </Card>
 
         {/* ==================================================================
             CUSTOMISE

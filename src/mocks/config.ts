@@ -19,11 +19,11 @@
 
 export const USE_MOCK_DASHBOARD = true;
 
-export const USE_MOCK_STORES = true;
+export const USE_MOCK_STORES = false;
 
 export const USE_MOCK_PRODUCTS = true;
 
-export const USE_MOCK_CATEGORIES = true;
+export const USE_MOCK_CATEGORIES = false;
 
 export const USE_MOCK_CUSTOMERS = true;
 
@@ -33,7 +33,7 @@ export const USE_MOCK_ORDERS = true;
 
 export const USE_MOCK_TRANSACTIONS = true;
 
-export const USE_MOCK_DISCOUNTS = true;
+export const USE_MOCK_DISCOUNTS = false;
 
 /**
  * ---------------------------------------------------------------------------

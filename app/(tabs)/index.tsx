@@ -1,6 +1,6 @@
 import { Pressable, View, ScrollView, RefreshControl } from "react-native";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -121,6 +121,65 @@ export default function HomeScreen() {
   const profileLoading = profileLoadingApi;
 
   const dashboardLoading = dashboardLoadingApi;
+
+  /**
+   * --------------------------------------------------------------------------
+   * TIME-BASED GREETING
+   * --------------------------------------------------------------------------
+   *
+   * The greeting is based on the device's local time.
+   *
+   * Morning:
+   * 05:00 - 11:59
+   *
+   * Afternoon:
+   * 12:00 - 16:59
+   *
+   * Evening:
+   * 17:00 - 20:59
+   *
+   * Night:
+   * 21:00 - 04:59
+   *
+   * The interval allows the greeting to update automatically while the
+   * application remains open.
+   */
+
+  const [currentHour, setCurrentHour] = useState(() => {
+    return new Date().getHours();
+  });
+
+  useEffect(() => {
+    const updateCurrentHour = () => {
+      setCurrentHour(new Date().getHours());
+    };
+
+    /**
+     * Check once every minute so the greeting changes automatically
+     * when the next period begins.
+     */
+    const interval = setInterval(updateCurrentHour, 60 * 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  const greeting = useMemo(() => {
+    if (currentHour >= 5 && currentHour < 12) {
+      return "Good morning,";
+    }
+
+    if (currentHour >= 12 && currentHour < 17) {
+      return "Good afternoon,";
+    }
+
+    if (currentHour >= 17 && currentHour < 21) {
+      return "Good evening,";
+    }
+
+    return "Good night,";
+  }, [currentHour]);
 
   /**
    * --------------------------------------------------------------------------
@@ -325,7 +384,7 @@ export default function HomeScreen() {
             }}
           >
             <AppText variant="body" color="secondary">
-              Good morning,
+              {greeting}
             </AppText>
 
             <AppText variant="h1">

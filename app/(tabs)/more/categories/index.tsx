@@ -33,9 +33,6 @@ import { useToast } from "@/hooks/useToast";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { USE_MOCK_PRODUCTS } from "@/mocks/config";
-import { getMockCategories } from "@/mocks/categories";
-
 import type { ProductCategoryDto } from "@/types/product";
 
 /**
@@ -57,17 +54,21 @@ function RightActions({
       accessibilityLabel="Delete category"
       disabled={disabled}
       onPress={onDelete}
-      style={{
+      style={({ pressed }) => ({
         width: 90,
         marginLeft: spacing.sm,
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: theme.action.primary.delete,
         borderRadius: radius.md,
-        opacity: disabled ? 0.5 : 1,
-      }}
+        opacity: disabled ? 0.5 : pressed ? 0.7 : 1,
+      })}
     >
-      <Ionicons name="trash-outline" size={24} color={theme.text.inverse} />
+      <Ionicons
+        name="trash-outline"
+        size={24}
+        color={theme.text.inverse}
+      />
 
       <AppText
         variant="bodySmall"
@@ -119,9 +120,7 @@ function CategoryCard({
             alignItems: "center",
           }}
         >
-          {/* ================================================================
-              ICON
-          ================================================================ */}
+          {/* ICON */}
 
           <View
             style={{
@@ -140,9 +139,7 @@ function CategoryCard({
             />
           </View>
 
-          {/* ================================================================
-              DETAILS
-          ================================================================ */}
+          {/* DETAILS */}
 
           <View
             style={{
@@ -151,18 +148,23 @@ function CategoryCard({
               gap: spacing.xs,
             }}
           >
-            <AppText variant="bodyBold" numberOfLines={1}>
+            <AppText
+              variant="bodyBold"
+              numberOfLines={1}
+            >
               {category.name}
             </AppText>
 
-            <AppText variant="bodySmall" color="muted" numberOfLines={2}>
+            <AppText
+              variant="bodySmall"
+              color="muted"
+              numberOfLines={2}
+            >
               {category.description || "No description"}
             </AppText>
           </View>
 
-          {/* ================================================================
-              STATUS
-          ================================================================ */}
+          {/* STATUS */}
 
           <View
             style={{
@@ -213,6 +215,8 @@ function CategoriesEmptyState({
           paddingHorizontal: spacing.lg,
         }}
       >
+        {/* ICON */}
+
         <View
           style={{
             width: 64,
@@ -230,6 +234,8 @@ function CategoriesEmptyState({
           />
         </View>
 
+        {/* TITLE */}
+
         <AppText
           variant="bodyLargeBold"
           style={{
@@ -239,6 +245,8 @@ function CategoriesEmptyState({
         >
           No categories yet
         </AppText>
+
+        {/* DESCRIPTION */}
 
         <AppText
           variant="body"
@@ -253,17 +261,25 @@ function CategoriesEmptyState({
           for customers to browse.
         </AppText>
 
+        {/* CTA */}
+
         <Button
           title="Add Category"
           variant="primary"
           leftIcon={
-            <Ionicons name="add" size={20} color={theme.action.primary.text} />
+            <Ionicons
+              name="add"
+              size={20}
+              color={theme.action.primary.text}
+            />
           }
           style={{
             marginTop: spacing.lg,
           }}
           onPress={onAddCategory}
         />
+
+        {/* SUPPORTING TEXT */}
 
         <AppText
           variant="caption"
@@ -306,6 +322,8 @@ function CategoriesSearchEmptyState({
           paddingHorizontal: spacing.lg,
         }}
       >
+        {/* ICON */}
+
         <View
           style={{
             width: 56,
@@ -323,6 +341,8 @@ function CategoriesSearchEmptyState({
           />
         </View>
 
+        {/* TITLE */}
+
         <AppText
           variant="bodyLargeBold"
           style={{
@@ -332,6 +352,8 @@ function CategoriesSearchEmptyState({
         >
           No categories found
         </AppText>
+
+        {/* DESCRIPTION */}
 
         <AppText
           variant="body"
@@ -343,6 +365,8 @@ function CategoriesSearchEmptyState({
         >
           Try searching with a different category name.
         </AppText>
+
+        {/* CLEAR */}
 
         <Pressable
           accessibilityRole="button"
@@ -365,7 +389,11 @@ function CategoriesSearchEmptyState({
  * ============================================================================
  */
 
-function CategoriesErrorState({ onRetry }: { onRetry: () => void }) {
+function CategoriesErrorState({
+  onRetry,
+}: {
+  onRetry: () => void;
+}) {
   return (
     <View
       style={{
@@ -453,28 +481,6 @@ export default function CategoriesScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * SOURCE OF TRUTH
-   * --------------------------------------------------------------------------
-   */
-
-  const categoryList = useMemo(() => {
-    return categories.filter((category) => category.isActive);
-  }, [categories]);
-
-  /**
-   * --------------------------------------------------------------------------
-   * SCREEN FOCUS
-   * --------------------------------------------------------------------------
-   */
-
-  useFocusEffect(
-    useCallback(() => {
-      refetch();
-    }, [refetch])
-  );
-
-  /**
-   * --------------------------------------------------------------------------
    * MUTATIONS
    * --------------------------------------------------------------------------
    */
@@ -493,6 +499,35 @@ export default function CategoriesScreen() {
 
   /**
    * --------------------------------------------------------------------------
+   * SOURCE OF TRUTH
+   * --------------------------------------------------------------------------
+   *
+   * Keep all categories here so the management screen can still represent
+   * inactive categories.
+   *
+   * If the product API intentionally only returns active categories,
+   * this can simply remain as categories.
+   * --------------------------------------------------------------------------
+   */
+
+  const categoryList = useMemo(() => {
+    return categories;
+  }, [categories]);
+
+  /**
+   * --------------------------------------------------------------------------
+   * SCREEN FOCUS
+   * --------------------------------------------------------------------------
+   */
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+
+  /**
+   * --------------------------------------------------------------------------
    * SCREEN STATE
    * --------------------------------------------------------------------------
    *
@@ -501,21 +536,26 @@ export default function CategoriesScreen() {
    * 1. Initial loading
    * 2. First-time user
    * 3. Error after categories already exist
-   * 4. Search empty
+   * 4. Search/filter empty
    * 5. Category list
    *
    * IMPORTANT:
    *
-   * A merchant with no categories should not see
-   * a technical API error.
+   * A brand-new merchant should not be shown a technical error simply
+   * because the categories request failed while there are no categories.
    */
 
   const hasCategories = categoryList.length > 0;
 
   const isFirstTimeUser =
-    !isLoading && !isError && !hasCategories && searchQuery.trim() === "";
+    !isLoading &&
+    !hasCategories &&
+    searchQuery.trim() === "";
 
-  const showCategoryError = !isLoading && isError && hasCategories;
+  const showCategoryError =
+    !isLoading &&
+    isError &&
+    hasCategories;
 
   /**
    * --------------------------------------------------------------------------
@@ -524,7 +564,9 @@ export default function CategoriesScreen() {
    */
 
   const sortedCategories = useMemo(() => {
-    return [...categoryList].sort((a, b) => a.name.localeCompare(b.name));
+    return [...categoryList].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }, [categoryList]);
 
   /**
@@ -587,7 +629,9 @@ export default function CategoriesScreen() {
       return;
     }
 
-    const category = categoryList.find((item) => item.id === categoryId);
+    const category = categoryList.find(
+      (item) => item.id === categoryId
+    );
 
     if (!category) {
       return;
@@ -601,29 +645,34 @@ export default function CategoriesScreen() {
           text: "Cancel",
           style: "cancel",
         },
-
         {
           text: "Delete",
           style: "destructive",
-
           onPress: async () => {
             try {
-              await deleteCategoryMutation.mutateAsync(categoryId);
+              await deleteCategoryMutation.mutateAsync(
+                categoryId
+              );
 
               await refetch();
 
               showToast({
                 type: "success",
                 title: "Category Deleted",
-                message: "The category has been removed successfully.",
+                message:
+                  "The category has been removed successfully.",
               });
             } catch (error) {
-              console.log("DELETE CATEGORY ERROR", error);
+              console.log(
+                "DELETE CATEGORY ERROR",
+                error
+              );
 
               showToast({
                 type: "error",
                 title: "Delete Failed",
-                message: "Unable to delete this category. Please try again.",
+                message:
+                  "Unable to delete this category. Please try again.",
               });
             }
           },
@@ -707,9 +756,14 @@ export default function CategoriesScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">Categories</AppText>
+              <AppText variant="h1">
+                Categories
+              </AppText>
 
-              <AppText variant="body" color="secondary">
+              <AppText
+                variant="body"
+                color="secondary"
+              >
                 {headerSubtitle}
               </AppText>
             </View>
@@ -730,7 +784,9 @@ export default function CategoriesScreen() {
                 backgroundColor: pressed
                   ? theme.action.primary.pressed
                   : theme.action.primary.background,
-                opacity: deleteCategoryMutation.isPending ? 0.5 : 1,
+                opacity: deleteCategoryMutation.isPending
+                  ? 0.5
+                  : 1,
               })}
             >
               <Ionicons
@@ -754,19 +810,20 @@ export default function CategoriesScreen() {
                 SEARCH
             ============================================================== */}
 
-            {!isFirstTimeUser && !showCategoryError && (
-              <View
-                style={{
-                  marginTop: spacing.md,
-                }}
-              >
-                <SearchBar
-                  placeholder="Search categories"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-              </View>
-            )}
+            {!isFirstTimeUser &&
+              !showCategoryError && (
+                <View
+                  style={{
+                    marginTop: spacing.md,
+                  }}
+                >
+                  <SearchBar
+                    placeholder="Search categories"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                  />
+                </View>
+              )}
 
             {/* ==============================================================
                 CATEGORY CONTENT
@@ -779,7 +836,7 @@ export default function CategoriesScreen() {
               }}
             >
               {/* ============================================================
-                  1. INITIAL LOADING
+                  1. LOADING
               ============================================================ */}
 
               {isLoading ? (
@@ -805,25 +862,31 @@ export default function CategoriesScreen() {
                     Loading categories...
                   </AppText>
                 </View>
-              ) : showCategoryError ? (
-                /* ==========================================================
-                   2. ERROR
-                ========================================================== */
-
-                <CategoriesErrorState onRetry={refetch} />
               ) : isFirstTimeUser ? (
                 /* ==========================================================
-                   3. FIRST-TIME USER
+                   2. FIRST-TIME USER
                 ========================================================== */
 
-                <CategoriesEmptyState onAddCategory={handleAddCategory} />
+                <CategoriesEmptyState
+                  onAddCategory={handleAddCategory}
+                />
+              ) : showCategoryError ? (
+                /* ==========================================================
+                   3. ERROR
+                ========================================================== */
+
+                <CategoriesErrorState
+                  onRetry={refetch}
+                />
               ) : hasNoSearchResults ? (
                 /* ==========================================================
                    4. SEARCH EMPTY
                 ========================================================== */
 
                 <CategoriesSearchEmptyState
-                  onClearSearch={() => setSearchQuery("")}
+                  onClearSearch={() =>
+                    setSearchQuery("")
+                  }
                 />
               ) : (
                 /* ==========================================================
@@ -832,15 +895,21 @@ export default function CategoriesScreen() {
 
                 <FlatList
                   data={filteredCategories}
-                  keyExtractor={(item) => String(item.id)}
+                  keyExtractor={(item) =>
+                    String(item.id)
+                  }
                   renderItem={({ item }) => (
                     <CategoryCard
                       category={item}
-                      deleting={deleteCategoryMutation.isPending}
+                      deleting={
+                        deleteCategoryMutation.isPending
+                      }
                       onDelete={handleDelete}
                     />
                   )}
-                  showsVerticalScrollIndicator={false}
+                  showsVerticalScrollIndicator={
+                    false
+                  }
                   keyboardShouldPersistTaps="handled"
                   contentContainerStyle={{
                     paddingTop: spacing.md,
@@ -857,9 +926,15 @@ export default function CategoriesScreen() {
                     <RefreshControl
                       refreshing={isFetching}
                       onRefresh={onRefresh}
-                      tintColor={theme.icon.branding.icon}
-                      colors={[theme.icon.branding.icon]}
-                      progressBackgroundColor={theme.background.surface}
+                      tintColor={
+                        theme.icon.branding.icon
+                      }
+                      colors={[
+                        theme.icon.branding.icon,
+                      ]}
+                      progressBackgroundColor={
+                        theme.background.surface
+                      }
                     />
                   }
                 />

@@ -1,4 +1,4 @@
-import { authClient } from "@/api/client";
+import { authClient, apiClient } from "@/api/client";
 import { API_ENDPOINTS } from "@/api/endpoints";
 
 import { ApiResponse } from "@/types/api";
@@ -289,7 +289,7 @@ export const authService = {
    */
 
   async getCurrentUser(token: string) {
-    const { data } = await authClient.get<ApiResponse<AuthUser>>(
+    const { data } = await apiClient.get<ApiResponse<AuthUser>>(
       API_ENDPOINTS.auth.fetchUser,
       {
         params: {

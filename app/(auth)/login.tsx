@@ -79,19 +79,35 @@ export default function LoginScreen() {
     try {
       setLoadingBiometric(true);
 
+      console.log("=================================");
+      console.log("BIOMETRIC LOGIN");
+      console.log("STEP 1: Authenticating biometrics");
+      console.log("=================================");
+
       const result = await authenticateWithBiometrics();
+
+      console.log("BIOMETRIC RESULT:", JSON.stringify(result));
 
       if (!result.success) {
         return;
       }
 
-      const email = await getBiometricEmail();
-
-      console.log("Biometric User:", email);
+      console.log("=================================");
+      console.log("BIOMETRIC LOGIN");
+      console.log("STEP 2: Reading stored session");
+      console.log("=================================");
 
       const token = await getAccessToken();
 
-      if (!token) {
+      const user = await getCurrentUser<AuthUser>();
+
+      const email = await getBiometricEmail();
+
+      console.log("BIOMETRIC EMAIL:", email);
+      console.log("HAS ACCESS TOKEN:", !!token);
+      console.log("HAS USER:", !!user);
+
+      if (!token || !user) {
         Alert.alert(
           "Session Expired",
           "Please sign in with your email and password."
@@ -100,19 +116,24 @@ export default function LoginScreen() {
         return;
       }
 
-      const user = await getCurrentUser<AuthUser>();
-
-      if (!user) {
-        Alert.alert("Unable to restore session", "Please sign in again.");
-
-        return;
-      }
-
+      /**
+       * Restore the locally stored authenticated user.
+       */
       await loginUser(user);
+
+      console.log("=================================");
+      console.log("BIOMETRIC LOGIN");
+      console.log("STEP 3: Session restored");
+      console.log("=================================");
 
       router.replace(ROUTES.TABS);
     } catch (error) {
-      console.log("Biometric login failed:", error);
+      console.error("Biometric login failed:", error);
+
+      Alert.alert(
+        "Unable to sign in",
+        "Please sign in with your email and password."
+      );
     } finally {
       setLoadingBiometric(false);
     }

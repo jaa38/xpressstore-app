@@ -33,7 +33,13 @@
       "@react-native-community/datetimepicker",
       "expo-secure-store",
       "expo-sqlite",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID"
+        }
+      ]
     ]
   }
 }

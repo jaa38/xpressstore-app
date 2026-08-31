@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Alert, Pressable, View } from "react-native";
 
@@ -20,7 +20,11 @@ import { ROUTES } from "@/navigation/routes";
 
 import { useAuth } from "@/providers/AuthProvider";
 
-import { authenticateWithBiometrics } from "@/services/biometrics";
+import {
+  authenticateWithBiometrics,
+  getBiometricAvailability,
+} from "@/services/biometrics";
+
 import { enableBiometrics } from "@/services/biometrics/storage";
 import { saveBiometricEmail } from "@/services/biometrics/user";
 
@@ -31,23 +35,41 @@ export default function BiometricVerificationScreen() {
 
   const { user } = useAuth();
 
+  const [biometricType, setBiometricType] = useState<
+    "face" | "fingerprint" | "iris" | "biometric" | "none"
+  >("none");
+
+  const biometricLabel =
+    biometricType === "face"
+      ? "Face ID"
+      : biometricType === "fingerprint"
+        ? "Fingerprint"
+        : "Biometrics";
+
+  useEffect(() => {
+    async function loadBiometricType() {
+      const availability = await getBiometricAvailability();
+
+      setBiometricType(availability.type);
+    }
+
+    loadBiometricType();
+  }, []);
+
   async function handleVerification() {
     await completeOnboarding();
 
     router.replace(ROUTES.TABS);
   }
 
-  async function handleEnableFaceId() {
+  async function handleEnableBiometrics() {
     try {
       setLoading(true);
 
       const result = await authenticateWithBiometrics();
 
       if (!result.success) {
-        Alert.alert(
-          "Face ID Unavailable",
-          "Authentication failed. Please ensure Face ID or Fingerprint is configured on your device."
-        );
+        Alert.alert("Biometric Authentication", result.message);
 
         return;
       }
@@ -171,7 +193,7 @@ export default function BiometricVerificationScreen() {
                 color="secondary"
                 style={{ textAlign: "center" }}
               >
-                Use Face ID to quickly and securely access your account and
+                Use biometrics to quickly and securely access your account and
                 confirm payments.
               </AppText>
             </View>
@@ -207,7 +229,7 @@ export default function BiometricVerificationScreen() {
                   size={20}
                   color={theme.icon.success.icon}
                 />
-                <AppText variant="body">Fast sign - no password needed</AppText>
+                <AppText variant="body">Fast sign-in with biometrics</AppText>
               </View>
               <View
                 style={{
@@ -253,11 +275,11 @@ export default function BiometricVerificationScreen() {
             }}
           >
             <Button
-              title={loading ? "Verifying..." : "Enable Face ID"}
+              title={loading ? "Verifying..." : `Enable ${biometricLabel}`}
               variant="primary"
               size="large"
               disabled={loading}
-              onPress={handleEnableFaceId}
+              onPress={handleEnableBiometrics}
             />
             <Button
               title="Skip for now"

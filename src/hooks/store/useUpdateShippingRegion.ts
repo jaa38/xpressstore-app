@@ -4,7 +4,7 @@ import { storeService } from "@/services/store/store-service";
 
 import { queryKeys } from "@/lib/queryKeys";
 
-import { USE_MOCK_STORES } from "@/mocks/config";
+import { USE_MOCK_SHIPPING_REGIONS } from "@/mocks/config";
 
 import { updateMockShippingRegion } from "@/mocks/stores";
 
@@ -15,7 +15,7 @@ export function useUpdateShippingRegion() {
 
   return useMutation({
     mutationFn: async (payload: UpdateShippingRegionRequest) => {
-      if (USE_MOCK_STORES) {
+      if (USE_MOCK_SHIPPING_REGIONS) {
         const region = updateMockShippingRegion(payload);
 
         if (!region) {

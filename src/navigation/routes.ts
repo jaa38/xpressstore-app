@@ -203,6 +203,18 @@ export const ROUTES = {
 
   // Create Customer - Step 2
   ADD_CUSTOMER_ADDRESS: "/customers/add/address",
+
+  /**
+   * SHIPPING REGION
+   */
+
+  SHIPPING_REGION: "/(tabs)/more/shipping-region",
+
+  ADD_SHIPPING_REGION: "/shipping-regions/add",
+
+  SHIPPING_REGION_DETAILS: "/shipping-regions/view/[id]",
+
+  EDIT_SHIPPING_REGION: "/shipping-regions/edit/[id]",
 } as const;
 
 /**
@@ -262,3 +274,15 @@ export const getStoreLayoutRoute = (id: number | string) =>
  */
 export const getStoreProductsRoute = (id: number | string) =>
   `/stores/view/products/${id}` as const;
+
+/**
+ * ============================================================================
+ * SHIPPING REGION ROUTE HELPERS
+ * ============================================================================
+ */
+
+export const getShippingRegionDetailsRoute = (id: number | string) =>
+  `/shipping-regions/view/${id}` as const;
+
+export const getEditShippingRegionRoute = (id: number | string) =>
+  `/shipping-regions/edit/${id}` as const;

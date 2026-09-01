@@ -4,7 +4,7 @@ import { storeService } from "@/services/store/store-service";
 
 import { queryKeys } from "@/lib/queryKeys";
 
-import { USE_MOCK_STORES } from "@/mocks/config";
+import { USE_MOCK_SHIPPING_REGIONS } from "@/mocks/config";
 
 import { deleteMockShippingRegion } from "@/mocks/stores";
 
@@ -13,7 +13,7 @@ export function useDeleteShippingRegion() {
 
   return useMutation({
     mutationFn: async (regionId: number) => {
-      if (USE_MOCK_STORES) {
+      if (USE_MOCK_SHIPPING_REGIONS) {
         const deleted = deleteMockShippingRegion(regionId);
 
         if (!deleted) {

@@ -4,7 +4,7 @@ import { storeService } from "@/services/store/store-service";
 
 import { queryKeys } from "@/lib/queryKeys";
 
-import { USE_MOCK_STORES } from "@/mocks/config";
+import { USE_MOCK_SHIPPING_REGIONS } from "@/mocks/config";
 
 import { getMockShippingRegions } from "@/mocks/stores";
 
@@ -13,7 +13,7 @@ export function useShippingRegions() {
     queryKey: queryKeys.shippingRegions,
 
     queryFn: async () => {
-      if (USE_MOCK_STORES) {
+      if (USE_MOCK_SHIPPING_REGIONS) {
         return {
           responseCode: "00",
           responseMessage: "Shipping regions retrieved successfully.",

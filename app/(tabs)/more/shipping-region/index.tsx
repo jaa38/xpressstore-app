@@ -26,14 +26,16 @@ import { SearchBar } from "@/components/ui/SearchBar";
 
 import { spacing, theme, radius } from "@/theme";
 
-import { useCategories } from "@/hooks/categories/useCategories";
-import { useDeleteCategory } from "@/hooks/categories/useDeleteCategory";
+import { useShippingRegions } from "@/hooks/store/useShippingRegions";
+import { useDeleteShippingRegion } from "@/hooks/store/useDeleteShippingRegion";
 
 import { useToast } from "@/hooks/useToast";
 
 import { ROUTES } from "@/navigation/routes";
 
-import type { ProductCategoryDto } from "@/types/product";
+import type { ShippingRegion } from "@/types/store";
+
+import { getEditShippingRegionRoute } from "@/navigation/routes";
 
 /**
  * ============================================================================
@@ -51,7 +53,7 @@ function RightActions({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Delete category"
+      accessibilityLabel="Delete shipping region"
       disabled={disabled}
       onPress={onDelete}
       style={({ pressed }) => ({
@@ -64,11 +66,7 @@ function RightActions({
         opacity: disabled ? 0.5 : pressed ? 0.7 : 1,
       })}
     >
-      <Ionicons
-        name="trash-outline"
-        size={24}
-        color={theme.text.inverse}
-      />
+      <Ionicons name="trash-outline" size={24} color={theme.text.inverse} />
 
       <AppText
         variant="bodySmall"
@@ -85,18 +83,20 @@ function RightActions({
 
 /**
  * ============================================================================
- * CATEGORY CARD
+ * SHIPPING REGION CARD
  * ============================================================================
  */
 
-function CategoryCard({
-  category,
+function ShippingRegionCard({
+  shippingRegion,
   onDelete,
   deleting,
+  onPress,
 }: {
-  category: ProductCategoryDto;
-  onDelete: (categoryId: number) => void;
+  shippingRegion: ShippingRegion;
+  onDelete: (regionId: number) => void;
   deleting: boolean;
+  onPress: (regionId: number) => void;
 }) {
   return (
     <Swipeable
@@ -104,88 +104,142 @@ function CategoryCard({
       renderRightActions={() => (
         <RightActions
           disabled={deleting}
-          onDelete={() => onDelete(category.id)}
+          onDelete={() => onDelete(shippingRegion.id)}
         />
       )}
     >
-      <Card
-        style={{
-          borderWidth: 1,
-          borderColor: theme.border.default,
-        }}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`View ${shippingRegion.region} shipping region`}
+        disabled={deleting}
+        onPress={() => onPress(shippingRegion.id)}
+        style={({ pressed }) => ({
+          opacity: pressed ? 0.7 : 1,
+        })}
       >
-        <View
+        <Card
           style={{
-            flexDirection: "row",
-            alignItems: "center",
+            borderWidth: 1,
+            borderColor: theme.border.default,
           }}
         >
-          {/* ICON */}
-
           <View
             style={{
-              width: 48,
-              height: 48,
-              borderRadius: radius.md,
-              backgroundColor: theme.background.subtle,
-              justifyContent: "center",
+              flexDirection: "row",
               alignItems: "center",
             }}
           >
-            <Ionicons
-              name="albums-outline"
-              size={24}
-              color={theme.icon.default.icon}
-            />
-          </View>
+            {/* ICON */}
 
-          {/* DETAILS */}
-
-          <View
-            style={{
-              flex: 1,
-              marginLeft: spacing.md,
-              gap: spacing.xs,
-            }}
-          >
-            <AppText
-              variant="bodyBold"
-              numberOfLines={1}
+            <View
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: radius.md,
+                backgroundColor: theme.background.subtle,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
             >
-              {category.name}
-            </AppText>
+              <Ionicons
+                name="location-outline"
+                size={24}
+                color={theme.icon.default.icon}
+              />
+            </View>
 
-            <AppText
-              variant="bodySmall"
-              color="muted"
-              numberOfLines={2}
+            {/* DETAILS */}
+
+            <View
+              style={{
+                flex: 1,
+                marginLeft: spacing.md,
+                gap: spacing.xs,
+              }}
             >
-              {category.description || "No description"}
-            </AppText>
-          </View>
+              <AppText variant="bodyBold" numberOfLines={1}>
+                {shippingRegion.region}
+              </AppText>
 
-          {/* STATUS */}
+              <AppText variant="bodySmall" color="muted" numberOfLines={1}>
+                {shippingRegion.state}
+              </AppText>
 
-          <View
-            style={{
-              marginLeft: spacing.sm,
-              paddingHorizontal: spacing.sm,
-              paddingVertical: spacing.xs,
-              borderRadius: radius.full,
-              backgroundColor: category.isActive
-                ? theme.state.success.background
-                : theme.state.error.background,
-            }}
-          >
-            <AppText
-              variant="caption"
-              color={category.isActive ? "success" : "error"}
+              <AppText variant="caption" color="secondary" numberOfLines={1}>
+                Shipping fee: ₦{shippingRegion.shippingFee.toLocaleString()}
+              </AppText>
+            </View>
+
+            {/* ACTIONS */}
+
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                marginLeft: spacing.sm,
+                gap: spacing.xs,
+              }}
             >
-              {category.isActive ? "Active" : "Inactive"}
-            </AppText>
+              {/* VIEW */}
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`View ${shippingRegion.region} shipping region`}
+                disabled={deleting}
+                onPress={() => onPress(shippingRegion.id)}
+                hitSlop={8}
+                style={({ pressed }) => ({
+                  width: 36,
+                  height: 36,
+                  borderRadius: radius.full,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: pressed
+                    ? theme.background.subtle
+                    : "transparent",
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Ionicons
+                  name="eye-outline"
+                  size={21}
+                  color={theme.icon.default.icon}
+                />
+              </Pressable>
+
+              {/* EDIT */}
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Edit ${shippingRegion.region} shipping region`}
+                disabled={deleting}
+                onPress={() => {
+                  router.push(getEditShippingRegionRoute(shippingRegion.id));
+                }}
+                hitSlop={8}
+                style={({ pressed }) => ({
+                  width: 36,
+                  height: 36,
+                  borderRadius: radius.full,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: pressed
+                    ? theme.background.subtle
+                    : "transparent",
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Ionicons
+                  name="create-outline"
+                  size={21}
+                  color={theme.icon.default.icon}
+                />
+              </Pressable>
+            </View>
           </View>
-        </View>
-      </Card>
+        </Card>
+      </Pressable>
     </Swipeable>
   );
 }
@@ -196,10 +250,10 @@ function CategoryCard({
  * ============================================================================
  */
 
-function CategoriesEmptyState({
-  onAddCategory,
+function ShippingRegionsEmptyState({
+  onAddShippingRegion,
 }: {
-  onAddCategory: () => void;
+  onAddShippingRegion: () => void;
 }) {
   return (
     <View
@@ -227,7 +281,7 @@ function CategoriesEmptyState({
           }}
         >
           <Ionicons
-            name="albums-outline"
+            name="location-outline"
             size={32}
             color={theme.icon.branding.icon}
           />
@@ -242,7 +296,7 @@ function CategoriesEmptyState({
             textAlign: "center",
           }}
         >
-          No categories yet
+          No shipping regions yet
         </AppText>
 
         {/* DESCRIPTION */}
@@ -256,26 +310,22 @@ function CategoriesEmptyState({
             maxWidth: 320,
           }}
         >
-          Organise your products into categories to make your storefront easier
-          for customers to browse.
+          Set up shipping regions and delivery fees for the areas where you
+          deliver your products.
         </AppText>
 
         {/* CTA */}
 
         <Button
-          title="Add Category"
+          title="Add Shipping Region"
           variant="primary"
           leftIcon={
-            <Ionicons
-              name="add"
-              size={20}
-              color={theme.action.primary.text}
-            />
+            <Ionicons name="add" size={20} color={theme.action.primary.text} />
           }
           style={{
             marginTop: spacing.lg,
           }}
-          onPress={onAddCategory}
+          onPress={onAddShippingRegion}
         />
 
         {/* SUPPORTING TEXT */}
@@ -288,8 +338,8 @@ function CategoriesEmptyState({
             textAlign: "center",
           }}
         >
-          Categories can be assigned to your products when creating or editing
-          them.
+          Shipping regions determine the delivery fee customers pay for their
+          location.
         </AppText>
       </Card>
     </View>
@@ -302,7 +352,7 @@ function CategoriesEmptyState({
  * ============================================================================
  */
 
-function CategoriesSearchEmptyState({
+function ShippingRegionsSearchEmptyState({
   onClearSearch,
 }: {
   onClearSearch: () => void;
@@ -349,7 +399,7 @@ function CategoriesSearchEmptyState({
             textAlign: "center",
           }}
         >
-          No categories found
+          No shipping regions found
         </AppText>
 
         {/* DESCRIPTION */}
@@ -362,14 +412,14 @@ function CategoriesSearchEmptyState({
             textAlign: "center",
           }}
         >
-          Try searching with a different category name.
+          Try searching with a different region or state name.
         </AppText>
 
         {/* CLEAR */}
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Clear category search"
+          accessibilityLabel="Clear shipping region search"
           onPress={onClearSearch}
           style={{
             marginTop: spacing.md,
@@ -388,11 +438,7 @@ function CategoriesSearchEmptyState({
  * ============================================================================
  */
 
-function CategoriesErrorState({
-  onRetry,
-}: {
-  onRetry: () => void;
-}) {
+function ShippingRegionsErrorState({ onRetry }: { onRetry: () => void }) {
   return (
     <View
       style={{
@@ -426,7 +472,7 @@ function CategoriesErrorState({
           textAlign: "center",
         }}
       >
-        Unable to load categories
+        Unable to load shipping regions
       </AppText>
 
       <AppText
@@ -438,7 +484,7 @@ function CategoriesErrorState({
           maxWidth: 320,
         }}
       >
-        We couldn't load your categories. Please try again.
+        We couldn't load your shipping regions. Please try again.
       </AppText>
 
       <Pressable
@@ -459,24 +505,19 @@ function CategoriesErrorState({
 
 /**
  * ============================================================================
- * CATEGORIES SCREEN
+ * SHIPPING REGIONS SCREEN
  * ============================================================================
  */
 
-export default function CategoriesScreen() {
+export default function ShippingRegionScreen() {
   /**
    * --------------------------------------------------------------------------
    * API
    * --------------------------------------------------------------------------
    */
 
-  const {
-    data: categories = [],
-    isLoading,
-    isError,
-    isFetching,
-    refetch,
-  } = useCategories();
+  const { shippingRegions, isLoading, isRefetching, error, refetch } =
+    useShippingRegions();
 
   /**
    * --------------------------------------------------------------------------
@@ -484,7 +525,7 @@ export default function CategoriesScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const deleteCategoryMutation = useDeleteCategory();
+  const deleteShippingRegionMutation = useDeleteShippingRegion();
 
   const { showToast } = useToast();
 
@@ -495,23 +536,6 @@ export default function CategoriesScreen() {
    */
 
   const [searchQuery, setSearchQuery] = useState("");
-
-  /**
-   * --------------------------------------------------------------------------
-   * SOURCE OF TRUTH
-   * --------------------------------------------------------------------------
-   *
-   * Keep all categories here so the management screen can still represent
-   * inactive categories.
-   *
-   * If the product API intentionally only returns active categories,
-   * this can simply remain as categories.
-   * --------------------------------------------------------------------------
-   */
-
-  const categoryList = useMemo(() => {
-    return categories;
-  }, [categories]);
 
   /**
    * --------------------------------------------------------------------------
@@ -527,34 +551,26 @@ export default function CategoriesScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * SCREEN STATE
+   * SOURCE OF TRUTH
    * --------------------------------------------------------------------------
-   *
-   * Architecture:
-   *
-   * 1. Initial loading
-   * 2. First-time user
-   * 3. Error after categories already exist
-   * 4. Search/filter empty
-   * 5. Category list
-   *
-   * IMPORTANT:
-   *
-   * A brand-new merchant should not be shown a technical error simply
-   * because the categories request failed while there are no categories.
    */
 
-  const hasCategories = categoryList.length > 0;
+  const shippingRegionList = useMemo(() => {
+    return shippingRegions;
+  }, [shippingRegions]);
+
+  /**
+   * --------------------------------------------------------------------------
+   * SCREEN STATE
+   * --------------------------------------------------------------------------
+   */
+
+  const hasShippingRegions = shippingRegionList.length > 0;
 
   const isFirstTimeUser =
-    !isLoading &&
-    !hasCategories &&
-    searchQuery.trim() === "";
+    !isLoading && !hasShippingRegions && searchQuery.trim() === "";
 
-  const showCategoryError =
-    !isLoading &&
-    isError &&
-    hasCategories;
+  const showShippingRegionError = !isLoading && !!error && !hasShippingRegions;
 
   /**
    * --------------------------------------------------------------------------
@@ -562,11 +578,11 @@ export default function CategoriesScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const sortedCategories = useMemo(() => {
-    return [...categoryList].sort((a, b) =>
-      a.name.localeCompare(b.name)
+  const sortedShippingRegions = useMemo(() => {
+    return [...shippingRegionList].sort((a, b) =>
+      a.region.localeCompare(b.region)
     );
-  }, [categoryList]);
+  }, [shippingRegionList]);
 
   /**
    * --------------------------------------------------------------------------
@@ -574,24 +590,26 @@ export default function CategoriesScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const filteredCategories = useMemo(() => {
+  const filteredShippingRegions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
     if (!query) {
-      return sortedCategories;
+      return sortedShippingRegions;
     }
 
-    return sortedCategories.filter((category) =>
-      category.name.toLowerCase().includes(query)
+    return sortedShippingRegions.filter(
+      (shippingRegion) =>
+        shippingRegion.region.toLowerCase().includes(query) ||
+        shippingRegion.state.toLowerCase().includes(query)
     );
-  }, [sortedCategories, searchQuery]);
+  }, [sortedShippingRegions, searchQuery]);
 
   const hasNoSearchResults =
     !isLoading &&
-    !showCategoryError &&
-    hasCategories &&
+    !showShippingRegionError &&
+    hasShippingRegions &&
     searchQuery.trim() !== "" &&
-    filteredCategories.length === 0;
+    filteredShippingRegions.length === 0;
 
   /**
    * --------------------------------------------------------------------------
@@ -600,45 +618,55 @@ export default function CategoriesScreen() {
    */
 
   const headerSubtitle = isLoading
-    ? "Loading categories..."
+    ? "Loading shipping regions..."
     : isFirstTimeUser
-      ? "Organise your products into categories."
-      : categoryList.length === 1
-        ? "1 category"
-        : `${categoryList.length} categories`;
+      ? "Manage where you deliver your products."
+      : shippingRegionList.length === 1
+        ? "1 shipping region"
+        : `${shippingRegionList.length} shipping regions`;
 
   /**
    * --------------------------------------------------------------------------
-   * ADD CATEGORY
+   * ADD SHIPPING REGION
    * --------------------------------------------------------------------------
    */
 
-  const handleAddCategory = () => {
-    router.push(ROUTES.ADD_CATEGORY);
+  const handleAddShippingRegion = () => {
+    router.push(ROUTES.ADD_SHIPPING_REGION);
   };
 
   /**
    * --------------------------------------------------------------------------
-   * DELETE CATEGORY
+   * VIEW SHIPPING REGION
    * --------------------------------------------------------------------------
    */
 
-  const handleDelete = (categoryId: number) => {
-    if (deleteCategoryMutation.isPending) {
+  const handleViewShippingRegion = (regionId: number) => {
+    router.push(`/shipping-regions/view/${regionId}`);
+  };
+
+  /**
+   * --------------------------------------------------------------------------
+   * DELETE SHIPPING REGION
+   * --------------------------------------------------------------------------
+   */
+
+  const handleDelete = (regionId: number) => {
+    if (deleteShippingRegionMutation.isPending) {
       return;
     }
 
-    const category = categoryList.find(
-      (item) => item.id === categoryId
+    const shippingRegion = shippingRegionList.find(
+      (item) => item.id === regionId
     );
 
-    if (!category) {
+    if (!shippingRegion) {
       return;
     }
 
     Alert.alert(
-      "Delete Category",
-      `Are you sure you want to delete "${category.name}"? This action cannot be undone.`,
+      "Delete Shipping Region",
+      `Are you sure you want to delete "${shippingRegion.region}"? This action cannot be undone.`,
       [
         {
           text: "Cancel",
@@ -649,29 +677,23 @@ export default function CategoriesScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteCategoryMutation.mutateAsync(
-                categoryId
-              );
+              await deleteShippingRegionMutation.mutateAsync(regionId);
 
               await refetch();
 
               showToast({
                 type: "success",
-                title: "Category Deleted",
-                message:
-                  "The category has been removed successfully.",
+                title: "Shipping Region Deleted",
+                message: "The shipping region has been removed successfully.",
               });
             } catch (error) {
-              console.log(
-                "DELETE CATEGORY ERROR",
-                error
-              );
+              console.log("DELETE SHIPPING REGION ERROR", error);
 
               showToast({
                 type: "error",
                 title: "Delete Failed",
                 message:
-                  "Unable to delete this category. Please try again.",
+                  "Unable to delete this shipping region. Please try again.",
               });
             }
           },
@@ -755,14 +777,9 @@ export default function CategoriesScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">
-                Categories
-              </AppText>
+              <AppText variant="h1">Shipping Regions</AppText>
 
-              <AppText
-                variant="body"
-                color="secondary"
-              >
+              <AppText variant="body" color="secondary">
                 {headerSubtitle}
               </AppText>
             </View>
@@ -771,9 +788,9 @@ export default function CategoriesScreen() {
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Add category"
-              disabled={deleteCategoryMutation.isPending}
-              onPress={handleAddCategory}
+              accessibilityLabel="Add shipping region"
+              disabled={deleteShippingRegionMutation.isPending}
+              onPress={handleAddShippingRegion}
               style={({ pressed }) => ({
                 width: 44,
                 height: 44,
@@ -783,9 +800,7 @@ export default function CategoriesScreen() {
                 backgroundColor: pressed
                   ? theme.action.primary.pressed
                   : theme.action.primary.background,
-                opacity: deleteCategoryMutation.isPending
-                  ? 0.5
-                  : 1,
+                opacity: deleteShippingRegionMutation.isPending ? 0.5 : 1,
               })}
             >
               <Ionicons
@@ -809,23 +824,22 @@ export default function CategoriesScreen() {
                 SEARCH
             ============================================================== */}
 
-            {!isFirstTimeUser &&
-              !showCategoryError && (
-                <View
-                  style={{
-                    marginTop: spacing.md,
-                  }}
-                >
-                  <SearchBar
-                    placeholder="Search categories"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                  />
-                </View>
-              )}
+            {!isFirstTimeUser && !showShippingRegionError && (
+              <View
+                style={{
+                  marginTop: spacing.md,
+                }}
+              >
+                <SearchBar
+                  placeholder="Search shipping regions"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
+            )}
 
             {/* ==============================================================
-                CATEGORY CONTENT
+                SHIPPING REGION CONTENT
             ============================================================== */}
 
             <View
@@ -858,7 +872,7 @@ export default function CategoriesScreen() {
                       marginTop: spacing.md,
                     }}
                   >
-                    Loading categories...
+                    Loading shipping regions...
                   </AppText>
                 </View>
               ) : isFirstTimeUser ? (
@@ -866,49 +880,40 @@ export default function CategoriesScreen() {
                    2. FIRST-TIME USER
                 ========================================================== */
 
-                <CategoriesEmptyState
-                  onAddCategory={handleAddCategory}
+                <ShippingRegionsEmptyState
+                  onAddShippingRegion={handleAddShippingRegion}
                 />
-              ) : showCategoryError ? (
+              ) : showShippingRegionError ? (
                 /* ==========================================================
                    3. ERROR
                 ========================================================== */
 
-                <CategoriesErrorState
-                  onRetry={refetch}
-                />
+                <ShippingRegionsErrorState onRetry={refetch} />
               ) : hasNoSearchResults ? (
                 /* ==========================================================
                    4. SEARCH EMPTY
                 ========================================================== */
 
-                <CategoriesSearchEmptyState
-                  onClearSearch={() =>
-                    setSearchQuery("")
-                  }
+                <ShippingRegionsSearchEmptyState
+                  onClearSearch={() => setSearchQuery("")}
                 />
               ) : (
                 /* ==========================================================
-                   5. CATEGORY LIST
+                   5. SHIPPING REGION LIST
                 ========================================================== */
 
                 <FlatList
-                  data={filteredCategories}
-                  keyExtractor={(item) =>
-                    String(item.id)
-                  }
+                  data={filteredShippingRegions}
+                  keyExtractor={(item) => String(item.id)}
                   renderItem={({ item }) => (
-                    <CategoryCard
-                      category={item}
-                      deleting={
-                        deleteCategoryMutation.isPending
-                      }
+                    <ShippingRegionCard
+                      shippingRegion={item}
+                      deleting={deleteShippingRegionMutation.isPending}
                       onDelete={handleDelete}
+                      onPress={handleViewShippingRegion}
                     />
                   )}
-                  showsVerticalScrollIndicator={
-                    false
-                  }
+                  showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
                   contentContainerStyle={{
                     paddingTop: spacing.md,
@@ -923,17 +928,11 @@ export default function CategoriesScreen() {
                   )}
                   refreshControl={
                     <RefreshControl
-                      refreshing={isFetching}
+                      refreshing={isRefetching}
                       onRefresh={onRefresh}
-                      tintColor={
-                        theme.icon.branding.icon
-                      }
-                      colors={[
-                        theme.icon.branding.icon,
-                      ]}
-                      progressBackgroundColor={
-                        theme.background.surface
-                      }
+                      tintColor={theme.icon.branding.icon}
+                      colors={[theme.icon.branding.icon]}
+                      progressBackgroundColor={theme.background.surface}
                     />
                   }
                 />

@@ -85,14 +85,9 @@ export default function DiscountCodesScreen() {
   const hasDiscounts = discounts.length > 0;
 
   const isFirstTimeUser =
-    !isLoading &&
-    !hasDiscounts &&
-    searchQuery.trim() === "";
+    !isLoading && !hasDiscounts && searchQuery.trim() === "";
 
-  const showDiscountError =
-    !isLoading &&
-    isError &&
-    hasDiscounts;
+  const showDiscountError = !isLoading && isError && hasDiscounts;
 
   /**
    * ==========================================================================
@@ -244,14 +239,9 @@ export default function DiscountCodesScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">
-                Discount Codes
-              </AppText>
+              <AppText variant="h1">Discount Codes</AppText>
 
-              <AppText
-                variant="body"
-                color="secondary"
-              >
+              <AppText variant="body" color="secondary">
                 {headerSubtitle}
               </AppText>
             </View>
@@ -315,17 +305,11 @@ export default function DiscountCodesScreen() {
                     gap: spacing.xs,
                   }}
                 >
-                  <AppText
-                    variant="bodySmallBold"
-                    color="muted"
-                  >
+                  <AppText variant="bodySmallBold" color="muted">
                     Total
                   </AppText>
 
-                  <AppText
-                    variant="h2"
-                    color="strong"
-                  >
+                  <AppText variant="h2" color="strong">
                     {isLoading ? "—" : totalDiscounts}
                   </AppText>
                 </View>
@@ -349,17 +333,11 @@ export default function DiscountCodesScreen() {
                     gap: spacing.xs,
                   }}
                 >
-                  <AppText
-                    variant="bodySmallBold"
-                    color="muted"
-                  >
+                  <AppText variant="bodySmallBold" color="muted">
                     Active
                   </AppText>
 
-                  <AppText
-                    variant="h2"
-                    color="success"
-                  >
+                  <AppText variant="h2" color="success">
                     {isLoading ? "—" : activeDiscounts}
                   </AppText>
                 </View>
@@ -383,17 +361,11 @@ export default function DiscountCodesScreen() {
                     gap: spacing.xs,
                   }}
                 >
-                  <AppText
-                    variant="bodySmallBold"
-                    color="muted"
-                  >
+                  <AppText variant="bodySmallBold" color="muted">
                     Inactive
                   </AppText>
 
-                  <AppText
-                    variant="h2"
-                    color="error"
-                  >
+                  <AppText variant="h2" color="error">
                     {isLoading ? "—" : inactiveDiscounts}
                   </AppText>
                 </View>
@@ -404,20 +376,19 @@ export default function DiscountCodesScreen() {
                 SEARCH
             ================================================================== */}
 
-            {!isFirstTimeUser &&
-              !showDiscountError && (
-                <View
-                  style={{
-                    marginTop: spacing.md,
-                  }}
-                >
-                  <SearchBar
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    placeholder="Search discount codes"
-                  />
-                </View>
-              )}
+            {!isFirstTimeUser && !showDiscountError && (
+              <View
+                style={{
+                  marginTop: spacing.md,
+                }}
+              >
+                <SearchBar
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Search discount codes"
+                />
+              </View>
+            )}
 
             {/* ==================================================================
                 DISCOUNT CONTENT
@@ -442,9 +413,7 @@ export default function DiscountCodesScreen() {
                     onRefresh={onRefresh}
                     tintColor={theme.icon.branding.icon}
                     colors={[theme.icon.branding.icon]}
-                    progressBackgroundColor={
-                      theme.background.surface
-                    }
+                    progressBackgroundColor={theme.background.surface}
                   />
                 }
               >
@@ -482,7 +451,6 @@ export default function DiscountCodesScreen() {
 
                   <View
                     style={{
-                      flex: 1,
                       justifyContent: "center",
                     }}
                   >
@@ -502,8 +470,7 @@ export default function DiscountCodesScreen() {
                           borderRadius: radius.full,
                           justifyContent: "center",
                           alignItems: "center",
-                          backgroundColor:
-                            theme.icon.branding.background,
+                          backgroundColor: theme.icon.branding.background,
                         }}
                       >
                         <Ionicons
@@ -537,8 +504,8 @@ export default function DiscountCodesScreen() {
                           maxWidth: 320,
                         }}
                       >
-                        Create discount codes to offer promotions and
-                        encourage customers to buy from your store.
+                        Create discount codes to offer promotions and encourage
+                        customers to buy from your store.
                       </AppText>
 
                       {/* CTA */}
@@ -550,9 +517,7 @@ export default function DiscountCodesScreen() {
                           <Ionicons
                             name="add"
                             size={20}
-                            color={
-                              theme.action.primary.text
-                            }
+                            color={theme.action.primary.text}
                           />
                         }
                         style={{
@@ -593,8 +558,7 @@ export default function DiscountCodesScreen() {
                         width: 56,
                         height: 56,
                         borderRadius: radius.full,
-                        backgroundColor:
-                          theme.background.error,
+                        backgroundColor: theme.background.error,
                         justifyContent: "center",
                         alignItems: "center",
                       }}
@@ -638,9 +602,7 @@ export default function DiscountCodesScreen() {
                         paddingHorizontal: spacing.sm,
                       }}
                     >
-                      <AppText color="link">
-                        Try Again
-                      </AppText>
+                      <AppText color="link">Try Again</AppText>
                     </Pressable>
                   </View>
                 ) : hasNoSearchResults ? (
@@ -666,8 +628,7 @@ export default function DiscountCodesScreen() {
                           width: 56,
                           height: 56,
                           borderRadius: radius.full,
-                          backgroundColor:
-                            theme.icon.default.background,
+                          backgroundColor: theme.icon.default.background,
                           justifyContent: "center",
                           alignItems: "center",
                         }}
@@ -708,9 +669,7 @@ export default function DiscountCodesScreen() {
                           marginTop: spacing.md,
                         }}
                       >
-                        <AppText color="link">
-                          Clear Search
-                        </AppText>
+                        <AppText color="link">Clear Search</AppText>
                       </Pressable>
                     </Card>
                   </View>
@@ -729,9 +688,7 @@ export default function DiscountCodesScreen() {
                         key={discount.id}
                         accessibilityRole="button"
                         accessibilityLabel={`Open ${discount.code} discount`}
-                        onPress={() =>
-                          handleOpenDiscount(discount.id)
-                        }
+                        onPress={() => handleOpenDiscount(discount.id)}
                         style={({ pressed }) => ({
                           opacity: pressed ? 0.7 : 1,
                         })}
@@ -770,8 +727,7 @@ export default function DiscountCodesScreen() {
                                   marginTop: spacing.xs,
                                 }}
                               >
-                                Discount value:{" "}
-                                {discount.discountValue}
+                                Discount value: {discount.discountValue}
                               </AppText>
                             </View>
 
@@ -782,10 +738,9 @@ export default function DiscountCodesScreen() {
                                 paddingHorizontal: spacing.sm,
                                 paddingVertical: spacing.xs,
                                 borderRadius: radius.full,
-                                backgroundColor:
-                                  discount.isActive
-                                    ? theme.background.success
-                                    : theme.background.error,
+                                backgroundColor: discount.isActive
+                                  ? theme.background.success
+                                  : theme.background.error,
                               }}
                             >
                               <AppText
@@ -796,9 +751,7 @@ export default function DiscountCodesScreen() {
                                     : theme.text.error,
                                 }}
                               >
-                                {discount.isActive
-                                  ? "Active"
-                                  : "Inactive"}
+                                {discount.isActive ? "Active" : "Inactive"}
                               </AppText>
                             </View>
                           </View>
@@ -810,8 +763,7 @@ export default function DiscountCodesScreen() {
                           <View
                             style={{
                               height: 1,
-                              backgroundColor:
-                                theme.divider.subtle,
+                              backgroundColor: theme.divider.subtle,
                               marginVertical: spacing.md,
                             }}
                           />
@@ -831,10 +783,7 @@ export default function DiscountCodesScreen() {
                                 alignItems: "center",
                               }}
                             >
-                              <AppText
-                                variant="bodySmall"
-                                color="muted"
-                              >
+                              <AppText variant="bodySmall" color="muted">
                                 Start
                               </AppText>
 
@@ -845,9 +794,7 @@ export default function DiscountCodesScreen() {
                                   marginLeft: "auto",
                                 }}
                               >
-                                {formatDate(
-                                  discount.startDate
-                                )}
+                                {formatDate(discount.startDate)}
                               </AppText>
                             </View>
 
@@ -857,10 +804,7 @@ export default function DiscountCodesScreen() {
                                 alignItems: "center",
                               }}
                             >
-                              <AppText
-                                variant="bodySmall"
-                                color="muted"
-                              >
+                              <AppText variant="bodySmall" color="muted">
                                 End
                               </AppText>
 
@@ -871,9 +815,7 @@ export default function DiscountCodesScreen() {
                                   marginLeft: "auto",
                                 }}
                               >
-                                {formatDate(
-                                  discount.endDate
-                                )}
+                                {formatDate(discount.endDate)}
                               </AppText>
                             </View>
                           </View>
@@ -889,10 +831,7 @@ export default function DiscountCodesScreen() {
                               marginTop: spacing.md,
                             }}
                           >
-                            <AppText
-                              variant="bodySmall"
-                              color="link"
-                            >
+                            <AppText variant="bodySmall" color="link">
                               View discount
                             </AppText>
 

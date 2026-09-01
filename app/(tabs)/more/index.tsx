@@ -198,41 +198,6 @@ export default function MoreScreen() {
               <Divider />
 
               {/* ----------------------------------------------------------- */}
-              {/* CUSTOMERS */}
-              {/* ----------------------------------------------------------- */}
-
-              <Pressable
-                onPress={() => router.push(ROUTES.CUSTOMERS)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: spacing.md,
-                }}
-              >
-                <Ionicons
-                  name="people-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
-                />
-
-                <View style={{ flex: 1 }}>
-                  <AppText variant="bodyBold">Customers</AppText>
-
-                  <AppText variant="bodySmall" color="muted">
-                    View and manage your customers
-                  </AppText>
-                </View>
-
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color={theme.listItem.default.chevron}
-                />
-              </Pressable>
-
-              <Divider />
-
-              {/* ----------------------------------------------------------- */}
               {/* CATEGORIES */}
               {/* ----------------------------------------------------------- */}
 
@@ -255,6 +220,41 @@ export default function MoreScreen() {
 
                   <AppText variant="bodySmall" color="muted">
                     Organise your products into categories
+                  </AppText>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
+
+              <Divider />
+
+              {/* ----------------------------------------------------------- */}
+              {/* CUSTOMERS */}
+              {/* ----------------------------------------------------------- */}
+
+              <Pressable
+                onPress={() => router.push(ROUTES.CUSTOMERS)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="people-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
+
+                <View style={{ flex: 1 }}>
+                  <AppText variant="bodyBold">Customers</AppText>
+
+                  <AppText variant="bodySmall" color="muted">
+                    View and manage your customers
                   </AppText>
                 </View>
 
@@ -325,6 +325,41 @@ export default function MoreScreen() {
 
                   <AppText variant="bodySmall" color="muted">
                     Create and manage payment links
+                  </AppText>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.listItem.default.chevron}
+                />
+              </Pressable>
+
+              <Divider />
+
+              {/* ----------------------------------------------------------- */}
+              {/* SHIPPING REGION */}
+              {/* ----------------------------------------------------------- */}
+
+              <Pressable
+                onPress={() => router.push(ROUTES.SHIPPING_REGION)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.md,
+                }}
+              >
+                <Ionicons
+                  name="map-outline"
+                  size={24}
+                  color={theme.listItem.default.icon}
+                />
+
+                <View style={{ flex: 1 }}>
+                  <AppText variant="bodyBold">Shipping Region</AppText>
+
+                  <AppText variant="bodySmall" color="muted">
+                    Manage where you deliver your products
                   </AppText>
                 </View>
 

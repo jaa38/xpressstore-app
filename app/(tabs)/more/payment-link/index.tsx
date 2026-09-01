@@ -93,53 +93,37 @@ function getPaymentLinkUrl(link: PaymentLink) {
 const STATUS_SECTIONS = [
   {
     status: "active" as const,
-
     badgeText: "Active",
-
     badgeBackground: theme.badge.success.background,
-
     badgeTextColor: "success" as const,
   },
 
   {
     status: "paid" as const,
-
     badgeText: "Paid",
-
     badgeBackground: theme.badge.success.background,
-
     badgeTextColor: "success" as const,
   },
 
   {
     status: "pending" as const,
-
     badgeText: "Pending",
-
     badgeBackground: theme.badge.warning.background,
-
     badgeTextColor: "warning" as const,
   },
 
   {
     status: "failed" as const,
-
     badgeText: "Failed",
-
     badgeBackground: theme.badge.error.background,
-
     badgeTextColor: "error" as const,
   },
 
   {
     status: "inactive" as const,
-
     badgeText: "Inactive",
-
     badgeBackground: theme.background.subtle,
-
     badgeBorderColor: theme.border.default,
-
     badgeTextColor: "secondary" as const,
   },
 ];
@@ -153,16 +137,12 @@ const STATUS_SECTIONS = [
 type PaymentLinkListItem =
   | {
       type: "warning";
-
       key: string;
     }
   | {
       type: "section";
-
       key: string;
-
       status: PaymentLinkStatus;
-
       link: PaymentLink;
     };
 
@@ -350,7 +330,6 @@ export default function PaymentLinksScreen() {
 
   const summaryAmount = formatCurrency(totalAmount, {
     currency: summaryCurrency,
-
     showDecimals: totalAmount % 1 !== 0,
   });
 
@@ -366,6 +345,9 @@ export default function PaymentLinksScreen() {
    * --------------------------------------------------------------------------
    * FIRST-TIME USER
    * --------------------------------------------------------------------------
+   *
+   * A brand-new merchant with no payment links should see
+   * the onboarding state rather than management controls.
    */
 
   const hasPaymentLinks = links.length > 0;
@@ -380,6 +362,12 @@ export default function PaymentLinksScreen() {
    * --------------------------------------------------------------------------
    * PAYMENT LINK ERROR
    * --------------------------------------------------------------------------
+   *
+   * Only show the technical error once payment links already exist.
+   *
+   * A brand-new merchant should not see an API error instead of
+   * the friendly empty state.
+   * --------------------------------------------------------------------------
    */
 
   const showPaymentLinkError = !isLoading && !!error && hasPaymentLinks;
@@ -391,7 +379,10 @@ export default function PaymentLinksScreen() {
    */
 
   const hasNoSearchResults =
-    !isLoading && !error && hasPaymentLinks && filteredLinks.length === 0;
+    !isLoading &&
+    !showPaymentLinkError &&
+    hasPaymentLinks &&
+    filteredLinks.length === 0;
 
   /**
    * --------------------------------------------------------------------------
@@ -481,7 +472,6 @@ export default function PaymentLinksScreen() {
       [
         {
           text: "OK",
-
           style: "default",
         },
       ]
@@ -512,7 +502,6 @@ export default function PaymentLinksScreen() {
     if (showTransactionError) {
       result.push({
         type: "warning",
-
         key: "transaction-warning",
       });
     }
@@ -530,7 +519,6 @@ export default function PaymentLinksScreen() {
 
       return {
         section,
-
         sectionLinks,
       };
     }).filter(({ sectionLinks }) => sectionLinks.length > 0);
@@ -572,18 +560,14 @@ export default function PaymentLinksScreen() {
         <Card
           style={{
             borderWidth: 1,
-
             borderColor: theme.border.error,
-
             backgroundColor: theme.background.surface,
           }}
         >
           <View
             style={{
               flexDirection: "row",
-
               alignItems: "center",
-
               gap: spacing.sm,
             }}
           >
@@ -655,7 +639,6 @@ export default function PaymentLinksScreen() {
     <SafeAreaView
       style={{
         flex: 1,
-
         backgroundColor: theme.background.primary,
       }}
     >
@@ -664,7 +647,6 @@ export default function PaymentLinksScreen() {
       <View
         style={{
           flex: 1,
-
           paddingHorizontal: spacing.lg,
         }}
       >
@@ -680,9 +662,7 @@ export default function PaymentLinksScreen() {
           <View
             style={{
               flexDirection: "row",
-
               alignItems: "center",
-
               gap: spacing.md,
             }}
           >
@@ -695,11 +675,8 @@ export default function PaymentLinksScreen() {
               onPress={() => router.back()}
               style={{
                 width: 44,
-
                 height: 44,
-
                 justifyContent: "center",
-
                 alignItems: "center",
               }}
             >
@@ -715,7 +692,6 @@ export default function PaymentLinksScreen() {
             <View
               style={{
                 flex: 1,
-
                 gap: spacing.xs,
               }}
             >
@@ -724,43 +700,40 @@ export default function PaymentLinksScreen() {
               <AppText variant="body" color="secondary">
                 {isLoading
                   ? "Loading payment links..."
-                  : filteredLinks.length === 0
+                  : isFirstTimeUser
                     ? "Create your first payment link to start accepting payments"
-                    : filteredLinks.length === 1
+                    : links.length === 1
                       ? "1 payment link"
-                      : `${filteredLinks.length} payment links`}
+                      : `${links.length} payment links`}
               </AppText>
             </View>
 
             {/* ADD */}
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Create payment link"
-              hitSlop={8}
-              onPress={() => router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION)}
-              style={({ pressed }) => ({
-                width: 44,
-
-                height: 44,
-
-                borderRadius: radius.full,
-
-                justifyContent: "center",
-
-                alignItems: "center",
-
-                backgroundColor: pressed
-                  ? theme.action.primary.pressed
-                  : theme.action.primary.background,
-              })}
-            >
-              <Ionicons
-                name="add"
-                size={24}
-                color={theme.action.primary.text}
-              />
-            </Pressable>
+            {!isFirstTimeUser && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Create payment link"
+                hitSlop={8}
+                onPress={() => router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION)}
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: radius.full,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: pressed
+                    ? theme.action.primary.pressed
+                    : theme.action.primary.background,
+                })}
+              >
+                <Ionicons
+                  name="add"
+                  size={24}
+                  color={theme.action.primary.text}
+                />
+              </Pressable>
+            )}
           </View>
 
           {/* ================================================================
@@ -776,180 +749,164 @@ export default function PaymentLinksScreen() {
                 SUMMARY
             ============================================================== */}
 
-            <Card
-              variant="active"
-              style={{
-                marginTop: spacing.md,
-              }}
-            >
-              <View
+            {!isFirstTimeUser && (
+              <Card
+                variant="active"
                 style={{
-                  flexDirection: "row",
-
-                  alignItems: "center",
+                  marginTop: spacing.md,
                 }}
               >
-                {/* LEFT */}
-
                 <View
                   style={{
-                    flex: 1,
-
                     flexDirection: "row",
-
                     alignItems: "center",
-
-                    gap: spacing.md,
                   }}
                 >
+                  {/* LEFT */}
+
                   <View
                     style={{
-                      width: 56,
-
-                      height: 56,
-
-                      borderRadius: radius.full,
-
-                      justifyContent: "center",
-
+                      flex: 1,
+                      flexDirection: "row",
                       alignItems: "center",
-
-                      backgroundColor: theme.icon.branding.background,
+                      gap: spacing.md,
                     }}
                   >
-                    <Ionicons
-                      name="link-outline"
-                      size={28}
-                      color={theme.icon.branding.icon}
-                    />
+                    <View
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: radius.full,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        backgroundColor: theme.icon.branding.background,
+                      }}
+                    >
+                      <Ionicons
+                        name="link-outline"
+                        size={28}
+                        color={theme.icon.branding.icon}
+                      />
+                    </View>
+
+                    <View
+                      style={{
+                        gap: spacing.xs,
+                      }}
+                    >
+                      <AppText variant="bodySmallBold" color="muted">
+                        {summaryTitle}
+                      </AppText>
+
+                      <AppText variant="h1">{summaryAmount}</AppText>
+                    </View>
                   </View>
+
+                  {/* DIVIDER */}
 
                   <View
                     style={{
+                      width: 1,
+                      alignSelf: "stretch",
+                      marginHorizontal: spacing.md,
+                      backgroundColor: theme.divider.strong,
+                    }}
+                  />
+
+                  {/* RIGHT */}
+
+                  <View
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: 72,
                       gap: spacing.xs,
                     }}
                   >
                     <AppText variant="bodySmallBold" color="muted">
-                      {summaryTitle}
+                      Links
                     </AppText>
 
-                    <AppText variant="h1">
-                      {isLoading ? "—" : summaryAmount}
+                    <AppText variant="h2">{totalLinks}</AppText>
+
+                    <AppText variant="caption" color={summaryStatusColor}>
+                      {summaryStatus}
                     </AppText>
                   </View>
                 </View>
-
-                {/* DIVIDER */}
-
-                <View
-                  style={{
-                    width: 1,
-
-                    alignSelf: "stretch",
-
-                    marginHorizontal: spacing.md,
-
-                    backgroundColor: theme.divider.strong,
-                  }}
-                />
-
-                {/* RIGHT */}
-
-                <View
-                  style={{
-                    alignItems: "center",
-
-                    justifyContent: "center",
-
-                    minWidth: 72,
-
-                    gap: spacing.xs,
-                  }}
-                >
-                  <AppText variant="bodySmallBold" color="muted">
-                    Links
-                  </AppText>
-
-                  <AppText variant="h2">{isLoading ? "—" : totalLinks}</AppText>
-
-                  <AppText variant="caption" color={summaryStatusColor}>
-                    {summaryStatus}
-                  </AppText>
-                </View>
-              </View>
-            </Card>
+              </Card>
+            )}
 
             {/* ==============================================================
                 SEARCH
             ============================================================== */}
 
-            <View
-              style={{
-                flexDirection: "row",
-
-                alignItems: "center",
-
-                gap: spacing.sm,
-
-                marginTop: spacing.md,
-              }}
-            >
+            {!isFirstTimeUser && (
               <View
                 style={{
-                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.sm,
+                  marginTop: spacing.md,
                 }}
               >
-                <SearchBar
-                  value={searchQuery}
-                  onChangeText={handleSearchChange}
-                  placeholder="Search payment links"
-                />
+                <View
+                  style={{
+                    flex: 1,
+                  }}
+                >
+                  <SearchBar
+                    value={searchQuery}
+                    onChangeText={handleSearchChange}
+                    placeholder="Search payment links"
+                  />
+                </View>
               </View>
-            </View>
+            )}
 
             {/* ==============================================================
                 STATUS FILTERS
             ============================================================== */}
 
-            <View
-              style={{
-                flexDirection: "row",
+            {!isFirstTimeUser && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginTop: spacing.md,
+                  gap: spacing.sm,
+                }}
+              >
+                <UICard
+                  title="All"
+                  variant={selectedStatus === "all" ? "active" : "default"}
+                  onPress={() => handleStatusChange("all")}
+                />
 
-                marginTop: spacing.md,
+                <UICard
+                  title="Active"
+                  variant={selectedStatus === "active" ? "active" : "default"}
+                  onPress={() => handleStatusChange("active")}
+                />
 
-                gap: spacing.sm,
-              }}
-            >
-              <UICard
-                title="All"
-                variant={selectedStatus === "all" ? "active" : "default"}
-                onPress={() => handleStatusChange("all")}
-              />
+                <UICard
+                  title="Paid"
+                  variant={selectedStatus === "paid" ? "active" : "default"}
+                  onPress={() => handleStatusChange("paid")}
+                />
 
-              <UICard
-                title="Active"
-                variant={selectedStatus === "active" ? "active" : "default"}
-                onPress={() => handleStatusChange("active")}
-              />
+                <UICard
+                  title="Failed"
+                  variant={selectedStatus === "failed" ? "active" : "default"}
+                  onPress={() => handleStatusChange("failed")}
+                />
 
-              <UICard
-                title="Paid"
-                variant={selectedStatus === "paid" ? "active" : "default"}
-                onPress={() => handleStatusChange("paid")}
-              />
-
-              <UICard
-                title="Failed"
-                variant={selectedStatus === "failed" ? "active" : "default"}
-                onPress={() => handleStatusChange("failed")}
-              />
-
-              <UICard
-                title="Inactive"
-                variant={selectedStatus === "inactive" ? "active" : "default"}
-                onPress={() => handleStatusChange("inactive")}
-              />
-            </View>
+                <UICard
+                  title="Inactive"
+                  variant={selectedStatus === "inactive" ? "active" : "default"}
+                  onPress={() => handleStatusChange("inactive")}
+                />
+              </View>
+            )}
 
             {/* ==============================================================
                 PAYMENT LINK CONTENT
@@ -958,7 +915,6 @@ export default function PaymentLinksScreen() {
             <View
               style={{
                 flex: 1,
-
                 marginTop: spacing.md,
               }}
             >
@@ -970,11 +926,8 @@ export default function PaymentLinksScreen() {
                 <View
                   style={{
                     flex: 1,
-
                     justifyContent: "center",
-
                     alignItems: "center",
-
                     paddingVertical: spacing["3xl"],
                   }}
                 >
@@ -992,6 +945,104 @@ export default function PaymentLinksScreen() {
                     Loading payment links...
                   </AppText>
                 </View>
+              ) : isFirstTimeUser ? (
+                /* ==========================================================
+                   FIRST-TIME USER
+                ========================================================== */
+
+                <View
+                  style={{
+                    justifyContent: "center",
+                  }}
+                >
+                  <Card
+                    style={{
+                      alignItems: "center",
+                      paddingVertical: spacing.xl,
+                      paddingHorizontal: spacing.lg,
+                    }}
+                  >
+                    {/* ICON */}
+
+                    <View
+                      style={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: radius.full,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: theme.icon.branding.background,
+                      }}
+                    >
+                      <Ionicons
+                        name="link-outline"
+                        size={32}
+                        color={theme.icon.branding.icon}
+                      />
+                    </View>
+
+                    {/* TITLE */}
+
+                    <AppText
+                      variant="bodyLargeBold"
+                      style={{
+                        marginTop: spacing.md,
+                        textAlign: "center",
+                      }}
+                    >
+                      No payment links yet
+                    </AppText>
+
+                    {/* DESCRIPTION */}
+
+                    <AppText
+                      variant="body"
+                      color="secondary"
+                      style={{
+                        marginTop: spacing.xs,
+                        textAlign: "center",
+                        maxWidth: 320,
+                      }}
+                    >
+                      Create your first payment link to start accepting payments
+                      from your customers.
+                    </AppText>
+
+                    {/* CTA */}
+
+                    <Button
+                      title="Create Payment Link"
+                      variant="primary"
+                      leftIcon={
+                        <Ionicons
+                          name="add"
+                          size={20}
+                          color={theme.action.primary.text}
+                        />
+                      }
+                      style={{
+                        marginTop: spacing.lg,
+                      }}
+                      onPress={() =>
+                        router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION)
+                      }
+                    />
+
+                    {/* SUPPORTING TEXT */}
+
+                    <AppText
+                      variant="caption"
+                      color="muted"
+                      style={{
+                        marginTop: spacing.sm,
+                        textAlign: "center",
+                      }}
+                    >
+                      You can share your payment link with customers to collect
+                      payments.
+                    </AppText>
+                  </Card>
+                </View>
               ) : showPaymentLinkError ? (
                 /* ==========================================================
                    ERROR
@@ -1000,26 +1051,18 @@ export default function PaymentLinksScreen() {
                 <View
                   style={{
                     flex: 1,
-
                     justifyContent: "center",
-
                     alignItems: "center",
-
                     paddingVertical: spacing["3xl"],
                   }}
                 >
                   <View
                     style={{
                       width: 56,
-
                       height: 56,
-
                       borderRadius: radius.full,
-
                       justifyContent: "center",
-
                       alignItems: "center",
-
                       backgroundColor: theme.background.error,
                     }}
                   >
@@ -1034,7 +1077,6 @@ export default function PaymentLinksScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
-
                       textAlign: "center",
                     }}
                   >
@@ -1046,9 +1088,7 @@ export default function PaymentLinksScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
-
                       textAlign: "center",
-
                       maxWidth: 320,
                     }}
                   >
@@ -1061,186 +1101,96 @@ export default function PaymentLinksScreen() {
                     onPress={() => refetchPaymentLinks()}
                     style={{
                       marginTop: spacing.md,
-
                       paddingVertical: spacing.xs,
-
                       paddingHorizontal: spacing.sm,
                     }}
                   >
                     <AppText color="link">Try Again</AppText>
                   </Pressable>
                 </View>
-              ) : isFirstTimeUser ? (
-                /* ==========================================================
-                   FIRST-TIME USER
-                ========================================================== */
-
-                <Card
-                  style={{
-                    alignItems: "center",
-
-                    paddingVertical: spacing.xl,
-
-                    paddingHorizontal: spacing.lg,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 64,
-
-                      height: 64,
-
-                      borderRadius: radius.full,
-
-                      alignItems: "center",
-
-                      justifyContent: "center",
-
-                      backgroundColor: theme.icon.branding.background,
-                    }}
-                  >
-                    <Ionicons
-                      name="link-outline"
-                      size={32}
-                      color={theme.icon.branding.icon}
-                    />
-                  </View>
-
-                  <AppText
-                    variant="bodyLargeBold"
-                    style={{
-                      marginTop: spacing.md,
-
-                      textAlign: "center",
-                    }}
-                  >
-                    No payment links yet
-                  </AppText>
-
-                  <AppText
-                    variant="body"
-                    color="secondary"
-                    style={{
-                      marginTop: spacing.xs,
-
-                      textAlign: "center",
-
-                      maxWidth: 320,
-                    }}
-                  >
-                    Create your first payment link to start accepting payments
-                    from your customers.
-                  </AppText>
-
-                  <Button
-                    title="Create Payment Link"
-                    variant="primary"
-                    style={{
-                      marginTop: spacing.lg,
-                    }}
-                    onPress={() =>
-                      router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION)
-                    }
-                  />
-
-                  <AppText
-                    variant="caption"
-                    color="muted"
-                    style={{
-                      marginTop: spacing.sm,
-
-                      textAlign: "center",
-                    }}
-                  >
-                    You can share your payment link with customers to collect
-                    payments.
-                  </AppText>
-                </Card>
               ) : hasNoSearchResults ? (
                 /* ==========================================================
-                   NO SEARCH RESULTS
+                   NO SEARCH / FILTER RESULTS
                 ========================================================== */
 
-                <Card
+                <View
                   style={{
-                    alignItems: "center",
-
-                    paddingVertical: spacing.xl,
-
-                    paddingHorizontal: spacing.lg,
+                    flex: 1,
+                    justifyContent: "center",
                   }}
                 >
-                  <View
+                  <Card
                     style={{
-                      width: 56,
-
-                      height: 56,
-
-                      borderRadius: radius.full,
-
                       alignItems: "center",
-
-                      justifyContent: "center",
-
-                      backgroundColor: theme.icon.default.background,
+                      paddingVertical: spacing.xl,
+                      paddingHorizontal: spacing.lg,
                     }}
                   >
-                    <Ionicons
-                      name="search-outline"
-                      size={28}
-                      color={theme.icon.default.icon}
-                    />
-                  </View>
-
-                  <AppText
-                    variant="bodyLargeBold"
-                    style={{
-                      marginTop: spacing.md,
-
-                      textAlign: "center",
-                    }}
-                  >
-                    No payment links found
-                  </AppText>
-
-                  <AppText
-                    variant="body"
-                    color="secondary"
-                    style={{
-                      marginTop: spacing.xs,
-
-                      textAlign: "center",
-                    }}
-                  >
-                    Try searching with a different name or reference.
-                  </AppText>
-
-                  {searchQuery.trim() !== "" && (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Clear search"
-                      onPress={() => handleSearchChange("")}
+                    <View
                       style={{
-                        marginTop: spacing.md,
+                        width: 56,
+                        height: 56,
+                        borderRadius: radius.full,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: theme.icon.default.background,
                       }}
                     >
-                      <AppText color="link">Clear Search</AppText>
-                    </Pressable>
-                  )}
+                      <Ionicons
+                        name="search-outline"
+                        size={28}
+                        color={theme.icon.default.icon}
+                      />
+                    </View>
 
-                  {hasActiveFilters && searchQuery.trim() === "" && (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Clear payment link filter"
-                      onPress={() => handleStatusChange("all")}
+                    <AppText
+                      variant="bodyLargeBold"
                       style={{
                         marginTop: spacing.md,
+                        textAlign: "center",
                       }}
                     >
-                      <AppText color="link">Clear Filter</AppText>
-                    </Pressable>
-                  )}
-                </Card>
+                      No payment links found
+                    </AppText>
+
+                    <AppText
+                      variant="body"
+                      color="secondary"
+                      style={{
+                        marginTop: spacing.xs,
+                        textAlign: "center",
+                      }}
+                    >
+                      Try searching with a different name or reference.
+                    </AppText>
+
+                    {searchQuery.trim() !== "" && (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Clear search"
+                        onPress={() => handleSearchChange("")}
+                        style={{
+                          marginTop: spacing.md,
+                        }}
+                      >
+                        <AppText color="link">Clear Search</AppText>
+                      </Pressable>
+                    )}
+
+                    {hasActiveFilters && searchQuery.trim() === "" && (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Clear payment link filter"
+                        onPress={() => handleStatusChange("all")}
+                        style={{
+                          marginTop: spacing.md,
+                        }}
+                      >
+                        <AppText color="link">Clear Filter</AppText>
+                      </Pressable>
+                    )}
+                  </Card>
+                </View>
               ) : (
                 /* ==========================================================
                    PAYMENT LINK LIST
@@ -1266,9 +1216,7 @@ export default function PaymentLinksScreen() {
                   }
                   contentContainerStyle={{
                     paddingTop: spacing.md,
-
                     paddingBottom: spacing["2xl"],
-
                     gap: spacing.md,
                   }}
                   onEndReached={loadMorePaymentLinks}
@@ -1283,7 +1231,6 @@ export default function PaymentLinksScreen() {
                         <View
                           style={{
                             paddingVertical: spacing.lg,
-
                             alignItems: "center",
                           }}
                         >
@@ -1314,7 +1261,6 @@ export default function PaymentLinksScreen() {
                           <View
                             style={{
                               paddingVertical: spacing.lg,
-
                               alignItems: "center",
                             }}
                           >
@@ -1342,10 +1288,8 @@ export default function PaymentLinksScreen() {
         onViewQRCode={(paymentLink) => {
           router.push({
             pathname: ROUTES.PAYMENT_LINK_QR_CODE,
-
             params: {
               title: paymentLink.name,
-
               url: getPaymentLinkUrl(paymentLink),
             },
           });

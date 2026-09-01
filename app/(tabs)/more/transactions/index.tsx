@@ -256,57 +256,54 @@ export default function TransactionsScreen() {
 
     return transactions.filter((transaction) => {
       /**
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        * Status
-       * ----------------------------------------------------------------------
-       *
-       * Status is already used by the server filter, but we keep this local
-       * check so the displayed data always reflects the active UI state.
+       * -------------------------------------------------------------------
        */
 
       const matchesStatus =
         filters.status === "all" || transaction.status === filters.status;
 
       /**
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        * Channel
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        */
 
       const matchesChannel =
         filters.channel === "all" || transaction.channel === filters.channel;
 
       /**
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        * Transaction Type
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        */
 
       const matchesType =
         filters.type === "all" || transaction.type === filters.type;
 
       /**
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        * Minimum Amount
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        */
 
       const matchesAmount =
         filters.amount.min == null || transaction.amount >= filters.amount.min;
 
       /**
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        * Maximum Amount
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        */
 
       const matchesMaximumAmount =
         filters.amount.max == null || transaction.amount <= filters.amount.max;
 
       /**
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        * Amount Search
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        */
 
       const transactionAmount = formatCurrency(transaction.amount, {
@@ -314,9 +311,9 @@ export default function TransactionsScreen() {
       });
 
       /**
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        * Search
-       * ----------------------------------------------------------------------
+       * -------------------------------------------------------------------
        */
 
       const matchesSearch =
@@ -408,6 +405,19 @@ export default function TransactionsScreen() {
    * =========================================================================
    * SCREEN STATES
    * =========================================================================
+   *
+   * Architecture:
+   *
+   * 1. Initial loading
+   * 2. First-time user
+   * 3. Error after transaction history already exists
+   * 4. Search/filter empty
+   * 5. Transaction list
+   *
+   * IMPORTANT:
+   *
+   * A brand-new merchant should not be shown a technical API error simply
+   * because the transaction request failed while there are no transactions.
    */
 
   const hasTransactions = totalCount > 0;
@@ -483,9 +493,9 @@ export default function TransactionsScreen() {
     ? "Loading transactions..."
     : isFirstTimeUser
       ? "Start accepting payments"
-      : filteredTransactions.length === 1
+      : transactions.length === 1
         ? "1 transaction"
-        : `${filteredTransactions.length} transactions`;
+        : `${transactions.length} transactions`;
 
   /**
    * =========================================================================
@@ -515,7 +525,6 @@ export default function TransactionsScreen() {
     },
   ] satisfies {
     key: TransactionFilters["status"];
-
     title: string;
   }[];
 
@@ -528,7 +537,6 @@ export default function TransactionsScreen() {
   const handleStatusChange = (status: TransactionFilters["status"]) => {
     const nextFilters: TransactionFilters = {
       ...filters,
-
       status,
     };
 
@@ -559,6 +567,16 @@ export default function TransactionsScreen() {
 
   /**
    * =========================================================================
+   * CREATE PAYMENT LINK
+   * =========================================================================
+   */
+
+  const handleCreatePaymentLink = () => {
+    router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION);
+  };
+
+  /**
+   * =========================================================================
    * UI
    * =========================================================================
    */
@@ -567,7 +585,6 @@ export default function TransactionsScreen() {
     <SafeAreaView
       style={{
         flex: 1,
-
         backgroundColor: theme.background.primary,
       }}
     >
@@ -576,7 +593,6 @@ export default function TransactionsScreen() {
       <View
         style={{
           flex: 1,
-
           paddingHorizontal: spacing.lg,
         }}
       >
@@ -585,28 +601,27 @@ export default function TransactionsScreen() {
             flex: 1,
           }}
         >
-          {/* HEADER */}
+          {/* ================================================================
+              HEADER
+          ================================================================ */}
 
           <View
             style={{
               flexDirection: "row",
-
               alignItems: "center",
-
               gap: spacing.md,
             }}
           >
+            {/* BACK */}
+
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Go back"
               onPress={() => router.back()}
               style={{
                 width: 44,
-
                 height: 44,
-
                 justifyContent: "center",
-
                 alignItems: "center",
               }}
             >
@@ -617,10 +632,11 @@ export default function TransactionsScreen() {
               />
             </Pressable>
 
+            {/* TITLE */}
+
             <View
               style={{
                 flex: 1,
-
                 gap: spacing.xs,
               }}
             >
@@ -632,125 +648,117 @@ export default function TransactionsScreen() {
             </View>
           </View>
 
-          {/* CONTENT */}
+          {/* ================================================================
+              CONTENT
+          ================================================================ */}
 
           <View
             style={{
               flex: 1,
             }}
           >
-            {/* SUMMARY */}
+            {/* ==============================================================
+                SUMMARY
+            ============================================================== */}
 
-            <Card
-              variant="active"
-              style={{
-                marginTop: spacing.lg,
-              }}
-            >
-              <View
+            {!isFirstTimeUser && (
+              <Card
+                variant="active"
                 style={{
-                  flexDirection: "row",
-
-                  alignItems: "center",
+                  marginTop: spacing.lg,
                 }}
               >
                 <View
                   style={{
-                    flex: 1,
-
                     flexDirection: "row",
-
                     alignItems: "center",
-
-                    gap: spacing.md,
                   }}
                 >
+                  {/* LEFT */}
+
                   <View
                     style={{
-                      width: 56,
-
-                      height: 56,
-
-                      borderRadius: radius.full,
-
-                      justifyContent: "center",
-
+                      flex: 1,
+                      flexDirection: "row",
                       alignItems: "center",
-
-                      backgroundColor: theme.icon.branding.background,
+                      gap: spacing.md,
                     }}
                   >
-                    <Ionicons
-                      name="receipt-outline"
-                      size={28}
-                      color={theme.icon.branding.icon}
-                    />
+                    <View
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: radius.full,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        backgroundColor: theme.icon.branding.background,
+                      }}
+                    >
+                      <Ionicons
+                        name="receipt-outline"
+                        size={28}
+                        color={theme.icon.branding.icon}
+                      />
+                    </View>
+
+                    <View
+                      style={{
+                        gap: spacing.xs,
+                      }}
+                    >
+                      <AppText variant="bodySmallBold" color="muted">
+                        {summaryTitle}
+                      </AppText>
+
+                      <AppText variant="h2">{summaryAmount}</AppText>
+                    </View>
                   </View>
+
+                  {/* DIVIDER */}
 
                   <View
                     style={{
+                      width: 1,
+                      alignSelf: "stretch",
+                      marginHorizontal: spacing.md,
+                      backgroundColor: theme.divider.strong,
+                    }}
+                  />
+
+                  {/* RIGHT */}
+
+                  <View
+                    style={{
+                      minWidth: 84,
+                      justifyContent: "center",
+                      alignItems: "center",
                       gap: spacing.xs,
                     }}
                   >
                     <AppText variant="bodySmallBold" color="muted">
-                      {summaryTitle}
+                      Transactions
                     </AppText>
 
-                    <AppText variant="h2">
-                      {isLoading ? "—" : summaryAmount}
+                    <AppText variant="h2">{summaryCount}</AppText>
+
+                    <AppText variant="caption" color={summaryStatusColor}>
+                      {summaryLabel}
                     </AppText>
                   </View>
                 </View>
+              </Card>
+            )}
 
-                <View
-                  style={{
-                    width: 1,
-
-                    alignSelf: "stretch",
-
-                    marginHorizontal: spacing.md,
-
-                    backgroundColor: theme.divider.strong,
-                  }}
-                />
-
-                <View
-                  style={{
-                    minWidth: 84,
-
-                    justifyContent: "center",
-
-                    alignItems: "center",
-
-                    gap: spacing.xs,
-                  }}
-                >
-                  <AppText variant="bodySmallBold" color="muted">
-                    Transactions
-                  </AppText>
-
-                  <AppText variant="h2">
-                    {isLoading ? "—" : summaryCount}
-                  </AppText>
-
-                  <AppText variant="caption" color={summaryStatusColor}>
-                    {summaryLabel}
-                  </AppText>
-                </View>
-              </View>
-            </Card>
-
-            {/* SEARCH + FILTER */}
+            {/* ==============================================================
+                SEARCH + FILTER
+            ============================================================== */}
 
             {!isFirstTimeUser && !showTransactionError && (
               <View
                 style={{
                   flexDirection: "row",
-
                   alignItems: "center",
-
                   gap: spacing.sm,
-
                   marginTop: spacing.md,
                 }}
               >
@@ -777,15 +785,15 @@ export default function TransactionsScreen() {
               </View>
             )}
 
-            {/* STATUS FILTERS */}
+            {/* ==============================================================
+                STATUS FILTERS
+            ============================================================== */}
 
             {!isFirstTimeUser && !showTransactionError && (
               <View
                 style={{
                   flexDirection: "row",
-
                   marginTop: spacing.md,
-
                   gap: spacing.sm,
                 }}
               >
@@ -802,24 +810,26 @@ export default function TransactionsScreen() {
               </View>
             )}
 
-            {/* TRANSACTION CONTENT */}
+            {/* ==============================================================
+                TRANSACTION CONTENT
+            ============================================================== */}
 
             <View
               style={{
                 flex: 1,
-
                 marginTop: spacing.md,
               }}
             >
+              {/* ============================================================
+                  1. LOADING
+              ============================================================ */}
+
               {isLoading ? (
                 <View
                   style={{
                     flex: 1,
-
                     justifyContent: "center",
-
                     alignItems: "center",
-
                     paddingVertical: spacing["3xl"],
                   }}
                 >
@@ -838,27 +848,26 @@ export default function TransactionsScreen() {
                   </AppText>
                 </View>
               ) : isFirstTimeUser ? (
+                /* ==========================================================
+                   2. FIRST-TIME USER
+                ========================================================== */
+
                 <Card
                   style={{
                     alignItems: "center",
-
                     paddingVertical: spacing.xl,
-
                     paddingHorizontal: spacing.lg,
                   }}
                 >
+                  {/* ICON */}
+
                   <View
                     style={{
                       width: 64,
-
                       height: 64,
-
                       borderRadius: radius.full,
-
                       alignItems: "center",
-
                       justifyContent: "center",
-
                       backgroundColor: theme.icon.branding.background,
                     }}
                   >
@@ -869,25 +878,26 @@ export default function TransactionsScreen() {
                     />
                   </View>
 
+                  {/* TITLE */}
+
                   <AppText
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
-
                       textAlign: "center",
                     }}
                   >
                     No transactions yet
                   </AppText>
 
+                  {/* DESCRIPTION */}
+
                   <AppText
                     variant="body"
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
-
                       textAlign: "center",
-
                       maxWidth: 320,
                     }}
                   >
@@ -895,23 +905,31 @@ export default function TransactionsScreen() {
                     through your store.
                   </AppText>
 
+                  {/* CTA */}
+
                   <Button
                     title="Create Payment Link"
                     variant="primary"
+                    leftIcon={
+                      <Ionicons
+                        name="add"
+                        size={20}
+                        color={theme.action.primary.text}
+                      />
+                    }
                     style={{
                       marginTop: spacing.lg,
                     }}
-                    onPress={() =>
-                      router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION)
-                    }
+                    onPress={handleCreatePaymentLink}
                   />
+
+                  {/* SUPPORTING TEXT */}
 
                   <AppText
                     variant="caption"
                     color="muted"
                     style={{
                       marginTop: spacing.sm,
-
                       textAlign: "center",
                     }}
                   >
@@ -920,29 +938,25 @@ export default function TransactionsScreen() {
                   </AppText>
                 </Card>
               ) : showTransactionError ? (
+                /* ==========================================================
+                   3. ERROR
+                ========================================================== */
+
                 <View
                   style={{
                     flex: 1,
-
                     justifyContent: "center",
-
                     alignItems: "center",
-
                     paddingVertical: spacing["3xl"],
                   }}
                 >
                   <View
                     style={{
                       width: 56,
-
                       height: 56,
-
                       borderRadius: radius.full,
-
                       justifyContent: "center",
-
                       alignItems: "center",
-
                       backgroundColor: theme.background.error,
                     }}
                   >
@@ -957,7 +971,6 @@ export default function TransactionsScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
-
                       textAlign: "center",
                     }}
                   >
@@ -969,9 +982,7 @@ export default function TransactionsScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
-
                       textAlign: "center",
-
                       maxWidth: 320,
                     }}
                   >
@@ -984,9 +995,7 @@ export default function TransactionsScreen() {
                     onPress={() => refetch()}
                     style={{
                       marginTop: spacing.md,
-
                       paddingVertical: spacing.xs,
-
                       paddingHorizontal: spacing.sm,
                     }}
                   >
@@ -994,27 +1003,24 @@ export default function TransactionsScreen() {
                   </Pressable>
                 </View>
               ) : hasNoResults ? (
+                /* ==========================================================
+                   4. SEARCH / FILTER EMPTY
+                ========================================================== */
+
                 <Card
                   style={{
                     alignItems: "center",
-
                     paddingVertical: spacing.xl,
-
                     paddingHorizontal: spacing.lg,
                   }}
                 >
                   <View
                     style={{
                       width: 56,
-
                       height: 56,
-
                       borderRadius: radius.full,
-
                       alignItems: "center",
-
                       justifyContent: "center",
-
                       backgroundColor: theme.icon.default.background,
                     }}
                   >
@@ -1029,7 +1035,6 @@ export default function TransactionsScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
-
                       textAlign: "center",
                     }}
                   >
@@ -1041,7 +1046,6 @@ export default function TransactionsScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
-
                       textAlign: "center",
                     }}
                   >
@@ -1076,6 +1080,10 @@ export default function TransactionsScreen() {
                   )}
                 </Card>
               ) : (
+                /* ==========================================================
+                   5. TRANSACTION LIST
+                ========================================================== */
+
                 <FlatList
                   data={filteredTransactions}
                   keyExtractor={(transaction) => transaction.id}
@@ -1091,6 +1099,7 @@ export default function TransactionsScreen() {
                     />
                   }
                   contentContainerStyle={{
+                    paddingTop: spacing.md,
                     paddingBottom: spacing["2xl"],
                   }}
                   renderItem={({ item }) => (
@@ -1108,7 +1117,6 @@ export default function TransactionsScreen() {
                     <View
                       style={{
                         paddingVertical: spacing.lg,
-
                         alignItems: "center",
                       }}
                     >
@@ -1145,7 +1153,9 @@ export default function TransactionsScreen() {
         </View>
       </View>
 
-      {/* TRANSACTION FILTER BOTTOM SHEET */}
+      {/* ================================================================
+          TRANSACTION FILTER BOTTOM SHEET
+      ================================================================ */}
 
       <TransactionFilterBottomSheet
         ref={transactionFilterRef}

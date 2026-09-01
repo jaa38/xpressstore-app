@@ -31,11 +31,9 @@ import { useDeleteShippingRegion } from "@/hooks/store/useDeleteShippingRegion";
 
 import { useToast } from "@/hooks/useToast";
 
-import { ROUTES } from "@/navigation/routes";
+import { ROUTES, getEditShippingRegionRoute } from "@/navigation/routes";
 
 import type { ShippingRegion } from "@/types/store";
-
-import { getEditShippingRegionRoute } from "@/navigation/routes";
 
 /**
  * ============================================================================
@@ -129,7 +127,9 @@ function ShippingRegionCard({
               alignItems: "center",
             }}
           >
-            {/* ICON */}
+            {/* ============================================================
+                ICON
+            ============================================================ */}
 
             <View
               style={{
@@ -148,7 +148,9 @@ function ShippingRegionCard({
               />
             </View>
 
-            {/* DETAILS */}
+            {/* ============================================================
+                DETAILS
+            ============================================================ */}
 
             <View
               style={{
@@ -170,7 +172,9 @@ function ShippingRegionCard({
               </AppText>
             </View>
 
-            {/* ACTIONS */}
+            {/* ============================================================
+                ACTIONS
+            ============================================================ */}
 
             <View
               style={{
@@ -204,7 +208,7 @@ function ShippingRegionCard({
                 <Ionicons
                   name="eye-outline"
                   size={21}
-                  color={theme.icon.default.icon}
+                  color={theme.state.info.icon}
                 />
               </Pressable>
 
@@ -258,7 +262,8 @@ function ShippingRegionsEmptyState({
   return (
     <View
       style={{
-        justifyContent: "center",
+        flex: 1,
+        // justifyContent: "center",
       }}
     >
       <Card
@@ -448,6 +453,8 @@ function ShippingRegionsErrorState({ onRetry }: { onRetry: () => void }) {
         paddingHorizontal: spacing.lg,
       }}
     >
+      {/* ICON */}
+
       <View
         style={{
           width: 56,
@@ -465,6 +472,8 @@ function ShippingRegionsErrorState({ onRetry }: { onRetry: () => void }) {
         />
       </View>
 
+      {/* TITLE */}
+
       <AppText
         variant="bodyLargeBold"
         style={{
@@ -474,6 +483,8 @@ function ShippingRegionsErrorState({ onRetry }: { onRetry: () => void }) {
       >
         Unable to load shipping regions
       </AppText>
+
+      {/* DESCRIPTION */}
 
       <AppText
         variant="body"
@@ -486,6 +497,8 @@ function ShippingRegionsErrorState({ onRetry }: { onRetry: () => void }) {
       >
         We couldn't load your shipping regions. Please try again.
       </AppText>
+
+      {/* RETRY */}
 
       <Pressable
         accessibilityRole="button"
@@ -505,14 +518,14 @@ function ShippingRegionsErrorState({ onRetry }: { onRetry: () => void }) {
 
 /**
  * ============================================================================
- * SHIPPING REGIONS SCREEN
+ * SHIPPING REGION SCREEN
  * ============================================================================
  */
 
 export default function ShippingRegionScreen() {
   /**
    * --------------------------------------------------------------------------
-   * API
+   * SHIPPING REGIONS
    * --------------------------------------------------------------------------
    */
 
@@ -521,11 +534,17 @@ export default function ShippingRegionScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * MUTATIONS
+   * DELETE
    * --------------------------------------------------------------------------
    */
 
   const deleteShippingRegionMutation = useDeleteShippingRegion();
+
+  /**
+   * --------------------------------------------------------------------------
+   * TOAST
+   * --------------------------------------------------------------------------
+   */
 
   const { showToast } = useToast();
 
@@ -551,17 +570,27 @@ export default function ShippingRegionScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * SOURCE OF TRUTH
+   * SHIPPING REGIONS SOURCE
    * --------------------------------------------------------------------------
    */
 
-  const shippingRegionList = useMemo(() => {
-    return shippingRegions;
-  }, [shippingRegions]);
+  const shippingRegionList = useMemo(
+    () => shippingRegions ?? [],
+    [shippingRegions]
+  );
 
   /**
    * --------------------------------------------------------------------------
-   * SCREEN STATE
+   * FIRST-TIME USER
+   * --------------------------------------------------------------------------
+   *
+   * Important:
+   *
+   * An empty response is treated as a legitimate state.
+   *
+   * If the API fails before the merchant has ever created a shipping region,
+   * we still show the onboarding state rather than exposing a technical
+   * error.
    * --------------------------------------------------------------------------
    */
 
@@ -570,7 +599,22 @@ export default function ShippingRegionScreen() {
   const isFirstTimeUser =
     !isLoading && !hasShippingRegions && searchQuery.trim() === "";
 
-  const showShippingRegionError = !isLoading && !!error && !hasShippingRegions;
+  /**
+   * --------------------------------------------------------------------------
+   * ERROR
+   * --------------------------------------------------------------------------
+   *
+   * Only show an API error when the merchant already has shipping regions.
+   *
+   * This prevents a new merchant from seeing:
+   *
+   * "Unable to load shipping regions"
+   *
+   * when they simply have not created one yet.
+   * --------------------------------------------------------------------------
+   */
+
+  const showShippingRegionError = !isLoading && !!error && hasShippingRegions;
 
   /**
    * --------------------------------------------------------------------------
@@ -604,6 +648,12 @@ export default function ShippingRegionScreen() {
     );
   }, [sortedShippingRegions, searchQuery]);
 
+  /**
+   * --------------------------------------------------------------------------
+   * SEARCH EMPTY
+   * --------------------------------------------------------------------------
+   */
+
   const hasNoSearchResults =
     !isLoading &&
     !showShippingRegionError &&
@@ -613,7 +663,7 @@ export default function ShippingRegionScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * HEADER
+   * HEADER SUBTITLE
    * --------------------------------------------------------------------------
    */
 
@@ -666,15 +716,19 @@ export default function ShippingRegionScreen() {
 
     Alert.alert(
       "Delete Shipping Region",
+
       `Are you sure you want to delete "${shippingRegion.region}"? This action cannot be undone.`,
+
       [
         {
           text: "Cancel",
           style: "cancel",
         },
+
         {
           text: "Delete",
           style: "destructive",
+
           onPress: async () => {
             try {
               await deleteShippingRegionMutation.mutateAsync(regionId);
@@ -786,29 +840,33 @@ export default function ShippingRegionScreen() {
 
             {/* ADD */}
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Add shipping region"
-              disabled={deleteShippingRegionMutation.isPending}
-              onPress={handleAddShippingRegion}
-              style={({ pressed }) => ({
-                width: 44,
-                height: 44,
-                borderRadius: radius.full,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: pressed
-                  ? theme.action.primary.pressed
-                  : theme.action.primary.background,
-                opacity: deleteShippingRegionMutation.isPending ? 0.5 : 1,
-              })}
-            >
-              <Ionicons
-                name="add"
-                size={24}
-                color={theme.action.primary.text}
-              />
-            </Pressable>
+            {!isFirstTimeUser && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Add shipping region"
+                disabled={deleteShippingRegionMutation.isPending}
+                onPress={handleAddShippingRegion}
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: radius.full,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: theme.action.primary.background,
+                  opacity: deleteShippingRegionMutation.isPending
+                    ? 0.5
+                    : pressed
+                      ? 0.7
+                      : 1,
+                })}
+              >
+                <Ionicons
+                  name="add"
+                  size={24}
+                  color={theme.action.primary.text}
+                />
+              </Pressable>
+            )}
           </View>
 
           {/* ================================================================
@@ -839,7 +897,7 @@ export default function ShippingRegionScreen() {
             )}
 
             {/* ==============================================================
-                SHIPPING REGION CONTENT
+                CONTENT STATE
             ============================================================== */}
 
             <View
@@ -849,7 +907,7 @@ export default function ShippingRegionScreen() {
               }}
             >
               {/* ============================================================
-                  1. LOADING
+                  INITIAL LOADING
               ============================================================ */}
 
               {isLoading ? (
@@ -877,7 +935,7 @@ export default function ShippingRegionScreen() {
                 </View>
               ) : isFirstTimeUser ? (
                 /* ==========================================================
-                   2. FIRST-TIME USER
+                   FIRST-TIME USER
                 ========================================================== */
 
                 <ShippingRegionsEmptyState
@@ -885,13 +943,13 @@ export default function ShippingRegionScreen() {
                 />
               ) : showShippingRegionError ? (
                 /* ==========================================================
-                   3. ERROR
+                   ERROR
                 ========================================================== */
 
                 <ShippingRegionsErrorState onRetry={refetch} />
               ) : hasNoSearchResults ? (
                 /* ==========================================================
-                   4. SEARCH EMPTY
+                   SEARCH EMPTY
                 ========================================================== */
 
                 <ShippingRegionsSearchEmptyState
@@ -899,7 +957,7 @@ export default function ShippingRegionScreen() {
                 />
               ) : (
                 /* ==========================================================
-                   5. SHIPPING REGION LIST
+                   SHIPPING REGION LIST
                 ========================================================== */
 
                 <FlatList

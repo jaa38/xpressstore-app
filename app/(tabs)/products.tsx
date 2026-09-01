@@ -505,6 +505,17 @@ export default function ProductScreen() {
    * ==========================================================================
    * SCREEN STATES
    * ==========================================================================
+   *
+   * State priority:
+   *
+   * 1. Initial loading
+   * 2. First-time user
+   * 3. Existing products + API error
+   * 4. Existing products + no search results
+   * 5. Product list
+   *
+   * A brand-new user should not see a technical error state simply because
+   * their catalog is empty.
    */
 
   const hasProducts = productList.length > 0;
@@ -516,7 +527,7 @@ export default function ProductScreen() {
 
   const hasNoSearchResults =
     !isLoading &&
-    !error &&
+    !showProductError &&
     hasProducts &&
     searchQuery.trim() !== "" &&
     filteredProducts.length === 0;
@@ -660,6 +671,20 @@ export default function ProductScreen() {
 
   /**
    * ==========================================================================
+   * HEADER SUBTITLE
+   * ==========================================================================
+   */
+
+  const headerSubtitle = isLoading
+    ? "Loading products..."
+    : isFirstTimeUser
+      ? "Add your first product to start building your catalog"
+      : productList.length === 1
+        ? "1 item in catalog"
+        : `${productList.length} items in catalog`;
+
+  /**
+   * ==========================================================================
    * UI
    * ==========================================================================
    */
@@ -704,48 +729,48 @@ export default function ProductScreen() {
               <AppText variant="h1">Products</AppText>
 
               <AppText variant="body" color="secondary">
-                {isLoading
-                  ? "Loading products..."
-                  : productList.length === 0
-                    ? "Add your first product to start building your catalog"
-                    : productList.length === 1
-                      ? "1 item in catalog"
-                      : `${productList.length} items in catalog`}
+                {headerSubtitle}
               </AppText>
             </View>
 
-            {/* ADD PRODUCT */}
+            {/* ============================================================
+                ADD PRODUCT
+                Hidden for first-time users.
+                The empty state provides the primary CTA instead.
+            ============================================================= */}
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Add Product"
-              disabled={
-                deleteProductMutation.isPending ||
-                toggleStatusMutation.isPending
-              }
-              onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
-              style={({ pressed }) => ({
-                width: 44,
-                height: 44,
-                borderRadius: radius.full,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: pressed
-                  ? theme.action.primary.pressed
-                  : theme.action.primary.background,
-                opacity:
+            {!isFirstTimeUser && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Add Product"
+                disabled={
                   deleteProductMutation.isPending ||
                   toggleStatusMutation.isPending
-                    ? 0.5
-                    : 1,
-              })}
-            >
-              <Ionicons
-                name="add"
-                size={24}
-                color={theme.action.primary.text}
-              />
-            </Pressable>
+                }
+                onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: radius.full,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: pressed
+                    ? theme.action.primary.pressed
+                    : theme.action.primary.background,
+                  opacity:
+                    deleteProductMutation.isPending ||
+                    toggleStatusMutation.isPending
+                      ? 0.5
+                      : 1,
+                })}
+              >
+                <Ionicons
+                  name="add"
+                  size={24}
+                  color={theme.action.primary.text}
+                />
+              </Pressable>
+            )}
           </View>
 
           {/* ================================================================
@@ -755,7 +780,8 @@ export default function ProductScreen() {
           {showLowStockBanner &&
             lowStockProducts.length > 0 &&
             !isLoading &&
-            !showProductError && (
+            !showProductError &&
+            !isFirstTimeUser && (
               <Card
                 style={{
                   marginTop: spacing.md,
@@ -807,9 +833,10 @@ export default function ProductScreen() {
 
           {/* ================================================================
               SEARCH
+              Hidden for first-time users.
           ================================================================= */}
 
-          {hasProducts && !showProductError && (
+          {!isFirstTimeUser && hasProducts && !showProductError && (
             <View
               style={{
                 marginTop: spacing.md,
@@ -864,71 +891,6 @@ export default function ProductScreen() {
                   >
                     Loading products...
                   </AppText>
-                </View>
-              ) : showProductError ? (
-                /* ==========================================================
-                   ERROR
-                =========================================================== */
-
-                <View
-                  style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingVertical: spacing["3xl"],
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: radius.full,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: theme.background.error,
-                    }}
-                  >
-                    <Ionicons
-                      name="alert-circle-outline"
-                      size={30}
-                      color={theme.icon.error.icon}
-                    />
-                  </View>
-
-                  <AppText
-                    variant="bodyLargeBold"
-                    style={{
-                      marginTop: spacing.md,
-                      textAlign: "center",
-                    }}
-                  >
-                    Unable to load products
-                  </AppText>
-
-                  <AppText
-                    variant="body"
-                    color="secondary"
-                    style={{
-                      marginTop: spacing.xs,
-                      textAlign: "center",
-                      maxWidth: 320,
-                    }}
-                  >
-                    We couldn't load your products. Please try again.
-                  </AppText>
-
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Try again"
-                    onPress={() => refetch()}
-                    style={{
-                      marginTop: spacing.md,
-                      paddingVertical: spacing.xs,
-                      paddingHorizontal: spacing.sm,
-                    }}
-                  >
-                    <AppText color="link">Try Again</AppText>
-                  </Pressable>
                 </View>
               ) : isFirstTimeUser ? (
                 /* ==========================================================
@@ -991,6 +953,71 @@ export default function ProductScreen() {
                     onPress={() => router.push(ROUTES.ADD_PRODUCT_INFO)}
                   />
                 </Card>
+              ) : showProductError ? (
+                /* ==========================================================
+                   EXISTING PRODUCTS + ERROR
+                =========================================================== */
+
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    paddingVertical: spacing["3xl"],
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: radius.full,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: theme.background.error,
+                    }}
+                  >
+                    <Ionicons
+                      name="alert-circle-outline"
+                      size={30}
+                      color={theme.icon.error.icon}
+                    />
+                  </View>
+
+                  <AppText
+                    variant="bodyLargeBold"
+                    style={{
+                      marginTop: spacing.md,
+                      textAlign: "center",
+                    }}
+                  >
+                    Unable to load products
+                  </AppText>
+
+                  <AppText
+                    variant="body"
+                    color="secondary"
+                    style={{
+                      marginTop: spacing.xs,
+                      textAlign: "center",
+                      maxWidth: 320,
+                    }}
+                  >
+                    We couldn't load your products. Please try again.
+                  </AppText>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Try again"
+                    onPress={() => refetch()}
+                    style={{
+                      marginTop: spacing.md,
+                      paddingVertical: spacing.xs,
+                      paddingHorizontal: spacing.sm,
+                    }}
+                  >
+                    <AppText color="link">Try Again</AppText>
+                  </Pressable>
+                </View>
               ) : hasNoSearchResults ? (
                 /* ==========================================================
                    SEARCH EMPTY STATE

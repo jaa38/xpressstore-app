@@ -282,15 +282,6 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    * STORES
    * --------------------------------------------------------------------------
-   *
-   * useStores() is the single source of truth.
-   *
-   * The hook decides whether the application uses:
-   *
-   * - Mock store data
-   * - Real API data
-   *
-   * The screen does not need to know which source is active.
    */
 
   const {
@@ -518,10 +509,6 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    * REFRESH
    * --------------------------------------------------------------------------
-   *
-   * The hook owns the data source.
-   *
-   * The screen simply requests a refetch.
    */
 
   async function onRefresh() {
@@ -613,6 +600,17 @@ export default function StoreScreen() {
    * --------------------------------------------------------------------------
    * SCREEN STATES
    * --------------------------------------------------------------------------
+   *
+   * State priority:
+   *
+   * 1. Initial loading
+   * 2. First-time user
+   * 3. Existing stores + API error
+   * 4. Existing stores + no search/filter results
+   * 5. Store list
+   *
+   * A brand-new merchant should see an onboarding state rather than a
+   * technical error or empty filtering UI.
    */
 
   const hasStores = stores.length > 0;
@@ -627,6 +625,20 @@ export default function StoreScreen() {
 
   const hasNoSearchResults =
     !isLoading && !showStoreError && hasStores && filteredStores.length === 0;
+
+  /**
+   * --------------------------------------------------------------------------
+   * HEADER SUBTITLE
+   * --------------------------------------------------------------------------
+   */
+
+  const headerSubtitle = isLoading
+    ? "Loading storefronts..."
+    : isFirstTimeUser
+      ? "Create your first storefront"
+      : totalStores === 1
+        ? "1 storefront"
+        : `${totalStores} storefronts`;
 
   /**
    * --------------------------------------------------------------------------
@@ -674,56 +686,48 @@ export default function StoreScreen() {
               <AppText variant="h1">Storefront</AppText>
 
               <AppText variant="body" color="secondary">
-                {isLoading
-                  ? "Loading storefronts..."
-                  : isFirstTimeUser
-                    ? "Create your first storefront"
-                    : totalStores === 1
-                      ? "1 storefront"
-                      : `${totalStores} storefronts`}
+                {headerSubtitle}
               </AppText>
             </View>
 
-            {/* ADD STORE */}
+            {/* ============================================================
+                ADD STORE
+                Hidden for first-time users.
+            ============================================================= */}
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Create Store"
-              disabled={deleteStoreMutation.isPending}
-              onPress={() => router.push(ROUTES.ADD_STORE_INFORMATION)}
-              style={({ pressed }) => ({
-                width: 44,
-                height: 44,
-                borderRadius: radius.full,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: pressed
-                  ? theme.action.primary.pressed
-                  : theme.action.primary.background,
-                opacity: deleteStoreMutation.isPending ? 0.5 : 1,
-              })}
-            >
-              <Ionicons
-                name="add"
-                size={24}
-                color={theme.action.primary.text}
-              />
-            </Pressable>
+            {!isFirstTimeUser && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Create Store"
+                disabled={deleteStoreMutation.isPending}
+                onPress={() => router.push(ROUTES.ADD_STORE_INFORMATION)}
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: radius.full,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: pressed
+                    ? theme.action.primary.pressed
+                    : theme.action.primary.background,
+                  opacity: deleteStoreMutation.isPending ? 0.5 : 1,
+                })}
+              >
+                <Ionicons
+                  name="add"
+                  size={24}
+                  color={theme.action.primary.text}
+                />
+              </Pressable>
+            )}
           </View>
 
           {/* ================================================================
-              CONTENT
+              SUMMARY
+              Hidden for first-time users.
           ================================================================= */}
 
-          <View
-            style={{
-              flex: 1,
-            }}
-          >
-            {/* ==============================================================
-                SUMMARY
-            =============================================================== */}
-
+          {!isFirstTimeUser && (
             <Card
               style={{
                 marginTop: spacing.md,
@@ -810,408 +814,418 @@ export default function StoreScreen() {
                 </View>
               </View>
             </Card>
+          )}
 
-            {/* ==============================================================
-                SEARCH + FILTER
-            =============================================================== */}
+          {/* ================================================================
+              SEARCH + FILTER
+              Hidden for first-time users.
+          ================================================================= */}
 
-            {!isFirstTimeUser && !showStoreError && (
+          {!isFirstTimeUser && !showStoreError && (
+            <View
+              style={{
+                marginTop: spacing.md,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.sm,
+              }}
+            >
               <View
                 style={{
-                  marginTop: spacing.md,
+                  flex: 1,
+                }}
+              >
+                <SearchBar
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Search stores"
+                />
+              </View>
+
+              <FilterButton
+                active={selectedFilter !== "all"}
+                onPress={() => storeFrontBottomSheetRef.current?.present()}
+              />
+            </View>
+          )}
+
+          {/* ================================================================
+              FILTER LABEL
+          ================================================================= */}
+
+          {selectedFilter !== "all" && !isFirstTimeUser && !showStoreError && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginTop: spacing.sm,
+              }}
+            >
+              <View
+                style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: spacing.sm,
+                  gap: spacing.xs,
+                }}
+              >
+                <AppText variant="bodySmall" color="secondary">
+                  Filter:
+                </AppText>
+
+                <AppText variant="bodySmallBold" color="brand">
+                  {filterLabel}
+                </AppText>
+              </View>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Clear store filter"
+                hitSlop={8}
+                onPress={() => setSelectedFilter("all")}
+              >
+                <AppText variant="bodySmall" color="link">
+                  Clear
+                </AppText>
+              </Pressable>
+            </View>
+          )}
+
+          {/* ================================================================
+              STORE CONTENT
+          ================================================================= */}
+
+          <View
+            style={{
+              flex: 1,
+              marginTop: spacing.md,
+            }}
+          >
+            {/* ============================================================
+                INITIAL LOADING
+            ============================================================= */}
+
+            {isLoading ? (
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingVertical: spacing["3xl"],
+                }}
+              >
+                <ActivityIndicator
+                  size="large"
+                  color={theme.icon.branding.icon}
+                />
+
+                <AppText
+                  color="secondary"
+                  style={{
+                    marginTop: spacing.md,
+                  }}
+                >
+                  Loading storefronts...
+                </AppText>
+              </View>
+            ) : isFirstTimeUser ? (
+              /* ==========================================================
+                 FIRST-TIME USER
+              =========================================================== */
+
+              <Card
+                style={{
+                  alignItems: "center",
+                  paddingVertical: spacing.xl,
+                  paddingHorizontal: spacing.lg,
                 }}
               >
                 <View
                   style={{
-                    flex: 1,
+                    width: 64,
+                    height: 64,
+                    borderRadius: radius.full,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: theme.icon.branding.background,
                   }}
                 >
-                  <SearchBar
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    placeholder="Search stores"
+                  <Ionicons
+                    name="storefront-outline"
+                    size={32}
+                    color={theme.icon.branding.icon}
                   />
                 </View>
 
-                <FilterButton
-                  active={selectedFilter !== "all"}
-                  onPress={() => storeFrontBottomSheetRef.current?.present()}
-                />
-              </View>
-            )}
-
-            {/* ==============================================================
-                FILTER LABEL
-            =============================================================== */}
-
-            {selectedFilter !== "all" &&
-              !isFirstTimeUser &&
-              !showStoreError && (
-                <View
+                <AppText
+                  variant="bodyLargeBold"
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginTop: spacing.sm,
+                    marginTop: spacing.md,
+                    textAlign: "center",
                   }}
                 >
-                  <View
+                  No stores yet
+                </AppText>
+
+                <AppText
+                  variant="body"
+                  color="secondary"
+                  style={{
+                    marginTop: spacing.xs,
+                    textAlign: "center",
+                    maxWidth: 320,
+                  }}
+                >
+                  Create your first storefront to start selling your products
+                  online.
+                </AppText>
+
+                <Button
+                  title="Create Store"
+                  variant="primary"
+                  style={{
+                    marginTop: spacing.lg,
+                  }}
+                  onPress={() => router.push(ROUTES.ADD_STORE_INFORMATION)}
+                />
+
+                <AppText
+                  variant="caption"
+                  color="muted"
+                  style={{
+                    marginTop: spacing.sm,
+                    textAlign: "center",
+                  }}
+                >
+                  You can manage your storefront and products from here.
+                </AppText>
+              </Card>
+            ) : showStoreError ? (
+              /* ==========================================================
+                 EXISTING STORES + ERROR
+              =========================================================== */
+
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingVertical: spacing["3xl"],
+                }}
+              >
+                <View
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: radius.full,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: theme.background.error,
+                  }}
+                >
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={30}
+                    color={theme.icon.error.icon}
+                  />
+                </View>
+
+                <AppText
+                  variant="bodyLargeBold"
+                  style={{
+                    marginTop: spacing.md,
+                    textAlign: "center",
+                  }}
+                >
+                  Unable to load stores
+                </AppText>
+
+                <AppText
+                  variant="body"
+                  color="secondary"
+                  style={{
+                    marginTop: spacing.xs,
+                    textAlign: "center",
+                    maxWidth: 320,
+                  }}
+                >
+                  We couldn't load your storefronts. Please try again.
+                </AppText>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Try again"
+                  onPress={() => refetch()}
+                  style={{
+                    marginTop: spacing.md,
+                    paddingVertical: spacing.xs,
+                    paddingHorizontal: spacing.sm,
+                  }}
+                >
+                  <AppText color="link">Try Again</AppText>
+                </Pressable>
+              </View>
+            ) : hasNoSearchResults ? (
+              /* ==========================================================
+                 SEARCH / FILTER EMPTY STATE
+              =========================================================== */
+
+              <Card
+                style={{
+                  alignItems: "center",
+                  paddingVertical: spacing.xl,
+                  paddingHorizontal: spacing.lg,
+                }}
+              >
+                <View
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: radius.full,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: theme.icon.default.background,
+                  }}
+                >
+                  <Ionicons
+                    name="search-outline"
+                    size={28}
+                    color={theme.icon.default.icon}
+                  />
+                </View>
+
+                <AppText
+                  variant="bodyLargeBold"
+                  style={{
+                    marginTop: spacing.md,
+                    textAlign: "center",
+                  }}
+                >
+                  No stores found
+                </AppText>
+
+                <AppText
+                  variant="body"
+                  color="secondary"
+                  style={{
+                    marginTop: spacing.xs,
+                    textAlign: "center",
+                    maxWidth: 320,
+                  }}
+                >
+                  Try searching with a different store name or change your
+                  filter.
+                </AppText>
+
+                {searchQuery.trim() !== "" && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Clear store search"
+                    onPress={() => setSearchQuery("")}
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: spacing.xs,
+                      marginTop: spacing.md,
                     }}
                   >
-                    <AppText variant="bodySmall" color="secondary">
-                      Filter:
-                    </AppText>
+                    <AppText color="link">Clear Search</AppText>
+                  </Pressable>
+                )}
 
-                    <AppText variant="bodySmallBold" color="brand">
-                      {filterLabel}
-                    </AppText>
-                  </View>
-
+                {selectedFilter !== "all" && searchQuery.trim() === "" && (
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Clear store filter"
-                    hitSlop={8}
                     onPress={() => setSelectedFilter("all")}
+                    style={{
+                      marginTop: spacing.md,
+                    }}
                   >
-                    <AppText variant="bodySmall" color="link">
-                      Clear
-                    </AppText>
+                    <AppText color="link">Clear Filter</AppText>
                   </Pressable>
-                </View>
-              )}
+                )}
+              </Card>
+            ) : (
+              /* ==========================================================
+                 STORE LIST
+              =========================================================== */
 
-            {/* ==============================================================
-                STORE CONTENT
-            =============================================================== */}
-
-            <View
-              style={{
-                flex: 1,
-                marginTop: spacing.md,
-              }}
-            >
-              {/* INITIAL LOADING */}
-
-              {isLoading ? (
-                <View
-                  style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingVertical: spacing["3xl"],
-                  }}
-                >
-                  <ActivityIndicator
-                    size="large"
-                    color={theme.icon.branding.icon}
+              <FlatList
+                data={displayedStores}
+                keyExtractor={(item) => item.storeId.toString()}
+                renderItem={({ item }) => (
+                  <StoreCard
+                    store={item}
+                    deleting={deleteStoreMutation.isPending}
+                    onDelete={handleDelete}
+                    onCopyLink={handleCopyLink}
+                    onShareLink={handleShareLink}
+                    onViewDetails={handleViewDetails}
                   />
-
-                  <AppText
-                    color="secondary"
-                    style={{
-                      marginTop: spacing.md,
-                    }}
-                  >
-                    Loading storefronts...
-                  </AppText>
-                </View>
-              ) : isFirstTimeUser ? (
-                /* FIRST-TIME USER */
-
-                <Card
-                  style={{
-                    alignItems: "center",
-                    paddingVertical: spacing.xl,
-                    paddingHorizontal: spacing.lg,
-                  }}
-                >
+                )}
+                ItemSeparatorComponent={() => (
                   <View
                     style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: radius.full,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: theme.icon.branding.background,
+                      height: spacing.md,
                     }}
-                  >
-                    <Ionicons
-                      name="storefront-outline"
-                      size={32}
-                      color={theme.icon.branding.icon}
-                    />
-                  </View>
-
-                  <AppText
-                    variant="bodyLargeBold"
-                    style={{
-                      marginTop: spacing.md,
-                      textAlign: "center",
-                    }}
-                  >
-                    No stores yet
-                  </AppText>
-
-                  <AppText
-                    variant="body"
-                    color="secondary"
-                    style={{
-                      marginTop: spacing.xs,
-                      textAlign: "center",
-                      maxWidth: 320,
-                    }}
-                  >
-                    Create your first storefront to start selling your products
-                    online.
-                  </AppText>
-
-                  <Button
-                    title="Create Store"
-                    variant="primary"
-                    style={{
-                      marginTop: spacing.lg,
-                    }}
-                    onPress={() => router.push(ROUTES.ADD_STORE_INFORMATION)}
                   />
-
-                  <AppText
-                    variant="caption"
-                    color="muted"
-                    style={{
-                      marginTop: spacing.sm,
-                      textAlign: "center",
-                    }}
-                  >
-                    You can manage your storefront and products from here.
-                  </AppText>
-                </Card>
-              ) : showStoreError ? (
-                /* ERROR */
-
-                <View
-                  style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingVertical: spacing["3xl"],
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: radius.full,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: theme.background.error,
-                    }}
-                  >
-                    <Ionicons
-                      name="alert-circle-outline"
-                      size={30}
-                      color={theme.icon.error.icon}
-                    />
-                  </View>
-
-                  <AppText
-                    variant="bodyLargeBold"
-                    style={{
-                      marginTop: spacing.md,
-                      textAlign: "center",
-                    }}
-                  >
-                    Unable to load stores
-                  </AppText>
-
-                  <AppText
-                    variant="body"
-                    color="secondary"
-                    style={{
-                      marginTop: spacing.xs,
-                      textAlign: "center",
-                      maxWidth: 320,
-                    }}
-                  >
-                    We couldn't load your storefronts. Please try again.
-                  </AppText>
-
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Try again"
-                    onPress={() => refetch()}
-                    style={{
-                      marginTop: spacing.md,
-                      paddingVertical: spacing.xs,
-                      paddingHorizontal: spacing.sm,
-                    }}
-                  >
-                    <AppText color="link">Try Again</AppText>
-                  </Pressable>
-                </View>
-              ) : hasNoSearchResults ? (
-                /* SEARCH / FILTER EMPTY */
-
-                <Card
-                  style={{
-                    alignItems: "center",
-                    paddingVertical: spacing.xl,
-                    paddingHorizontal: spacing.lg,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: radius.full,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: theme.icon.default.background,
-                    }}
-                  >
-                    <Ionicons
-                      name="search-outline"
-                      size={28}
-                      color={theme.icon.default.icon}
-                    />
-                  </View>
-
-                  <AppText
-                    variant="bodyLargeBold"
-                    style={{
-                      marginTop: spacing.md,
-                      textAlign: "center",
-                    }}
-                  >
-                    No stores found
-                  </AppText>
-
-                  <AppText
-                    variant="body"
-                    color="secondary"
-                    style={{
-                      marginTop: spacing.xs,
-                      textAlign: "center",
-                    }}
-                  >
-                    Try searching with a different store name or change your
-                    filter.
-                  </AppText>
-
-                  {searchQuery.trim() !== "" && (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Clear store search"
-                      onPress={() => setSearchQuery("")}
-                      style={{
-                        marginTop: spacing.md,
-                      }}
-                    >
-                      <AppText color="link">Clear Search</AppText>
-                    </Pressable>
-                  )}
-
-                  {selectedFilter !== "all" && searchQuery.trim() === "" && (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Clear store filter"
-                      onPress={() => setSelectedFilter("all")}
-                      style={{
-                        marginTop: spacing.md,
-                      }}
-                    >
-                      <AppText color="link">Clear Filter</AppText>
-                    </Pressable>
-                  )}
-                </Card>
-              ) : (
-                /* STORE LIST */
-
-                <FlatList
-                  data={displayedStores}
-                  keyExtractor={(item) => item.storeId.toString()}
-                  renderItem={({ item }) => (
-                    <StoreCard
-                      store={item}
-                      deleting={deleteStoreMutation.isPending}
-                      onDelete={handleDelete}
-                      onCopyLink={handleCopyLink}
-                      onShareLink={handleShareLink}
-                      onViewDetails={handleViewDetails}
-                    />
-                  )}
-                  ItemSeparatorComponent={() => (
+                )}
+                contentContainerStyle={{
+                  paddingBottom: spacing["2xl"],
+                }}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                refreshControl={
+                  <RefreshControl
+                    refreshing={isRefetching}
+                    onRefresh={onRefresh}
+                    tintColor={theme.icon.branding.icon}
+                    colors={[theme.icon.branding.icon]}
+                    progressBackgroundColor={theme.background.surface}
+                  />
+                }
+                onEndReached={loadMoreStores}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={
+                  hasMoreStores || isLoadingMore ? (
                     <View
                       style={{
-                        height: spacing.md,
+                        paddingVertical: spacing.lg,
+                        alignItems: "center",
                       }}
-                    />
-                  )}
-                  contentContainerStyle={{
-                    paddingBottom: spacing["2xl"],
-                  }}
-                  showsVerticalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={isRefetching}
-                      onRefresh={onRefresh}
-                      tintColor={theme.icon.branding.icon}
-                      colors={[theme.icon.branding.icon]}
-                      progressBackgroundColor={theme.background.surface}
-                    />
-                  }
-                  onEndReached={loadMoreStores}
-                  onEndReachedThreshold={0.5}
-                  ListFooterComponent={
-                    hasMoreStores || isLoadingMore ? (
-                      <View
-                        style={{
-                          paddingVertical: spacing.lg,
-                          alignItems: "center",
-                        }}
-                      >
-                        {isLoadingMore && (
-                          <>
-                            <ActivityIndicator
-                              size="small"
-                              color={theme.icon.branding.icon}
-                            />
+                    >
+                      {isLoadingMore && (
+                        <>
+                          <ActivityIndicator
+                            size="small"
+                            color={theme.icon.branding.icon}
+                          />
 
-                            <AppText
-                              variant="caption"
-                              color="secondary"
-                              style={{
-                                marginTop: spacing.xs,
-                              }}
-                            >
-                              Loading more stores...
-                            </AppText>
-                          </>
-                        )}
-                      </View>
-                    ) : (
-                      <View
-                        style={{
-                          paddingVertical: spacing.lg,
-                          alignItems: "center",
-                        }}
-                      >
-                        <AppText variant="caption" color="muted">
-                          You've reached the end of your stores.
-                        </AppText>
-                      </View>
-                    )
-                  }
-                />
-              )}
-            </View>
+                          <AppText
+                            variant="caption"
+                            color="secondary"
+                            style={{
+                              marginTop: spacing.xs,
+                            }}
+                          >
+                            Loading more stores...
+                          </AppText>
+                        </>
+                      )}
+                    </View>
+                  ) : (
+                    <View
+                      style={{
+                        paddingVertical: spacing.lg,
+                        alignItems: "center",
+                      }}
+                    >
+                      <AppText variant="caption" color="muted">
+                        You've reached the end of your stores.
+                      </AppText>
+                    </View>
+                  )
+                }
+              />
+            )}
           </View>
         </View>
       </View>

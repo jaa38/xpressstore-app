@@ -64,11 +64,7 @@ function RightActions({
         opacity: disabled ? 0.5 : pressed ? 0.7 : 1,
       })}
     >
-      <Ionicons
-        name="trash-outline"
-        size={24}
-        color={theme.text.inverse}
-      />
+      <Ionicons name="trash-outline" size={24} color={theme.text.inverse} />
 
       <AppText
         variant="bodySmall"
@@ -148,18 +144,11 @@ function CategoryCard({
               gap: spacing.xs,
             }}
           >
-            <AppText
-              variant="bodyBold"
-              numberOfLines={1}
-            >
+            <AppText variant="bodyBold" numberOfLines={1}>
               {category.name}
             </AppText>
 
-            <AppText
-              variant="bodySmall"
-              color="muted"
-              numberOfLines={2}
-            >
+            <AppText variant="bodySmall" color="muted" numberOfLines={2}>
               {category.description || "No description"}
             </AppText>
           </View>
@@ -266,11 +255,7 @@ function CategoriesEmptyState({
           title="Add Category"
           variant="primary"
           leftIcon={
-            <Ionicons
-              name="add"
-              size={20}
-              color={theme.action.primary.text}
-            />
+            <Ionicons name="add" size={20} color={theme.action.primary.text} />
           }
           style={{
             marginTop: spacing.lg,
@@ -388,11 +373,7 @@ function CategoriesSearchEmptyState({
  * ============================================================================
  */
 
-function CategoriesErrorState({
-  onRetry,
-}: {
-  onRetry: () => void;
-}) {
+function CategoriesErrorState({ onRetry }: { onRetry: () => void }) {
   return (
     <View
       style={{
@@ -547,14 +528,9 @@ export default function CategoriesScreen() {
   const hasCategories = categoryList.length > 0;
 
   const isFirstTimeUser =
-    !isLoading &&
-    !hasCategories &&
-    searchQuery.trim() === "";
+    !isLoading && !hasCategories && searchQuery.trim() === "";
 
-  const showCategoryError =
-    !isLoading &&
-    isError &&
-    hasCategories;
+  const showCategoryError = !isLoading && isError && hasCategories;
 
   /**
    * --------------------------------------------------------------------------
@@ -563,9 +539,7 @@ export default function CategoriesScreen() {
    */
 
   const sortedCategories = useMemo(() => {
-    return [...categoryList].sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
+    return [...categoryList].sort((a, b) => a.name.localeCompare(b.name));
   }, [categoryList]);
 
   /**
@@ -628,9 +602,7 @@ export default function CategoriesScreen() {
       return;
     }
 
-    const category = categoryList.find(
-      (item) => item.id === categoryId
-    );
+    const category = categoryList.find((item) => item.id === categoryId);
 
     if (!category) {
       return;
@@ -649,29 +621,22 @@ export default function CategoriesScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteCategoryMutation.mutateAsync(
-                categoryId
-              );
+              await deleteCategoryMutation.mutateAsync(categoryId);
 
               await refetch();
 
               showToast({
                 type: "success",
                 title: "Category Deleted",
-                message:
-                  "The category has been removed successfully.",
+                message: "The category has been removed successfully.",
               });
             } catch (error) {
-              console.log(
-                "DELETE CATEGORY ERROR",
-                error
-              );
+              console.log("DELETE CATEGORY ERROR", error);
 
               showToast({
                 type: "error",
                 title: "Delete Failed",
-                message:
-                  "Unable to delete this category. Please try again.",
+                message: "Unable to delete this category. Please try again.",
               });
             }
           },
@@ -755,45 +720,40 @@ export default function CategoriesScreen() {
                 gap: spacing.xs,
               }}
             >
-              <AppText variant="h1">
-                Categories
-              </AppText>
+              <AppText variant="h1">Categories</AppText>
 
-              <AppText
-                variant="body"
-                color="secondary"
-              >
+              <AppText variant="body" color="secondary">
                 {headerSubtitle}
               </AppText>
             </View>
 
             {/* ADD */}
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Add category"
-              disabled={deleteCategoryMutation.isPending}
-              onPress={handleAddCategory}
-              style={({ pressed }) => ({
-                width: 44,
-                height: 44,
-                borderRadius: radius.full,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: pressed
-                  ? theme.action.primary.pressed
-                  : theme.action.primary.background,
-                opacity: deleteCategoryMutation.isPending
-                  ? 0.5
-                  : 1,
-              })}
-            >
-              <Ionicons
-                name="add"
-                size={24}
-                color={theme.action.primary.text}
-              />
-            </Pressable>
+            {!isFirstTimeUser && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Add category"
+                disabled={deleteCategoryMutation.isPending}
+                onPress={handleAddCategory}
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: radius.full,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: pressed
+                    ? theme.action.primary.pressed
+                    : theme.action.primary.background,
+                  opacity: deleteCategoryMutation.isPending ? 0.5 : 1,
+                })}
+              >
+                <Ionicons
+                  name="add"
+                  size={24}
+                  color={theme.action.primary.text}
+                />
+              </Pressable>
+            )}
           </View>
 
           {/* ================================================================
@@ -809,20 +769,19 @@ export default function CategoriesScreen() {
                 SEARCH
             ============================================================== */}
 
-            {!isFirstTimeUser &&
-              !showCategoryError && (
-                <View
-                  style={{
-                    marginTop: spacing.md,
-                  }}
-                >
-                  <SearchBar
-                    placeholder="Search categories"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                  />
-                </View>
-              )}
+            {!isFirstTimeUser && !showCategoryError && (
+              <View
+                style={{
+                  marginTop: spacing.md,
+                }}
+              >
+                <SearchBar
+                  placeholder="Search categories"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
+            )}
 
             {/* ==============================================================
                 CATEGORY CONTENT
@@ -866,26 +825,20 @@ export default function CategoriesScreen() {
                    2. FIRST-TIME USER
                 ========================================================== */
 
-                <CategoriesEmptyState
-                  onAddCategory={handleAddCategory}
-                />
+                <CategoriesEmptyState onAddCategory={handleAddCategory} />
               ) : showCategoryError ? (
                 /* ==========================================================
                    3. ERROR
                 ========================================================== */
 
-                <CategoriesErrorState
-                  onRetry={refetch}
-                />
+                <CategoriesErrorState onRetry={refetch} />
               ) : hasNoSearchResults ? (
                 /* ==========================================================
                    4. SEARCH EMPTY
                 ========================================================== */
 
                 <CategoriesSearchEmptyState
-                  onClearSearch={() =>
-                    setSearchQuery("")
-                  }
+                  onClearSearch={() => setSearchQuery("")}
                 />
               ) : (
                 /* ==========================================================
@@ -894,21 +847,15 @@ export default function CategoriesScreen() {
 
                 <FlatList
                   data={filteredCategories}
-                  keyExtractor={(item) =>
-                    String(item.id)
-                  }
+                  keyExtractor={(item) => String(item.id)}
                   renderItem={({ item }) => (
                     <CategoryCard
                       category={item}
-                      deleting={
-                        deleteCategoryMutation.isPending
-                      }
+                      deleting={deleteCategoryMutation.isPending}
                       onDelete={handleDelete}
                     />
                   )}
-                  showsVerticalScrollIndicator={
-                    false
-                  }
+                  showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
                   contentContainerStyle={{
                     paddingTop: spacing.md,
@@ -925,15 +872,9 @@ export default function CategoriesScreen() {
                     <RefreshControl
                       refreshing={isFetching}
                       onRefresh={onRefresh}
-                      tintColor={
-                        theme.icon.branding.icon
-                      }
-                      colors={[
-                        theme.icon.branding.icon,
-                      ]}
-                      progressBackgroundColor={
-                        theme.background.surface
-                      }
+                      tintColor={theme.icon.branding.icon}
+                      colors={[theme.icon.branding.icon]}
+                      progressBackgroundColor={theme.background.surface}
                     />
                   }
                 />

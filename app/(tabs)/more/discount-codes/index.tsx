@@ -248,28 +248,30 @@ export default function DiscountCodesScreen() {
 
             {/* ADD */}
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Create discount code"
-              hitSlop={8}
-              onPress={handleCreateDiscount}
-              style={({ pressed }) => ({
-                width: 44,
-                height: 44,
-                borderRadius: radius.full,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: pressed
-                  ? theme.action.primary.pressed
-                  : theme.action.primary.background,
-              })}
-            >
-              <Ionicons
-                name="add"
-                size={24}
-                color={theme.action.primary.text}
-              />
-            </Pressable>
+            {!isFirstTimeUser && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Create discount code"
+                hitSlop={8}
+                onPress={handleCreateDiscount}
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: radius.full,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: pressed
+                    ? theme.action.primary.pressed
+                    : theme.action.primary.background,
+                })}
+              >
+                <Ionicons
+                  name="add"
+                  size={24}
+                  color={theme.action.primary.text}
+                />
+              </Pressable>
+            )}
           </View>
 
           {/* ==================================================================
@@ -285,92 +287,94 @@ export default function DiscountCodesScreen() {
                 SUMMARY
             ================================================================== */}
 
-            <Card
-              style={{
-                marginTop: spacing.md,
-              }}
-            >
-              <View
+            {!isFirstTimeUser && (
+              <Card
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
+                  marginTop: spacing.md,
                 }}
               >
-                {/* TOTAL */}
-
                 <View
                   style={{
-                    flex: 1,
+                    flexDirection: "row",
                     alignItems: "center",
-                    gap: spacing.xs,
                   }}
                 >
-                  <AppText variant="bodySmallBold" color="muted">
-                    Total
-                  </AppText>
+                  {/* TOTAL */}
 
-                  <AppText variant="h2" color="strong">
-                    {isLoading ? "—" : totalDiscounts}
-                  </AppText>
+                  <View
+                    style={{
+                      flex: 1,
+                      alignItems: "center",
+                      gap: spacing.xs,
+                    }}
+                  >
+                    <AppText variant="bodySmallBold" color="muted">
+                      Total
+                    </AppText>
+
+                    <AppText variant="h2" color="strong">
+                      {totalDiscounts}
+                    </AppText>
+                  </View>
+
+                  {/* DIVIDER */}
+
+                  <View
+                    style={{
+                      width: 1,
+                      height: 40,
+                      backgroundColor: theme.divider.strong,
+                    }}
+                  />
+
+                  {/* ACTIVE */}
+
+                  <View
+                    style={{
+                      flex: 1,
+                      alignItems: "center",
+                      gap: spacing.xs,
+                    }}
+                  >
+                    <AppText variant="bodySmallBold" color="muted">
+                      Active
+                    </AppText>
+
+                    <AppText variant="h2" color="success">
+                      {activeDiscounts}
+                    </AppText>
+                  </View>
+
+                  {/* DIVIDER */}
+
+                  <View
+                    style={{
+                      width: 1,
+                      height: 40,
+                      backgroundColor: theme.divider.strong,
+                    }}
+                  />
+
+                  {/* INACTIVE */}
+
+                  <View
+                    style={{
+                      flex: 1,
+                      alignItems: "center",
+                      gap: spacing.xs,
+                    }}
+                  >
+                    <AppText variant="bodySmallBold" color="muted">
+                      Inactive
+                    </AppText>
+
+                    <AppText variant="h2" color="error">
+                      {inactiveDiscounts}
+                    </AppText>
+                  </View>
                 </View>
-
-                {/* DIVIDER */}
-
-                <View
-                  style={{
-                    width: 1,
-                    height: 40,
-                    backgroundColor: theme.divider.strong,
-                  }}
-                />
-
-                {/* ACTIVE */}
-
-                <View
-                  style={{
-                    flex: 1,
-                    alignItems: "center",
-                    gap: spacing.xs,
-                  }}
-                >
-                  <AppText variant="bodySmallBold" color="muted">
-                    Active
-                  </AppText>
-
-                  <AppText variant="h2" color="success">
-                    {isLoading ? "—" : activeDiscounts}
-                  </AppText>
-                </View>
-
-                {/* DIVIDER */}
-
-                <View
-                  style={{
-                    width: 1,
-                    height: 40,
-                    backgroundColor: theme.divider.strong,
-                  }}
-                />
-
-                {/* INACTIVE */}
-
-                <View
-                  style={{
-                    flex: 1,
-                    alignItems: "center",
-                    gap: spacing.xs,
-                  }}
-                >
-                  <AppText variant="bodySmallBold" color="muted">
-                    Inactive
-                  </AppText>
-
-                  <AppText variant="h2" color="error">
-                    {isLoading ? "—" : inactiveDiscounts}
-                  </AppText>
-                </View>
-              </View>
-            </Card>
+              </Card>
+            )}
 
             {/* ==================================================================
                 SEARCH

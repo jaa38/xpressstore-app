@@ -163,15 +163,6 @@ export default function OrdersScreen() {
    * -------------------------------------------------------------------------
    * OPEN ORDER ACTIONS
    * -------------------------------------------------------------------------
-   *
-   * IMPORTANT:
-   *
-   * We do not use a useEffect here.
-   *
-   * The button explicitly selects the order and then presents the sheet on
-   * the next animation frame. This avoids the timing issue where the sheet
-   * attempts to present before the ref/order state has been updated.
-   * -------------------------------------------------------------------------
    */
 
   const handleOpenOrderActions = useCallback((order: Order) => {
@@ -391,20 +382,30 @@ export default function OrdersScreen() {
    * -------------------------------------------------------------------------
    * SCREEN STATES
    * -------------------------------------------------------------------------
+   *
+   * State priority:
+   *
+   * 1. Initial loading
+   * 2. First-time user
+   * 3. Existing orders + API error
+   * 4. Existing orders + no search/filter results
+   * 5. Orders list
+   *
+   * A brand-new merchant should not see an error state simply because they
+   * have not received their first order yet.
    */
 
-  const isFirstTimeUser =
-    !isLoading &&
-    orders.length === 0 &&
-    !hasActiveFilters &&
-    searchQuery.trim() === "";
+  const hasOrders = orders.length > 0;
 
-  const showOrderError =
-    !isLoading && !USE_MOCK_ORDERS && !!error && orders.length > 0;
+  const isFirstTimeUser =
+    !isLoading && !hasOrders && !hasActiveFilters && searchQuery.trim() === "";
+
+  const showOrderError = !isLoading && !USE_MOCK_ORDERS && !!error && hasOrders;
 
   const hasNoResults =
     !isLoading &&
     !showOrderError &&
+    hasOrders &&
     !isFirstTimeUser &&
     filteredOrders.length === 0;
 
@@ -544,6 +545,7 @@ export default function OrdersScreen() {
 
             {/* ============================================================
                 SEARCH + FILTER
+                Hidden for first-time users.
             ============================================================ */}
 
             {!isFirstTimeUser && !showOrderError && (
@@ -580,6 +582,7 @@ export default function OrdersScreen() {
 
             {/* ============================================================
                 STATUS FILTERS
+                Hidden for first-time users.
             ============================================================ */}
 
             {!isFirstTimeUser && !showOrderError && (
@@ -639,12 +642,19 @@ export default function OrdersScreen() {
                 marginTop: spacing.md,
               }}
             >
+              {/*
+               * ============================================================
+               * INITIAL LOADING
+               * ============================================================
+               */}
+
               {isLoading ? (
                 <View
                   style={{
                     flex: 1,
                     justifyContent: "center",
                     alignItems: "center",
+                    paddingVertical: spacing["3xl"],
                   }}
                 >
                   <ActivityIndicator
@@ -661,62 +671,13 @@ export default function OrdersScreen() {
                     Loading orders...
                   </AppText>
                 </View>
-              ) : showOrderError ? (
-                <View
-                  style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: radius.full,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: theme.background.error,
-                    }}
-                  >
-                    <Ionicons
-                      name="alert-circle-outline"
-                      size={30}
-                      color={theme.icon.error.icon}
-                    />
-                  </View>
-
-                  <AppText
-                    variant="bodyLargeBold"
-                    style={{
-                      marginTop: spacing.md,
-                      textAlign: "center",
-                    }}
-                  >
-                    Unable to load orders
-                  </AppText>
-
-                  <AppText
-                    variant="body"
-                    color="secondary"
-                    style={{
-                      marginTop: spacing.xs,
-                      textAlign: "center",
-                    }}
-                  >
-                    We couldn't load your orders. Please try again.
-                  </AppText>
-
-                  <Pressable
-                    onPress={() => refetch()}
-                    style={{
-                      marginTop: spacing.md,
-                    }}
-                  >
-                    <AppText color="link">Try Again</AppText>
-                  </Pressable>
-                </View>
               ) : isFirstTimeUser ? (
+                /*
+                 * ==========================================================
+                 * FIRST-TIME USER
+                 * ==========================================================
+                 */
+
                 <Card
                   style={{
                     alignItems: "center",
@@ -784,13 +745,85 @@ export default function OrdersScreen() {
                     Add products to your store to start accepting orders.
                   </AppText>
                 </Card>
+              ) : showOrderError ? (
+                /*
+                 * ==========================================================
+                 * EXISTING ORDERS + ERROR
+                 * ==========================================================
+                 */
+
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    paddingVertical: spacing["3xl"],
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: radius.full,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: theme.background.error,
+                    }}
+                  >
+                    <Ionicons
+                      name="alert-circle-outline"
+                      size={30}
+                      color={theme.icon.error.icon}
+                    />
+                  </View>
+
+                  <AppText
+                    variant="bodyLargeBold"
+                    style={{
+                      marginTop: spacing.md,
+                      textAlign: "center",
+                    }}
+                  >
+                    Unable to load orders
+                  </AppText>
+
+                  <AppText
+                    variant="body"
+                    color="secondary"
+                    style={{
+                      marginTop: spacing.xs,
+                      textAlign: "center",
+                      maxWidth: 320,
+                    }}
+                  >
+                    We couldn't load your orders. Please try again.
+                  </AppText>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Try again"
+                    onPress={() => refetch()}
+                    style={{
+                      marginTop: spacing.md,
+                      paddingVertical: spacing.xs,
+                      paddingHorizontal: spacing.sm,
+                    }}
+                  >
+                    <AppText color="link">Try Again</AppText>
+                  </Pressable>
+                </View>
               ) : hasNoResults ? (
+                /*
+                 * ==========================================================
+                 * SEARCH / FILTER EMPTY STATE
+                 * ==========================================================
+                 */
+
                 <Card
                   style={{
-                    marginTop: spacing.md,
+                    alignItems: "center",
                     paddingVertical: spacing.xl,
                     paddingHorizontal: spacing.lg,
-                    alignItems: "center",
                   }}
                 >
                   <View
@@ -826,14 +859,17 @@ export default function OrdersScreen() {
                     style={{
                       marginTop: spacing.xs,
                       textAlign: "center",
+                      maxWidth: 320,
                     }}
                   >
-                    Try searching with a different order reference, customer or
-                    product.
+                    Try changing your search or filters to find what you're
+                    looking for.
                   </AppText>
 
                   {searchQuery.trim() !== "" && (
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Clear order search"
                       onPress={clearSearch}
                       style={{
                         marginTop: spacing.md,
@@ -845,6 +881,8 @@ export default function OrdersScreen() {
 
                   {hasActiveFilters && searchQuery.trim() === "" && (
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Clear order filters"
                       onPress={clearFilters}
                       style={{
                         marginTop: spacing.md,
@@ -855,6 +893,12 @@ export default function OrdersScreen() {
                   )}
                 </Card>
               ) : (
+                /*
+                 * ==========================================================
+                 * ORDERS LIST
+                 * ==========================================================
+                 */
+
                 <FlatList
                   style={{
                     flex: 1,
@@ -1064,10 +1108,7 @@ export default function OrdersScreen() {
                               })}
                             </AppText>
 
-                            {/* ==================================================
-                                ORDER ACTIONS BUTTON
-                                UI UNCHANGED
-                            ================================================== */}
+                            {/* ORDER ACTIONS */}
 
                             <Pressable
                               hitSlop={10}

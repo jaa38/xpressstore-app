@@ -834,29 +834,31 @@ export default function CustomersScreen() {
               </AppText>
             </View>
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Add customer"
-              disabled={mutationPending}
-              onPress={() => router.push(ROUTES.ADD_CUSTOMER)}
-              style={({ pressed }) => ({
-                width: 44,
-                height: 44,
-                borderRadius: radius.full,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: pressed
-                  ? theme.action.primary.pressed
-                  : theme.action.primary.background,
-                opacity: mutationPending ? 0.5 : 1,
-              })}
-            >
-              <Ionicons
-                name="add"
-                size={24}
-                color={theme.action.primary.text}
-              />
-            </Pressable>
+            {!isFirstTimeUser && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Add customer"
+                disabled={mutationPending}
+                onPress={() => router.push(ROUTES.ADD_CUSTOMER)}
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: radius.full,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: pressed
+                    ? theme.action.primary.pressed
+                    : theme.action.primary.background,
+                  opacity: mutationPending ? 0.5 : 1,
+                })}
+              >
+                <Ionicons
+                  name="add"
+                  size={24}
+                  color={theme.action.primary.text}
+                />
+              </Pressable>
+            )}
           </View>
 
           {/* ================================================================

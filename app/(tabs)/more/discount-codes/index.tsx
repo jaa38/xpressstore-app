@@ -6,6 +6,7 @@ import {
   RefreshControl,
   ScrollView,
   View,
+  Image,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -465,24 +466,16 @@ export default function DiscountCodesScreen() {
                         paddingHorizontal: spacing.lg,
                       }}
                     >
-                      {/* ICON */}
+                      {/* DISCOUNT CODES IMAGE */}
 
-                      <View
+                      <Image
+                        source={require("../../../../assets/images/default-discount-codes.png")}
                         style={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: radius.full,
-                          justifyContent: "center",
-                          alignItems: "center",
-                          backgroundColor: theme.icon.branding.background,
+                          width: 256,
+                          height: 128,
                         }}
-                      >
-                        <Ionicons
-                          name="pricetag-outline"
-                          size={32}
-                          color={theme.icon.branding.icon}
-                        />
-                      </View>
+                        resizeMode="contain"
+                      />
 
                       {/* TITLE */}
 

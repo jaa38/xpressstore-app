@@ -940,22 +940,14 @@ export default function StoreScreen() {
                   paddingHorizontal: spacing.lg,
                 }}
               >
-                <View
+                <Image
+                  source={require("../../assets/images/default-storefront.png.png")}
                   style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: radius.full,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: theme.icon.branding.background,
+                    width: 128,
+                    height: 128,
                   }}
-                >
-                  <Ionicons
-                    name="storefront-outline"
-                    size={32}
-                    color={theme.icon.branding.icon}
-                  />
-                </View>
+                  resizeMode="contain"
+                />
 
                 <AppText
                   variant="bodyLargeBold"

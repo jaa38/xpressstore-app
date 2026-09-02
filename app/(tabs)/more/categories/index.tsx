@@ -5,6 +5,7 @@ import {
   Pressable,
   RefreshControl,
   View,
+  Image,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -203,24 +204,16 @@ function CategoriesEmptyState({
           paddingHorizontal: spacing.lg,
         }}
       >
-        {/* ICON */}
+        {/* CATEGORIES IMAGE */}
 
-        <View
+        <Image
+          source={require("../../../../assets/images/default-categories.png")}
           style={{
-            width: 64,
-            height: 64,
-            borderRadius: radius.full,
-            backgroundColor: theme.icon.branding.background,
-            justifyContent: "center",
-            alignItems: "center",
+            width: 128,
+            height: 128,
           }}
-        >
-          <Ionicons
-            name="albums-outline"
-            size={32}
-            color={theme.icon.branding.icon}
-          />
-        </View>
+          resizeMode="contain"
+        />
 
         {/* TITLE */}
 

@@ -5,6 +5,7 @@ import {
   Pressable,
   RefreshControl,
   View,
+  Image,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -275,22 +276,16 @@ function ShippingRegionsEmptyState({
       >
         {/* ICON */}
 
-        <View
+        {/* SHIPPING REGIONS IMAGE */}
+
+        <Image
+          source={require("../../../../assets/images/default-shipping-regions.png")}
           style={{
-            width: 64,
-            height: 64,
-            borderRadius: radius.full,
-            backgroundColor: theme.icon.branding.background,
-            justifyContent: "center",
-            alignItems: "center",
+            width: 256,
+            height: 128,
           }}
-        >
-          <Ionicons
-            name="location-outline"
-            size={32}
-            color={theme.icon.branding.icon}
-          />
-        </View>
+          resizeMode="contain"
+        />
 
         {/* TITLE */}
 

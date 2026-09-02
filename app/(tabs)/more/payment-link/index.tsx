@@ -7,6 +7,7 @@ import {
   Pressable,
   RefreshControl,
   View,
+  Image,
 } from "react-native";
 
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -962,24 +963,16 @@ export default function PaymentLinksScreen() {
                       paddingHorizontal: spacing.lg,
                     }}
                   >
-                    {/* ICON */}
+                    {/* PAYMENT LINK IMAGE */}
 
-                    <View
+                    <Image
+                      source={require("../../../../assets/images/default-payment-link.png")}
                       style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: radius.full,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: theme.icon.branding.background,
+                        width: 128,
+                        height: 128,
                       }}
-                    >
-                      <Ionicons
-                        name="link-outline"
-                        size={32}
-                        color={theme.icon.branding.icon}
-                      />
-                    </View>
+                      resizeMode="contain"
+                    />
 
                     {/* TITLE */}
 

@@ -6,6 +6,7 @@ import {
   Pressable,
   RefreshControl,
   View,
+  Image,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -997,22 +998,14 @@ export default function CustomersScreen() {
                   paddingHorizontal: spacing.lg,
                 }}
               >
-                <View
+                <Image
+                  source={require("../../../../assets/images/default-customers.png")}
                   style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: radius.full,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: theme.icon.branding.background,
+                    width: 256,
+                    height: 128,
                   }}
-                >
-                  <Ionicons
-                    name="people-outline"
-                    size={32}
-                    color={theme.icon.branding.icon}
-                  />
-                </View>
+                  resizeMode="contain"
+                />
 
                 <AppText
                   variant="bodyLargeBold"

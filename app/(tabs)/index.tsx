@@ -1,4 +1,11 @@
-import { Pressable, View, ScrollView, RefreshControl } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  View,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -31,6 +38,8 @@ import { useMerchantProfile } from "@/hooks/merchant/useMerchantProfile";
 import { MOCK_TRANSACTIONS } from "@/mocks/transactions";
 
 import { USE_MOCK_TRANSACTIONS } from "@/mocks/config";
+
+import { Button } from "@/components/ui/Button";
 
 /**
  * ============================================================================
@@ -90,18 +99,6 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    * DATA SOURCE
    * --------------------------------------------------------------------------
-   *
-   * Dashboard/profile:
-   *
-   * USE_MOCK_DASHBOARD
-   *
-   * Transactions:
-   *
-   * USE_MOCK_TRANSACTIONS
-   *
-   * This is important because transaction mock mode is now controlled from:
-   *
-   * src/mocks/config.ts
    */
 
   const profile = apiProfile;
@@ -122,12 +119,13 @@ export default function HomeScreen() {
 
   const dashboardLoading = dashboardLoadingApi;
 
+  const transactionsLoading =
+    !USE_MOCK_TRANSACTIONS && !transactionsData && dashboardLoadingApi;
+
   /**
    * --------------------------------------------------------------------------
    * TIME-BASED GREETING
    * --------------------------------------------------------------------------
-   *
-   * The greeting is based on the device's local time.
    *
    * Morning:
    * 05:00 - 11:59
@@ -140,9 +138,6 @@ export default function HomeScreen() {
    *
    * Night:
    * 21:00 - 04:59
-   *
-   * The interval allows the greeting to update automatically while the
-   * application remains open.
    */
 
   const [currentHour, setCurrentHour] = useState(() => {
@@ -154,10 +149,6 @@ export default function HomeScreen() {
       setCurrentHour(new Date().getHours());
     };
 
-    /**
-     * Check once every minute so the greeting changes automatically
-     * when the next period begins.
-     */
     const interval = setInterval(updateCurrentHour, 60 * 1000);
 
     return () => {
@@ -203,12 +194,6 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    *
    * Revenue is calculated from successful credit transactions.
-   *
-   * This week:
-   * Monday -> today
-   *
-   * Previous week:
-   * Previous Monday -> previous Sunday
    */
 
   const weeklyRevenue = useMemo(() => {
@@ -292,6 +277,38 @@ export default function HomeScreen() {
 
   /**
    * --------------------------------------------------------------------------
+   * TRANSACTION STATE
+   * --------------------------------------------------------------------------
+   */
+
+  const hasTransactions =
+    (dashboard?.summary.totalTransactions ?? 0) > 0 || transactions.length > 0;
+
+  /**
+   * --------------------------------------------------------------------------
+   * FIRST-TIME USER
+   * --------------------------------------------------------------------------
+   *
+   * A merchant with no transaction history is treated as a new/empty
+   * dashboard rather than being shown a technical or analytics state.
+   */
+
+  const isFirstTimeUser =
+    !dashboardLoading && !hasTransactions && transactions.length === 0;
+
+  /**
+   * --------------------------------------------------------------------------
+   * DASHBOARD STATISTICS
+   * --------------------------------------------------------------------------
+   *
+   * Do not show the revenue statistics card for a first-time merchant.
+   */
+
+  const showDashboardStats =
+    !dashboardLoading && !!dashboard && !isFirstTimeUser;
+
+  /**
+   * --------------------------------------------------------------------------
    * REFRESH
    * --------------------------------------------------------------------------
    */
@@ -304,6 +321,8 @@ export default function HomeScreen() {
     try {
       if (USE_MOCK_TRANSACTIONS) {
         await new Promise((resolve) => setTimeout(resolve, 500));
+
+        await Promise.all([refetchProfile(), refetchDashboard()]);
 
         return;
       }
@@ -322,28 +341,12 @@ export default function HomeScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * TRANSACTION STATE
+   * HOME CONTENT LOADING
    * --------------------------------------------------------------------------
    */
 
-  const hasTransactions =
-    (dashboard?.summary.totalTransactions ?? 0) > 0 || transactions.length > 0;
-
-  /**
-   * --------------------------------------------------------------------------
-   * EMPTY DASHBOARD
-   * --------------------------------------------------------------------------
-   */
-
-  const showEmptyDashboard = !dashboardLoading && !hasTransactions;
-
-  /**
-   * --------------------------------------------------------------------------
-   * DASHBOARD STATISTICS
-   * --------------------------------------------------------------------------
-   */
-
-  const showDashboardStats = !dashboardLoading && !!dashboard;
+  const isInitialLoading =
+    profileLoading || dashboardLoading || transactionsLoading;
 
   /**
    * --------------------------------------------------------------------------
@@ -442,244 +445,309 @@ export default function HomeScreen() {
           }
         >
           {/* ================================================================
-              DASHBOARD
+              INITIAL LOADING
           ================================================================ */}
 
-          {showDashboardStats && dashboard && (
-            <DashboardStatsCard
-              title="This Week's Revenue"
-              amount={formatCurrency(weeklyRevenue.thisWeekRevenue, {
-                currency: "NGN",
-              })}
-              trend={weeklyRevenue.revenueChangePercent}
-            />
-          )}
-
-          {/* ================================================================
-              EMPTY DASHBOARD
-          ================================================================ */}
-
-          {showEmptyDashboard && (
-            <Card
-              style={{
-                marginTop: spacing.lg,
-                padding: spacing.lg,
-              }}
-            >
-              <View
-                style={{
-                  alignItems: "center",
-                  gap: spacing.sm,
-                }}
-              >
-                {/* ICON */}
-
-                <View
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: radius.full,
-                    backgroundColor: theme.icon.default.background,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Ionicons
-                    name="bar-chart-outline"
-                    size={28}
-                    color={theme.icon.default.icon}
-                  />
-                </View>
-
-                {/* TITLE */}
-
-                <AppText
-                  variant="h3"
-                  style={{
-                    textAlign: "center",
-                  }}
-                >
-                  No transactions yet
-                </AppText>
-
-                {/* DESCRIPTION */}
-
-                <AppText
-                  variant="bodySmall"
-                  color="secondary"
-                  style={{
-                    textAlign: "center",
-                  }}
-                >
-                  Your sales and transaction activity will appear here once you
-                  receive your first payment.
-                </AppText>
-              </View>
-            </Card>
-          )}
-
-          {/* ================================================================
-              QUICK ACTIONS
-          ================================================================ */}
-
-          <View
-            style={{
-              marginTop: spacing.lg,
-            }}
-          >
-            <AppText variant="h3">Quick Actions</AppText>
-
+          {isInitialLoading ? (
             <View
               style={{
-                flexDirection: "row",
-                gap: spacing.md,
-                marginTop: spacing.md,
-              }}
-            >
-              {/* ADD PAYMENT LINK */}
-
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Nww Payment Link"
-                onPress={() => router.push("/payment-link/add/information")}
-                style={({ pressed }) => [
-                  {
-                    flex: 1,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: spacing.sm,
-
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.md,
-
-                    borderWidth: 1,
-                    borderRadius: radius.md,
-
-                    backgroundColor: theme.card.default.background,
-
-                    borderColor: theme.card.default.border,
-
-                    opacity: pressed ? 0.8 : 1,
-                  },
-                ]}
-              >
-                <Ionicons name="add" size={24} color={theme.text.primary} />
-
-                <AppText variant="button">Payment Link</AppText>
-              </Pressable>
-
-              {/* ADD STOREFRONT */}
-
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Storefront"
-                onPress={() => router.push("/stores/add/information")}
-                style={({ pressed }) => [
-                  {
-                    flex: 1,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: spacing.sm,
-
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.md,
-
-                    borderWidth: 1,
-                    borderRadius: radius.md,
-
-                    backgroundColor: theme.card.default.background,
-
-                    borderColor: theme.card.default.border,
-
-                    opacity: pressed ? 0.8 : 1,
-                  },
-                ]}
-              >
-                <Ionicons name="add" size={24} color={theme.text.primary} />
-
-                <AppText variant="button">Storefront</AppText>
-              </Pressable>
-            </View>
-          </View>
-
-          {/* ================================================================
-              RECENT TRANSACTIONS
-          ================================================================ */}
-
-          <View
-            style={{
-              marginTop: spacing.lg,
-            }}
-          >
-            {/* SECTION HEADER */}
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
+                minHeight: 260,
+                justifyContent: "center",
                 alignItems: "center",
               }}
             >
-              <AppText variant="h3">Recent Transactions</AppText>
+              <ActivityIndicator
+                size="large"
+                color={theme.icon.branding.icon}
+              />
 
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="View all transactions"
-                onPress={() => router.push(ROUTES.TRANSACTIONS)}
+              <AppText
+                color="secondary"
+                style={{
+                  marginTop: spacing.md,
+                }}
               >
-                <AppText variant="bodySmallBold" color="link">
-                  View All
-                </AppText>
-              </Pressable>
+                Loading your dashboard...
+              </AppText>
             </View>
+          ) : (
+            <>
+              {/* ============================================================
+                  FIRST-TIME DASHBOARD
+              ============================================================ */}
 
-            {/* TRANSACTION LIST */}
-
-            <View
-              style={{
-                marginTop: spacing.md,
-              }}
-            >
-              {recentTransactions.length > 0 ? (
-                <TransactionList transactions={recentTransactions} />
-              ) : (
+              {isFirstTimeUser && (
                 <Card
                   style={{
+                    marginTop: spacing.lg,
                     alignItems: "center",
                     paddingVertical: spacing.xl,
+                    paddingHorizontal: spacing.lg,
                   }}
                 >
-                  <Ionicons
-                    name="receipt-outline"
-                    size={32}
-                    color={theme.icon.default.icon}
+                  {/* XPRESSSTORE LOGO */}
+
+                  <Image
+                    source={require("../../assets/logo/xpressStoreLogo.png")}
+                    style={{
+                      width: 128,
+                      height: 128,
+                    }}
+                    resizeMode="contain"
                   />
 
                   <AppText
-                    variant="bodyBold"
+                    variant="bodyLargeBold"
                     style={{
-                      marginTop: spacing.sm,
+                      marginTop: spacing.md,
+                      textAlign: "center",
                     }}
                   >
-                    No transactions yet
+                    Welcome to XpressStore
                   </AppText>
 
                   <AppText
-                    variant="bodySmall"
+                    variant="body"
                     color="secondary"
                     style={{
-                      textAlign: "center",
                       marginTop: spacing.xs,
+                      textAlign: "center",
+                      maxWidth: 320,
                     }}
                   >
-                    Your recent transactions will appear here.
+                    Your dashboard will come to life once you start accepting
+                    payments from your customers.
                   </AppText>
+
+                  <View
+                    style={{
+                      width: "100%",
+                      flexDirection: "row",
+                      gap: spacing.sm,
+                      marginTop: spacing.lg,
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Button
+                        title="Payment Link"
+                        variant="primary"
+                        onPress={() =>
+                          router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION)
+                        }
+                      />
+                    </View>
+
+                    <View style={{ flex: 1 }}>
+                      <Button
+                        title="Storefront"
+                        variant="secondary"
+                        onPress={() => router.push(ROUTES.ADD_STORE_STOREFRONT)}
+                      />
+                    </View>
+                  </View>
                 </Card>
               )}
-            </View>
-          </View>
+
+              {/* ============================================================
+                  DASHBOARD STATISTICS
+              ============================================================ */}
+
+              {showDashboardStats && dashboard && (
+                <DashboardStatsCard
+                  title="This Week's Revenue"
+                  amount={formatCurrency(weeklyRevenue.thisWeekRevenue, {
+                    currency: "NGN",
+                  })}
+                  trend={weeklyRevenue.revenueChangePercent}
+                />
+              )}
+
+              {/* ============================================================
+                  QUICK ACTIONS
+                  Hidden for first-time users because the onboarding
+                  card already provides the primary actions.
+              ============================================================ */}
+
+              {!isFirstTimeUser && (
+                <View
+                  style={{
+                    marginTop: spacing.lg,
+                  }}
+                >
+                  <AppText variant="h3">Quick Actions</AppText>
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: spacing.md,
+                      marginTop: spacing.md,
+                    }}
+                  >
+                    {/* ADD PAYMENT LINK */}
+
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="New Payment Link"
+                      onPress={() =>
+                        router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION)
+                      }
+                      style={({ pressed }) => [
+                        {
+                          flex: 1,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: spacing.sm,
+
+                          paddingHorizontal: spacing.md,
+                          paddingVertical: spacing.md,
+
+                          borderWidth: 1,
+                          borderRadius: radius.md,
+
+                          backgroundColor: theme.card.default.background,
+
+                          borderColor: theme.card.default.border,
+
+                          opacity: pressed ? 0.8 : 1,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name="add"
+                        size={24}
+                        color={theme.text.primary}
+                      />
+
+                      <AppText variant="button">Payment Link</AppText>
+                    </Pressable>
+
+                    {/* ADD STOREFRONT */}
+
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Storefront"
+                      onPress={() => router.push(ROUTES.ADD_STORE_INFORMATION)}
+                      style={({ pressed }) => [
+                        {
+                          flex: 1,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: spacing.sm,
+
+                          paddingHorizontal: spacing.md,
+                          paddingVertical: spacing.md,
+
+                          borderWidth: 1,
+                          borderRadius: radius.md,
+
+                          backgroundColor: theme.card.default.background,
+
+                          borderColor: theme.card.default.border,
+
+                          opacity: pressed ? 0.8 : 1,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name="add"
+                        size={24}
+                        color={theme.text.primary}
+                      />
+
+                      <AppText variant="button">Storefront</AppText>
+                    </Pressable>
+                  </View>
+                </View>
+              )}
+
+              {/* ============================================================
+                  RECENT TRANSACTIONS
+                  Hidden for first-time users because there is no
+                  transaction history to display.
+              ============================================================ */}
+
+              {!isFirstTimeUser && (
+                <View
+                  style={{
+                    marginTop: spacing.lg,
+                  }}
+                >
+                  {/* SECTION HEADER */}
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <AppText variant="h3">Recent Transactions</AppText>
+
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="View all transactions"
+                      onPress={() => router.push(ROUTES.TRANSACTIONS)}
+                    >
+                      <AppText variant="bodySmallBold" color="link">
+                        View All
+                      </AppText>
+                    </Pressable>
+                  </View>
+
+                  {/* TRANSACTION LIST */}
+
+                  <View
+                    style={{
+                      marginTop: spacing.md,
+                    }}
+                  >
+                    {recentTransactions.length > 0 ? (
+                      <TransactionList transactions={recentTransactions} />
+                    ) : (
+                      <Card
+                        style={{
+                          alignItems: "center",
+                          paddingVertical: spacing.lg,
+                          paddingHorizontal: spacing.lg,
+                        }}
+                      >
+                        <Ionicons
+                          name="receipt-outline"
+                          size={32}
+                          color={theme.icon.default.icon}
+                        />
+
+                        <AppText
+                          variant="bodyBold"
+                          style={{
+                            marginTop: spacing.sm,
+                            textAlign: "center",
+                          }}
+                        >
+                          No recent transactions
+                        </AppText>
+
+                        <AppText
+                          variant="bodySmall"
+                          color="secondary"
+                          style={{
+                            textAlign: "center",
+                            marginTop: spacing.xs,
+                            maxWidth: 300,
+                          }}
+                        >
+                          Transactions will appear here as your customers make
+                          payments.
+                        </AppText>
+                      </Card>
+                    )}
+                  </View>
+                </View>
+              )}
+            </>
+          )}
         </ScrollView>
       </View>
     </SafeAreaView>

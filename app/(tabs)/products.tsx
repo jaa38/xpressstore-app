@@ -6,6 +6,7 @@ import {
   RefreshControl,
   Switch,
   View,
+  Image
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -904,22 +905,16 @@ export default function ProductScreen() {
                     paddingHorizontal: spacing.lg,
                   }}
                 >
-                  <View
+                  {/* PRODUCTS IMAGE */}
+
+                  <Image
+                    source={require("../../assets/images/default-products.png")}
                     style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: radius.full,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: theme.icon.branding.background,
+                      width: 128,
+                      height: 128,
                     }}
-                  >
-                    <Ionicons
-                      name="cube-outline"
-                      size={28}
-                      color={theme.icon.branding.icon}
-                    />
-                  </View>
+                    resizeMode="contain"
+                  />
 
                   <AppText
                     variant="bodyLargeBold"

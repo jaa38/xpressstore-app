@@ -5,6 +5,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   ScrollView,
+  Image
 } from "react-native";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -685,22 +686,16 @@ export default function OrdersScreen() {
                     paddingHorizontal: spacing.lg,
                   }}
                 >
-                  <View
+                  {/* ORDERS IMAGE */}
+
+                  <Image
+                    source={require("../../assets/images/default-orders.png")}
                     style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: radius.full,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: theme.icon.branding.background,
+                      width: 128,
+                      height: 128,
                     }}
-                  >
-                    <Ionicons
-                      name="receipt-outline"
-                      size={32}
-                      color={theme.icon.branding.icon}
-                    />
-                  </View>
+                    resizeMode="contain"
+                  />
 
                   <AppText
                     variant="bodyLargeBold"

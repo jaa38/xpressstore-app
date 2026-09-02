@@ -540,8 +540,8 @@ export default function HomeScreen() {
                     <View style={{ flex: 1 }}>
                       <Button
                         title="Storefront"
-                        variant="secondary"
-                        onPress={() => router.push(ROUTES.ADD_STORE_STOREFRONT)}
+                        variant='tertiary'
+                        onPress={() => router.push(ROUTES.ADD_STORE_INFORMATION)}
                       />
                     </View>
                   </View>

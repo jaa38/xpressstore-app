@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -17,14 +18,62 @@ import { router } from "expo-router";
 
 import { Ionicons } from "@expo/vector-icons";
 
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+
 import { AppText } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SearchBar } from "@/components/ui/SearchBar";
 
 import { useDiscounts } from "@/hooks/discounts/useDiscounts";
+import { useDeleteDiscount } from "@/hooks/discounts/useDeleteDiscount";
+import { useToast } from "@/hooks/useToast";
 
 import { spacing, theme, radius } from "@/theme";
+
+/**
+ * ============================================================================
+ * RIGHT ACTIONS
+ * ============================================================================
+ */
+
+function RightActions({
+  onDelete,
+  disabled,
+}: {
+  onDelete: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Delete discount"
+      disabled={disabled}
+      onPress={onDelete}
+      style={({ pressed }) => ({
+        width: 90,
+        marginLeft: spacing.sm,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: theme.action.primary.delete,
+        borderRadius: radius.md,
+        opacity: disabled ? 0.5 : pressed ? 0.7 : 1,
+      })}
+    >
+      <Ionicons name="trash-outline" size={24} color={theme.text.inverse} />
+
+      <AppText
+        variant="bodySmall"
+        color="inverse"
+        style={{
+          marginTop: spacing.xs,
+        }}
+      >
+        Delete
+      </AppText>
+    </Pressable>
+  );
+}
 
 export default function DiscountCodesScreen() {
   /**
@@ -49,6 +98,16 @@ export default function DiscountCodesScreen() {
     error,
     refetch,
   } = useDiscounts();
+
+  /**
+   * ==========================================================================
+   * DELETE
+   * ==========================================================================
+   */
+
+  const deleteDiscountMutation = useDeleteDiscount();
+
+  const { showToast } = useToast();
 
   /**
    * ==========================================================================
@@ -152,6 +211,52 @@ export default function DiscountCodesScreen() {
     });
   }
 
+  function handleDelete(discountId: string) {
+    if (deleteDiscountMutation.isPending) {
+      return;
+    }
+
+    const discount = discounts.find((item) => item.id === discountId);
+
+    if (!discount) {
+      return;
+    }
+
+    Alert.alert(
+      "Delete Discount",
+      `Are you sure you want to delete "${discount.code}"? This action cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDiscountMutation.mutateAsync(discountId);
+
+              showToast({
+                type: "success",
+                title: "Discount Deleted",
+                message: "The discount has been removed successfully.",
+              });
+            } catch (error) {
+              console.log("DELETE DISCOUNT ERROR", error);
+
+              showToast({
+                type: "error",
+                title: "Delete Failed",
+                message: "Unable to delete this discount. Please try again.",
+              });
+            }
+          },
+        },
+      ]
+    );
+  }
+
   async function onRefresh() {
     await refetch();
   }
@@ -253,6 +358,7 @@ export default function DiscountCodesScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Create discount code"
+                disabled={deleteDiscountMutation.isPending}
                 hitSlop={8}
                 onPress={handleCreateDiscount}
                 style={({ pressed }) => ({
@@ -264,6 +370,7 @@ export default function DiscountCodesScreen() {
                   backgroundColor: pressed
                     ? theme.action.primary.pressed
                     : theme.action.primary.background,
+                  opacity: deleteDiscountMutation.isPending ? 0.5 : 1,
                 })}
               >
                 <Ionicons
@@ -681,168 +788,178 @@ export default function DiscountCodesScreen() {
                     }}
                   >
                     {filteredDiscounts.map((discount) => (
-                      <Pressable
+                      <Swipeable
                         key={discount.id}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Open ${discount.code} discount`}
-                        onPress={() => handleOpenDiscount(discount.id)}
-                        style={({ pressed }) => ({
-                          opacity: pressed ? 0.7 : 1,
-                        })}
-                      >
-                        <Card>
-                          {/* --------------------------------------------------
-                              DISCOUNT HEADER
-                          -------------------------------------------------- */}
-
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "flex-start",
-                              gap: spacing.md,
-                            }}
-                          >
-                            <View
-                              style={{
-                                flex: 1,
-                              }}
-                            >
-                              <AppText
-                                variant="bodyLargeBold"
-                                color="strong"
-                                style={{
-                                  textTransform: "uppercase",
-                                }}
-                              >
-                                {discount.code}
-                              </AppText>
-
-                              <AppText
-                                variant="bodySmall"
-                                color="secondary"
-                                style={{
-                                  marginTop: spacing.xs,
-                                }}
-                              >
-                                Discount value: {discount.discountValue}
-                              </AppText>
-                            </View>
-
-                            {/* STATUS */}
-
-                            <View
-                              style={{
-                                paddingHorizontal: spacing.sm,
-                                paddingVertical: spacing.xs,
-                                borderRadius: radius.full,
-                                backgroundColor: discount.isActive
-                                  ? theme.background.success
-                                  : theme.background.error,
-                              }}
-                            >
-                              <AppText
-                                variant="bodySmallBold"
-                                style={{
-                                  color: discount.isActive
-                                    ? theme.text.success
-                                    : theme.text.error,
-                                }}
-                              >
-                                {discount.isActive ? "Active" : "Inactive"}
-                              </AppText>
-                            </View>
-                          </View>
-
-                          {/* --------------------------------------------------
-                              DIVIDER
-                          -------------------------------------------------- */}
-
-                          <View
-                            style={{
-                              height: 1,
-                              backgroundColor: theme.divider.subtle,
-                              marginVertical: spacing.md,
-                            }}
+                        enabled={!deleteDiscountMutation.isPending}
+                        renderRightActions={() => (
+                          <RightActions
+                            disabled={deleteDiscountMutation.isPending}
+                            onDelete={() => handleDelete(discount.id)}
                           />
-
-                          {/* --------------------------------------------------
-                              DATE INFORMATION
-                          -------------------------------------------------- */}
-
-                          <View
-                            style={{
-                              gap: spacing.xs,
-                            }}
-                          >
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                              }}
-                            >
-                              <AppText variant="bodySmall" color="muted">
-                                Start
-                              </AppText>
-
-                              <AppText
-                                variant="bodySmall"
-                                color="secondary"
-                                style={{
-                                  marginLeft: "auto",
-                                }}
-                              >
-                                {formatDate(discount.startDate)}
-                              </AppText>
-                            </View>
+                        )}
+                      >
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={`Open ${discount.code} discount`}
+                          onPress={() => handleOpenDiscount(discount.id)}
+                          style={({ pressed }) => ({
+                            opacity: pressed ? 0.7 : 1,
+                          })}
+                        >
+                          <Card>
+                            {/* --------------------------------------------------
+                                DISCOUNT HEADER
+                            -------------------------------------------------- */}
 
                             <View
                               style={{
                                 flexDirection: "row",
-                                alignItems: "center",
+                                alignItems: "flex-start",
+                                gap: spacing.md,
                               }}
                             >
-                              <AppText variant="bodySmall" color="muted">
-                                End
-                              </AppText>
-
-                              <AppText
-                                variant="bodySmall"
-                                color="secondary"
+                              <View
                                 style={{
-                                  marginLeft: "auto",
+                                  flex: 1,
                                 }}
                               >
-                                {formatDate(discount.endDate)}
-                              </AppText>
+                                <AppText
+                                  variant="bodyLargeBold"
+                                  color="strong"
+                                  style={{
+                                    textTransform: "uppercase",
+                                  }}
+                                >
+                                  {discount.code}
+                                </AppText>
+
+                                <AppText
+                                  variant="bodySmall"
+                                  color="secondary"
+                                  style={{
+                                    marginTop: spacing.xs,
+                                  }}
+                                >
+                                  Discount value: {discount.discountValue}
+                                </AppText>
+                              </View>
+
+                              {/* STATUS */}
+
+                              <View
+                                style={{
+                                  paddingHorizontal: spacing.sm,
+                                  paddingVertical: spacing.xs,
+                                  borderRadius: radius.full,
+                                  backgroundColor: discount.isActive
+                                    ? theme.background.success
+                                    : theme.background.error,
+                                }}
+                              >
+                                <AppText
+                                  variant="bodySmallBold"
+                                  style={{
+                                    color: discount.isActive
+                                      ? theme.text.success
+                                      : theme.text.error,
+                                  }}
+                                >
+                                  {discount.isActive ? "Active" : "Inactive"}
+                                </AppText>
+                              </View>
                             </View>
-                          </View>
 
-                          {/* --------------------------------------------------
-                              FOOTER
-                          -------------------------------------------------- */}
+                            {/* --------------------------------------------------
+                                DIVIDER
+                            -------------------------------------------------- */}
 
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              marginTop: spacing.md,
-                            }}
-                          >
-                            <AppText variant="bodySmall" color="link">
-                              View discount
-                            </AppText>
-
-                            <Ionicons
-                              name="chevron-forward"
-                              size={18}
-                              color={theme.text.link}
+                            <View
                               style={{
-                                marginLeft: "auto",
+                                height: 1,
+                                backgroundColor: theme.divider.subtle,
+                                marginVertical: spacing.md,
                               }}
                             />
-                          </View>
-                        </Card>
-                      </Pressable>
+
+                            {/* --------------------------------------------------
+                                DATE INFORMATION
+                            -------------------------------------------------- */}
+
+                            <View
+                              style={{
+                                gap: spacing.xs,
+                              }}
+                            >
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <AppText variant="bodySmall" color="muted">
+                                  Start
+                                </AppText>
+
+                                <AppText
+                                  variant="bodySmall"
+                                  color="secondary"
+                                  style={{
+                                    marginLeft: "auto",
+                                  }}
+                                >
+                                  {formatDate(discount.startDate)}
+                                </AppText>
+                              </View>
+
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <AppText variant="bodySmall" color="muted">
+                                  End
+                                </AppText>
+
+                                <AppText
+                                  variant="bodySmall"
+                                  color="secondary"
+                                  style={{
+                                    marginLeft: "auto",
+                                  }}
+                                >
+                                  {formatDate(discount.endDate)}
+                                </AppText>
+                              </View>
+                            </View>
+
+                            {/* --------------------------------------------------
+                                FOOTER
+                            -------------------------------------------------- */}
+
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                marginTop: spacing.md,
+                              }}
+                            >
+                              <AppText variant="bodySmall" color="link">
+                                View discount
+                              </AppText>
+
+                              <Ionicons
+                                name="chevron-forward"
+                                size={18}
+                                color={theme.text.link}
+                                style={{
+                                  marginLeft: "auto",
+                                }}
+                              />
+                            </View>
+                          </Card>
+                        </Pressable>
+                      </Swipeable>
                     ))}
                   </View>
                 )}

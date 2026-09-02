@@ -17,7 +17,7 @@
  * ---------------------------------------------------------------------------
  */
 
-export const USE_MOCK_DASHBOARD = true;
+export const USE_MOCK_DASHBOARD = false;
 
 export const USE_MOCK_STORES = false;
 

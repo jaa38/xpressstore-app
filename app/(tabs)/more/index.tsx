@@ -1,4 +1,4 @@
-import { Alert, Pressable, ScrollView, View } from "react-native";
+import { Alert, Pressable, ScrollView, View, Image } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -110,7 +110,7 @@ export default function MoreScreen() {
         {/* AVAILABLE BALANCE */}
         {/* ================================================================= */}
 
-        <Card
+        {/* <Card
           style={{
             marginTop: spacing.md,
             flexDirection: "row",
@@ -131,7 +131,7 @@ export default function MoreScreen() {
           </View>
 
           <Button title="Withdraw" />
-        </Card>
+        </Card> */}
 
         {/* ================================================================= */}
         {/* CATEGORIES */}
@@ -174,10 +174,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="business-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/businessInformationIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -209,10 +212,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="grid-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/categoriesIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -244,10 +250,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="people-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/customersIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -279,10 +288,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="pricetag-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/discountCodesIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -314,10 +326,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="link-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/paymentLinksIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -349,10 +364,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="map-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/shippingRegionsIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -384,10 +402,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="receipt-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/transactionsIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -438,10 +459,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="card-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/paymentSettingsIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -473,10 +497,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="cash-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/settlementIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -527,10 +554,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="shield-checkmark-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/securityIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -562,10 +592,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="notifications-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/notificationIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -597,10 +630,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="settings-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/settingsIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -651,10 +687,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="help-circle-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/supportIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
@@ -686,10 +725,13 @@ export default function MoreScreen() {
                   gap: spacing.md,
                 }}
               >
-                <Ionicons
-                  name="information-circle-outline"
-                  size={24}
-                  color={theme.listItem.default.icon}
+                <Image
+                  source={require("../../../assets/icons/aboutIcon.png")}
+                  style={{
+                    width: 48,
+                    height: 48,
+                  }}
+                  resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>

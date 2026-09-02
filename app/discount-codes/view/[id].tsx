@@ -706,7 +706,7 @@ export default function DiscountDetailsScreen() {
               ACTIONS
           ================================================================== */}
 
-          <Button
+          {/* <Button
             title="Edit Discount"
             variant="primary"
             leftIcon={
@@ -722,9 +722,9 @@ export default function DiscountDetailsScreen() {
             onPress={() => {
               // TODO: Navigate to edit discount screen.
             }}
-          />
+          /> */}
 
-          <Button
+          {/* <Button
             title={
               discount.isActive ? "Deactivate Discount" : "Activate Discount"
             }
@@ -734,7 +734,7 @@ export default function DiscountDetailsScreen() {
               marginTop: spacing.md,
             }}
             onPress={handleToggleStatus}
-          />
+          /> */}
 
           <Button
             title="Delete Discount"

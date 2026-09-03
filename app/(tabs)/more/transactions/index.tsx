@@ -485,6 +485,28 @@ export default function TransactionsScreen() {
   const summaryStatusColor = summaryStatusColors[filters.status];
 
   /**
+   * -------------------------------------------------------------------------
+   * SUMMARY ICON
+   * -------------------------------------------------------------------------
+   *
+   * The summary image changes according to the selected transaction status.
+   *
+   * All     -> transactionsAllIcon.png
+   * Paid    -> transactionsPaidIcon.png
+   * Pending -> transactionsPendingIcon.png
+   * Failed  -> transactionsFailed.png
+   */
+
+  const summaryIconSource =
+    filters.status === "all"
+      ? require("../../../../assets/icons/transactions/transactionsAllIcon.png")
+      : filters.status === "paid"
+        ? require("../../../../assets/icons/transactions/transactionsPaidIcon.png")
+        : filters.status === "pending"
+          ? require("../../../../assets/icons/transactions/transactionsPendingIcon.png")
+          : require("../../../../assets/icons/transactions/transactionsFailed.png");
+
+  /**
    * =========================================================================
    * HEADER
    * =========================================================================
@@ -685,6 +707,8 @@ export default function TransactionsScreen() {
                       gap: spacing.md,
                     }}
                   >
+                    {/* TRANSACTION STATUS IMAGE */}
+
                     <View
                       style={{
                         width: 56,
@@ -692,15 +716,19 @@ export default function TransactionsScreen() {
                         borderRadius: radius.full,
                         justifyContent: "center",
                         alignItems: "center",
-                        backgroundColor: theme.icon.branding.background,
                       }}
                     >
-                      <Ionicons
-                        name="receipt-outline"
-                        size={28}
-                        color={theme.icon.branding.icon}
+                      <Image
+                        source={summaryIconSource}
+                        style={{
+                          width: 56,
+                          height: 56,
+                        }}
+                        resizeMode="contain"
                       />
                     </View>
+
+                    {/* SUMMARY DETAILS */}
 
                     <View
                       style={{

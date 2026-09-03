@@ -4,6 +4,13 @@ import type { Transaction } from "@/types/transaction";
  * ============================================================================
  * MOCK TRANSACTIONS
  * ============================================================================
+ *
+ * These transactions represent the transactions belonging to the development
+ * merchant.
+ *
+ * Development merchant ID:
+ *
+ * M12345
  */
 
 export const MOCK_TRANSACTIONS: Transaction[] = [
@@ -13,10 +20,10 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
     type: "credit",
     status: "paid",
     channel: "card",
-    amount: 185000,
+    amount: 125000,
     currency: "NGN",
-    reference: "XPS-000001",
-    createdAt: "2026-08-21T09:30:00.000Z",
+    reference: "TXN-20260821-001",
+    createdAt: "2026-08-21T14:32:00.000Z",
   },
   {
     id: "txn_002",
@@ -24,405 +31,346 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
     type: "credit",
     status: "paid",
     channel: "bank",
-    amount: 45000,
+    amount: 85000,
     currency: "NGN",
-    reference: "XPS-000002",
-    createdAt: "2026-08-21T08:45:00.000Z",
+    reference: "TXN-20260821-002",
+    createdAt: "2026-08-21T13:18:00.000Z",
   },
   {
     id: "txn_003",
-    customer: "Michael Adeyemi",
+    customer: "Chinedu Obi",
     type: "credit",
     status: "pending",
     channel: "transfer",
-    amount: 75000,
+    amount: 45000,
     currency: "NGN",
-    reference: "XPS-000003",
-    createdAt: "2026-08-21T08:10:00.000Z",
+    reference: "TXN-20260821-003",
+    createdAt: "2026-08-21T11:45:00.000Z",
   },
   {
     id: "txn_004",
-    customer: "Grace Williams",
+    customer: "Blessing Adeyemi",
     type: "credit",
     status: "failed",
-    channel: "card",
-    amount: 120000,
+    channel: "ussd",
+    amount: 30000,
     currency: "NGN",
-    reference: "XPS-000004",
-    createdAt: "2026-08-20T17:30:00.000Z",
+    reference: "TXN-20260821-004",
+    createdAt: "2026-08-21T10:21:00.000Z",
   },
   {
     id: "txn_005",
-    customer: "Ibrahim Musa",
+    customer: "Tunde Balogun",
     type: "credit",
     status: "paid",
-    channel: "ussd",
-    amount: 25000,
+    channel: "qr",
+    amount: 75000,
     currency: "NGN",
-    reference: "XPS-000005",
-    createdAt: "2026-08-20T16:50:00.000Z",
+    reference: "TXN-20260820-005",
+    createdAt: "2026-08-20T16:12:00.000Z",
   },
   {
     id: "txn_006",
-    customer: "Sarah Johnson",
+    customer: "Ngozi Nwosu",
     type: "credit",
     status: "paid",
     channel: "card",
-    amount: 350000,
+    amount: 150000,
     currency: "NGN",
-    reference: "XPS-000006",
-    createdAt: "2026-08-20T15:40:00.000Z",
+    reference: "TXN-20260820-006",
+    createdAt: "2026-08-20T14:40:00.000Z",
   },
   {
     id: "txn_007",
-    customer: "Chinedu Okoro",
-    type: "credit",
-    status: "pending",
-    channel: "qr",
-    amount: 65000,
-    currency: "NGN",
-    reference: "XPS-000007",
-    createdAt: "2026-08-20T14:25:00.000Z",
-  },
-  {
-    id: "txn_008",
-    customer: "Blessing Joseph",
-    type: "credit",
-    status: "paid",
-    channel: "transfer",
-    amount: 95000,
-    currency: "NGN",
-    reference: "XPS-000008",
-    createdAt: "2026-08-20T13:10:00.000Z",
-  },
-  {
-    id: "txn_009",
-    customer: "Tunde Balogun",
-    type: "credit",
-    status: "failed",
-    channel: "ussd",
-    amount: 18000,
-    currency: "NGN",
-    reference: "XPS-000009",
-    createdAt: "2026-08-20T11:45:00.000Z",
-  },
-  {
-    id: "txn_010",
-    customer: "Esther Adebayo",
-    type: "credit",
-    status: "paid",
-    channel: "card",
-    amount: 210000,
-    currency: "NGN",
-    reference: "XPS-000010",
-    createdAt: "2026-08-20T10:20:00.000Z",
-  },
-  {
-    id: "txn_011",
-    customer: "David Nwosu",
+    customer: "Emeka Umeh",
     type: "credit",
     status: "pending",
     channel: "bank",
     amount: 55000,
     currency: "NGN",
-    reference: "XPS-000011",
-    createdAt: "2026-08-20T09:15:00.000Z",
+    reference: "TXN-20260820-007",
+    createdAt: "2026-08-20T12:30:00.000Z",
+  },
+  {
+    id: "txn_008",
+    customer: "Aisha Mohammed",
+    type: "credit",
+    status: "paid",
+    channel: "transfer",
+    amount: 95000,
+    currency: "NGN",
+    reference: "TXN-20260820-008",
+    createdAt: "2026-08-20T10:14:00.000Z",
+  },
+  {
+    id: "txn_009",
+    customer: "Yusuf Ibrahim",
+    type: "credit",
+    status: "failed",
+    channel: "card",
+    amount: 40000,
+    currency: "NGN",
+    reference: "TXN-20260819-009",
+    createdAt: "2026-08-19T17:05:00.000Z",
+  },
+  {
+    id: "txn_010",
+    customer: "Fatima Bello",
+    type: "credit",
+    status: "paid",
+    channel: "ussd",
+    amount: 65000,
+    currency: "NGN",
+    reference: "TXN-20260819-010",
+    createdAt: "2026-08-19T15:22:00.000Z",
+  },
+  {
+    id: "txn_011",
+    customer: "Ibrahim Musa",
+    type: "credit",
+    status: "paid",
+    channel: "bank",
+    amount: 200000,
+    currency: "NGN",
+    reference: "TXN-20260819-011",
+    createdAt: "2026-08-19T13:11:00.000Z",
   },
   {
     id: "txn_012",
-    customer: "Mercy Peter",
+    customer: "Esther Johnson",
     type: "credit",
-    status: "paid",
-    channel: "card",
-    amount: 80000,
+    status: "pending",
+    channel: "qr",
+    amount: 35000,
     currency: "NGN",
-    reference: "XPS-000012",
-    createdAt: "2026-08-19T18:40:00.000Z",
+    reference: "TXN-20260819-012",
+    createdAt: "2026-08-19T11:48:00.000Z",
   },
   {
     id: "txn_013",
-    customer: "Samuel Obi",
+    customer: "Samuel Okoro",
     type: "credit",
     status: "paid",
     channel: "transfer",
-    amount: 150000,
+    amount: 120000,
     currency: "NGN",
-    reference: "XPS-000013",
-    createdAt: "2026-08-19T16:30:00.000Z",
+    reference: "TXN-20260818-013",
+    createdAt: "2026-08-18T16:35:00.000Z",
   },
   {
     id: "txn_014",
-    customer: "Aisha Bello",
+    customer: "Joyce Williams",
     type: "credit",
     status: "failed",
-    channel: "qr",
-    amount: 32000,
+    channel: "card",
+    amount: 50000,
     currency: "NGN",
-    reference: "XPS-000014",
-    createdAt: "2026-08-19T15:20:00.000Z",
+    reference: "TXN-20260818-014",
+    createdAt: "2026-08-18T14:20:00.000Z",
   },
   {
     id: "txn_015",
-    customer: "Kevin Martins",
+    customer: "Peter Adekunle",
     type: "credit",
     status: "paid",
-    channel: "card",
-    amount: 275000,
+    channel: "bank",
+    amount: 180000,
     currency: "NGN",
-    reference: "XPS-000015",
-    createdAt: "2026-08-19T13:45:00.000Z",
+    reference: "TXN-20260818-015",
+    createdAt: "2026-08-18T12:45:00.000Z",
   },
   {
     id: "txn_016",
-    customer: "Joyce Williams",
+    customer: "Maryam Sule",
     type: "credit",
     status: "pending",
-    channel: "bank",
-    amount: 40000,
+    channel: "ussd",
+    amount: 25000,
     currency: "NGN",
-    reference: "XPS-000016",
-    createdAt: "2026-08-19T12:30:00.000Z",
+    reference: "TXN-20260818-016",
+    createdAt: "2026-08-18T10:30:00.000Z",
   },
   {
     id: "txn_017",
-    customer: "Femi Lawal",
+    customer: "Kingsley Nnamdi",
     type: "credit",
     status: "paid",
-    channel: "ussd",
-    amount: 70000,
+    channel: "qr",
+    amount: 90000,
     currency: "NGN",
-    reference: "XPS-000017",
-    createdAt: "2026-08-19T11:15:00.000Z",
+    reference: "TXN-20260817-017",
+    createdAt: "2026-08-17T17:18:00.000Z",
   },
   {
     id: "txn_018",
-    customer: "Nneka Ibe",
+    customer: "Sarah James",
     type: "credit",
-    status: "failed",
+    status: "paid",
     channel: "card",
-    amount: 125000,
+    amount: 110000,
     currency: "NGN",
-    reference: "XPS-000018",
-    createdAt: "2026-08-19T09:40:00.000Z",
+    reference: "TXN-20260817-018",
+    createdAt: "2026-08-17T15:46:00.000Z",
   },
   {
     id: "txn_019",
-    customer: "Yusuf Ibrahim",
+    customer: "Michael Ojo",
     type: "credit",
-    status: "paid",
+    status: "failed",
     channel: "transfer",
-    amount: 90000,
+    amount: 70000,
     currency: "NGN",
-    reference: "XPS-000019",
-    createdAt: "2026-08-18T17:20:00.000Z",
+    reference: "TXN-20260817-019",
+    createdAt: "2026-08-17T13:25:00.000Z",
   },
   {
     id: "txn_020",
-    customer: "Adaeze Chukwu",
-    type: "credit",
-    status: "paid",
-    channel: "qr",
-    amount: 60000,
-    currency: "NGN",
-    reference: "XPS-000020",
-    createdAt: "2026-08-18T16:10:00.000Z",
-  },
-  {
-    id: "txn_021",
-    customer: "Emeka Uche",
-    type: "credit",
-    status: "pending",
-    channel: "card",
-    amount: 220000,
-    currency: "NGN",
-    reference: "XPS-000021",
-    createdAt: "2026-08-18T14:50:00.000Z",
-  },
-  {
-    id: "txn_022",
-    customer: "Hannah Cole",
-    type: "credit",
-    status: "paid",
-    channel: "ussd",
-    amount: 30000,
-    currency: "NGN",
-    reference: "XPS-000022",
-    createdAt: "2026-08-18T13:35:00.000Z",
-  },
-  {
-    id: "txn_023",
-    customer: "Peter James",
-    type: "credit",
-    status: "failed",
-    channel: "bank",
-    amount: 110000,
-    currency: "NGN",
-    reference: "XPS-000023",
-    createdAt: "2026-08-18T12:20:00.000Z",
-  },
-  {
-    id: "txn_024",
-    customer: "Rita Okeke",
-    type: "credit",
-    status: "paid",
-    channel: "card",
-    amount: 145000,
-    currency: "NGN",
-    reference: "XPS-000024",
-    createdAt: "2026-08-18T10:45:00.000Z",
-  },
-  {
-    id: "txn_025",
-    customer: "Oluwaseun Adeola",
-    type: "credit",
-    status: "paid",
-    channel: "transfer",
-    amount: 50000,
-    currency: "NGN",
-    reference: "XPS-000025",
-    createdAt: "2026-08-17T17:30:00.000Z",
-  },
-  {
-    id: "txn_026",
-    customer: "Fatima Abdullahi",
-    type: "credit",
-    status: "pending",
-    channel: "qr",
-    amount: 85000,
-    currency: "NGN",
-    reference: "XPS-000026",
-    createdAt: "2026-08-17T15:15:00.000Z",
-  },
-  {
-    id: "txn_027",
-    customer: "Chris Morgan",
-    type: "credit",
-    status: "paid",
-    channel: "card",
-    amount: 190000,
-    currency: "NGN",
-    reference: "XPS-000027",
-    createdAt: "2026-08-17T13:40:00.000Z",
-  },
-  {
-    id: "txn_028",
-    customer: "Ngozi Eze",
-    type: "credit",
-    status: "failed",
-    channel: "ussd",
-    amount: 27000,
-    currency: "NGN",
-    reference: "XPS-000028",
-    createdAt: "2026-08-17T11:20:00.000Z",
-  },
-  {
-    id: "txn_029",
-    customer: "Marcus Brown",
+    customer: "Grace Eze",
     type: "credit",
     status: "paid",
     channel: "bank",
     amount: 135000,
     currency: "NGN",
-    reference: "XPS-000029",
-    createdAt: "2026-08-17T09:50:00.000Z",
+    reference: "TXN-20260817-020",
+    createdAt: "2026-08-17T11:12:00.000Z",
   },
   {
-    id: "txn_030",
-    customer: "Temitope Akinyemi",
+    id: "txn_021",
+    customer: "David Adeola",
+    type: "credit",
+    status: "pending",
+    channel: "card",
+    amount: 60000,
+    currency: "NGN",
+    reference: "TXN-20260816-021",
+    createdAt: "2026-08-16T16:40:00.000Z",
+  },
+  {
+    id: "txn_022",
+    customer: "Janet Okeke",
+    type: "credit",
+    status: "paid",
+    channel: "ussd",
+    amount: 45000,
+    currency: "NGN",
+    reference: "TXN-20260816-022",
+    createdAt: "2026-08-16T14:30:00.000Z",
+  },
+  {
+    id: "txn_023",
+    customer: "Victor Adebayo",
+    type: "credit",
+    status: "paid",
+    channel: "transfer",
+    amount: 100000,
+    currency: "NGN",
+    reference: "TXN-20260816-023",
+    createdAt: "2026-08-16T13:15:00.000Z",
+  },
+  {
+    id: "txn_024",
+    customer: "Ruth Chukwu",
+    type: "credit",
+    status: "failed",
+    channel: "qr",
+    amount: 30000,
+    currency: "NGN",
+    reference: "TXN-20260816-024",
+    createdAt: "2026-08-16T11:50:00.000Z",
+  },
+  {
+    id: "txn_025",
+    customer: "Collins Obi",
     type: "credit",
     status: "paid",
     channel: "card",
-    amount: 72000,
+    amount: 145000,
     currency: "NGN",
-    reference: "XPS-000030",
-    createdAt: "2026-08-16T16:30:00.000Z",
+    reference: "TXN-20260816-025",
+    createdAt: "2026-08-16T10:25:00.000Z",
+  },
+  {
+    id: "txn_026",
+    customer: "Funke Ajayi",
+    type: "credit",
+    status: "pending",
+    channel: "bank",
+    amount: 80000,
+    currency: "NGN",
+    reference: "TXN-20260816-026",
+    createdAt: "2026-08-16T09:40:00.000Z",
+  },
+  {
+    id: "txn_027",
+    customer: "Olumide Lawal",
+    type: "credit",
+    status: "paid",
+    channel: "transfer",
+    amount: 175000,
+    currency: "NGN",
+    reference: "TXN-20260816-027",
+    createdAt: "2026-08-16T08:35:00.000Z",
+  },
+  {
+    id: "txn_028",
+    customer: "Abigail David",
+    type: "credit",
+    status: "paid",
+    channel: "ussd",
+    amount: 55000,
+    currency: "NGN",
+    reference: "TXN-20260816-028",
+    createdAt: "2026-08-16T08:10:00.000Z",
+  },
+  {
+    id: "txn_029",
+    customer: "Ifeanyi Okafor",
+    type: "credit",
+    status: "failed",
+    channel: "card",
+    amount: 90000,
+    currency: "NGN",
+    reference: "TXN-20260816-029",
+    createdAt: "2026-08-16T07:45:00.000Z",
+  },
+  {
+    id: "txn_030",
+    customer: "Temitope Akinola",
+    type: "credit",
+    status: "paid",
+    channel: "qr",
+    amount: 70000,
+    currency: "NGN",
+    reference: "TXN-20260816-030",
+    createdAt: "2026-08-16T07:20:00.000Z",
   },
 ];
 
 /**
  * ============================================================================
- * MOCK TRANSACTION FILTER
- * ============================================================================
- *
- * Mirrors the documented GraphQL TransactionFilterInput.
- *
- * Supported server-side filters:
- *
- * - customerEmail
- * - reference
- * - transactionId
- * - startDate
- * - endDate
- * - cardBrand
- * - paymentMethod
- * - status
- *
- * The local Transaction model only contains enough information to faithfully
- * reproduce:
- *
- * - reference
- * - transactionId
- * - startDate
- * - endDate
- * - status
- * - paymentMethod
- * ============================================================================
- */
-
-export interface MockTransactionsQueryFilters {
-  customerEmail?: string | null;
-
-  reference?: string | null;
-
-  transactionId?: string | null;
-
-  startDate?: string | null;
-
-  endDate?: string | null;
-
-  cardBrand?: string | null;
-
-  paymentMethod?: string | null;
-
-  status?: string | null;
-}
-
-/**
- * ============================================================================
- * MERCHANT-ISOLATED MOCK TRANSACTIONS
- * ============================================================================
- *
- * Each merchant has its own transaction collection.
- *
- * This is important because mock data must behave like real account-scoped
- * data. A merchant should never see another merchant's transactions.
- *
- * The first mock merchant receives the existing demo transactions.
- * New merchants start with an empty transaction collection.
+ * MERCHANT-SCOPED MOCK TRANSACTIONS
  * ============================================================================
  */
 
 const mockTransactionsByMerchant: Record<string, Transaction[]> = {
-  "mock-merchant-001": [...MOCK_TRANSACTIONS],
+  M12345: [...MOCK_TRANSACTIONS],
 };
 
 /**
  * ============================================================================
- * GET MERCHANT TRANSACTIONS
+ * GET TRANSACTIONS FOR MERCHANT
  * ============================================================================
  */
 
 export function getMockTransactionsForMerchant(
   merchantId: string
 ): Transaction[] {
-  return [
-    ...(mockTransactionsByMerchant[merchantId] ?? []),
-  ];
+  return [...(mockTransactionsByMerchant[merchantId] ?? [])];
 }
 
 /**
  * ============================================================================
- * SET MERCHANT TRANSACTIONS
+ * SET TRANSACTIONS FOR MERCHANT
  * ============================================================================
  */
 
@@ -430,33 +378,46 @@ export function setMockTransactionsForMerchant(
   merchantId: string,
   transactions: Transaction[]
 ): void {
-  mockTransactionsByMerchant[merchantId] = [
-    ...transactions,
-  ];
+  mockTransactionsByMerchant[merchantId] = [...transactions];
 }
 
 /**
  * ============================================================================
- * CLEAR MERCHANT TRANSACTIONS
+ * DELETE TRANSACTIONS FOR MERCHANT
  * ============================================================================
  */
 
-export function clearMockTransactionsForMerchant(
-  merchantId: string
-): void {
+export function deleteMockTransactionsForMerchant(merchantId: string): void {
   delete mockTransactionsByMerchant[merchantId];
 }
 
 /**
  * ============================================================================
- * MOCK TRANSACTION STATUS
+ * MOCK QUERY FILTERS
  * ============================================================================
  */
 
-function matchesMockStatus(
-  transaction: Transaction,
-  status: string
-): boolean {
+export interface MockTransactionsQueryFilters {
+  status?: string | null;
+
+  reference?: string | null;
+
+  transactionId?: string | null;
+
+  paymentMethod?: string | null;
+
+  startDate?: string | null;
+
+  endDate?: string | null;
+}
+
+/**
+ * ============================================================================
+ * MOCK TRANSACTION STATUS MATCHER
+ * ============================================================================
+ */
+
+function matchesMockStatus(transaction: Transaction, status: string): boolean {
   const normalizedStatus = status.trim().toLowerCase();
 
   switch (normalizedStatus) {
@@ -479,26 +440,7 @@ function matchesMockStatus(
 
 /**
  * ============================================================================
- * MOCK TRANSACTION PAGE
- * ============================================================================
- *
- * Mirrors the response shape of:
- *
- * transactions {
- *   items
- *   totalCount
- *   pageNumber
- *   pageSize
- * }
- *
- * Supported mock filters:
- *
- * - status
- * - startDate
- * - endDate
- * - reference
- * - transactionId
- * - paymentMethod
+ * MOCK TRANSACTIONS PAGE
  * ============================================================================
  */
 
@@ -506,171 +448,133 @@ export async function getMockTransactionsPage(
   page = 1,
   limit = 20,
   filter: MockTransactionsQueryFilters = {},
-  merchantId = "mock-merchant-001"
+  merchantId = "M12345"
 ) {
   const safePage = Math.max(1, page);
 
   const safeLimit = Math.max(1, limit);
 
-  const merchantTransactions =
-    getMockTransactionsForMerchant(merchantId);
+  const merchantTransactions = getMockTransactionsForMerchant(merchantId);
 
-  const normalizedStatus =
-    filter.status?.trim().toLowerCase() ?? null;
+  let filteredTransactions = [...merchantTransactions];
 
-  const normalizedPaymentMethod =
-    filter.paymentMethod?.trim().toLowerCase() ?? null;
+  /**
+   * --------------------------------------------------------------------------
+   * STATUS
+   * --------------------------------------------------------------------------
+   */
 
-  const normalizedReference =
-    filter.reference?.trim().toLowerCase() ?? null;
-
-  const normalizedTransactionId =
-    filter.transactionId?.trim().toLowerCase() ?? null;
-
-  const filteredTransactions =
-    merchantTransactions.filter((transaction) => {
-      /**
-       * ----------------------------------------------------------------------
-       * Status
-       * ----------------------------------------------------------------------
-       */
-
-      if (normalizedStatus) {
-        if (
-          !matchesMockStatus(
-            transaction,
-            normalizedStatus
-          )
-        ) {
-          return false;
-        }
-      }
-
-      /**
-       * ----------------------------------------------------------------------
-       * Reference
-       * ----------------------------------------------------------------------
-       */
-
-      if (
-        normalizedReference &&
-        !transaction.reference
-          .toLowerCase()
-          .includes(normalizedReference)
-      ) {
-        return false;
-      }
-
-      /**
-       * ----------------------------------------------------------------------
-       * Transaction ID
-       * ----------------------------------------------------------------------
-       */
-
-      if (
-        normalizedTransactionId &&
-        !transaction.id
-          .toLowerCase()
-          .includes(normalizedTransactionId)
-      ) {
-        return false;
-      }
-
-      /**
-       * ----------------------------------------------------------------------
-       * Payment Method
-       * ----------------------------------------------------------------------
-       */
-
-      if (
-        normalizedPaymentMethod &&
-        transaction.channel.toLowerCase() !==
-          normalizedPaymentMethod
-      ) {
-        return false;
-      }
-
-      /**
-       * ----------------------------------------------------------------------
-       * Start Date
-       * ----------------------------------------------------------------------
-       */
-
-      if (filter.startDate) {
-        const transactionDate = new Date(
-          transaction.createdAt
-        );
-
-        const startDate = new Date(
-          filter.startDate
-        );
-
-        if (transactionDate < startDate) {
-          return false;
-        }
-      }
-
-      /**
-       * ----------------------------------------------------------------------
-       * End Date
-       * ----------------------------------------------------------------------
-       */
-
-      if (filter.endDate) {
-        const transactionDate = new Date(
-          transaction.createdAt
-        );
-
-        const endDate = new Date(
-          filter.endDate
-        );
-
-        if (transactionDate > endDate) {
-          return false;
-        }
-      }
-
-      /**
-       * ----------------------------------------------------------------------
-       * Unsupported documented fields
-       * ----------------------------------------------------------------------
-       *
-       * customerEmail and cardBrand are part of the backend contract,
-       * but the local Transaction model does not contain those values.
-       *
-       * We therefore intentionally do not invent filtering behaviour.
-       */
-
-      return true;
-    });
-
-  const startIndex =
-    (safePage - 1) * safeLimit;
-
-  const endIndex =
-    startIndex + safeLimit;
-
-  const transactions =
-    filteredTransactions.slice(
-      startIndex,
-      endIndex
+  if (filter.status) {
+    filteredTransactions = filteredTransactions.filter((transaction) =>
+      matchesMockStatus(transaction, filter.status as string)
     );
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * REFERENCE
+   * --------------------------------------------------------------------------
+   */
+
+  if (filter.reference) {
+    const reference = filter.reference.trim().toLowerCase();
+
+    filteredTransactions = filteredTransactions.filter((transaction) =>
+      transaction.reference.toLowerCase().includes(reference)
+    );
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * TRANSACTION ID
+   * --------------------------------------------------------------------------
+   */
+
+  if (filter.transactionId) {
+    const transactionId = filter.transactionId.trim().toLowerCase();
+
+    filteredTransactions = filteredTransactions.filter((transaction) =>
+      transaction.id.toLowerCase().includes(transactionId)
+    );
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * PAYMENT METHOD
+   * --------------------------------------------------------------------------
+   */
+
+  if (filter.paymentMethod) {
+    const paymentMethod = filter.paymentMethod.trim().toLowerCase();
+
+    filteredTransactions = filteredTransactions.filter(
+      (transaction) => transaction.channel.toLowerCase() === paymentMethod
+    );
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * START DATE
+   * --------------------------------------------------------------------------
+   */
+
+  if (filter.startDate) {
+    const startDate = new Date(filter.startDate);
+
+    filteredTransactions = filteredTransactions.filter(
+      (transaction) => new Date(transaction.createdAt) >= startDate
+    );
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * END DATE
+   * --------------------------------------------------------------------------
+   */
+
+  if (filter.endDate) {
+    const endDate = new Date(filter.endDate);
+
+    filteredTransactions = filteredTransactions.filter(
+      (transaction) => new Date(transaction.createdAt) <= endDate
+    );
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * PAGINATION
+   * --------------------------------------------------------------------------
+   */
+
+  const startIndex = (safePage - 1) * safeLimit;
+
+  const endIndex = startIndex + safeLimit;
+
+  const transactions = filteredTransactions.slice(startIndex, endIndex);
 
   return {
     responseCode: "00",
 
-    responseMessage:
-      "Transactions loaded from mock data.",
+    responseMessage: "Transactions loaded from mock data.",
 
     data: {
       transactions,
 
-      totalCount:
-        filteredTransactions.length,
+      totalCount: filteredTransactions.length,
 
       pageNumber: safePage,
 
       pageSize: safeLimit,
     },
   };
+}
+
+/**
+ * ============================================================================
+ * RESET MOCK TRANSACTIONS
+ * ============================================================================
+ */
+
+export function resetMockTransactions(): void {
+  mockTransactionsByMerchant.M12345 = [...MOCK_TRANSACTIONS];
 }

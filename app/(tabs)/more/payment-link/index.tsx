@@ -316,6 +316,12 @@ export default function PaymentLinksScreen() {
     inactive: "Inactive",
   }[selectedStatus];
 
+  /**
+   * --------------------------------------------------------------------------
+   * SUMMARY STATUS TEXT COLOUR
+   * --------------------------------------------------------------------------
+   */
+
   const summaryStatusColors: Record<PaymentLinkStatus, Color> = {
     all: "strong",
     active: "success",
@@ -326,6 +332,67 @@ export default function PaymentLinksScreen() {
   };
 
   const summaryStatusColor = summaryStatusColors[selectedStatus];
+
+  /**
+   * --------------------------------------------------------------------------
+   * SUMMARY CARD COLOUR
+   * --------------------------------------------------------------------------
+   *
+   * All      -> active
+   * Active   -> success
+   * Paid     -> success
+   * Pending  -> warning
+   * Failed   -> error
+   * Inactive -> default
+   * --------------------------------------------------------------------------
+   */
+
+  const summaryCardVariant =
+    selectedStatus === "failed"
+      ? "error"
+      : selectedStatus === "pending"
+        ? "warning"
+        : selectedStatus === "inactive"
+          ? "default"
+          : selectedStatus === "active" || selectedStatus === "paid"
+            ? "success"
+            : "active";
+
+  /**
+   * --------------------------------------------------------------------------
+   * SUMMARY ICON
+   * --------------------------------------------------------------------------
+   *
+   * All
+   * -> paymentLinksIconAll.png
+   *
+   * Active
+   * -> paymentLinksIconActive.png
+   *
+   * Paid
+   * -> paymentLinksIconPaid.png
+   *
+   * Failed
+   * -> paymentLinksIconFailed.png
+   *
+   * Inactive
+   * -> paymentLinksIconInactive.png
+   *
+   * Pending currently has no separate icon in the supplied icon list,
+   * so it falls back to the All icon.
+   * --------------------------------------------------------------------------
+   */
+
+  const summaryIconSource =
+    selectedStatus === "active"
+      ? require("../../../../assets/icons/payment-links/paymentLinksIconActive.png")
+      : selectedStatus === "paid"
+        ? require("../../../../assets/icons/payment-links/paymentLinksIconPaid.png")
+        : selectedStatus === "failed"
+          ? require("../../../../assets/icons/payment-links/paymentLinksIconFailed.png")
+          : selectedStatus === "inactive"
+            ? require("../../../../assets/icons/payment-links/paymentLinksIconInactive.png")
+            : require("../../../../assets/icons/payment-links/paymentLinksIconAll.png");
 
   const summaryCurrency = summaryLinks[0]?.currency ?? "NGN";
 
@@ -349,6 +416,7 @@ export default function PaymentLinksScreen() {
    *
    * A brand-new merchant with no payment links should see
    * the onboarding state rather than management controls.
+   * --------------------------------------------------------------------------
    */
 
   const hasPaymentLinks = links.length > 0;
@@ -752,7 +820,7 @@ export default function PaymentLinksScreen() {
 
             {!isFirstTimeUser && (
               <Card
-                variant="active"
+                variant={summaryCardVariant}
                 style={{
                   marginTop: spacing.md,
                 }}
@@ -783,10 +851,13 @@ export default function PaymentLinksScreen() {
                         backgroundColor: theme.icon.branding.background,
                       }}
                     >
-                      <Ionicons
-                        name="link-outline"
-                        size={28}
-                        color={theme.icon.branding.icon}
+                      <Image
+                        source={summaryIconSource}
+                        style={{
+                          width: 56,
+                          height: 56,
+                        }}
+                        resizeMode="contain"
                       />
                     </View>
 

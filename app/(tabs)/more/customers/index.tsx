@@ -189,6 +189,8 @@ function CustomerCard({
             gap: spacing.sm,
           }}
         >
+          {/* CUSTOMER ICON */}
+
           <Image
             source={require("../../../../assets/icons/customerIcon.png")}
             style={{
@@ -198,48 +200,29 @@ function CustomerCard({
             resizeMode="contain"
           />
 
+          {/* CUSTOMER INFORMATION */}
+
           <View
             style={{
               flex: 1,
             }}
           >
-            <View
+            <AppText
+              variant="h3"
+              numberOfLines={1}
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: spacing.sm,
+                flexShrink: 1,
               }}
             >
-              <AppText
-                variant="h3"
-                numberOfLines={1}
-                style={{
-                  flexShrink: 1,
-                }}
-              >
-                {customer.name}
-              </AppText>
-
-              {customer.isBlackListed && (
-                <View
-                  style={{
-                    paddingHorizontal: spacing.sm,
-                    paddingVertical: spacing.xs,
-                    borderRadius: radius.full,
-                    backgroundColor: theme.state.error.background,
-                  }}
-                >
-                  <AppText variant="caption" color="error">
-                    Blacklisted
-                  </AppText>
-                </View>
-              )}
-            </View>
+              {customer.name}
+            </AppText>
 
             <AppText variant="body" color="secondary">
               {customer.phone}
             </AppText>
           </View>
+
+          {/* VIEW + EDIT */}
 
           <View
             style={{
@@ -296,63 +279,100 @@ function CustomerCard({
           </View>
         </View>
 
+        {/* ================================================================
+            DIVIDER
+        ================================================================ */}
+
         <Divider
           style={{
             marginVertical: spacing.rg,
           }}
         />
 
+        {/* ================================================================
+            STATUS + CONTACT ACTIONS
+        ================================================================ */}
+
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "flex-end",
-            gap: spacing.sm,
+            justifyContent: "space-between",
           }}
         >
-          {/* CALL */}
+          {/* CUSTOMER STATUS */}
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Call ${customer.name}`}
-            disabled={mutationPending}
+          <View
             style={{
-              width: 44,
-              height: 44,
+              paddingHorizontal: spacing.sm,
+              paddingVertical: spacing.xs,
               borderRadius: radius.full,
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: theme.background.subtle,
-              opacity: mutationPending ? 0.5 : 1,
+              backgroundColor: customer.isBlackListed
+                ? theme.state.error.background
+                : theme.state.success.background,
             }}
-            onPress={() => onCall(customer.phone)}
           >
-            <Ionicons
-              name="call-outline"
-              size={22}
-              color={theme.icon.default.icon}
-            />
-          </Pressable>
+            <AppText
+              variant="caption"
+              color={customer.isBlackListed ? "error" : "success"}
+            >
+              {customer.isBlackListed ? "Blacklisted" : "Not Blacklisted"}
+            </AppText>
+          </View>
 
-          {/* WHATSAPP */}
+          {/* CONTACT ACTIONS */}
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`WhatsApp ${customer.name}`}
-            disabled={mutationPending}
+          <View
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: radius.full,
-              justifyContent: "center",
+              flexDirection: "row",
               alignItems: "center",
-              backgroundColor: "#25D36615",
-              opacity: mutationPending ? 0.5 : 1,
+              gap: spacing.sm,
             }}
-            onPress={() => onWhatsApp(customer.phone)}
           >
-            <Ionicons name="logo-whatsapp" size={22} color="#25D366" />
-          </Pressable>
+            {/* CALL */}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Call ${customer.name}`}
+              disabled={mutationPending}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: radius.full,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: theme.background.subtle,
+                opacity: mutationPending ? 0.5 : 1,
+              }}
+              onPress={() => onCall(customer.phone)}
+            >
+              <Ionicons
+                name="call-outline"
+                size={22}
+                color={theme.icon.default.icon}
+              />
+            </Pressable>
+
+            {/* WHATSAPP */}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`WhatsApp ${customer.name}`}
+              disabled={mutationPending}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: radius.full,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#25D36615",
+                opacity: mutationPending ? 0.5 : 1,
+              }}
+              onPress={() => onWhatsApp(customer.phone)}
+            >
+              <Ionicons name="logo-whatsapp" size={22} color="#25D366" />
+            </Pressable>
+          </View>
         </View>
       </Card>
     </Swipeable>

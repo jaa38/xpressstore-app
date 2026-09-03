@@ -17,25 +17,27 @@
  * ---------------------------------------------------------------------------
  */
 
-export const USE_MOCK_DASHBOARD = false;
+export const USE_MOCK_DASHBOARD = true;
 
-export const USE_MOCK_STORES = false;
+export const USE_MOCK_STORES = true;
 
-export const USE_MOCK_PRODUCTS = false;
+export const USE_MOCK_PRODUCTS = true;
 
-export const USE_MOCK_CATEGORIES = false;
+export const USE_MOCK_CATEGORIES = true;
 
-export const USE_MOCK_SHIPPING_REGIONS = false;
+export const USE_MOCK_SHIPPING_REGIONS = true;
 
-export const USE_MOCK_CUSTOMERS = false;
+export const USE_MOCK_CUSTOMERS = true;
 
-export const USE_MOCK_PAYMENT_LINKS = false;
+export const USE_MOCK_PAYMENT_LINKS = true;
 
-export const USE_MOCK_ORDERS = false;
+export const USE_MOCK_ORDERS = true;
 
-export const USE_MOCK_TRANSACTIONS = false;
+export const USE_MOCK_TRANSACTIONS = true;
 
-export const USE_MOCK_DISCOUNTS = false;
+export const USE_MOCK_DISCOUNTS = true;
+
+export const USE_MOCK_MERCHANT_PROFILE = true;
 
 /**
  * ---------------------------------------------------------------------------

@@ -247,9 +247,6 @@ function CategoriesEmptyState({
         <Button
           title="Add Category"
           variant="primary"
-          leftIcon={
-            <Ionicons name="add" size={20} color={theme.action.primary.text} />
-          }
           style={{
             marginTop: spacing.lg,
           }}

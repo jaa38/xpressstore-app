@@ -75,10 +75,13 @@ export default function MoreScreen() {
             gap: spacing.md,
           }}
         >
-          <Ionicons
-            name="person-circle"
-            size={56}
-            color={theme.icon.default.icon}
+          <Image
+            source={require("../../../assets/icons/profileIcon.png")}
+            style={{
+              width: 96,
+              height: 96,
+            }}
+            resizeMode="contain"
           />
 
           <View
@@ -89,6 +92,10 @@ export default function MoreScreen() {
           >
             <AppText variant="h3">
               {isLoading ? "Loading..." : (profile?.businessName ?? "Merchant")}
+            </AppText>
+
+            <AppText variant="bodySmall" color="muted">
+              Merchant ID: {profile?.merchantId || "Not available"}
             </AppText>
 
             <AppText variant="bodySmall" color="muted">

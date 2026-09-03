@@ -189,10 +189,13 @@ function CustomerCard({
             gap: spacing.sm,
           }}
         >
-          <Ionicons
-            name="person-circle"
-            size={56}
-            color={theme.icon.default.icon}
+          <Image
+            source={require("../../../../assets/icons/customerIcon.png")}
+            style={{
+              width: 56,
+              height: 56,
+            }}
+            resizeMode="contain"
           />
 
           <View

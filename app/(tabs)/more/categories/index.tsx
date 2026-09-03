@@ -129,10 +129,13 @@ function CategoryCard({
               alignItems: "center",
             }}
           >
-            <Ionicons
-              name="albums-outline"
-              size={24}
-              color={theme.icon.default.icon}
+            <Image
+              source={require("../../../../assets/icons/categoriesIcon.png")}
+              style={{
+                width: 48,
+                height: 48,
+              }}
+              resizeMode="contain"
             />
           </View>
 

@@ -57,19 +57,6 @@ interface NativeToggleSwitchProps {
  * ============================================================================
  * TOGGLE SWITCH PROPS
  * ============================================================================
- *
- * The component supports two modes:
- *
- * 1. Option mode
- *    - Used by ID verification
- *    - value is a string
- *    - options are provided
- *
- * 2. Native switch mode
- *    - Used by Storefront Status
- *    - value is a boolean
- *    - options are omitted
- * ============================================================================
  */
 
 type ToggleSwitchProps = OptionToggleSwitchProps | NativeToggleSwitchProps;
@@ -83,15 +70,21 @@ type ToggleSwitchProps = OptionToggleSwitchProps | NativeToggleSwitchProps;
 export function ToggleSwitch(props: ToggleSwitchProps) {
   /**
    * --------------------------------------------------------------------------
-   * NATIVE SWITCH MODE
+   * OPTION MODE
    * --------------------------------------------------------------------------
    *
-   * When no options are supplied, render the React Native Switch.
+   * This preserves the existing segmented toggle UI.
    */
 
   if ("options" in props) {
     return <OptionToggleSwitch {...props} />;
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * NATIVE SWITCH MODE
+   * --------------------------------------------------------------------------
+   */
 
   return <NativeToggleSwitch {...props} />;
 }
@@ -116,7 +109,16 @@ function OptionToggleSwitch({
       <Pressable
         key={option.value}
         disabled={option.disabled}
-        onPress={() => onChange(option.value)}
+        onPress={() => {
+          if (!option.disabled) {
+            onChange(option.value);
+          }
+        }}
+        accessibilityRole="switch"
+        accessibilityState={{
+          checked: isActive,
+          disabled: option.disabled,
+        }}
         style={[
           styles.button,
 
@@ -179,17 +181,11 @@ function NativeToggleSwitch({
         value={value}
         onValueChange={onChange}
         disabled={disabled}
-        /**
-         * iOS
-         */
         trackColor={{
           false: theme.background.subtle,
           true: theme.action.primary.background,
         }}
         thumbColor={theme.background.surface}
-        /**
-         * Android
-         */
         ios_backgroundColor={theme.background.subtle}
       />
     </View>
@@ -203,6 +199,12 @@ function NativeToggleSwitch({
  */
 
 const styles = StyleSheet.create({
+  /**
+   * ==========================================================================
+   * OPTION MODE
+   * ==========================================================================
+   */
+
   container: {
     width: "100%",
   },
@@ -254,11 +256,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
 
     paddingHorizontal: 16,
+
     paddingVertical: 8,
 
     borderRadius: radius.md,
 
-    backgroundColor: theme.background.subtle,
+    backgroundColor: theme.background.surface,
   },
 
   /**

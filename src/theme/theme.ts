@@ -277,6 +277,11 @@ export const theme = {
       background: colors.gray[100],
       border: colors.gray[300],
     },
+
+    description: {
+      background: colors.gray[100],
+      border: colors.gray[300],
+    },
   },
 
   /**

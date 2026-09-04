@@ -1,10 +1,6 @@
 import React from "react";
 
-import {
-  StyleSheet,
-  View,
-  ViewProps,
-} from "react-native";
+import { StyleSheet, View, ViewProps } from "react-native";
 
 import { theme } from "@/theme";
 import { radius } from "@/theme/radius";
@@ -16,10 +12,10 @@ export type CardVariant =
   | "accent"
   | "success"
   | "error"
-  | "warning";
+  | "warning"
+  | "description"
 
-interface CardProps
-  extends ViewProps {
+interface CardProps extends ViewProps {
   variant?: CardVariant;
 
   fullWidth?: boolean;
@@ -46,9 +42,7 @@ export function Card({
 
         variantStyles[variant],
 
-        fullWidth
-          ? styles.fullWidth
-          : styles.autoWidth,
+        fullWidth ? styles.fullWidth : styles.autoWidth,
 
         style,
       ]}
@@ -60,74 +54,64 @@ export function Card({
 
 const variantStyles = {
   default: {
-    backgroundColor:
-      theme.card.default.background,
+    backgroundColor: theme.card.default.background,
 
-    borderColor:
-      theme.card.default.border,
+    borderColor: theme.card.default.border,
   },
 
   active: {
-    backgroundColor:
-      theme.card.active.background,
+    backgroundColor: theme.card.active.background,
 
-    borderColor:
-      theme.card.active.border,
+    borderColor: theme.card.active.border,
   },
 
   accent: {
-    backgroundColor:
-      theme.card.accent.background,
+    backgroundColor: theme.card.accent.background,
 
-    borderColor:
-      theme.card.accent.border,
+    borderColor: theme.card.accent.border,
   },
 
   success: {
-    backgroundColor:
-      theme.card.success.background,
+    backgroundColor: theme.card.success.background,
 
-    borderColor:
-      theme.card.success.border,
+    borderColor: theme.card.success.border,
   },
 
   error: {
-    backgroundColor:
-      theme.card.error.background,
+    backgroundColor: theme.card.error.background,
 
-    borderColor:
-      theme.card.error.border,
+    borderColor: theme.card.error.border,
   },
 
   warning: {
-    backgroundColor:
-      theme.card.warning.background,
+    backgroundColor: theme.card.warning.background,
 
-    borderColor:
-      theme.card.warning.border,
+    borderColor: theme.card.warning.border,
+  },
+
+  description: {
+    backgroundColor: theme.card.description.background,
+
+    borderColor: theme.card.description.border,
   },
 } as const;
 
-const styles =
-  StyleSheet.create({
-    card: {
-      paddingHorizontal:
-        spacing.md,
+const styles = StyleSheet.create({
+  card: {
+    paddingHorizontal: spacing.md,
 
-      paddingVertical:
-        spacing.md,
+    paddingVertical: spacing.md,
 
-      borderWidth: 1,
+    borderWidth: 1,
 
-      borderRadius:
-        radius.md,
-    },
+    borderRadius: radius.md,
+  },
 
-    fullWidth: {
-      width: "100%",
-    },
+  fullWidth: {
+    width: "100%",
+  },
 
-    autoWidth: {
-      alignSelf: "flex-start",
-    },
-  });
+  autoWidth: {
+    alignSelf: "flex-start",
+  },
+});

@@ -76,12 +76,6 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    * TRANSACTIONS API
    * --------------------------------------------------------------------------
-   *
-   * The API hook is always called.
-   *
-   * We choose between the API data and the shared mock data below based on:
-   *
-   * USE_MOCK_TRANSACTIONS
    */
 
   const { data: transactionsData, refetch: refetchTransactions } =
@@ -176,12 +170,6 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    * RECENT TRANSACTIONS
    * --------------------------------------------------------------------------
-   *
-   * Only show the first 5 transactions on Home.
-   *
-   * The complete transaction list remains available on:
-   *
-   * /more/transactions
    */
 
   const recentTransactions = useMemo(() => {
@@ -192,8 +180,6 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    * WEEKLY REVENUE
    * --------------------------------------------------------------------------
-   *
-   * Revenue is calculated from successful credit transactions.
    */
 
   const weeklyRevenue = useMemo(() => {
@@ -202,6 +188,7 @@ export default function HomeScreen() {
     /**
      * Current week starts on Monday.
      */
+
     const currentWeekStart = new Date(now);
 
     const day = currentWeekStart.getDay();
@@ -216,6 +203,7 @@ export default function HomeScreen() {
      * Previous week starts seven days before
      * the current week.
      */
+
     const previousWeekStart = new Date(currentWeekStart);
 
     previousWeekStart.setDate(previousWeekStart.getDate() - 7);
@@ -223,6 +211,7 @@ export default function HomeScreen() {
     /**
      * End of previous week.
      */
+
     const previousWeekEnd = new Date(currentWeekStart);
 
     previousWeekEnd.setMilliseconds(-1);
@@ -230,6 +219,7 @@ export default function HomeScreen() {
     /**
      * Successful credit transactions only.
      */
+
     const revenueTransactions = transactions.filter(
       (transaction) =>
         transaction.type === "credit" && transaction.status === "paid"
@@ -238,6 +228,7 @@ export default function HomeScreen() {
     /**
      * This week's revenue.
      */
+
     const thisWeekRevenue = revenueTransactions
       .filter((transaction) => {
         const transactionDate = new Date(transaction.createdAt);
@@ -249,6 +240,7 @@ export default function HomeScreen() {
     /**
      * Previous week's revenue.
      */
+
     const previousWeekRevenue = revenueTransactions
       .filter((transaction) => {
         const transactionDate = new Date(transaction.createdAt);
@@ -263,6 +255,7 @@ export default function HomeScreen() {
     /**
      * Percentage change.
      */
+
     const revenueChangePercent =
       previousWeekRevenue === 0
         ? 0
@@ -288,9 +281,6 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    * FIRST-TIME USER
    * --------------------------------------------------------------------------
-   *
-   * A merchant with no transaction history is treated as a new/empty
-   * dashboard rather than being shown a technical or analytics state.
    */
 
   const isFirstTimeUser =
@@ -300,8 +290,6 @@ export default function HomeScreen() {
    * --------------------------------------------------------------------------
    * DASHBOARD STATISTICS
    * --------------------------------------------------------------------------
-   *
-   * Do not show the revenue statistics card for a first-time merchant.
    */
 
   const showDashboardStats =
@@ -423,6 +411,38 @@ export default function HomeScreen() {
         </View>
 
         {/* ==================================================================
+            ACCOUNT STATUS BANNER
+        ================================================================== */}
+
+        <View
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+
+            /**
+             * Cancel the parent's horizontal padding so the banner
+             * extends to the screen boundaries.
+             */
+
+            marginHorizontal: -spacing.lg,
+
+            /**
+             * Keep vertical spacing consistent with the dashboard.
+             */
+
+            marginTop: spacing.md,
+            marginBottom: spacing.xs,
+
+            backgroundColor: theme.background.pending,
+
+            paddingVertical: spacing.sm,
+            paddingHorizontal: spacing.lg,
+          }}
+        >
+          <AppText color="inverse">Pending</AppText>
+        </View>
+
+        {/* ==================================================================
             SCROLLABLE CONTENT
         ================================================================== */}
 
@@ -485,8 +505,6 @@ export default function HomeScreen() {
                     paddingHorizontal: spacing.lg,
                   }}
                 >
-                  {/* XPRESSSTORE LOGO */}
-
                   <Image
                     source={require("../../assets/logo/xpressStoreLogo.png")}
                     style={{
@@ -540,8 +558,10 @@ export default function HomeScreen() {
                     <View style={{ flex: 1 }}>
                       <Button
                         title="Storefront"
-                        variant='tertiary'
-                        onPress={() => router.push(ROUTES.ADD_STORE_INFORMATION)}
+                        variant="tertiary"
+                        onPress={() =>
+                          router.push(ROUTES.ADD_STORE_INFORMATION)
+                        }
                       />
                     </View>
                   </View>
@@ -564,8 +584,6 @@ export default function HomeScreen() {
 
               {/* ============================================================
                   QUICK ACTIONS
-                  Hidden for first-time users because the onboarding
-                  card already provides the primary actions.
               ============================================================ */}
 
               {!isFirstTimeUser && (
@@ -664,8 +682,6 @@ export default function HomeScreen() {
 
               {/* ============================================================
                   RECENT TRANSACTIONS
-                  Hidden for first-time users because there is no
-                  transaction history to display.
               ============================================================ */}
 
               {!isFirstTimeUser && (

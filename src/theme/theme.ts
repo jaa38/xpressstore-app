@@ -55,6 +55,8 @@ export const theme = {
     overlay: "rgba(0,0,0,0.4)",
 
     inverse: colors.gray[900],
+
+    pending: colors.secondary[500],
   },
 
   /**

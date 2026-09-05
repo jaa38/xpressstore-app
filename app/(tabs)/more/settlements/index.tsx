@@ -6,7 +6,7 @@ import {
   View,
 } from "react-native";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -51,6 +51,8 @@ type SettlementForm = {
   accountName: string;
 };
 
+type AccountResolutionStatus = "idle" | "resolving" | "success" | "error";
+
 /**
  * ============================================================================
  * SETTLEMENTS SCREEN
@@ -80,9 +82,36 @@ export default function SettlementsScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const validateSettlementAccount = useValidateSettlementAccount();
+  const { mutateAsync: validateSettlementAccount } =
+    useValidateSettlementAccount();
+
+  /**
+   * --------------------------------------------------------------------------
+   * SETTLEMENT ACCOUNT UPDATE
+   * --------------------------------------------------------------------------
+   */
 
   const updateSettlementAccount = useUpdateSettlementAccount();
+
+  /**
+   * --------------------------------------------------------------------------
+   * ACCOUNT RESOLUTION UI STATE
+   * --------------------------------------------------------------------------
+   *
+   * This is intentionally kept separately from React Query's mutation state.
+   *
+   * It controls the complete account verification flow:
+   *
+   * - idle
+   * - debounce + API verification
+   * - successful verification
+   * - failed verification
+   */
+
+  const [accountResolutionStatus, setAccountResolutionStatus] =
+    useState<AccountResolutionStatus>("idle");
+
+  const [accountResolutionMessage, setAccountResolutionMessage] = useState("");
 
   /**
    * --------------------------------------------------------------------------
@@ -90,7 +119,7 @@ export default function SettlementsScreen() {
    * --------------------------------------------------------------------------
    *
    * Used to prevent an older API response from overwriting
-   * a newer account number.
+   * a newer account number or bank selection.
    */
 
   const resolveRequestRef = useRef(0);
@@ -111,6 +140,7 @@ export default function SettlementsScreen() {
   });
 
   const { bvn: enteredBVN, bankCode, accountNumber, accountName } = watch();
+
   /**
    * --------------------------------------------------------------------------
    * VERIFIED BVN
@@ -138,23 +168,24 @@ export default function SettlementsScreen() {
    *
    * Flow:
    *
-   * 1. Merchant selects bank.
-   * 2. Merchant enters account number.
-   * 3. Once account number reaches 10 digits:
-   *    - wait briefly
-   *    - resolve account automatically
-   *    - display account holder name
+   * 1. Merchant selects a bank.
+   * 2. Merchant enters a 10-digit account number.
+   * 3. Previous verification is cleared.
+   * 4. UI immediately enters the resolving state.
+   * 5. Wait briefly for the debounce period.
+   * 6. Resolve the account automatically.
+   * 7. Display the verified account holder.
    *
    * If either the bank or account number changes,
-   * the previous verification is cleared.
+   * the previous verification becomes invalid immediately.
    */
 
   useEffect(() => {
     /**
-     * Every change creates a new request version.
+     * Every input change creates a new request version.
      *
-     * This prevents stale responses from an older request
-     * from updating the current account.
+     * This prevents stale API responses from updating
+     * the current account state.
      */
 
     resolveRequestRef.current += 1;
@@ -168,26 +199,48 @@ export default function SettlementsScreen() {
     setValue("accountName", "");
 
     /**
-     * Do not resolve until both values are valid.
+     * Reset account resolution UI.
      */
 
-    if (!bankCode || accountNumber.length !== 10) {
+    setAccountResolutionStatus("idle");
+
+    setAccountResolutionMessage("");
+
+    /**
+     * Only resolve when both values are valid.
+     */
+
+    const isAccountNumberValid = /^\d{10}$/.test(accountNumber);
+
+    if (!bankCode || !isAccountNumberValid) {
       return;
     }
 
     /**
+     * Immediately show verification feedback.
+     *
+     * This covers both:
+     *
+     * - debounce period
+     * - API request
+     */
+
+    setAccountResolutionStatus("resolving");
+
+    /**
      * Small debounce.
      *
-     * This avoids firing the request immediately while
-     * the user is still entering or editing the account number.
+     * Prevents unnecessary requests while the merchant
+     * is still entering or editing the account number.
      */
 
     const timeout = setTimeout(async () => {
       try {
-        const response = await validateSettlementAccount.mutateAsync({
+        const response = await validateSettlementAccount({
           bankCode,
           accountNumber,
         });
+
         /**
          * Ignore stale responses.
          */
@@ -197,16 +250,35 @@ export default function SettlementsScreen() {
         }
 
         /**
+         * Validate that the API returned an account holder.
+         */
+
+        if (!response.data?.accountName?.trim()) {
+          setValue("accountName", "");
+
+          setAccountResolutionStatus("error");
+
+          setAccountResolutionMessage(
+            response.responseMessage ||
+              "We could not verify this account. Check the bank and account number."
+          );
+
+          return;
+        }
+
+        /**
          * Store the resolved account holder.
          */
 
-        if (!response.data) {
-          throw new Error(
-            response.responseMessage || "Unable to validate settlement account."
-          );
-        }
+        setValue("accountName", response.data.accountName.trim());
 
-        setValue("accountName", response.data.accountName);
+        /**
+         * Update verification state.
+         */
+
+        setAccountResolutionStatus("success");
+
+        setAccountResolutionMessage("");
       } catch (error) {
         /**
          * Ignore stale errors.
@@ -217,13 +289,22 @@ export default function SettlementsScreen() {
         }
 
         /**
-         * Account name remains empty.
-         *
-         * We do not show an alert automatically because
-         * that can be disruptive while the user is editing.
+         * Clear account holder.
          */
 
         setValue("accountName", "");
+
+        /**
+         * Update verification state.
+         */
+
+        setAccountResolutionStatus("error");
+
+        /**
+         * Store a user-friendly error message.
+         */
+
+        setAccountResolutionMessage(getApiErrorMessage(error));
       }
     }, 600);
 
@@ -238,13 +319,16 @@ export default function SettlementsScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const isBVNValid = enteredBVN.length === 11;
+  const isBVNValid = /^\d{11}$/.test(enteredBVN);
+
+  const isAccountNumberValid = /^\d{10}$/.test(accountNumber);
 
   const isSettlementFormValid =
     hasVerifiedBVN &&
     bankCode.length > 0 &&
-    accountNumber.length === 10 &&
-    accountName.length > 0;
+    isAccountNumberValid &&
+    accountName.trim().length > 0 &&
+    accountResolutionStatus === "success";
 
   /**
    * --------------------------------------------------------------------------
@@ -290,6 +374,14 @@ export default function SettlementsScreen() {
    */
 
   async function onVerifyBVN() {
+    /**
+     * Prevent duplicate verification requests.
+     */
+
+    if (verifyBVN.isPending) {
+      return;
+    }
+
     try {
       if (!isBVNValid) {
         Alert.alert("Invalid BVN", "Please enter a valid 11-digit BVN.");
@@ -333,6 +425,20 @@ export default function SettlementsScreen() {
    */
 
   async function onSubmit(data: SettlementForm) {
+    /**
+     * Prevent duplicate save requests.
+     */
+
+    if (updateSettlementAccount.isPending) {
+      return;
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * BVN VALIDATION
+     * ------------------------------------------------------------------------
+     */
+
     if (!hasVerifiedBVN) {
       Alert.alert(
         "BVN Verification Required",
@@ -342,14 +448,56 @@ export default function SettlementsScreen() {
       return;
     }
 
-    if (!data.accountName) {
+    /**
+     * ------------------------------------------------------------------------
+     * BANK VALIDATION
+     * ------------------------------------------------------------------------
+     */
+
+    if (!data.bankCode) {
       Alert.alert(
-        "Account Verification Required",
-        "Please enter a valid bank and account number."
+        "Bank Required",
+        "Please select the bank for your settlement account."
       );
 
       return;
     }
+
+    /**
+     * ------------------------------------------------------------------------
+     * ACCOUNT NUMBER VALIDATION
+     * ------------------------------------------------------------------------
+     */
+
+    if (!/^\d{10}$/.test(data.accountNumber)) {
+      Alert.alert(
+        "Invalid Account Number",
+        "Please enter a valid 10-digit account number."
+      );
+
+      return;
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * ACCOUNT VERIFICATION VALIDATION
+     * ------------------------------------------------------------------------
+     */
+
+    if (accountResolutionStatus !== "success" || !data.accountName.trim()) {
+      Alert.alert(
+        "Account Verification Required",
+        "Please wait for your account details to be successfully verified before saving."
+      );
+
+      return;
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * BANK LOOKUP
+     * ------------------------------------------------------------------------
+     */
 
     const selectedBank = bankOptions.find(
       (bank) => bank.value === data.bankCode
@@ -361,11 +509,17 @@ export default function SettlementsScreen() {
       return;
     }
 
+    /**
+     * ------------------------------------------------------------------------
+     * SAVE ACCOUNT
+     * ------------------------------------------------------------------------
+     */
+
     try {
       await updateSettlementAccount.mutateAsync({
         accountNumber: data.accountNumber,
 
-        accountName: data.accountName,
+        accountName: data.accountName.trim(),
 
         bankName: selectedBank.label,
 
@@ -552,7 +706,9 @@ export default function SettlementsScreen() {
                   keyboardType="number-pad"
                   maxLength={11}
                   value={value}
-                  onChangeText={onChange}
+                  onChangeText={(text) => {
+                    onChange(text.replace(/\D/g, ""));
+                  }}
                   editable={!hasVerifiedBVN}
                   helperText={
                     hasVerifiedBVN
@@ -595,7 +751,9 @@ export default function SettlementsScreen() {
                 </AppText>
               </View>
 
-              {/* BANK */}
+              {/* ============================================================
+                  BANK
+              ============================================================ */}
 
               <Controller
                 control={control}
@@ -611,7 +769,9 @@ export default function SettlementsScreen() {
                 )}
               />
 
-              {/* ACCOUNT NUMBER */}
+              {/* ============================================================
+                  ACCOUNT NUMBER
+              ============================================================ */}
 
               <Controller
                 control={control}
@@ -623,42 +783,60 @@ export default function SettlementsScreen() {
                     keyboardType="number-pad"
                     maxLength={10}
                     value={value}
-                    onChangeText={onChange}
+                    onChangeText={(text) => {
+                      onChange(text.replace(/\D/g, ""));
+                    }}
                     helperText="Your account name will be verified automatically."
                   />
                 )}
               />
 
               {/* ============================================================
-                  ACCOUNT RESOLUTION STATE
+                  ACCOUNT RESOLUTION - RESOLVING
               ============================================================ */}
 
-              {bankCode &&
-                accountNumber.length === 10 &&
-                validateSettlementAccount.isPending && (
+              {accountResolutionStatus === "resolving" && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: spacing.sm,
+
+                    padding: spacing.md,
+
+                    backgroundColor: theme.card.default.background,
+
+                    borderWidth: 1,
+                    borderColor: theme.card.default.border,
+
+                    borderRadius: radius.md,
+                  }}
+                >
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.icon.branding.icon}
+                  />
+
                   <View
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: spacing.sm,
-
-                      paddingVertical: spacing.sm,
+                      flex: 1,
+                      gap: spacing.xs,
                     }}
                   >
-                    <ActivityIndicator
-                      size="small"
-                      color={theme.icon.branding.icon}
-                    />
+                    <AppText variant="bodySmallBold">Verifying account</AppText>
 
                     <AppText variant="bodySmall" color="secondary">
-                      Verifying account...
+                      Please wait while we confirm the account holder.
                     </AppText>
                   </View>
-                )}
+                </View>
+              )}
 
-              {/* VERIFIED ACCOUNT */}
+              {/* ============================================================
+                  ACCOUNT RESOLUTION - SUCCESS
+              ============================================================ */}
 
-              {accountName && !validateSettlementAccount.isPending && (
+              {accountResolutionStatus === "success" && accountName && (
                 <View
                   style={{
                     flexDirection: "row",
@@ -693,56 +871,55 @@ export default function SettlementsScreen() {
                 </View>
               )}
 
-              {/* RESOLUTION ERROR */}
+              {/* ============================================================
+                  ACCOUNT RESOLUTION - ERROR
+              ============================================================ */}
 
-              {bankCode &&
-                accountNumber.length === 10 &&
-                !validateSettlementAccount.isPending &&
-                !accountName &&
-                validateSettlementAccount.isError && (
+              {accountResolutionStatus === "error" && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    gap: spacing.sm,
+
+                    padding: spacing.md,
+
+                    backgroundColor: theme.card.default.background,
+
+                    borderWidth: 1,
+                    borderColor: theme.card.default.border,
+
+                    borderRadius: radius.md,
+                  }}
+                >
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={20}
+                    color={theme.text.secondary}
+                  />
+
                   <View
                     style={{
-                      flexDirection: "row",
-                      alignItems: "flex-start",
-                      gap: spacing.sm,
-
-                      padding: spacing.md,
-
-                      backgroundColor: theme.card.default.background,
-
-                      borderWidth: 1,
-                      borderColor: theme.card.default.border,
-
-                      borderRadius: radius.md,
+                      flex: 1,
                     }}
                   >
-                    <Ionicons
-                      name="alert-circle-outline"
-                      size={20}
-                      color={theme.text.secondary}
-                    />
+                    <AppText variant="bodySmallBold">
+                      Unable to verify account
+                    </AppText>
 
-                    <View
+                    <AppText
+                      variant="bodySmall"
+                      color="secondary"
                       style={{
-                        flex: 1,
+                        marginTop: spacing.xs,
                       }}
                     >
-                      <AppText variant="bodySmallBold">
-                        Unable to verify account
-                      </AppText>
-
-                      <AppText
-                        variant="bodySmall"
-                        color="secondary"
-                        style={{
-                          marginTop: spacing.xs,
-                        }}
-                      >
-                        Check the bank and account number, then try again.
-                      </AppText>
-                    </View>
+                      {accountResolutionMessage ||
+                        "Check the bank and account number, then try again."}
+                    </AppText>
                   </View>
-                )}
+                </View>
+              )}
             </View>
           )}
 

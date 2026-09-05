@@ -64,3 +64,11 @@ export const USE_MOCK_BUSINESS_CATEGORIES = true;
  */
 
 export const USE_MOCK_AUTH = true;
+
+/**
+ * ---------------------------------------------------------------------------
+ * Settlement Accounts
+ * ---------------------------------------------------------------------------
+ */
+
+export const USE_MOCK_SETTLEMENT_ACCOUNTS = true;

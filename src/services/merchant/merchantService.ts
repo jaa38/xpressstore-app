@@ -19,8 +19,13 @@ import {
 
 import {
   USE_MOCK_ONBOARDING,
+  USE_MOCK_SETTLEMENT_ACCOUNTS,
   updateMockBusinessDetails,
   updateMockBusinessType,
+  getMockSettlementAccounts,
+  updateMockSettlementAccount,
+  deleteMockSettlementAccount,
+  validateMockSettlementAccount,
 } from "@/mocks";
 
 export const merchantService = {
@@ -93,6 +98,22 @@ export const merchantService = {
    */
 
   async getSettlementAccounts() {
+    /**
+     * ------------------------------------------------------------------------
+     * MOCK MODE
+     * ------------------------------------------------------------------------
+     */
+
+    if (USE_MOCK_SETTLEMENT_ACCOUNTS) {
+      return getMockSettlementAccounts();
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * API MODE
+     * ------------------------------------------------------------------------
+     */
+
     const { data } = await authClient.get<ApiResponse<SettlementAccount[]>>(
       API_ENDPOINTS.merchants.settlementAccounts
     );
@@ -101,14 +122,61 @@ export const merchantService = {
   },
 
   async validateSettlementAccount(payload: ValidateSettlementAccountRequest) {
+    /**
+     * ------------------------------------------------------------------------
+     * MOCK MODE
+     * ------------------------------------------------------------------------
+     */
+
+    if (USE_MOCK_SETTLEMENT_ACCOUNTS) {
+      return validateMockSettlementAccount(payload);
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * API MODE
+     * ------------------------------------------------------------------------
+     */
+
     const { data } = await authClient.post<
       ApiResponse<ValidateSettlementAccountResponse>
     >(API_ENDPOINTS.merchants.validateSettlementAccount, payload);
+
+    /**
+     * ------------------------------------------------------------------------
+     * RESPONSE VALIDATION
+     * ------------------------------------------------------------------------
+     *
+     * The API may return a successful HTTP response while the
+     * account validation itself was unsuccessful.
+     */
+
+    if (!data.data) {
+      throw new Error(
+        data.responseMessage || "Unable to validate settlement account."
+      );
+    }
 
     return data;
   },
 
   async updateSettlementAccount(payload: UpdateSettlementAccountRequest) {
+    /**
+     * ------------------------------------------------------------------------
+     * MOCK MODE
+     * ------------------------------------------------------------------------
+     */
+
+    if (USE_MOCK_SETTLEMENT_ACCOUNTS) {
+      return updateMockSettlementAccount(payload);
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * API MODE
+     * ------------------------------------------------------------------------
+     */
+
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.merchants.updateSettlementAccount,
       payload
@@ -118,6 +186,22 @@ export const merchantService = {
   },
 
   async deleteSettlementAccount(settlementId: string | number) {
+    /**
+     * ------------------------------------------------------------------------
+     * MOCK MODE
+     * ------------------------------------------------------------------------
+     */
+
+    if (USE_MOCK_SETTLEMENT_ACCOUNTS) {
+      return deleteMockSettlementAccount(settlementId);
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * API MODE
+     * ------------------------------------------------------------------------
+     */
+
     const { data } = await authClient.post<ApiResponse<void>>(
       API_ENDPOINTS.merchants.deleteSettlementAccount(settlementId)
     );

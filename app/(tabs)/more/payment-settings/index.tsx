@@ -22,14 +22,28 @@ import { Card } from "@/components/ui/Card";
 
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 
+import { useSettlementAccounts } from "@/hooks/merchant/useSettlementAccounts";
+
 import { radius, spacing, theme } from "@/theme";
 
+/**
+ * ============================================================================
+ * TYPES
+ * ============================================================================
+ */
+
 type IDType = "Myself" | "Customers";
+
+/**
+ * ============================================================================
+ * PAYMENT SETTINGS SCREEN
+ * ============================================================================
+ */
 
 export default function PaymentSettingsScreen() {
   /**
    * =========================================================================
-   * STATE
+   * PAYMENT SETTINGS STATE
    * =========================================================================
    */
 
@@ -45,21 +59,44 @@ export default function PaymentSettingsScreen() {
 
   const [nqrEnabled, setNqrEnabled] = useState(true);
 
+  /**
+   * =========================================================================
+   * REFRESH STATE
+   * =========================================================================
+   */
+
   const [refreshing, setRefreshing] = useState(false);
 
   /**
    * =========================================================================
-   * VERIFICATION
+   * SETTLEMENT ACCOUNT STATUS
    * =========================================================================
    *
-   * Payment settings remain disabled until the merchant is verified.
-   *
-   * TODO:
-   * Replace this temporary value with the merchant verification status
-   * from the merchant profile/API once that integration is available.
+   * Payment settings can only be configured after the merchant
+   * has added a settlement account.
    */
 
-  const isVerified = false;
+  const {
+    settlementAccounts,
+    isLoading: settlementAccountsLoading,
+    refetch: refetchSettlementAccounts,
+  } = useSettlementAccounts();
+
+  const hasSettlementAccount = (settlementAccounts?.length ?? 0) > 0;
+
+  /**
+   * =========================================================================
+   * PAYMENT SETTINGS ACCESS
+   * =========================================================================
+   *
+   * The merchant can configure payment settings only when:
+   *
+   * - Settlement accounts have finished loading
+   * - At least one settlement account exists
+   */
+
+  const canConfigurePaymentSettings =
+    !settlementAccountsLoading && hasSettlementAccount;
 
   /**
    * =========================================================================
@@ -72,12 +109,13 @@ export default function PaymentSettingsScreen() {
 
     try {
       /**
-       * TODO:
-       * Replace this with the payment settings API refetch
-       * once the backend integration is available.
+       * Refresh settlement account status.
+       *
+       * Once payment settings APIs are integrated,
+       * add their refetch calls here as well.
        */
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await refetchSettlementAccounts();
     } finally {
       setRefreshing(false);
     }
@@ -175,15 +213,18 @@ export default function PaymentSettingsScreen() {
           }
         >
           {/* ==============================================================
-              VERIFICATION NOTICE
+              SETTLEMENT ACCOUNT REQUIRED
           ============================================================== */}
 
-          {!isVerified && (
-            <View
-              style={{
+          {!settlementAccountsLoading && !hasSettlementAccount && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Add settlement account"
+              onPress={() => router.push("/(tabs)/more/settlements")}
+              style={({ pressed }) => ({
                 marginTop: spacing.sm,
                 paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm,
+                paddingVertical: spacing.md,
                 borderRadius: radius.md,
                 backgroundColor: theme.background.warning,
                 borderWidth: 1,
@@ -191,17 +232,14 @@ export default function PaymentSettingsScreen() {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: spacing.sm,
-              }}
+                opacity: pressed ? 0.8 : 1,
+              })}
             >
-              {/* ICON */}
-
               <Ionicons
                 name="lock-closed-outline"
                 size={18}
                 color={theme.icon.warning.icon}
               />
-
-              {/* CONTENT */}
 
               <View
                 style={{
@@ -210,15 +248,21 @@ export default function PaymentSettingsScreen() {
                 }}
               >
                 <AppText variant="bodySmall" color="warning">
-                  Payment settings are locked
+                  Settlement account required
                 </AppText>
 
                 <AppText variant="caption" color="muted">
-                  Complete merchant verification to configure your payment
+                  Add a settlement account before configuring your payment
                   methods.
                 </AppText>
               </View>
-            </View>
+
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={theme.icon.warning.icon}
+              />
+            </Pressable>
           )}
 
           {/* ==============================================================
@@ -229,12 +273,18 @@ export default function PaymentSettingsScreen() {
             style={{
               marginTop: spacing.md,
               gap: spacing.md,
+
+              /**
+               * Visual locked state.
+               */
+
+              opacity: canConfigurePaymentSettings ? 1 : 0.6,
             }}
             variant="description"
           >
-            {/* ================================================================
+            {/* ============================================================
                 HEADER
-            ================================================================ */}
+            ============================================================ */}
 
             <View
               style={{
@@ -248,9 +298,9 @@ export default function PaymentSettingsScreen() {
               </AppText>
             </View>
 
-            {/* ================================================================
+            {/* ============================================================
                 CHARGE BEARER
-            ================================================================ */}
+            ============================================================ */}
 
             <View
               style={{
@@ -268,17 +318,17 @@ export default function PaymentSettingsScreen() {
                   {
                     label: "Myself",
                     value: "Myself",
-                    disabled: !isVerified,
+                    disabled: !canConfigurePaymentSettings,
                   },
                   {
                     label: "Customers",
                     value: "Customers",
-                    disabled: !isVerified,
+                    disabled: !canConfigurePaymentSettings,
                   },
                 ]}
                 onChange={(value) => {
                   if (
-                    isVerified &&
+                    canConfigurePaymentSettings &&
                     (value === "Myself" || value === "Customers")
                   ) {
                     setIdType(value);
@@ -287,9 +337,9 @@ export default function PaymentSettingsScreen() {
               />
             </View>
 
-            {/* ================================================================
+            {/* ============================================================
                 SELECTION DESCRIPTION
-            ================================================================ */}
+            ============================================================ */}
 
             <View
               style={{
@@ -319,6 +369,8 @@ export default function PaymentSettingsScreen() {
             style={{
               marginTop: spacing.xl,
               gap: spacing.xs,
+
+              opacity: canConfigurePaymentSettings ? 1 : 0.6,
             }}
           >
             <AppText variant="bodyLargeBold">Payment Methods</AppText>
@@ -336,11 +388,12 @@ export default function PaymentSettingsScreen() {
             style={{
               marginTop: spacing.md,
               paddingVertical: spacing.sm,
+              opacity: canConfigurePaymentSettings ? 1 : 0.6,
             }}
           >
-            {/* ================================================================
+            {/* ============================================================
                 CARDS
-            ================================================================ */}
+            ============================================================ */}
 
             <View
               style={{
@@ -348,7 +401,6 @@ export default function PaymentSettingsScreen() {
                 alignItems: "center",
                 gap: spacing.md,
                 paddingVertical: spacing.sm,
-                opacity: isVerified ? 1 : 0.6,
               }}
             >
               {/* ICON */}
@@ -404,7 +456,7 @@ export default function PaymentSettingsScreen() {
               <ToggleSwitch
                 value={cardsEnabled}
                 onChange={setCardsEnabled}
-                disabled={!isVerified}
+                disabled={!canConfigurePaymentSettings}
               />
             </View>
 
@@ -419,9 +471,9 @@ export default function PaymentSettingsScreen() {
               }}
             />
 
-            {/* ================================================================
+            {/* ============================================================
                 USSD
-            ================================================================ */}
+            ============================================================ */}
 
             <View
               style={{
@@ -429,7 +481,6 @@ export default function PaymentSettingsScreen() {
                 alignItems: "center",
                 gap: spacing.md,
                 paddingVertical: spacing.sm,
-                opacity: isVerified ? 1 : 0.6,
               }}
             >
               {/* ICON */}
@@ -485,7 +536,7 @@ export default function PaymentSettingsScreen() {
               <ToggleSwitch
                 value={ussdEnabled}
                 onChange={setUssdEnabled}
-                disabled={!isVerified}
+                disabled={!canConfigurePaymentSettings}
               />
             </View>
 
@@ -500,9 +551,9 @@ export default function PaymentSettingsScreen() {
               }}
             />
 
-            {/* ================================================================
+            {/* ============================================================
                 BANK
-            ================================================================ */}
+            ============================================================ */}
 
             <View
               style={{
@@ -510,7 +561,6 @@ export default function PaymentSettingsScreen() {
                 alignItems: "center",
                 gap: spacing.md,
                 paddingVertical: spacing.sm,
-                opacity: isVerified ? 1 : 0.6,
               }}
             >
               {/* ICON */}
@@ -566,7 +616,7 @@ export default function PaymentSettingsScreen() {
               <ToggleSwitch
                 value={bankEnabled}
                 onChange={setBankEnabled}
-                disabled={!isVerified}
+                disabled={!canConfigurePaymentSettings}
               />
             </View>
 
@@ -581,9 +631,9 @@ export default function PaymentSettingsScreen() {
               }}
             />
 
-            {/* ================================================================
+            {/* ============================================================
                 BANK TRANSFER
-            ================================================================ */}
+            ============================================================ */}
 
             <View
               style={{
@@ -591,7 +641,6 @@ export default function PaymentSettingsScreen() {
                 alignItems: "center",
                 gap: spacing.md,
                 paddingVertical: spacing.sm,
-                opacity: isVerified ? 1 : 0.6,
               }}
             >
               {/* ICON */}
@@ -647,7 +696,7 @@ export default function PaymentSettingsScreen() {
               <ToggleSwitch
                 value={bankTransferEnabled}
                 onChange={setBankTransferEnabled}
-                disabled={!isVerified}
+                disabled={!canConfigurePaymentSettings}
               />
             </View>
 
@@ -662,9 +711,9 @@ export default function PaymentSettingsScreen() {
               }}
             />
 
-            {/* ================================================================
+            {/* ============================================================
                 NQR
-            ================================================================ */}
+            ============================================================ */}
 
             <View
               style={{
@@ -672,7 +721,6 @@ export default function PaymentSettingsScreen() {
                 alignItems: "center",
                 gap: spacing.md,
                 paddingVertical: spacing.sm,
-                opacity: isVerified ? 1 : 0.6,
               }}
             >
               {/* ICON */}
@@ -728,7 +776,7 @@ export default function PaymentSettingsScreen() {
               <ToggleSwitch
                 value={nqrEnabled}
                 onChange={setNqrEnabled}
-                disabled={!isVerified}
+                disabled={!canConfigurePaymentSettings}
               />
             </View>
           </Card>

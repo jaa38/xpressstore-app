@@ -14,7 +14,7 @@ import { Card } from "@/components/ui/Card";
 import { Divider } from "@/components/ui/Divider";
 import { UICard } from "@/components/ui/UICard";
 
-import { spacing, theme } from "@/theme";
+import { spacing, theme, radius } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
@@ -22,10 +22,53 @@ import { useAuth } from "@/providers/AuthProvider";
 
 import { useMerchantProfile } from "@/hooks/merchant/useMerchantProfile";
 
+import { useSettlementAccounts } from "@/hooks/merchant/useSettlementAccounts";
+
+/**
+ * ============================================================================
+ * MORE SCREEN
+ * ============================================================================
+ */
+
 export default function MoreScreen() {
+  /**
+   * ==========================================================================
+   * AUTHENTICATION
+   * ==========================================================================
+   */
+
   const { logout } = useAuth();
 
+  /**
+   * ==========================================================================
+   * MERCHANT PROFILE
+   * ==========================================================================
+   */
+
   const { profile, isLoading } = useMerchantProfile();
+
+  /**
+   * ==========================================================================
+   * SETTLEMENT ACCOUNTS
+   * ==========================================================================
+   */
+
+  const { settlementAccounts, isLoading: settlementAccountsLoading } =
+    useSettlementAccounts();
+
+  /**
+   * ==========================================================================
+   * SETTLEMENT ACCOUNT STATUS
+   * ==========================================================================
+   */
+
+  const hasSettlementAccount = (settlementAccounts?.length ?? 0) > 0;
+
+  /**
+   * ==========================================================================
+   * LOGOUT
+   * ==========================================================================
+   */
 
   async function handleLogout() {
     try {
@@ -36,6 +79,12 @@ export default function MoreScreen() {
       Alert.alert("Error", "Failed to log out. Please try again.");
     }
   }
+
+  /**
+   * ==========================================================================
+   * UI
+   * ==========================================================================
+   */
 
   return (
     <SafeAreaView
@@ -51,17 +100,26 @@ export default function MoreScreen() {
           flex: 1,
           paddingHorizontal: spacing.lg,
         }}
+        contentContainerStyle={{
+          paddingBottom: spacing.lg,
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* ================================================================= */}
         {/* HEADER */}
         {/* ================================================================= */}
 
-        <AppText variant="h1">Profile</AppText>
+        <View
+          style={{
+            gap: spacing.xs,
+          }}
+        >
+          <AppText variant="h1">Profile</AppText>
 
-        <AppText variant="body" color="secondary">
-          Manage your business and account
-        </AppText>
+          <AppText variant="body" color="secondary">
+            Manage your business and account
+          </AppText>
+        </View>
 
         {/* ================================================================= */}
         {/* PROFILE CARD */}
@@ -114,31 +172,82 @@ export default function MoreScreen() {
         </Card>
 
         {/* ================================================================= */}
-        {/* AVAILABLE BALANCE */}
+        {/* SETTLEMENT ACCOUNT REQUIRED */}
         {/* ================================================================= */}
+        {/* 
+          UX RECOMMENDATION:
 
-        {/* <Card
-          style={{
-            marginTop: spacing.md,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <View
-            style={{
-              flex: 1,
-            }}
+          Settlement setup is a prerequisite for payment configuration.
+
+          Instead of hiding this information inside Payment Settings,
+          we surface it immediately after the merchant profile.
+
+          This gives the merchant a clear next step and prevents them
+          from navigating into Payment Settings only to discover that
+          the controls are locked.
+        */}
+
+        {!settlementAccountsLoading && !hasSettlementAccount && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Add settlement account"
+            onPress={() => router.push(ROUTES.SETTLEMENTS)}
+            style={({ pressed }) => ({
+              marginTop: spacing.md,
+
+              paddingHorizontal: spacing.md,
+              paddingVertical: spacing.md,
+
+              borderRadius: radius.md,
+
+              backgroundColor: theme.background.warning,
+
+              borderWidth: 1,
+              borderColor: theme.border.warning,
+
+              flexDirection: "row",
+              alignItems: "center",
+
+              gap: spacing.sm,
+
+              opacity: pressed ? 0.8 : 1,
+            })}
           >
-            <AppText variant="label" color="muted">
-              Available to withdraw
-            </AppText>
+            {/* WARNING ICON */}
 
-            <AppText variant="h1">₦248,750</AppText>
-          </View>
+            <Ionicons
+              name="lock-closed-outline"
+              size={20}
+              color={theme.icon.warning.icon}
+            />
 
-          <Button title="Withdraw" />
-        </Card> */}
+            {/* CONTENT */}
+
+            <View
+              style={{
+                flex: 1,
+                gap: spacing.xs,
+              }}
+            >
+              <AppText variant="bodySmall" color="warning">
+                Settlement account required
+              </AppText>
+
+              <AppText variant="caption" color="muted">
+                Add a settlement account before configuring your payment
+                methods.
+              </AppText>
+            </View>
+
+            {/* ACTION */}
+
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={theme.icon.warning.icon}
+            />
+          </Pressable>
+        )}
 
         {/* ================================================================= */}
         {/* CATEGORIES */}
@@ -169,9 +278,7 @@ export default function MoreScreen() {
                 gap: spacing.rg,
               }}
             >
-              {/* ----------------------------------------------------------- */}
               {/* BUSINESS INFORMATION */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.BUSINESS)}
@@ -207,9 +314,7 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* ----------------------------------------------------------- */}
               {/* CATEGORIES */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.CATEGORIES)}
@@ -245,9 +350,7 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* ----------------------------------------------------------- */}
               {/* CUSTOMERS */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.CUSTOMERS)}
@@ -283,9 +386,7 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* ----------------------------------------------------------- */}
               {/* DISCOUNT CODES */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.DISCOUNT_CODES)}
@@ -321,9 +422,7 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* ----------------------------------------------------------- */}
               {/* PAYMENT LINKS */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.PAYMENT_LINKS)}
@@ -359,9 +458,7 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* ----------------------------------------------------------- */}
               {/* SHIPPING REGION */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.SHIPPING_REGION)}
@@ -397,9 +494,7 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* ----------------------------------------------------------- */}
               {/* TRANSACTIONS */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.TRANSACTIONS)}
@@ -454,9 +549,7 @@ export default function MoreScreen() {
                 gap: spacing.rg,
               }}
             >
-              {/* ----------------------------------------------------------- */}
               {/* PAYMENT SETTINGS */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.PAYMENT_SETTINGS)}
@@ -471,15 +564,31 @@ export default function MoreScreen() {
                   style={{
                     width: 48,
                     height: 48,
+
+                    opacity:
+                      !settlementAccountsLoading && !hasSettlementAccount
+                        ? 0.6
+                        : 1,
                   }}
                   resizeMode="contain"
                 />
 
                 <View style={{ flex: 1 }}>
-                  <AppText variant="bodyBold">Payment Settings</AppText>
+                  <AppText
+                    variant="bodyBold"
+                    color={
+                      !settlementAccountsLoading && !hasSettlementAccount
+                        ? "muted"
+                        : undefined
+                    }
+                  >
+                    Payment Settings
+                  </AppText>
 
                   <AppText variant="bodySmall" color="muted">
-                    Bank, Card, Transfer, USSD
+                    {!settlementAccountsLoading && !hasSettlementAccount
+                      ? "Add a settlement account first"
+                      : "Bank, Card, Transfer, USSD"}
                   </AppText>
                 </View>
 
@@ -492,9 +601,7 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* ----------------------------------------------------------- */}
               {/* SETTLEMENT */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.SETTLEMENTS)}
@@ -513,18 +620,57 @@ export default function MoreScreen() {
                   resizeMode="contain"
                 />
 
-                <View style={{ flex: 1 }}>
-                  <AppText variant="bodyBold">Settlement</AppText>
+                <View
+                  style={{
+                    flex: 1,
+                    gap: spacing.xs,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: spacing.sm,
+                    }}
+                  >
+                    <AppText variant="bodyBold">Settlement</AppText>
+
+                    {!settlementAccountsLoading && !hasSettlementAccount && (
+                      <View
+                        style={{
+                          paddingHorizontal: spacing.sm,
+                          paddingVertical: 2,
+
+                          borderRadius: 999,
+
+                          backgroundColor: theme.background.warning,
+                        }}
+                      >
+                        <AppText variant="caption" color="warning">
+                          Required
+                        </AppText>
+                      </View>
+                    )}
+                  </View>
 
                   <AppText variant="bodySmall" color="muted">
-                    Setup how you be paid
+                    {settlementAccountsLoading
+                      ? "Checking settlement account..."
+                      : hasSettlementAccount
+                        ? "Manage how you receive payments"
+                        : "Add your settlement account"}
                   </AppText>
                 </View>
 
                 <Ionicons
                   name="chevron-forward"
                   size={20}
-                  color={theme.listItem.default.chevron}
+                  color={
+                    !settlementAccountsLoading && !hasSettlementAccount
+                      ? theme.icon.warning.icon
+                      : theme.listItem.default.chevron
+                  }
                 />
               </Pressable>
             </Card>
@@ -549,9 +695,7 @@ export default function MoreScreen() {
                 gap: spacing.rg,
               }}
             >
-              {/* ----------------------------------------------------------- */}
               {/* SECURITY */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.SECURITY)}
@@ -587,9 +731,7 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* ----------------------------------------------------------- */}
               {/* NOTIFICATIONS */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.NOTIFICATIONS)}
@@ -625,9 +767,7 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* ----------------------------------------------------------- */}
               {/* SETTINGS */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.SETTINGS)}
@@ -682,9 +822,7 @@ export default function MoreScreen() {
                 gap: spacing.rg,
               }}
             >
-              {/* ----------------------------------------------------------- */}
               {/* SUPPORT */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.SUPPORT)}
@@ -720,9 +858,7 @@ export default function MoreScreen() {
 
               <Divider />
 
-              {/* ----------------------------------------------------------- */}
               {/* ABOUT */}
-              {/* ----------------------------------------------------------- */}
 
               <Pressable
                 onPress={() => router.push(ROUTES.ABOUT)}
@@ -765,7 +901,6 @@ export default function MoreScreen() {
 
         <View
           style={{
-            paddingBottom: spacing.lg,
             paddingTop: spacing.md,
           }}
         >

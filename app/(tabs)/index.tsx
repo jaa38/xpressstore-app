@@ -41,6 +41,8 @@ import { USE_MOCK_TRANSACTIONS } from "@/mocks/config";
 
 import { Button } from "@/components/ui/Button";
 
+import { useSettlementAccounts } from "@/hooks/merchant/useSettlementAccounts";
+
 /**
  * ============================================================================
  * HOME SCREEN
@@ -74,12 +76,24 @@ export default function HomeScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * TRANSACTIONS API
+   * TRANSACTIONS
    * --------------------------------------------------------------------------
    */
 
   const { data: transactionsData, refetch: refetchTransactions } =
     useTransactions();
+
+  /**
+   * --------------------------------------------------------------------------
+   * SETTLEMENT ACCOUNTS
+   * --------------------------------------------------------------------------
+   */
+
+  const {
+    settlementAccounts,
+    isLoading: settlementAccountsLoading,
+    refetch: refetchSettlementAccounts,
+  } = useSettlementAccounts();
 
   /**
    * --------------------------------------------------------------------------
@@ -118,20 +132,19 @@ export default function HomeScreen() {
 
   /**
    * --------------------------------------------------------------------------
+   * SETTLEMENT ACCOUNT STATUS
+   * --------------------------------------------------------------------------
+   */
+
+  const hasSettlementAccount = (settlementAccounts?.length ?? 0) > 0;
+
+  const shouldShowSettlementPendingBanner =
+    !settlementAccountsLoading && !hasSettlementAccount;
+
+  /**
+   * --------------------------------------------------------------------------
    * TIME-BASED GREETING
    * --------------------------------------------------------------------------
-   *
-   * Morning:
-   * 05:00 - 11:59
-   *
-   * Afternoon:
-   * 12:00 - 16:59
-   *
-   * Evening:
-   * 17:00 - 20:59
-   *
-   * Night:
-   * 21:00 - 04:59
    */
 
   const [currentHour, setCurrentHour] = useState(() => {
@@ -200,24 +213,19 @@ export default function HomeScreen() {
     currentWeekStart.setHours(0, 0, 0, 0);
 
     /**
-     * Previous week starts seven days before
-     * the current week.
+     * Previous week.
      */
 
     const previousWeekStart = new Date(currentWeekStart);
 
     previousWeekStart.setDate(previousWeekStart.getDate() - 7);
 
-    /**
-     * End of previous week.
-     */
-
     const previousWeekEnd = new Date(currentWeekStart);
 
     previousWeekEnd.setMilliseconds(-1);
 
     /**
-     * Successful credit transactions only.
+     * Successful credit transactions.
      */
 
     const revenueTransactions = transactions.filter(
@@ -297,11 +305,17 @@ export default function HomeScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * REFRESH
+   * REFRESH STATE
    * --------------------------------------------------------------------------
    */
 
   const [refreshing, setRefreshing] = useState(false);
+
+  /**
+   * --------------------------------------------------------------------------
+   * PULL TO REFRESH
+   * --------------------------------------------------------------------------
+   */
 
   async function onRefresh() {
     setRefreshing(true);
@@ -310,7 +324,11 @@ export default function HomeScreen() {
       if (USE_MOCK_TRANSACTIONS) {
         await new Promise((resolve) => setTimeout(resolve, 500));
 
-        await Promise.all([refetchProfile(), refetchDashboard()]);
+        await Promise.all([
+          refetchProfile(),
+          refetchDashboard(),
+          refetchSettlementAccounts(),
+        ]);
 
         return;
       }
@@ -319,6 +337,7 @@ export default function HomeScreen() {
         refetchProfile(),
         refetchDashboard(),
         refetchTransactions(),
+        refetchSettlementAccounts(),
       ];
 
       await Promise.all(refetchPromises);
@@ -329,17 +348,36 @@ export default function HomeScreen() {
 
   /**
    * --------------------------------------------------------------------------
-   * HOME CONTENT LOADING
+   * INITIAL LOADING
    * --------------------------------------------------------------------------
    */
 
   const isInitialLoading =
-    profileLoading || dashboardLoading || transactionsLoading;
+    profileLoading ||
+    dashboardLoading ||
+    transactionsLoading ||
+    settlementAccountsLoading;
 
   /**
    * --------------------------------------------------------------------------
-   * UI
+   * CONTENT LOADING
    * --------------------------------------------------------------------------
+   *
+   * This is used for BOTH:
+   *
+   * - Initial app load
+   * - Pull-to-refresh
+   *
+   * The header and settlement banner remain visible.
+   * Only the ScrollView content is replaced.
+   */
+
+  const isContentLoading = isInitialLoading || refreshing;
+
+  /**
+   * ==========================================================================
+   * UI
+   * ==========================================================================
    */
 
   return (
@@ -356,9 +394,9 @@ export default function HomeScreen() {
           paddingHorizontal: spacing.lg,
         }}
       >
-        {/* ==================================================================
+        {/* ================================================================
             HEADER
-        ================================================================== */}
+        ================================================================ */}
 
         <View
           style={{
@@ -395,9 +433,13 @@ export default function HomeScreen() {
               style={{
                 width: 40,
                 height: 40,
+
                 justifyContent: "center",
+
                 alignItems: "center",
+
                 backgroundColor: theme.icon.default.background,
+
                 borderRadius: radius.full,
               }}
             >
@@ -410,43 +452,66 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* ==================================================================
+        {/* ================================================================
             ACCOUNT STATUS BANNER
-        ================================================================== */}
+        ================================================================ */}
 
-        <View
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
+        {shouldShowSettlementPendingBanner && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Complete settlement account setup"
+            onPress={() => router.push(ROUTES.SETTLEMENTS)}
+            style={({ pressed }) => ({
+              alignItems: "center",
 
-            /**
-             * Cancel the parent's horizontal padding so the banner
-             * extends to the screen boundaries.
-             */
+              justifyContent: "center",
 
-            marginHorizontal: -spacing.lg,
+              marginHorizontal: -spacing.lg,
 
-            /**
-             * Keep vertical spacing consistent with the dashboard.
-             */
+              marginTop: spacing.md,
 
-            marginTop: spacing.md,
-            marginBottom: spacing.xs,
+              marginBottom: spacing.xs,
 
-            backgroundColor: theme.background.pending,
+              backgroundColor: theme.background.pending,
 
-            paddingVertical: spacing.sm,
-            paddingHorizontal: spacing.lg,
-          }}
-        >
-          <AppText variant="bodyBold" color="inverse">
-            Pending
-          </AppText>
-        </View>
+              paddingVertical: spacing.sm,
 
-        {/* ==================================================================
+              paddingHorizontal: spacing.lg,
+
+              opacity: pressed ? 0.85 : 1,
+            })}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+
+                alignItems: "center",
+
+                gap: spacing.sm,
+              }}
+            >
+              <Ionicons
+                name="alert-circle-outline"
+                size={20}
+                color={theme.text.inverse}
+              />
+
+              <AppText variant="bodyBold" color="inverse">
+                Settlement account pending
+              </AppText>
+
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={theme.text.inverse}
+              />
+            </View>
+          </Pressable>
+        )}
+
+        {/* ================================================================
             SCROLLABLE CONTENT
-        ================================================================== */}
+        ================================================================ */}
 
         <ScrollView
           style={{
@@ -454,6 +519,7 @@ export default function HomeScreen() {
           }}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
+            flexGrow: 1,
             paddingBottom: spacing.xl,
           }}
           refreshControl={
@@ -466,15 +532,19 @@ export default function HomeScreen() {
             />
           }
         >
-          {/* ================================================================
-              INITIAL LOADING
-          ================================================================ */}
+          {/* ============================================================
+              LOADING CONTENT
+          ============================================================ */}
 
-          {isInitialLoading ? (
+          {isContentLoading ? (
             <View
               style={{
-                minHeight: 260,
+                flex: 1,
+
+                minHeight: 500,
+
                 justifyContent: "center",
+
                 alignItems: "center",
               }}
             >
@@ -487,6 +557,8 @@ export default function HomeScreen() {
                 color="secondary"
                 style={{
                   marginTop: spacing.md,
+
+                  textAlign: "center",
                 }}
               >
                 Loading your dashboard...
@@ -494,16 +566,19 @@ export default function HomeScreen() {
             </View>
           ) : (
             <>
-              {/* ============================================================
+              {/* ==========================================================
                   FIRST-TIME DASHBOARD
-              ============================================================ */}
+              ========================================================== */}
 
               {isFirstTimeUser && (
                 <Card
                   style={{
                     marginTop: spacing.lg,
+
                     alignItems: "center",
+
                     paddingVertical: spacing.xl,
+
                     paddingHorizontal: spacing.lg,
                   }}
                 >
@@ -520,6 +595,7 @@ export default function HomeScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
+
                       textAlign: "center",
                     }}
                   >
@@ -531,7 +607,9 @@ export default function HomeScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
+
                       textAlign: "center",
+
                       maxWidth: 320,
                     }}
                   >
@@ -542,12 +620,19 @@ export default function HomeScreen() {
                   <View
                     style={{
                       width: "100%",
+
                       flexDirection: "row",
+
                       gap: spacing.sm,
+
                       marginTop: spacing.lg,
                     }}
                   >
-                    <View style={{ flex: 1 }}>
+                    <View
+                      style={{
+                        flex: 1,
+                      }}
+                    >
                       <Button
                         title="Payment Link"
                         variant="primary"
@@ -557,7 +642,11 @@ export default function HomeScreen() {
                       />
                     </View>
 
-                    <View style={{ flex: 1 }}>
+                    <View
+                      style={{
+                        flex: 1,
+                      }}
+                    >
                       <Button
                         title="Storefront"
                         variant="tertiary"
@@ -570,9 +659,9 @@ export default function HomeScreen() {
                 </Card>
               )}
 
-              {/* ============================================================
+              {/* ==========================================================
                   DASHBOARD STATISTICS
-              ============================================================ */}
+              ========================================================== */}
 
               {showDashboardStats && dashboard && (
                 <DashboardStatsCard
@@ -584,9 +673,9 @@ export default function HomeScreen() {
                 />
               )}
 
-              {/* ============================================================
+              {/* ==========================================================
                   QUICK ACTIONS
-              ============================================================ */}
+              ========================================================== */}
 
               {!isFirstTimeUser && (
                 <View
@@ -599,39 +688,43 @@ export default function HomeScreen() {
                   <View
                     style={{
                       flexDirection: "row",
+
                       gap: spacing.md,
+
                       marginTop: spacing.md,
                     }}
                   >
-                    {/* ADD PAYMENT LINK */}
-
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="New Payment Link"
                       onPress={() =>
                         router.push(ROUTES.ADD_PAYMENT_LINK_INFORMATION)
                       }
-                      style={({ pressed }) => [
-                        {
-                          flex: 1,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: spacing.sm,
+                      style={({ pressed }) => ({
+                        flex: 1,
 
-                          paddingHorizontal: spacing.md,
-                          paddingVertical: spacing.md,
+                        flexDirection: "row",
 
-                          borderWidth: 1,
-                          borderRadius: radius.md,
+                        alignItems: "center",
 
-                          backgroundColor: theme.card.default.background,
+                        justifyContent: "center",
 
-                          borderColor: theme.card.default.border,
+                        gap: spacing.sm,
 
-                          opacity: pressed ? 0.8 : 1,
-                        },
-                      ]}
+                        paddingHorizontal: spacing.md,
+
+                        paddingVertical: spacing.md,
+
+                        borderWidth: 1,
+
+                        borderRadius: radius.md,
+
+                        backgroundColor: theme.card.default.background,
+
+                        borderColor: theme.card.default.border,
+
+                        opacity: pressed ? 0.8 : 1,
+                      })}
                     >
                       <Ionicons
                         name="add"
@@ -642,33 +735,35 @@ export default function HomeScreen() {
                       <AppText variant="button">Payment Link</AppText>
                     </Pressable>
 
-                    {/* ADD STOREFRONT */}
-
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="Storefront"
                       onPress={() => router.push(ROUTES.ADD_STORE_INFORMATION)}
-                      style={({ pressed }) => [
-                        {
-                          flex: 1,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: spacing.sm,
+                      style={({ pressed }) => ({
+                        flex: 1,
 
-                          paddingHorizontal: spacing.md,
-                          paddingVertical: spacing.md,
+                        flexDirection: "row",
 
-                          borderWidth: 1,
-                          borderRadius: radius.md,
+                        alignItems: "center",
 
-                          backgroundColor: theme.card.default.background,
+                        justifyContent: "center",
 
-                          borderColor: theme.card.default.border,
+                        gap: spacing.sm,
 
-                          opacity: pressed ? 0.8 : 1,
-                        },
-                      ]}
+                        paddingHorizontal: spacing.md,
+
+                        paddingVertical: spacing.md,
+
+                        borderWidth: 1,
+
+                        borderRadius: radius.md,
+
+                        backgroundColor: theme.card.default.background,
+
+                        borderColor: theme.card.default.border,
+
+                        opacity: pressed ? 0.8 : 1,
+                      })}
                     >
                       <Ionicons
                         name="add"
@@ -682,9 +777,9 @@ export default function HomeScreen() {
                 </View>
               )}
 
-              {/* ============================================================
+              {/* ==========================================================
                   RECENT TRANSACTIONS
-              ============================================================ */}
+              ========================================================== */}
 
               {!isFirstTimeUser && (
                 <View
@@ -697,7 +792,9 @@ export default function HomeScreen() {
                   <View
                     style={{
                       flexDirection: "row",
+
                       justifyContent: "space-between",
+
                       alignItems: "center",
                     }}
                   >
@@ -727,7 +824,9 @@ export default function HomeScreen() {
                       <Card
                         style={{
                           alignItems: "center",
+
                           paddingVertical: spacing.lg,
+
                           paddingHorizontal: spacing.lg,
                         }}
                       >
@@ -741,6 +840,7 @@ export default function HomeScreen() {
                           variant="bodyBold"
                           style={{
                             marginTop: spacing.sm,
+
                             textAlign: "center",
                           }}
                         >
@@ -752,7 +852,9 @@ export default function HomeScreen() {
                           color="secondary"
                           style={{
                             textAlign: "center",
+
                             marginTop: spacing.xs,
+
                             maxWidth: 300,
                           }}
                         >

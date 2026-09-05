@@ -32,9 +32,11 @@ import { useOnboardingStore } from "@/store/onboarding/onboardingStore";
 
 import { useVerifyBVN } from "@/hooks/kyc/useVerifyBVN";
 
-import { useResolveAccount } from "@/hooks/settlements/useResolveAccount";
-
 import { getApiErrorMessage } from "@/api/errors";
+
+import { useValidateSettlementAccount } from "@/hooks/merchant/useValidateSettlementAccount";
+
+import { useUpdateSettlementAccount } from "@/hooks/merchant/useUpdateSettlementAccount";
 
 /**
  * ============================================================================
@@ -44,7 +46,7 @@ import { getApiErrorMessage } from "@/api/errors";
 
 type SettlementForm = {
   bvn: string;
-  bankName: string;
+  bankCode: string;
   accountNumber: string;
   accountName: string;
 };
@@ -78,7 +80,9 @@ export default function SettlementsScreen() {
    * --------------------------------------------------------------------------
    */
 
-  const resolveAccount = useResolveAccount();
+  const validateSettlementAccount = useValidateSettlementAccount();
+
+  const updateSettlementAccount = useUpdateSettlementAccount();
 
   /**
    * --------------------------------------------------------------------------
@@ -100,14 +104,13 @@ export default function SettlementsScreen() {
   const { control, handleSubmit, watch, setValue } = useForm<SettlementForm>({
     defaultValues: {
       bvn: bvn ?? "",
-      bankName: "",
+      bankCode: "",
       accountNumber: "",
       accountName: "",
     },
   });
 
-  const { bvn: enteredBVN, bankName, accountNumber, accountName } = watch();
-
+  const { bvn: enteredBVN, bankCode, accountNumber, accountName } = watch();
   /**
    * --------------------------------------------------------------------------
    * VERIFIED BVN
@@ -168,7 +171,7 @@ export default function SettlementsScreen() {
      * Do not resolve until both values are valid.
      */
 
-    if (!bankName || accountNumber.length !== 10) {
+    if (!bankCode || accountNumber.length !== 10) {
       return;
     }
 
@@ -181,11 +184,10 @@ export default function SettlementsScreen() {
 
     const timeout = setTimeout(async () => {
       try {
-        const response = await resolveAccount.mutateAsync({
-          bankCode: bankName,
+        const response = await validateSettlementAccount.mutateAsync({
+          bankCode,
           accountNumber,
         });
-
         /**
          * Ignore stale responses.
          */
@@ -198,7 +200,13 @@ export default function SettlementsScreen() {
          * Store the resolved account holder.
          */
 
-        setValue("accountName", response.accountName);
+        if (!response.data) {
+          throw new Error(
+            response.responseMessage || "Unable to validate settlement account."
+          );
+        }
+
+        setValue("accountName", response.data.accountName);
       } catch (error) {
         /**
          * Ignore stale errors.
@@ -222,7 +230,7 @@ export default function SettlementsScreen() {
     return () => {
       clearTimeout(timeout);
     };
-  }, [bankName, accountNumber, resolveAccount, setValue]);
+  }, [bankCode, accountNumber, validateSettlementAccount, setValue]);
 
   /**
    * --------------------------------------------------------------------------
@@ -234,7 +242,7 @@ export default function SettlementsScreen() {
 
   const isSettlementFormValid =
     hasVerifiedBVN &&
-    bankName.length > 0 &&
+    bankCode.length > 0 &&
     accountNumber.length === 10 &&
     accountName.length > 0;
 
@@ -343,37 +351,42 @@ export default function SettlementsScreen() {
       return;
     }
 
-    /**
-     * Find selected bank.
-     */
-
     const selectedBank = bankOptions.find(
-      (bank) => bank.value === data.bankName
+      (bank) => bank.value === data.bankCode
     );
 
-    /**
-     * Settlement payload.
-     */
+    if (!selectedBank) {
+      Alert.alert("Bank Required", "Please select a valid bank.");
 
-    const payload = {
-      bvn: data.bvn,
+      return;
+    }
 
-      bankCode: data.bankName,
+    try {
+      await updateSettlementAccount.mutateAsync({
+        accountNumber: data.accountNumber,
 
-      bankName: selectedBank?.label ?? "",
+        accountName: data.accountName,
 
-      accountNumber: data.accountNumber,
+        bankName: selectedBank.label,
 
-      accountName: data.accountName,
-    };
+        bankCode: data.bankCode,
 
-    /**
-     * TODO:
-     *
-     * Connect settlement account API here.
-     */
+        isPrimary: true,
+      });
 
-    console.log("Settlement account data:", payload);
+      Alert.alert(
+        "Settlement Account Saved",
+        "Your settlement account has been successfully saved.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert("Unable to Save Account", getApiErrorMessage(error));
+    }
   }
 
   /**
@@ -586,7 +599,7 @@ export default function SettlementsScreen() {
 
               <Controller
                 control={control}
-                name="bankName"
+                name="bankCode"
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
                     label="Bank"
@@ -620,9 +633,9 @@ export default function SettlementsScreen() {
                   ACCOUNT RESOLUTION STATE
               ============================================================ */}
 
-              {bankName &&
+              {bankCode &&
                 accountNumber.length === 10 &&
-                resolveAccount.isPending && (
+                validateSettlementAccount.isPending && (
                   <View
                     style={{
                       flexDirection: "row",
@@ -645,7 +658,7 @@ export default function SettlementsScreen() {
 
               {/* VERIFIED ACCOUNT */}
 
-              {accountName && !resolveAccount.isPending && (
+              {accountName && !validateSettlementAccount.isPending && (
                 <View
                   style={{
                     flexDirection: "row",
@@ -682,11 +695,11 @@ export default function SettlementsScreen() {
 
               {/* RESOLUTION ERROR */}
 
-              {bankName &&
+              {bankCode &&
                 accountNumber.length === 10 &&
-                !resolveAccount.isPending &&
+                !validateSettlementAccount.isPending &&
                 !accountName &&
-                resolveAccount.isError && (
+                validateSettlementAccount.isError && (
                   <View
                     style={{
                       flexDirection: "row",
@@ -797,10 +810,16 @@ export default function SettlementsScreen() {
             }}
           >
             <Button
-              title="Save Settlement Account"
+              title={
+                updateSettlementAccount.isPending
+                  ? "Saving..."
+                  : "Save Settlement Account"
+              }
               variant="primary"
               size="large"
-              disabled={!isSettlementFormValid}
+              disabled={
+                !isSettlementFormValid || updateSettlementAccount.isPending
+              }
               onPress={handleSubmit(onSubmit)}
             />
           </View>

@@ -239,11 +239,13 @@ export const API_ENDPOINTS = {
    * ---------------------------------------------------------------------------
    */
   merchants: {
-    settlementAccounts: "/Merchants/GetSettlementAccounts",
+    settlementAccounts: "/Merchants/GetSettlementAccount",
+
+    validateSettlementAccount: "/Merchants/ValidateSettlementAccount",
 
     updateSettlementAccount: "/Merchants/UpdateSettlementAccount",
 
-    deleteSettlementAccount: (settlementId: string) =>
+    deleteSettlementAccount: (settlementId: string | number) =>
       `/Merchants/DeleteSettlementAccount/${settlementId}`,
 
     paymentMethods: "/Merchants/payment-methods",

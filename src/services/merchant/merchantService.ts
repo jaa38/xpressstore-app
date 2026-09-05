@@ -13,6 +13,8 @@ import {
   UpdateBusinessTypeRequest,
   UpdatePaymentMethodRequest,
   UpdateSettlementAccountRequest,
+  ValidateSettlementAccountRequest,
+  ValidateSettlementAccountResponse,
 } from "@/types/merchant";
 
 import {
@@ -64,7 +66,7 @@ export const merchantService = {
    * Update Business Type
    * ---------------------------------------------------------------------------
    */
-  
+
   async updateBusinessType(payload: UpdateBusinessTypeRequest) {
     if (USE_MOCK_ONBOARDING) {
       updateMockBusinessType(payload);
@@ -89,10 +91,19 @@ export const merchantService = {
    * Settlement Accounts
    * ---------------------------------------------------------------------------
    */
+
   async getSettlementAccounts() {
     const { data } = await authClient.get<ApiResponse<SettlementAccount[]>>(
       API_ENDPOINTS.merchants.settlementAccounts
     );
+
+    return data;
+  },
+
+  async validateSettlementAccount(payload: ValidateSettlementAccountRequest) {
+    const { data } = await authClient.post<
+      ApiResponse<ValidateSettlementAccountResponse>
+    >(API_ENDPOINTS.merchants.validateSettlementAccount, payload);
 
     return data;
   },
@@ -106,9 +117,9 @@ export const merchantService = {
     return data;
   },
 
-  async deleteSettlementAccount(settlementAccountId: string) {
-    const { data } = await authClient.delete<ApiResponse<void>>(
-      API_ENDPOINTS.merchants.deleteSettlementAccount(settlementAccountId)
+  async deleteSettlementAccount(settlementId: string | number) {
+    const { data } = await authClient.post<ApiResponse<void>>(
+      API_ENDPOINTS.merchants.deleteSettlementAccount(settlementId)
     );
 
     return data;

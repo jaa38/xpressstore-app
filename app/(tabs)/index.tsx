@@ -439,7 +439,9 @@ export default function HomeScreen() {
             paddingHorizontal: spacing.lg,
           }}
         >
-          <AppText color="inverse">Pending</AppText>
+          <AppText variant="bodyBold" color="inverse">
+            Pending
+          </AppText>
         </View>
 
         {/* ==================================================================

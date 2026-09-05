@@ -73,7 +73,7 @@ export interface UpdateBusinessTypeRequest {
  */
 
 export interface SettlementAccount {
-  settlementAccountId: string;
+  settlementAccountId: string | number;
 
   bankName: string;
 
@@ -86,14 +86,40 @@ export interface SettlementAccount {
   isDefault: boolean;
 }
 
-export interface UpdateSettlementAccountRequest {
-  settlementAccountId: string;
+/**
+ * Validate Settlement Account
+ */
 
+export interface ValidateSettlementAccountRequest {
   bankCode: string;
 
   accountNumber: string;
+}
+
+export interface ValidateSettlementAccountResponse {
+  accountNumber: string;
 
   accountName: string;
+
+  bankCode: string;
+
+  bankName: string;
+}
+
+/**
+ * Update Settlement Account
+ */
+
+export interface UpdateSettlementAccountRequest {
+  accountNumber: string;
+
+  accountName: string;
+
+  bankName: string;
+
+  bankCode: string;
+
+  isPrimary?: boolean;
 }
 
 /**

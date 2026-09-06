@@ -363,16 +363,13 @@ export default function HomeScreen() {
    * CONTENT LOADING
    * --------------------------------------------------------------------------
    *
-   * This is used for BOTH:
+   * Only used for the initial dashboard load.
    *
-   * - Initial app load
-   * - Pull-to-refresh
-   *
-   * The header and settlement banner remain visible.
-   * Only the ScrollView content is replaced.
+   * Pull-to-refresh keeps the existing dashboard visible and
+   * uses the native RefreshControl spinner.
    */
 
-  const isContentLoading = isInitialLoading || refreshing;
+  const isContentLoading = isInitialLoading;
 
   /**
    * ==========================================================================
@@ -533,7 +530,7 @@ export default function HomeScreen() {
           }
         >
           {/* ============================================================
-              LOADING CONTENT
+              INITIAL LOADING
           ============================================================ */}
 
           {isContentLoading ? (

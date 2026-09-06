@@ -597,4 +597,19 @@ export const theme = {
       chevron: colors.gray[300],
     },
   },
+
+  /**
+   * 💳 PAYMENT METHOD STATUS
+   */
+  paymentMethodStatus: {
+    active: {
+      background: colors.success[100],
+      text: colors.success[600],
+    },
+
+    disabled: {
+      background: colors.gray[100],
+      text: colors.gray[500],
+    },
+  },
 };

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 
 import {
+  Alert,
   Image,
   Pressable,
   RefreshControl,
@@ -88,15 +89,42 @@ export default function PaymentSettingsScreen() {
    * =========================================================================
    * PAYMENT SETTINGS ACCESS
    * =========================================================================
-   *
-   * The merchant can configure payment settings only when:
-   *
-   * - Settlement accounts have finished loading
-   * - At least one settlement account exists
    */
 
   const canConfigurePaymentSettings =
     !settlementAccountsLoading && hasSettlementAccount;
+
+  /**
+   * =========================================================================
+   * PAYMENT METHOD TOGGLE
+   * =========================================================================
+   *
+   * Updates the payment method status and shows a native popup.
+   */
+
+  const handlePaymentMethodToggle = (
+    paymentMethod: string,
+    enabled: boolean,
+    setEnabled: Dispatch<SetStateAction<boolean>>
+  ) => {
+    if (!canConfigurePaymentSettings) {
+      return;
+    }
+
+    setEnabled(enabled);
+
+    Alert.alert(
+      enabled ? `${paymentMethod} enabled` : `${paymentMethod} disabled`,
+      enabled
+        ? `${paymentMethod} payments are now available to your customers.`
+        : `${paymentMethod} payments are no longer available to your customers.`,
+      [
+        {
+          text: "OK",
+        },
+      ]
+    );
+  };
 
   /**
    * =========================================================================
@@ -273,18 +301,11 @@ export default function PaymentSettingsScreen() {
             style={{
               marginTop: spacing.md,
               gap: spacing.md,
-
-              /**
-               * Visual locked state.
-               */
-
               opacity: canConfigurePaymentSettings ? 1 : 0.6,
             }}
             variant="description"
           >
-            {/* ============================================================
-                HEADER
-            ============================================================ */}
+            {/* HEADER */}
 
             <View
               style={{
@@ -298,9 +319,7 @@ export default function PaymentSettingsScreen() {
               </AppText>
             </View>
 
-            {/* ============================================================
-                CHARGE BEARER
-            ============================================================ */}
+            {/* CHARGE BEARER */}
 
             <View
               style={{
@@ -337,9 +356,7 @@ export default function PaymentSettingsScreen() {
               />
             </View>
 
-            {/* ============================================================
-                SELECTION DESCRIPTION
-            ============================================================ */}
+            {/* SELECTION DESCRIPTION */}
 
             <View
               style={{
@@ -369,7 +386,6 @@ export default function PaymentSettingsScreen() {
             style={{
               marginTop: spacing.xl,
               gap: spacing.xs,
-
               opacity: canConfigurePaymentSettings ? 1 : 0.6,
             }}
           >
@@ -403,8 +419,6 @@ export default function PaymentSettingsScreen() {
                 paddingVertical: spacing.sm,
               }}
             >
-              {/* ICON */}
-
               <Image
                 source={require("../../../../assets/payment-settings/cardIcon.png")}
                 style={{
@@ -413,8 +427,6 @@ export default function PaymentSettingsScreen() {
                 }}
                 resizeMode="contain"
               />
-
-              {/* CONTENT */}
 
               <View
                 style={{
@@ -437,10 +449,19 @@ export default function PaymentSettingsScreen() {
                       paddingHorizontal: spacing.sm,
                       paddingVertical: 3,
                       borderRadius: radius.full,
-                      backgroundColor: theme.background.brand,
+                      backgroundColor: cardsEnabled
+                        ? theme.paymentMethodStatus.active.background
+                        : theme.paymentMethodStatus.disabled.background,
                     }}
                   >
-                    <AppText variant="caption" color="brand">
+                    <AppText
+                      variant="caption"
+                      style={{
+                        color: cardsEnabled
+                          ? theme.paymentMethodStatus.active.text
+                          : theme.paymentMethodStatus.disabled.text,
+                      }}
+                    >
                       1.5% Flat Fee
                     </AppText>
                   </View>
@@ -451,11 +472,11 @@ export default function PaymentSettingsScreen() {
                 </AppText>
               </View>
 
-              {/* ACTION */}
-
               <ToggleSwitch
                 value={cardsEnabled}
-                onChange={setCardsEnabled}
+                onChange={(enabled) =>
+                  handlePaymentMethodToggle("Cards", enabled, setCardsEnabled)
+                }
                 disabled={!canConfigurePaymentSettings}
               />
             </View>
@@ -483,8 +504,6 @@ export default function PaymentSettingsScreen() {
                 paddingVertical: spacing.sm,
               }}
             >
-              {/* ICON */}
-
               <Image
                 source={require("../../../../assets/payment-settings/ussdIcon.png")}
                 style={{
@@ -493,8 +512,6 @@ export default function PaymentSettingsScreen() {
                 }}
                 resizeMode="contain"
               />
-
-              {/* CONTENT */}
 
               <View
                 style={{
@@ -517,10 +534,19 @@ export default function PaymentSettingsScreen() {
                       paddingHorizontal: spacing.sm,
                       paddingVertical: 3,
                       borderRadius: radius.full,
-                      backgroundColor: theme.background.brand,
+                      backgroundColor: ussdEnabled
+                        ? theme.paymentMethodStatus.active.background
+                        : theme.paymentMethodStatus.disabled.background,
                     }}
                   >
-                    <AppText variant="caption" color="brand">
+                    <AppText
+                      variant="caption"
+                      style={{
+                        color: ussdEnabled
+                          ? theme.paymentMethodStatus.active.text
+                          : theme.paymentMethodStatus.disabled.text,
+                      }}
+                    >
                       1.5% Flat Fee
                     </AppText>
                   </View>
@@ -531,11 +557,11 @@ export default function PaymentSettingsScreen() {
                 </AppText>
               </View>
 
-              {/* ACTION */}
-
               <ToggleSwitch
                 value={ussdEnabled}
-                onChange={setUssdEnabled}
+                onChange={(enabled) =>
+                  handlePaymentMethodToggle("USSD", enabled, setUssdEnabled)
+                }
                 disabled={!canConfigurePaymentSettings}
               />
             </View>
@@ -563,8 +589,6 @@ export default function PaymentSettingsScreen() {
                 paddingVertical: spacing.sm,
               }}
             >
-              {/* ICON */}
-
               <Image
                 source={require("../../../../assets/payment-settings/bankIcon.png")}
                 style={{
@@ -573,8 +597,6 @@ export default function PaymentSettingsScreen() {
                 }}
                 resizeMode="contain"
               />
-
-              {/* CONTENT */}
 
               <View
                 style={{
@@ -597,10 +619,19 @@ export default function PaymentSettingsScreen() {
                       paddingHorizontal: spacing.sm,
                       paddingVertical: 3,
                       borderRadius: radius.full,
-                      backgroundColor: theme.background.brand,
+                      backgroundColor: bankEnabled
+                        ? theme.paymentMethodStatus.active.background
+                        : theme.paymentMethodStatus.disabled.background,
                     }}
                   >
-                    <AppText variant="caption" color="brand">
+                    <AppText
+                      variant="caption"
+                      style={{
+                        color: bankEnabled
+                          ? theme.paymentMethodStatus.active.text
+                          : theme.paymentMethodStatus.disabled.text,
+                      }}
+                    >
                       1.5% Flat Fee
                     </AppText>
                   </View>
@@ -611,11 +642,11 @@ export default function PaymentSettingsScreen() {
                 </AppText>
               </View>
 
-              {/* ACTION */}
-
               <ToggleSwitch
                 value={bankEnabled}
-                onChange={setBankEnabled}
+                onChange={(enabled) =>
+                  handlePaymentMethodToggle("Bank", enabled, setBankEnabled)
+                }
                 disabled={!canConfigurePaymentSettings}
               />
             </View>
@@ -643,8 +674,6 @@ export default function PaymentSettingsScreen() {
                 paddingVertical: spacing.sm,
               }}
             >
-              {/* ICON */}
-
               <Image
                 source={require("../../../../assets/payment-settings/bankTransferIcon.png")}
                 style={{
@@ -653,8 +682,6 @@ export default function PaymentSettingsScreen() {
                 }}
                 resizeMode="contain"
               />
-
-              {/* CONTENT */}
 
               <View
                 style={{
@@ -677,10 +704,19 @@ export default function PaymentSettingsScreen() {
                       paddingHorizontal: spacing.sm,
                       paddingVertical: 3,
                       borderRadius: radius.full,
-                      backgroundColor: theme.background.brand,
+                      backgroundColor: bankTransferEnabled
+                        ? theme.paymentMethodStatus.active.background
+                        : theme.paymentMethodStatus.disabled.background,
                     }}
                   >
-                    <AppText variant="caption" color="brand">
+                    <AppText
+                      variant="caption"
+                      style={{
+                        color: bankTransferEnabled
+                          ? theme.paymentMethodStatus.active.text
+                          : theme.paymentMethodStatus.disabled.text,
+                      }}
+                    >
                       1.5% Flat Fee
                     </AppText>
                   </View>
@@ -691,11 +727,15 @@ export default function PaymentSettingsScreen() {
                 </AppText>
               </View>
 
-              {/* ACTION */}
-
               <ToggleSwitch
                 value={bankTransferEnabled}
-                onChange={setBankTransferEnabled}
+                onChange={(enabled) =>
+                  handlePaymentMethodToggle(
+                    "Transfer",
+                    enabled,
+                    setBankTransferEnabled
+                  )
+                }
                 disabled={!canConfigurePaymentSettings}
               />
             </View>
@@ -723,8 +763,6 @@ export default function PaymentSettingsScreen() {
                 paddingVertical: spacing.sm,
               }}
             >
-              {/* ICON */}
-
               <Image
                 source={require("../../../../assets/payment-settings/nqrIcon.png")}
                 style={{
@@ -733,8 +771,6 @@ export default function PaymentSettingsScreen() {
                 }}
                 resizeMode="contain"
               />
-
-              {/* CONTENT */}
 
               <View
                 style={{
@@ -757,10 +793,19 @@ export default function PaymentSettingsScreen() {
                       paddingHorizontal: spacing.sm,
                       paddingVertical: 3,
                       borderRadius: radius.full,
-                      backgroundColor: theme.background.brand,
+                      backgroundColor: nqrEnabled
+                        ? theme.paymentMethodStatus.active.background
+                        : theme.paymentMethodStatus.disabled.background,
                     }}
                   >
-                    <AppText variant="caption" color="brand">
+                    <AppText
+                      variant="caption"
+                      style={{
+                        color: nqrEnabled
+                          ? theme.paymentMethodStatus.active.text
+                          : theme.paymentMethodStatus.disabled.text,
+                      }}
+                    >
                       1.5% Flat Fee
                     </AppText>
                   </View>
@@ -771,11 +816,11 @@ export default function PaymentSettingsScreen() {
                 </AppText>
               </View>
 
-              {/* ACTION */}
-
               <ToggleSwitch
                 value={nqrEnabled}
-                onChange={setNqrEnabled}
+                onChange={(enabled) =>
+                  handlePaymentMethodToggle("NQR", enabled, setNqrEnabled)
+                }
                 disabled={!canConfigurePaymentSettings}
               />
             </View>

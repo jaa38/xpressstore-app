@@ -1,91 +1,105 @@
 # XpressStore Mobile App
 
-XpressStore is a mobile-first commerce platform built with React Native, Expo, TypeScript, Supabase, TanStack Query, React Hook Form, and Expo Router.
+XpressStore is a mobile-first commerce platform designed to help merchants manage their businesses from a single mobile application.
 
-The platform enables merchants to:
+Built with **React Native, Expo, TypeScript, Supabase, TanStack Query, Zustand, React Hook Form, and Expo Router**, XpressStore provides merchants with the tools to manage products, inventory, storefronts, orders, and payments.
 
-* Create and manage storefronts
-* Add and organize products
-* Manage inventory
-* Receive orders
+## What Merchants Can Do
+
+* Create and manage a business storefront
+* Add, edit, and organize products
+* Manage product visibility and inventory
+* Create product variants
+* Search and browse products
+* Receive and manage orders
+* Configure settlement accounts
 * Accept payments
-* Grow their business from a mobile application
+* Manage their business from a mobile application
 
 ---
 
 # Current Status
 
-## Foundation ✅
+> 🚧 XpressStore is actively being developed. Core authentication, onboarding, product management foundations, and the merchant dashboard are currently implemented, with commerce and analytics features planned for future phases.
 
-### Project Setup
+---
+
+# Foundation ✅
+
+## Project Setup
 
 * Expo SDK 56
 * React Native
 * TypeScript
 * Expo Router
 * Path Aliases
-* ESLint & Prettier
+* ESLint
+* Prettier
 * Environment Configuration
 
-### Architecture
+## Architecture
 
 * Feature-Based Folder Structure
 * Route Constants System
+* Reusable API and Service Layer
 * Supabase Integration
 * TanStack Query Setup
 * Zustand State Management
 * MMKV Storage
 * Reusable Design System
+* Shared Providers
 
 ---
 
 # Authentication & Onboarding ✅
 
-### Authentication
+## Authentication
 
 * Welcome Screen
-* Sign Up Screen
-* Login Screen
+* User Registration
+* Login
 * Forgot Password
 * Password Reset Flow
 * Email Verification
 * OTP Verification
 * Password Validation
-* Show / Hide Password
+* Show / Hide Password Controls
+* Supabase Authentication Integration
 
-### Onboarding
+## Onboarding
 
-#### Step 1
+### Step 1 — Business Account Creation
 
-Business Account Creation
+Create and initialize a merchant business account.
 
-#### Step 2
-
-Business Details
+### Step 2 — Business Details
 
 * Business Name
 * Business Address
 * Business Type
 * Business Category
 
-#### Step 3
+### Step 3 — ID Verification
 
-ID Verification
+Merchant identity verification flow.
 
-#### Step 4
+### Step 4 — Biometric Verification
 
-Biometric Verification
+Biometric verification flow for merchant onboarding.
+
+### Onboarding Features
 
 * Progress Indicators
 * Multi-Step Navigation
-* Validation
+* Form Validation
+* Persistent Form State
 * Supabase Integration
 
 ---
 
 # Merchant Dashboard 🚧
 
-### Bottom Navigation
+## Bottom Navigation
 
 * Home
 * Products
@@ -93,32 +107,54 @@ Biometric Verification
 * Store
 * More
 
-### Home
+## Home
 
-* Dashboard Layout
+* Merchant Dashboard Layout
+* Business Overview
 * Quick Actions
-* Merchant Overview
+* Dashboard Data Fetching
+* Pull-to-Refresh Support
+* Loading States
+* Refresh States
+* Settlement Account Status Handling
+* Settlement Account Pending Banner
+
+## Data Management
+
+* TanStack Query Data Fetching
+* Query Cache Management
+* Query Invalidation
+* Refetching After Data Changes
+* Shared Loading and Refresh States
 
 ---
 
 # Product Management 🚧
 
-### Product List
+## Product List
 
 * Product Grid
 * Product Cards
 * Product Visibility Toggle
-* Product Details Navigation
 * Product Search Foundation
+* Product Details Navigation
+* Pull-to-Refresh
+* Loading States
+* Empty States
+* Swipe-to-Delete Interactions
+* Product Cache Invalidation
 
-### Product Details
+## Product Details
 
-* Dynamic Product Route
+* Dynamic Product Routes
 * Product Information Screen
+* Product Data Fetching
 
-### Product Creation Wizard
+## Product Creation Wizard
 
-#### Step 1 — Product Information
+A multi-step product creation flow designed to guide merchants through creating and publishing products.
+
+### Step 1 — Product Information
 
 * Product Image Upload
 * Camera Integration
@@ -129,32 +165,51 @@ Biometric Verification
 * Category Selection
 * Custom Category Creation
 
-#### Step 2 — Pricing & Inventory
+### Step 2 — Pricing & Inventory
 
 * Selling Price
 * Cost Price
 * Inventory Setup
 * SKU Generation
 
-#### Step 3 — Product Variants
+### Step 3 — Product Variants
 
 * Size Variants
 * Color Variants
 * Product Options
 
-#### Step 4 — Storefront Settings
+### Step 4 — Storefront Settings
 
 * Product Visibility
 * Featured Product Settings
 
-#### Step 5 — Review & Publish
+### Step 5 — Review & Publish
 
 * Product Summary
+* Product Review
 * Publish Product
 
 ---
 
+# Settlement Accounts 🚧
+
+XpressStore includes the foundation for merchant settlement account management.
+
+## Current Features
+
+* Settlement Account Detection
+* Account Status Handling
+* Pending Account State
+* Dashboard Settlement Banner
+* Query-Based Data Refreshing
+
+Future improvements will include full account creation, verification, management, and payout functionality.
+
+---
+
 # Design System ✅
+
+XpressStore uses a reusable design system to maintain consistency across screens and features.
 
 ## Typography
 
@@ -162,11 +217,9 @@ Biometric Verification
 * Body Text
 * Labels
 * Captions
-* Buttons
+* Button Text
 
-## Components
-
-### Core Components
+## Core Components
 
 * AppText
 * Button
@@ -178,45 +231,79 @@ Biometric Verification
 * Divider
 * Card
 
-### Product Components
+## Product Components
 
 * ImageActionCard
 * Product Cards
 * Product Visibility Controls
+* Product List Components
+* Product Action Components
 
-### Feedback States
+## Feedback States
 
+* Loading
+* Refreshing
 * Default
 * Focus
 * Disabled
 * Error
 * Success
+* Empty States
 
-### Theme Tokens
+## Theme Tokens
 
 * Colors
 * Typography
-* Radius
+* Border Radius
 * Spacing
 * Shadows
 * Semantic Theme System
 
 ---
 
+# Data Fetching & State Management
+
+## TanStack Query
+
+TanStack Query is used for server-state management.
+
+Current patterns include:
+
+* Data Fetching
+* Query Caching
+* Query Invalidation
+* Refetching
+* Pull-to-Refresh
+* Loading States
+* Mutation Handling
+* Cache Synchronization After Updates and Deletes
+
+## Zustand
+
+Zustand is used for lightweight client-side state management.
+
+## MMKV
+
+MMKV is used for fast local storage and persistent application state.
+
+---
+
 # Supabase
 
-## Current Integration
-
-### Authentication
+## Authentication
 
 * User Registration
-* Email Verification
 * Login
+* Email Verification
+* OTP Verification
 * Password Recovery
+* Password Reset
 
-### Database
+## Database
 
-#### business_categories
+XpressStore uses Supabase as its backend platform for application data.
+
+### Business Categories
 
 ```sql
 create table business_categories (
@@ -225,7 +312,9 @@ create table business_categories (
 );
 ```
 
-### Row Level Security
+## Row Level Security
+
+Example policy for publicly readable business categories:
 
 ```sql
 create policy "Allow public read"
@@ -266,6 +355,7 @@ src
 │   ├── auth
 │   ├── business
 │   ├── products
+│   ├── settlement
 │   └── storefront
 │
 ├── navigation
@@ -280,17 +370,20 @@ src
 
 # Tech Stack
 
-## Frontend
+## Mobile
 
 * React Native
 * Expo
 * TypeScript
 * Expo Router
 
-## State Management
+## Server State
+
+* TanStack Query
+
+## Client State
 
 * Zustand
-* TanStack Query
 
 ## Forms & Validation
 
@@ -311,47 +404,82 @@ src
 
 ## Phase 1 — Foundation ✅
 
-* Authentication
-* Onboarding
-* Design System
-* Navigation
-* Supabase Integration
+* [x] Authentication
+* [x] Onboarding
+* [x] Design System
+* [x] Navigation
+* [x] Supabase Integration
+* [x] State Management
+* [x] Server-State Management
 
-## Phase 2 — Product Management 🚧
+---
 
-* Product Creation
-* Product Editing
-* Product Categories
-* Product Variants
-* Inventory Management
+## Phase 2 — Merchant Dashboard 🚧
 
-## Phase 3 — Storefront
+* [x] Dashboard Layout
+* [x] Quick Actions
+* [x] Merchant Overview
+* [x] Pull-to-Refresh
+* [x] Loading States
+* [x] Settlement Account Status Foundation
+* [x] Revenue Summary
 
-* Store Configuration
-* Public Storefront
-* Product Publishing
+---
 
-## Phase 4 — Commerce
+## Phase 3 — Product Management 🚧
 
-* Orders
-* Checkout
-* Payments
-* Shipping
+* [x] Product Creation Foundation
+* [x] Multi-Step Product Wizard
+* [x] Product Images
+* [x] Product Categories
+* [x] Product Variants
+* [x] Product Visibility Controls
+* [x] Product Details
+* [x] Product Search Foundation
+* [x] Swipe-to-Delete Interactions
+* [x] Product Editing
 
-## Phase 5 — Analytics
+---
 
-* Revenue Dashboard
-* Product Insights
-* Customer Analytics
-* Business Reporting
+## Phase 4 — Storefront
+
+* [x] Store Configuration
+* [x] Public Storefront
+* [x] Product Publishing
+* [x] Featured Products
+* [x] Store Customization
 
 ---
 
 # Author
 
-Jeremiah Akinsowon
+**Jeremiah Akinsowon**
 
-Product Designer → Frontend Engineer
+Product Designer → Frontend Engineer→ Mobile Engineer (React Native)
 
-Building XpressStore publicly while transitioning into Frontend Engineering and React Native development.
+Building **XpressStore** publicly while transitioning into Frontend Engineering and specialising in React Native development.
+
+---
+
+# Project Goals
+
+XpressStore is being built as a real-world portfolio project focused on demonstrating modern mobile application development practices.
+
+Key areas of focus include:
+
+* Mobile Application Architecture
+* React Native Development
+* Server-State Management
+* API Integration
+* Authentication
+* Form Management and Validation
+* Reusable Component Systems
+* Mobile Navigation
+* Backend Integration
+* Cache Management
+* Performance
+* Scalable Feature Architecture
+
+The project is being developed publicly as part of an ongoing journey into professional frontend and mobile application development.
+
 

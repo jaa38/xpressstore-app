@@ -184,7 +184,7 @@ export default function PaymentSettingsScreen() {
           >
             <AppText variant="h1">Payment Settings</AppText>
 
-            <AppText variant="body" color="secondary">
+            <AppText variant="bodySmall" color="secondary">
               Configure payment methods, settlement preferences, and checkout
               options.
             </AppText>

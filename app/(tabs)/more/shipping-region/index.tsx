@@ -831,7 +831,7 @@ export default function ShippingRegionScreen() {
             >
               <AppText variant="h1">Shipping Regions</AppText>
 
-              <AppText variant="body" color="secondary">
+              <AppText variant="bodySmall" color="secondary">
                 {headerSubtitle}
               </AppText>
             </View>

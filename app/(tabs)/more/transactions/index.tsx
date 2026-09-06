@@ -665,7 +665,7 @@ export default function TransactionsScreen() {
             >
               <AppText variant="h1">Transactions</AppText>
 
-              <AppText variant="body" color="secondary">
+              <AppText variant="bodySmall" color="secondary">
                 {headerSubtitle}
               </AppText>
             </View>

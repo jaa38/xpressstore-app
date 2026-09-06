@@ -1,5 +1,31 @@
 import { Stack } from "expo-router";
 
+/**
+ * ============================================================================
+ * MORE STACK NAVIGATION
+ * ============================================================================
+ *
+ * The More tab has its own navigation stack.
+ *
+ * Structure:
+ *
+ * More
+ * ├── index
+ * ├── payment-link
+ * ├── business
+ * ├── settlements
+ * ├── customers
+ * ├── security
+ * ├── payment-settings
+ * ├── transactions
+ * ├── categories
+ * ├── discount-codes
+ * ├── notifications
+ * ├── settings
+ * ├── support
+ * └── about
+ */
+
 export default function MoreLayout() {
   return (
     <Stack
@@ -7,12 +33,20 @@ export default function MoreLayout() {
         headerShown: false,
       }}
     >
+      {/* ==================================================================
+          MORE HOME
+      ================================================================== */}
+
       <Stack.Screen
         name="index"
         options={{
           headerShown: false,
         }}
       />
+
+      {/* ==================================================================
+          PAYMENT LINKS
+      ================================================================== */}
 
       <Stack.Screen
         name="payment-link"
@@ -21,12 +55,20 @@ export default function MoreLayout() {
         }}
       />
 
+      {/* ==================================================================
+          BUSINESS
+      ================================================================== */}
+
       <Stack.Screen
         name="business"
         options={{
           headerShown: false,
         }}
       />
+
+      {/* ==================================================================
+          SETTLEMENTS
+      ================================================================== */}
 
       <Stack.Screen
         name="settlements"
@@ -35,12 +77,20 @@ export default function MoreLayout() {
         }}
       />
 
+      {/* ==================================================================
+          CUSTOMERS
+      ================================================================== */}
+
       <Stack.Screen
         name="customers"
         options={{
           headerShown: false,
         }}
       />
+
+      {/* ==================================================================
+          SECURITY
+      ================================================================== */}
 
       <Stack.Screen
         name="security"
@@ -49,12 +99,20 @@ export default function MoreLayout() {
         }}
       />
 
+      {/* ==================================================================
+          PAYMENT SETTINGS
+      ================================================================== */}
+
       <Stack.Screen
         name="payment-settings"
         options={{
           headerShown: false,
         }}
       />
+
+      {/* ==================================================================
+          TRANSACTIONS
+      ================================================================== */}
 
       <Stack.Screen
         name="transactions"
@@ -63,7 +121,9 @@ export default function MoreLayout() {
         }}
       />
 
-      {/* Categories */}
+      {/* ==================================================================
+          CATEGORIES
+      ================================================================== */}
 
       <Stack.Screen
         name="categories"
@@ -72,7 +132,9 @@ export default function MoreLayout() {
         }}
       />
 
-      {/* Discount Codes */}
+      {/* ==================================================================
+          DISCOUNT CODES
+      ================================================================== */}
 
       <Stack.Screen
         name="discount-codes"
@@ -81,7 +143,9 @@ export default function MoreLayout() {
         }}
       />
 
-      {/* Notifications */}
+      {/* ==================================================================
+          NOTIFICATIONS
+      ================================================================== */}
 
       <Stack.Screen
         name="notifications"
@@ -90,7 +154,9 @@ export default function MoreLayout() {
         }}
       />
 
-      {/* Settings */}
+      {/* ==================================================================
+          SETTINGS
+      ================================================================== */}
 
       <Stack.Screen
         name="settings"
@@ -99,7 +165,9 @@ export default function MoreLayout() {
         }}
       />
 
-      {/* Support */}
+      {/* ==================================================================
+          SUPPORT
+      ================================================================== */}
 
       <Stack.Screen
         name="support"
@@ -108,7 +176,9 @@ export default function MoreLayout() {
         }}
       />
 
-      {/* About */}
+      {/* ==================================================================
+          ABOUT
+      ================================================================== */}
 
       <Stack.Screen
         name="about"

@@ -68,7 +68,7 @@ export default function SecurityScreen() {
             >
               <AppText variant="h1">Security</AppText>
 
-              <AppText variant="body" color="secondary">
+              <AppText variant="bodySmall" color="secondary">
                 Manage your password, PIN and account security settings.
               </AppText>
             </View>

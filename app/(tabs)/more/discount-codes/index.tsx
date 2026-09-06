@@ -600,7 +600,7 @@ export default function DiscountCodesScreen() {
                       {/* DESCRIPTION */}
 
                       <AppText
-                        variant="body"
+                        variant="bodySmall"
                         color="secondary"
                         style={{
                           marginTop: spacing.xs,

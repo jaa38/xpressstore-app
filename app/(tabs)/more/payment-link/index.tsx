@@ -766,7 +766,7 @@ export default function PaymentLinksScreen() {
             >
               <AppText variant="h1">Payment Link</AppText>
 
-              <AppText variant="body" color="secondary">
+              <AppText variant="bodySmall" color="secondary">
                 {isLoading
                   ? "Loading payment links..."
                   : isFirstTimeUser

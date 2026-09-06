@@ -233,7 +233,7 @@ function CategoriesEmptyState({
         {/* DESCRIPTION */}
 
         <AppText
-          variant="body"
+          variant="bodySmall"
           color="secondary"
           style={{
             marginTop: spacing.xs,

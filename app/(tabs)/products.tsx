@@ -729,7 +729,7 @@ export default function ProductScreen() {
             >
               <AppText variant="h1">Products</AppText>
 
-              <AppText variant="body" color="secondary">
+              <AppText variant="bodySmall" color="secondary">
                 {headerSubtitle}
               </AppText>
             </View>
@@ -927,7 +927,7 @@ export default function ProductScreen() {
                   </AppText>
 
                   <AppText
-                    variant="body"
+                    variant="bodySmall"
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,

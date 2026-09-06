@@ -68,7 +68,7 @@ export default function BusinessScreen() {
             >
               <AppText variant="h1">Business</AppText>
 
-              <AppText variant="body" color="secondary">
+              <AppText variant="bodySmall" color="secondary">
                 Manage your business profile and merchant information.
               </AppText>
             </View>

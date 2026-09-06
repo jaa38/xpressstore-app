@@ -685,7 +685,7 @@ export default function StoreScreen() {
             >
               <AppText variant="h1">Storefront</AppText>
 
-              <AppText variant="body" color="secondary">
+              <AppText variant="bodySmall" color="secondary">
                 {headerSubtitle}
               </AppText>
             </View>

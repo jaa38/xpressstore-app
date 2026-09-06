@@ -538,7 +538,7 @@ export default function OrdersScreen() {
               >
                 <AppText variant="h1">Orders</AppText>
 
-                <AppText variant="body" color="secondary">
+                <AppText variant="bodySmall" color="secondary">
                   {headerSubtitle}
                 </AppText>
               </View>

@@ -38,6 +38,8 @@ import { useValidateSettlementAccount } from "@/hooks/merchant/useValidateSettle
 
 import { useUpdateSettlementAccount } from "@/hooks/merchant/useUpdateSettlementAccount";
 
+import { ROUTES } from "@/navigation/routes";
+
 /**
  * ============================================================================
  * TYPES
@@ -578,7 +580,14 @@ export default function SettlementsScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Go back"
-            onPress={() => router.back()}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+                return;
+              }
+
+              router.replace(ROUTES.MORE);
+            }}
             style={{
               width: 44,
               height: 44,
@@ -599,9 +608,9 @@ export default function SettlementsScreen() {
               gap: spacing.xs,
             }}
           >
-            <AppText variant="h1">Settlements</AppText>
+            <AppText variant="h1">Settlement Account</AppText>
 
-            <AppText variant="body" color="secondary">
+            <AppText variant="bodySmall" color="secondary">
               Add your settlement account to receive payments.
             </AppText>
           </View>
@@ -632,8 +641,6 @@ export default function SettlementsScreen() {
               gap: spacing.xs,
             }}
           >
-            <AppText variant="bodyLargeBold">Settlement Account</AppText>
-
             <AppText variant="body" color="secondary">
               Your settlement account is where funds from your transactions will
               be paid.

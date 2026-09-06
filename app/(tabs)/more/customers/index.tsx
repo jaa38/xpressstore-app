@@ -847,7 +847,7 @@ export default function CustomersScreen() {
             >
               <AppText variant="h1">Customers</AppText>
 
-              <AppText variant="body" color="secondary">
+              <AppText variant="bodySmall" color="secondary">
                 {isLoading
                   ? "Loading customers..."
                   : filteredCustomers.length === 0
@@ -1041,7 +1041,7 @@ export default function CustomersScreen() {
                 </AppText>
 
                 <AppText
-                  variant="body"
+                  variant="bodySmall"
                   color="secondary"
                   style={{
                     marginTop: spacing.xs,

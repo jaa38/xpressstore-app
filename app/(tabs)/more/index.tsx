@@ -116,7 +116,7 @@ export default function MoreScreen() {
         >
           <AppText variant="h1">Profile</AppText>
 
-          <AppText variant="body" color="secondary">
+          <AppText variant="bodySmall" color="secondary">
             Manage your business and account
           </AppText>
         </View>
@@ -149,7 +149,9 @@ export default function MoreScreen() {
             }}
           >
             <AppText variant="h3">
-              {isLoading ? "Loading..." : (profile?.businessName ?? "Merchant")}
+              {isLoading
+                ? "Loading..."
+                : (profile?.businessName ?? "Merchant")}
             </AppText>
 
             <AppText variant="bodySmall" color="muted">
@@ -174,18 +176,6 @@ export default function MoreScreen() {
         {/* ================================================================= */}
         {/* SETTLEMENT ACCOUNT REQUIRED */}
         {/* ================================================================= */}
-        {/* 
-          UX RECOMMENDATION:
-
-          Settlement setup is a prerequisite for payment configuration.
-
-          Instead of hiding this information inside Payment Settings,
-          we surface it immediately after the merchant profile.
-
-          This gives the merchant a clear next step and prevents them
-          from navigating into Payment Settings only to discover that
-          the controls are locked.
-        */}
 
         {!settlementAccountsLoading && !hasSettlementAccount && (
           <Pressable
@@ -213,15 +203,11 @@ export default function MoreScreen() {
               opacity: pressed ? 0.8 : 1,
             })}
           >
-            {/* WARNING ICON */}
-
             <Ionicons
               name="lock-closed-outline"
               size={20}
               color={theme.icon.warning.icon}
             />
-
-            {/* CONTENT */}
 
             <View
               style={{
@@ -238,8 +224,6 @@ export default function MoreScreen() {
                 methods.
               </AppText>
             </View>
-
-            {/* ACTION */}
 
             <Ionicons
               name="chevron-forward"
@@ -564,7 +548,6 @@ export default function MoreScreen() {
                   style={{
                     width: 48,
                     height: 48,
-
                     opacity:
                       !settlementAccountsLoading && !hasSettlementAccount
                         ? 0.6

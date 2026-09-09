@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 
-import { TextInput, TextInputProps, View, StyleSheet } from "react-native";
+import type { ReactNode } from "react";
+
+import { StyleSheet, TextInput, TextInputProps, View } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
 
 import { spacing, theme } from "@/theme";
+
 import { typography } from "@/theme/typography";
+
 import { radius } from "@/theme/radius";
 
 type InputVariant = "default" | "textarea";
@@ -27,33 +31,48 @@ interface InputProps extends TextInputProps {
 
   helperText?: string;
 
-  leftElement?: React.ReactNode;
+  leftElement?: ReactNode;
 
-  rightElement?: React.ReactNode;
+  rightElement?: ReactNode;
 
-  rightIcon?: React.ReactNode;
+  rightIcon?: ReactNode;
 }
 
-export function Input({
-  label,
-  required = false,
-  variant = "default",
-  optional = false,
-  maxLength,
-  error,
-  helperText,
-  leftElement,
-  rightElement,
-  rightIcon,
-  editable = true,
-  onFocus,
-  onBlur,
-  style,
-  placeholder,
-  value,
-  ...props
-}: InputProps) {
+export const Input = forwardRef<TextInput, InputProps>(function Input(
+  {
+    label,
+    required = false,
+    variant = "default",
+    optional = false,
+    maxLength,
+    error,
+    helperText,
+    leftElement,
+    rightElement,
+    rightIcon,
+    editable = true,
+    onFocus,
+    onBlur,
+    style,
+    placeholder,
+    value,
+    ...props
+  },
+  ref
+) {
+  /**
+   * ------------------------------------------------------------------------
+   * STATE
+   * ------------------------------------------------------------------------
+   */
+
   const [focused, setFocused] = useState(false);
+
+  /**
+   * ------------------------------------------------------------------------
+   * INPUT STATE
+   * ------------------------------------------------------------------------
+   */
 
   const state: InputState = !editable
     ? "disabled"
@@ -63,13 +82,36 @@ export function Input({
         ? "focus"
         : "default";
 
+  /**
+   * ------------------------------------------------------------------------
+   * ACCESSIBILITY
+   * ------------------------------------------------------------------------
+   */
+
   const accessibilityHint = error
     ? `Error. ${error}`
     : (helperText ?? placeholder ?? undefined);
 
+  /**
+   * ------------------------------------------------------------------------
+   * CHARACTER COUNT
+   * ------------------------------------------------------------------------
+   */
+
   const characterCount = value?.length ?? 0;
+
+  /**
+   * ------------------------------------------------------------------------
+   * RENDER
+   * ------------------------------------------------------------------------
+   */
+
   return (
     <View style={styles.container}>
+      {/* ================================================================
+            LABEL
+        ================================================================= */}
+
       {label && (
         <View style={styles.labelContainer}>
           <View
@@ -114,6 +156,10 @@ export function Input({
         </View>
       )}
 
+      {/* ================================================================
+            INPUT CONTAINER
+        ================================================================= */}
+
       <View
         style={[
           styles.inputContainer,
@@ -126,6 +172,7 @@ export function Input({
         {leftElement}
 
         <TextInput
+          ref={ref}
           {...props}
           value={value}
           maxLength={maxLength}
@@ -146,42 +193,49 @@ export function Input({
 
             style,
           ]}
-          onFocus={(e) => {
+          onFocus={(event) => {
             setFocused(true);
 
-            onFocus?.(e);
+            onFocus?.(event);
           }}
-          onBlur={(e) => {
+          onBlur={(event) => {
             setFocused(false);
 
-            onBlur?.(e);
+            onBlur?.(event);
           }}
         />
+
         {rightElement}
 
         {rightIcon && <View style={styles.iconContainer}>{rightIcon}</View>}
       </View>
 
-      <View
-        style={{
-          marginTop: 4,
-        }}
-      >
-        <View>
+      {/* ================================================================
+            FEEDBACK
+        ================================================================= */}
+
+      {(error || helperText) && (
+        <View
+          style={{
+            marginTop: 4,
+          }}
+        >
           {error ? (
             <AppText variant="caption" color="error" accessibilityRole="alert">
               {error}
             </AppText>
-          ) : helperText ? (
+          ) : (
             <AppText variant="caption" color="secondary">
               {helperText}
             </AppText>
-          ) : null}
+          )}
         </View>
-      </View>
+      )}
     </View>
   );
-}
+});
+
+Input.displayName = "Input";
 
 function getInputStateStyle(state: InputState) {
   switch (state) {
@@ -244,6 +298,7 @@ const styles = StyleSheet.create({
 
   textareaContainer: {
     height: 120,
+
     alignItems: "flex-start",
   },
 
@@ -263,15 +318,13 @@ const styles = StyleSheet.create({
 
   textareaInput: {
     flex: 1,
+
     paddingTop: 16,
+
     paddingBottom: 16,
   },
 
   iconContainer: {
     paddingRight: 16,
-  },
-
-  feedback: {
-    marginTop: 4,
   },
 });

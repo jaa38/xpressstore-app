@@ -16,106 +16,174 @@ interface OTPInputProps {
 
   value?: string;
 
+  onChange?: (code: string) => void;
+
   onComplete?: (code: string) => void;
 }
 
 export function OTPInput({
   length = 6,
   value = "",
+  onChange,
   onComplete,
 }: OTPInputProps) {
+  /**
+   * --------------------------------------------------------------------------
+   * STATE
+   * --------------------------------------------------------------------------
+   */
+
   const [otp, setOtp] = useState<string[]>(Array(length).fill(""));
+
+  /**
+   * --------------------------------------------------------------------------
+   * INPUT REFS
+   * --------------------------------------------------------------------------
+   */
 
   const refs = useRef<TextInput[]>([]);
 
   /**
-   * Sync external value
-   * Useful for React Hook Form reset()
+   * --------------------------------------------------------------------------
+   * SYNC EXTERNAL VALUE
+   * --------------------------------------------------------------------------
+   *
+   * Allows the parent component to control and reset the OTP.
+   *
+   * Useful for:
+   * - Clearing the OTP after resend
+   * - React Hook Form reset()
+   * - Programmatically setting an OTP
    */
+
   useEffect(() => {
-    if (!value) {
-      setOtp(Array(length).fill(""));
-
-      return;
-    }
-
-    const digits = value.slice(0, length).split("");
+    const digits = value.replace(/\D/g, "").slice(0, length).split("");
 
     const filled = [...digits, ...Array(length - digits.length).fill("")];
 
     setOtp(filled);
   }, [value, length]);
 
-  function handleChange(text: string, index: number) {
-    const newOtp = [...otp];
+  /**
+   * --------------------------------------------------------------------------
+   * UPDATE OTP
+   * --------------------------------------------------------------------------
+   */
+
+  function updateOtp(nextOtp: string[]) {
+    setOtp(nextOtp);
+
+    const code = nextOtp.join("");
 
     /**
-     * Paste Support
+     * Notify parent of every change.
      */
 
-    if (text.length > 1) {
-      const digits = text.replace(/\D/g, "").slice(0, length).split("");
-
-      const filled = Array(length).fill("");
-
-      digits.forEach((digit, i) => {
-        filled[i] = digit;
-      });
-
-      setOtp(filled);
-
-      const code = filled.join("");
-
-      const isComplete = filled.every((digit) => digit !== "");
-
-      if (isComplete) {
-        onComplete?.(code);
-      }
-
-      return;
-    }
+    onChange?.(code);
 
     /**
-     * Single Digit Entry
+     * Notify parent when OTP is complete.
      */
 
-    newOtp[index] = text;
-
-    setOtp(newOtp);
-
-    /**
-     * Move Forward
-     */
-
-    if (text && index < length - 1) {
-      refs.current[index + 1]?.focus();
-    }
-
-    const code = newOtp.join("");
-
-    const isComplete = newOtp.every((digit) => digit !== "");
+    const isComplete = nextOtp.every((digit) => digit !== "");
 
     if (isComplete) {
       onComplete?.(code);
     }
   }
 
+  /**
+   * --------------------------------------------------------------------------
+   * HANDLE INPUT CHANGE
+   * --------------------------------------------------------------------------
+   */
+
+  function handleChange(text: string, index: number) {
+    /**
+     * Remove non-numeric characters.
+     */
+
+    const sanitizedText = text.replace(/\D/g, "");
+
+    /**
+     * ------------------------------------------------------------------------
+     * PASTE SUPPORT
+     * ------------------------------------------------------------------------
+     */
+
+    if (sanitizedText.length > 1) {
+      const digits = sanitizedText.slice(0, length).split("");
+
+      const filled = Array(length).fill("");
+
+      digits.forEach((digit, digitIndex) => {
+        filled[digitIndex] = digit;
+      });
+
+      updateOtp(filled);
+
+      /**
+       * Move focus to the last field after pasting.
+       */
+
+      const lastFilledIndex = Math.min(digits.length, length) - 1;
+
+      if (lastFilledIndex >= 0) {
+        refs.current[lastFilledIndex]?.focus();
+      }
+
+      return;
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * SINGLE DIGIT ENTRY
+     * ------------------------------------------------------------------------
+     */
+
+    const nextOtp = [...otp];
+
+    nextOtp[index] = sanitizedText;
+
+    updateOtp(nextOtp);
+
+    /**
+     * Move to the next input.
+     */
+
+    if (sanitizedText && index < length - 1) {
+      refs.current[index + 1]?.focus();
+    }
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * HANDLE BACKSPACE
+   * --------------------------------------------------------------------------
+   */
+
   function handleKeyPress(
-    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
+    event: NativeSyntheticEvent<TextInputKeyPressEventData>,
     index: number
   ) {
-    if (e.nativeEvent.key === "Backspace" && !otp[index] && index > 0) {
+    const { key } = event.nativeEvent;
+
+    if (key === "Backspace" && !otp[index] && index > 0) {
       refs.current[index - 1]?.focus();
     }
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * RENDER
+   * --------------------------------------------------------------------------
+   */
 
   return (
     <View
       style={{
         flexDirection: "row",
-
         justifyContent: "center",
-
         gap: spacing.sm,
       }}
     >
@@ -129,7 +197,7 @@ export function OTPInput({
           }}
           value={digit}
           onChangeText={(text) => handleChange(text, index)}
-          onKeyPress={(e) => handleKeyPress(e, index)}
+          onKeyPress={(event) => handleKeyPress(event, index)}
         />
       ))}
     </View>

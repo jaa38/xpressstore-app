@@ -1,6 +1,15 @@
-import { Alert, Pressable, View } from "react-native";
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  TextInput,
+  View,
+} from "react-native";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Link, router, useLocalSearchParams } from "expo-router";
 
@@ -17,8 +26,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { AppText } from "@/components/ui/AppText";
+
 import { Button } from "@/components/ui/Button";
+
 import { Input } from "@/components/ui/Input";
+
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
 import { spacing, theme } from "@/theme";
@@ -61,7 +73,14 @@ type PasswordSchema = z.infer<typeof passwordSchema>;
  * ============================================================================
  */
 
-function PasswordRule({ passed, text }: { passed: boolean; text: string }) {
+function PasswordRule({
+  passed,
+  text,
+}: {
+  passed: boolean;
+
+  text: string;
+}) {
   return (
     <View
       style={{
@@ -101,6 +120,18 @@ export default function PasswordScreen() {
   const { email } = useLocalSearchParams<{
     email?: string;
   }>();
+
+  /**
+   * --------------------------------------------------------------------------
+   * INPUT REFS
+   * --------------------------------------------------------------------------
+   *
+   * Used for keyboard navigation.
+   */
+
+  const passwordRef = useRef<TextInput>(null);
+
+  const confirmPasswordRef = useRef<TextInput>(null);
 
   /**
    * --------------------------------------------------------------------------
@@ -170,6 +201,14 @@ export default function PasswordScreen() {
    */
 
   async function onSubmit(data: PasswordSchema) {
+    /**
+     * Prevent duplicate submissions.
+     */
+
+    if (updatePassword.isPending) {
+      return;
+    }
+
     const normalizedEmail = email?.trim();
 
     if (!normalizedEmail) {
@@ -180,6 +219,13 @@ export default function PasswordScreen() {
 
       return;
     }
+
+    /**
+     * Dismiss keyboard before
+     * starting the mutation.
+     */
+
+    Keyboard.dismiss();
 
     try {
       await updatePassword.mutateAsync({
@@ -212,283 +258,350 @@ export default function PasswordScreen() {
     >
       <StatusBar style="auto" />
 
-      <View
+      <KeyboardAvoidingView
         style={{
           flex: 1,
-
-          paddingHorizontal: spacing.lg,
         }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View
+        <ScrollView
           style={{
             flex: 1,
-
-            justifyContent: "space-between",
           }}
+          contentContainerStyle={{
+            flexGrow: 1,
+
+            paddingHorizontal: spacing.lg,
+
+            paddingBottom: spacing.lg,
+          }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
         >
-          {/* ==================================================================
-              TOP
-          ================================================================== */}
-
-          <View>
-            {/* HEADER */}
-
-            <View
-              style={{
-                flexDirection: "row",
-
-                alignItems: "center",
-
-                gap: spacing.sm,
-
-                justifyContent: "space-between",
-              }}
-            >
-              <Link href={ROUTES.EMAIL_VERIFICATION} asChild>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Go back"
-                  hitSlop={8}
-                >
-                  <Ionicons
-                    name="chevron-back"
-                    size={24}
-                    color={theme.icon.default.icon}
-                  />
-                </Pressable>
-              </Link>
-
-              <View
-                accessible
-                accessibilityRole="progressbar"
-                accessibilityLabel="Password setup progress"
-                accessibilityValue={{
-                  min: 0,
-
-                  max: 100,
-
-                  now: 50,
-                }}
-                style={{
-                  flex: 1,
-
-                  height: 8,
-
-                  backgroundColor: theme.divider.default,
-
-                  borderRadius: 999,
-
-                  overflow: "hidden",
-
-                  marginHorizontal: spacing.sm,
-                }}
-              >
-                <ProgressBar progress={33.33} />
-              </View>
-
-              <AppText variant="bodySmall" color="muted">
-                Step 2 of 6
-              </AppText>
-            </View>
-
-            {/* CONTENT */}
-
-            <View
-              style={{
-                marginTop: spacing.lg,
-
-                gap: spacing.lg,
-              }}
-            >
-              {/* TITLE */}
-
-              <View
-                style={{
-                  gap: spacing.xs,
-                }}
-              >
-                <AppText
-                  accessibilityRole="header"
-                  variant="h1"
-                  color="heading"
-                >
-                  Create your password
-                </AppText>
-
-                <AppText variant="body" color="secondary">
-                  Create a secure password for your XpressStore account.
-                </AppText>
-              </View>
-
-              {/* EMAIL */}
-
-              {email ? (
-                <View
-                  style={{
-                    flexDirection: "row",
-
-                    alignItems: "center",
-
-                    gap: spacing.sm,
-
-                    padding: spacing.md,
-
-                    borderRadius: 12,
-
-                    backgroundColor: theme.background.subtle,
-                  }}
-                >
-                  <Ionicons
-                    name="mail-outline"
-                    size={20}
-                    color={theme.icon.branding.icon}
-                  />
-
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                    numberOfLines={1}
-                  >
-                    {email}
-                  </AppText>
-                </View>
-              ) : null}
-
-              {/* PASSWORD */}
-
-              <Controller
-                control={control}
-                name="password"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label="Password"
-                    placeholder="Enter your password"
-                    secureTextEntry={!showPassword}
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.password?.message}
-                    rightIcon={
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={
-                          showPassword ? "Hide password" : "Show password"
-                        }
-                        hitSlop={8}
-                        onPress={() => setShowPassword(!showPassword)}
-                      >
-                        <Ionicons
-                          name={
-                            showPassword ? "eye-off-outline" : "eye-outline"
-                          }
-                          size={20}
-                          color={theme.icon.default.icon}
-                        />
-                      </Pressable>
-                    }
-                  />
-                )}
-              />
-
-              {/* RULES */}
-
-              <View
-                accessible
-                accessibilityLabel="Password requirements"
-                style={{
-                  gap: spacing.xs,
-                }}
-              >
-                <AppText variant="caption" color="muted">
-                  Password must contain:
-                </AppText>
-
-                <PasswordRule
-                  passed={passwordRules.minLength}
-                  text="At least 8 characters"
-                />
-
-                <PasswordRule
-                  passed={passwordRules.uppercase}
-                  text="One uppercase letter"
-                />
-
-                <PasswordRule
-                  passed={passwordRules.lowercase}
-                  text="One lowercase letter"
-                />
-
-                <PasswordRule passed={passwordRules.number} text="One number" />
-
-                <PasswordRule
-                  passed={passwordRules.special}
-                  text="One special character"
-                />
-              </View>
-
-              {/* CONFIRM PASSWORD */}
-
-              <Controller
-                control={control}
-                name="confirmPassword"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label="Confirm Password"
-                    placeholder="Confirm your password"
-                    secureTextEntry={!showConfirmPassword}
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.confirmPassword?.message}
-                    rightIcon={
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={
-                          showConfirmPassword
-                            ? "Hide password"
-                            : "Show password"
-                        }
-                        hitSlop={8}
-                        onPress={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                      >
-                        <Ionicons
-                          name={
-                            showConfirmPassword
-                              ? "eye-off-outline"
-                              : "eye-outline"
-                          }
-                          size={20}
-                          color={theme.icon.default.icon}
-                        />
-                      </Pressable>
-                    }
-                  />
-                )}
-              />
-            </View>
-          </View>
-
-          {/* ==================================================================
-              BOTTOM
-          ================================================================== */}
-
           <View
             style={{
-              paddingBottom: spacing.lg,
+              flex: 1,
+
+              justifyContent: "space-between",
             }}
           >
-            <Button
-              title={
-                updatePassword.isPending ? "Creating Password..." : "Continue"
-              }
-              variant="primary"
-              size="large"
-              disabled={!isValid || updatePassword.isPending}
-              onPress={handleSubmit(onSubmit)}
-            />
+            {/* ============================================================
+                TOP
+            ============================================================= */}
+
+            <View>
+              {/* ==========================================================
+                  HEADER
+              =========================================================== */}
+
+              <View
+                style={{
+                  flexDirection: "row",
+
+                  alignItems: "center",
+
+                  gap: spacing.sm,
+
+                  justifyContent: "space-between",
+                }}
+              >
+                {/* BACK */}
+
+                <Link href={ROUTES.EMAIL_VERIFICATION} asChild>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Go back"
+                    accessibilityHint="Returns to email verification"
+                    accessibilityState={{
+                      disabled: updatePassword.isPending,
+                    }}
+                    disabled={updatePassword.isPending}
+                    hitSlop={8}
+                  >
+                    <Ionicons
+                      name="chevron-back"
+                      size={24}
+                      color={theme.icon.default.icon}
+                    />
+                  </Pressable>
+                </Link>
+
+                {/* PROGRESS */}
+
+                <View
+                  accessible
+                  accessibilityRole="progressbar"
+                  accessibilityLabel="Password setup progress"
+                  accessibilityValue={{
+                    min: 0,
+
+                    max: 100,
+
+                    now: 33.33,
+                  }}
+                  style={{
+                    flex: 1,
+
+                    height: 8,
+
+                    backgroundColor: theme.divider.default,
+
+                    borderRadius: 999,
+
+                    overflow: "hidden",
+
+                    marginHorizontal: spacing.sm,
+                  }}
+                >
+                  <ProgressBar progress={33.33} />
+                </View>
+
+                {/* STEP */}
+
+                <AppText variant="bodySmall" color="muted">
+                  Step 2 of 6
+                </AppText>
+              </View>
+
+              {/* ==========================================================
+                  CONTENT
+              =========================================================== */}
+
+              <View
+                style={{
+                  marginTop: spacing.lg,
+
+                  gap: spacing.lg,
+                }}
+              >
+                {/* TITLE */}
+
+                <View
+                  style={{
+                    gap: spacing.xs,
+                  }}
+                >
+                  <AppText
+                    accessibilityRole="header"
+                    variant="h1"
+                    color="heading"
+                  >
+                    Create your password
+                  </AppText>
+
+                  <AppText variant="body" color="secondary">
+                    Create a secure password for your XpressStore account.
+                  </AppText>
+                </View>
+
+                {/* EMAIL */}
+
+                {email ? (
+                  <View
+                    style={{
+                      flexDirection: "row",
+
+                      alignItems: "center",
+
+                      gap: spacing.sm,
+
+                      padding: spacing.md,
+
+                      borderRadius: 12,
+
+                      backgroundColor: theme.background.subtle,
+                    }}
+                  >
+                    <Ionicons
+                      name="mail-outline"
+                      size={20}
+                      color={theme.icon.branding.icon}
+                    />
+
+                    <AppText
+                      variant="bodySmall"
+                      color="secondary"
+                      numberOfLines={1}
+                      style={{
+                        flex: 1,
+                      }}
+                    >
+                      {email}
+                    </AppText>
+                  </View>
+                ) : null}
+
+                {/* ========================================================
+                    PASSWORD
+                ========================================================= */}
+
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value, ref } }) => (
+                    <Input
+                      ref={(input) => {
+                        passwordRef.current = input;
+
+                        ref(input);
+                      }}
+                      label="Password"
+                      placeholder="Enter your password"
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="next"
+                      blurOnSubmit={false}
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      onSubmitEditing={() => {
+                        confirmPasswordRef.current?.focus();
+                      }}
+                      error={errors.password?.message}
+                      rightIcon={
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={
+                            showPassword ? "Hide password" : "Show password"
+                          }
+                          hitSlop={8}
+                          onPress={() => setShowPassword((current) => !current)}
+                        >
+                          <Ionicons
+                            name={
+                              showPassword ? "eye-off-outline" : "eye-outline"
+                            }
+                            size={20}
+                            color={theme.icon.default.icon}
+                          />
+                        </Pressable>
+                      }
+                    />
+                  )}
+                />
+
+                {/* ========================================================
+                    PASSWORD RULES
+                ========================================================= */}
+
+                <View
+                  accessible
+                  accessibilityLabel="Password requirements"
+                  style={{
+                    gap: spacing.xs,
+                  }}
+                >
+                  <AppText variant="caption" color="muted">
+                    Password must contain:
+                  </AppText>
+
+                  <PasswordRule
+                    passed={passwordRules.minLength}
+                    text="At least 8 characters"
+                  />
+
+                  <PasswordRule
+                    passed={passwordRules.uppercase}
+                    text="One uppercase letter"
+                  />
+
+                  <PasswordRule
+                    passed={passwordRules.lowercase}
+                    text="One lowercase letter"
+                  />
+
+                  <PasswordRule
+                    passed={passwordRules.number}
+                    text="One number"
+                  />
+
+                  <PasswordRule
+                    passed={passwordRules.special}
+                    text="One special character"
+                  />
+                </View>
+
+                {/* ========================================================
+                    CONFIRM PASSWORD
+                ========================================================= */}
+
+                <Controller
+                  control={control}
+                  name="confirmPassword"
+                  render={({ field: { onChange, onBlur, value, ref } }) => (
+                    <Input
+                      ref={(input) => {
+                        confirmPasswordRef.current = input;
+
+                        ref(input);
+                      }}
+                      label="Confirm Password"
+                      placeholder="Confirm your password"
+                      secureTextEntry={!showConfirmPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="done"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      onSubmitEditing={() => {
+                        handleSubmit(onSubmit)();
+                      }}
+                      error={errors.confirmPassword?.message}
+                      rightIcon={
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={
+                            showConfirmPassword
+                              ? "Hide password"
+                              : "Show password"
+                          }
+                          hitSlop={8}
+                          onPress={() =>
+                            setShowConfirmPassword((current) => !current)
+                          }
+                        >
+                          <Ionicons
+                            name={
+                              showConfirmPassword
+                                ? "eye-off-outline"
+                                : "eye-outline"
+                            }
+                            size={20}
+                            color={theme.icon.default.icon}
+                          />
+                        </Pressable>
+                      }
+                    />
+                  )}
+                />
+              </View>
+            </View>
+
+            {/* ============================================================
+                BOTTOM
+            ============================================================= */}
+
+            <View
+              style={{
+                paddingTop: spacing.xl,
+              }}
+            >
+              <Button
+                title={
+                  updatePassword.isPending ? "Creating Password..." : "Continue"
+                }
+                variant="primary"
+                size="large"
+                disabled={!isValid || updatePassword.isPending}
+                onPress={handleSubmit(onSubmit)}
+              />
+            </View>
           </View>
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

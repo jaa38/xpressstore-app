@@ -28,8 +28,9 @@ import { z } from "zod";
 import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Card } from "@/components/ui/Card";
 
-import { spacing, theme } from "@/theme";
+import { radius, spacing, theme } from "@/theme";
 
 import { useChangePassword } from "@/hooks/auth/useChangePassword";
 
@@ -229,7 +230,7 @@ export default function ChangePasswordScreen() {
       });
 
       /**
-       * Clear sensitive password values immediately after success.
+       * Clear sensitive password values immediately.
        */
 
       reset();
@@ -281,261 +282,343 @@ export default function ChangePasswordScreen() {
             }}
           >
             {/* ================================================================
-                SCROLLABLE CONTENT
+                SCREEN CONTENT
             ================================================================= */}
 
-            <ScrollView
-              contentContainerStyle={{
+            <View
+              style={{
+                flex: 1,
+
                 paddingHorizontal: spacing.lg,
-
-                paddingTop: spacing.lg,
-
-                paddingBottom: spacing.xl,
               }}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
             >
-              {/* ==============================================================
-                  BACK BUTTON
-              ============================================================== */}
-
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Go back"
-                hitSlop={8}
-                onPress={() => router.back()}
-                style={{
-                  width: 44,
-
-                  height: 44,
-
-                  justifyContent: "center",
-                }}
-              >
-                <Ionicons
-                  name="arrow-back"
-                  size={24}
-                  color={theme.navigation.active}
-                />
-              </Pressable>
-
-              {/* ==============================================================
-                  SECURITY ICON
-              ============================================================== */}
-
-              <View
-                style={{
-                  alignItems: "center",
-
-                  marginTop: spacing.md,
-                }}
-              >
-                <View
-                  style={{
-                    width: 72,
-
-                    height: 72,
-
-                    borderRadius: 36,
-
-                    backgroundColor: theme.icon.branding.background,
-
-                    justifyContent: "center",
-
-                    alignItems: "center",
-                  }}
-                >
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={32}
-                    color={theme.icon.branding.icon}
-                  />
-                </View>
-              </View>
-
               {/* ==============================================================
                   HEADER
               ============================================================== */}
 
               <View
                 style={{
-                  marginTop: spacing.lg,
+                  flexDirection: "row",
 
-                  gap: spacing.xs,
+                  alignItems: "center",
+
+                  gap: spacing.md,
                 }}
               >
-                <AppText
-                  accessibilityRole="header"
-                  variant="h1"
-                  color="heading"
-                  align="center"
-                >
-                  Change Password
-                </AppText>
+                {/* BACK BUTTON */}
 
-                <AppText variant="body" color="secondary" align="center">
-                  Update your password to keep your XpressStore account secure.
-                </AppText>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Go back"
+                  hitSlop={8}
+                  onPress={() => router.back()}
+                  style={({ pressed }) => ({
+                    width: 44,
+
+                    height: 44,
+
+                    justifyContent: "center",
+
+                    alignItems: "center",
+
+                    opacity: pressed ? 0.6 : 1,
+                  })}
+                >
+                  <Ionicons
+                    name="chevron-back"
+                    size={24}
+                    color={theme.text.primary}
+                  />
+                </Pressable>
+
+                {/* HEADER CONTENT */}
+
+                <View
+                  style={{
+                    flex: 1,
+
+                    gap: spacing.xs,
+                  }}
+                >
+                  <AppText
+                    accessibilityRole="header"
+                    variant="h1"
+                    color="heading"
+                  >
+                    Change Password
+                  </AppText>
+
+                  <AppText variant="bodySmall" color="secondary">
+                    Update your password to keep your account secure.
+                  </AppText>
+                </View>
               </View>
 
               {/* ==============================================================
-                  FORM
+                  SCROLLABLE CONTENT
               ============================================================== */}
 
-              <View
+              <ScrollView
                 style={{
-                  marginTop: spacing.xl,
-
-                  gap: spacing.lg,
+                  flex: 1,
                 }}
+                contentContainerStyle={{
+                  paddingTop: spacing.xl,
+
+                  paddingBottom: spacing.xl,
+                }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
               >
                 {/* ============================================================
-                    CURRENT PASSWORD
+                    SECURITY OVERVIEW
                 ============================================================ */}
 
-                <Controller
-                  control={control}
-                  name="oldPassword"
-                  render={({ field: { value, onChange } }) => (
-                    <Input
-                      label="Current Password"
-                      placeholder="Enter your current password"
-                      secureTextEntry={!showOldPassword}
-                      value={value}
-                      onChangeText={onChange}
-                      error={errors.oldPassword?.message}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      autoComplete="current-password"
-                      textContentType="password"
-                      rightIcon={
-                        <PasswordVisibilityButton
-                          visible={showOldPassword}
-                          passwordLabel="current password"
-                          onPress={() =>
-                            setShowOldPassword((previous) => !previous)
-                          }
-                        />
-                      }
-                    />
-                  )}
-                />
+                <Card
+                  style={{
+                    padding: spacing.lg,
+
+                    backgroundColor: theme.background.brand,
+
+                    borderColor: theme.border.brand,
+
+                    borderWidth: 1,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+
+                      alignItems: "center",
+
+                      gap: spacing.md,
+                    }}
+                  >
+                    {/* ICON */}
+
+                    <View
+                      style={{
+                        width: 48,
+
+                        height: 48,
+
+                        borderRadius: radius.full,
+
+                        justifyContent: "center",
+
+                        alignItems: "center",
+
+                        backgroundColor: theme.icon.branding.background,
+                      }}
+                    >
+                      <Ionicons
+                        name="lock-closed-outline"
+                        size={24}
+                        color={theme.icon.branding.icon}
+                      />
+                    </View>
+
+                    {/* CONTENT */}
+
+                    <View
+                      style={{
+                        flex: 1,
+
+                        gap: spacing.xs,
+                      }}
+                    >
+                      <AppText variant="bodyBold">
+                        Keep your account protected
+                      </AppText>
+
+                      <AppText variant="bodySmall" color="secondary">
+                        Choose a strong password that you do not use elsewhere.
+                      </AppText>
+                    </View>
+                  </View>
+                </Card>
 
                 {/* ============================================================
-                    NEW PASSWORD
-                ============================================================ */}
-
-                <Controller
-                  control={control}
-                  name="newPassword"
-                  render={({ field: { value, onChange } }) => (
-                    <Input
-                      label="New Password"
-                      placeholder="Enter your new password"
-                      secureTextEntry={!showNewPassword}
-                      value={value}
-                      onChangeText={onChange}
-                      error={errors.newPassword?.message}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      autoComplete="new-password"
-                      textContentType="newPassword"
-                      rightIcon={
-                        <PasswordVisibilityButton
-                          visible={showNewPassword}
-                          passwordLabel="new password"
-                          onPress={() =>
-                            setShowNewPassword((previous) => !previous)
-                          }
-                        />
-                      }
-                    />
-                  )}
-                />
-
-                {/* ============================================================
-                    PASSWORD REQUIREMENTS
+                    FORM SECTION HEADER
                 ============================================================ */}
 
                 <View
-                  accessible
-                  accessibilityLabel="New password requirements"
                   style={{
+                    marginTop: spacing.xl,
+
                     gap: spacing.xs,
-
-                    padding: spacing.md,
-
-                    borderRadius: 12,
-
-                    backgroundColor: theme.background.subtle,
                   }}
                 >
-                  <AppText variant="caption" color="secondary">
-                    Your new password must contain:
+                  <AppText variant="bodyLargeBold">Password Details</AppText>
+
+                  <AppText variant="bodySmall" color="muted">
+                    Enter your current password, then choose a new secure
+                    password.
                   </AppText>
-
-                  <PasswordRule
-                    passed={passwordRules.minLength}
-                    text="At least 8 characters"
-                  />
-
-                  <PasswordRule
-                    passed={passwordRules.uppercase}
-                    text="One uppercase letter"
-                  />
-
-                  <PasswordRule
-                    passed={passwordRules.lowercase}
-                    text="One lowercase letter"
-                  />
-
-                  <PasswordRule
-                    passed={passwordRules.number}
-                    text="One number"
-                  />
-
-                  <PasswordRule
-                    passed={passwordRules.special}
-                    text="One special character"
-                  />
                 </View>
 
                 {/* ============================================================
-                    CONFIRM NEW PASSWORD
+                    FORM
                 ============================================================ */}
 
-                <Controller
-                  control={control}
-                  name="confirmPassword"
-                  render={({ field: { value, onChange } }) => (
-                    <Input
-                      label="Confirm New Password"
-                      placeholder="Confirm your new password"
-                      secureTextEntry={!showConfirmPassword}
-                      value={value}
-                      onChangeText={onChange}
-                      error={errors.confirmPassword?.message}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      autoComplete="new-password"
-                      textContentType="newPassword"
-                      onSubmitEditing={handleSubmit(onSubmit)}
-                      rightIcon={
-                        <PasswordVisibilityButton
-                          visible={showConfirmPassword}
-                          passwordLabel="confirmed password"
-                          onPress={() =>
-                            setShowConfirmPassword(
-                              (previous) => !previous
-                            )
-                          }
-                        />
-                      }
-                    />
-                  )}
-                />
-              </View>
-            </ScrollView>
+                <View
+                  style={{
+                    marginTop: spacing.lg,
+
+                    gap: spacing.lg,
+                  }}
+                >
+                  {/* ==========================================================
+                      CURRENT PASSWORD
+                  ========================================================== */}
+
+                  <Controller
+                    control={control}
+                    name="oldPassword"
+                    render={({ field: { value, onChange } }) => (
+                      <Input
+                        label="Current Password"
+                        placeholder="Enter your current password"
+                        secureTextEntry={!showOldPassword}
+                        value={value}
+                        onChangeText={onChange}
+                        error={errors.oldPassword?.message}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        autoComplete="current-password"
+                        textContentType="password"
+                        rightIcon={
+                          <PasswordVisibilityButton
+                            visible={showOldPassword}
+                            passwordLabel="current password"
+                            onPress={() =>
+                              setShowOldPassword((previous) => !previous)
+                            }
+                          />
+                        }
+                      />
+                    )}
+                  />
+
+                  {/* ==========================================================
+                      NEW PASSWORD
+                  ========================================================== */}
+
+                  <Controller
+                    control={control}
+                    name="newPassword"
+                    render={({ field: { value, onChange } }) => (
+                      <Input
+                        label="New Password"
+                        placeholder="Enter your new password"
+                        secureTextEntry={!showNewPassword}
+                        value={value}
+                        onChangeText={onChange}
+                        error={errors.newPassword?.message}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        autoComplete="new-password"
+                        textContentType="newPassword"
+                        rightIcon={
+                          <PasswordVisibilityButton
+                            visible={showNewPassword}
+                            passwordLabel="new password"
+                            onPress={() =>
+                              setShowNewPassword((previous) => !previous)
+                            }
+                          />
+                        }
+                      />
+                    )}
+                  />
+
+                  {/* ==========================================================
+                      PASSWORD REQUIREMENTS
+                  ========================================================== */}
+
+                  <Card
+                    style={{
+                      padding: spacing.md,
+
+                      backgroundColor: theme.background.subtle,
+
+                      borderColor: theme.border.light,
+                    }}
+                  >
+                    <View
+                      accessible
+                      accessibilityLabel="New password requirements"
+                      style={{
+                        gap: spacing.xs,
+                      }}
+                    >
+                      <AppText variant="caption" color="secondary">
+                        Your new password must contain:
+                      </AppText>
+
+                      <PasswordRule
+                        passed={passwordRules.minLength}
+                        text="At least 8 characters"
+                      />
+
+                      <PasswordRule
+                        passed={passwordRules.uppercase}
+                        text="One uppercase letter"
+                      />
+
+                      <PasswordRule
+                        passed={passwordRules.lowercase}
+                        text="One lowercase letter"
+                      />
+
+                      <PasswordRule
+                        passed={passwordRules.number}
+                        text="One number"
+                      />
+
+                      <PasswordRule
+                        passed={passwordRules.special}
+                        text="One special character"
+                      />
+                    </View>
+                  </Card>
+
+                  {/* ==========================================================
+                      CONFIRM NEW PASSWORD
+                  ========================================================== */}
+
+                  <Controller
+                    control={control}
+                    name="confirmPassword"
+                    render={({ field: { value, onChange } }) => (
+                      <Input
+                        label="Confirm New Password"
+                        placeholder="Confirm your new password"
+                        secureTextEntry={!showConfirmPassword}
+                        value={value}
+                        onChangeText={onChange}
+                        error={errors.confirmPassword?.message}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        autoComplete="new-password"
+                        textContentType="newPassword"
+                        returnKeyType="done"
+                        onSubmitEditing={handleSubmit(onSubmit)}
+                        rightIcon={
+                          <PasswordVisibilityButton
+                            visible={showConfirmPassword}
+                            passwordLabel="confirmed password"
+                            onPress={() =>
+                              setShowConfirmPassword((previous) => !previous)
+                            }
+                          />
+                        }
+                      />
+                    )}
+                  />
+                </View>
+              </ScrollView>
+            </View>
 
             {/* ================================================================
                 BOTTOM ACTION

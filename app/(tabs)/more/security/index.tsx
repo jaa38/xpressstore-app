@@ -268,11 +268,7 @@ export default function SecurityScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Manage biometric authentication"
-              onPress={() => {
-                /**
-                 * Configure Face ID / Touch ID.
-                 */
-              }}
+              onPress={() => router.push(ROUTES.BIOMETRIC_AUTHENTICATION)}
               style={({ pressed }) => ({
                 flexDirection: "row",
                 alignItems: "center",

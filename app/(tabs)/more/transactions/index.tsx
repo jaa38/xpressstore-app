@@ -29,9 +29,11 @@ import { UICard } from "@/components/ui/UICard";
 
 import { Card } from "@/components/ui/Card";
 
+import { Divider } from "@/components/ui/Divider";
+
 import { FilterButton } from "@/components/ui/FilterButton";
 
-import { TransactionList } from "@/components/transactions/TransactionList";
+import { TransactionListItem } from "@/components/transactions/TransactionListItem";
 
 import { TransactionFilterBottomSheet } from "@/components/bottom-sheet/TransactionFilterBottomSheet";
 
@@ -114,17 +116,6 @@ export default function TransactionsScreen() {
    * =========================================================================
    * SERVER FILTERS
    * =========================================================================
-   *
-   * Only filters supported by the documented transactions API are sent to
-   * the service.
-   *
-   * Client-only filters such as:
-   *
-   * - channel
-   * - type
-   * - amount range
-   *
-   * are intentionally handled below by client-side filtering.
    */
 
   const serverFilters = useMemo<TransactionsQueryFilters>(() => {
@@ -148,23 +139,14 @@ export default function TransactionsScreen() {
    * =========================================================================
    * TRANSACTIONS
    * =========================================================================
-   *
-   * Mock/API isolation happens inside transactions-service.ts.
-   *
-   * The screen simply consumes the resulting query.
    */
 
   const {
     data: transactionsData,
-
     isLoading,
-
     isFetching,
-
     isRefetching,
-
     error,
-
     refetch,
   } = useTransactions(currentPage, PAGE_SIZE, serverFilters);
 
@@ -172,14 +154,6 @@ export default function TransactionsScreen() {
    * =========================================================================
    * PAGE ACCUMULATION
    * =========================================================================
-   *
-   * The API is paginated.
-   *
-   * The screen accumulates pages so FlatList can behave like an infinite
-   * scrolling list.
-   *
-   * This also works when the service is operating in mock mode because the
-   * mock service exposes the same paginated response contract.
    */
 
   useEffect(() => {
@@ -238,18 +212,6 @@ export default function TransactionsScreen() {
    * =========================================================================
    * CLIENT-SIDE FILTERING
    * =========================================================================
-   *
-   * The documented API does not expose all UI filters.
-   *
-   * Therefore these remain client-side:
-   *
-   * - channel
-   * - transaction type
-   * - amount range
-   * - customer-name search
-   * - amount search
-   *
-   * Server-supported filters are already passed through `serverFilters`.
    */
 
   const filteredTransactions = useMemo(() => {
@@ -258,7 +220,7 @@ export default function TransactionsScreen() {
     return transactions.filter((transaction) => {
       /**
        * -------------------------------------------------------------------
-       * Status
+       * STATUS
        * -------------------------------------------------------------------
        */
 
@@ -267,7 +229,7 @@ export default function TransactionsScreen() {
 
       /**
        * -------------------------------------------------------------------
-       * Channel
+       * CHANNEL
        * -------------------------------------------------------------------
        */
 
@@ -276,7 +238,7 @@ export default function TransactionsScreen() {
 
       /**
        * -------------------------------------------------------------------
-       * Transaction Type
+       * TRANSACTION TYPE
        * -------------------------------------------------------------------
        */
 
@@ -285,7 +247,7 @@ export default function TransactionsScreen() {
 
       /**
        * -------------------------------------------------------------------
-       * Minimum Amount
+       * MINIMUM AMOUNT
        * -------------------------------------------------------------------
        */
 
@@ -294,7 +256,7 @@ export default function TransactionsScreen() {
 
       /**
        * -------------------------------------------------------------------
-       * Maximum Amount
+       * MAXIMUM AMOUNT
        * -------------------------------------------------------------------
        */
 
@@ -303,7 +265,7 @@ export default function TransactionsScreen() {
 
       /**
        * -------------------------------------------------------------------
-       * Amount Search
+       * AMOUNT SEARCH
        * -------------------------------------------------------------------
        */
 
@@ -313,7 +275,7 @@ export default function TransactionsScreen() {
 
       /**
        * -------------------------------------------------------------------
-       * Search
+       * SEARCH
        * -------------------------------------------------------------------
        */
 
@@ -406,19 +368,6 @@ export default function TransactionsScreen() {
    * =========================================================================
    * SCREEN STATES
    * =========================================================================
-   *
-   * Architecture:
-   *
-   * 1. Initial loading
-   * 2. First-time user
-   * 3. Error after transaction history already exists
-   * 4. Search/filter empty
-   * 5. Transaction list
-   *
-   * IMPORTANT:
-   *
-   * A brand-new merchant should not be shown a technical API error simply
-   * because the transaction request failed while there are no transactions.
    */
 
   const hasTransactions = totalCount > 0;
@@ -488,13 +437,6 @@ export default function TransactionsScreen() {
    * -------------------------------------------------------------------------
    * SUMMARY ICON
    * -------------------------------------------------------------------------
-   *
-   * The summary image changes according to the selected transaction status.
-   *
-   * All     -> transactionsAllIcon.png
-   * Paid    -> transactionsPaidIcon.png
-   * Pending -> transactionsPendingIcon.png
-   * Failed  -> transactionsFailed.png
    */
 
   const summaryIconSource =
@@ -516,9 +458,9 @@ export default function TransactionsScreen() {
     ? "Loading transactions..."
     : isFirstTimeUser
       ? "Start accepting payments"
-      : transactions.length === 1
+      : totalCount === 1
         ? "1 transaction"
-        : `${transactions.length} transactions`;
+        : `${totalCount} transactions`;
 
   /**
    * =========================================================================
@@ -707,8 +649,6 @@ export default function TransactionsScreen() {
                       gap: spacing.md,
                     }}
                   >
-                    {/* TRANSACTION STATUS IMAGE */}
-
                     <View
                       style={{
                         width: 56,
@@ -727,8 +667,6 @@ export default function TransactionsScreen() {
                         resizeMode="contain"
                       />
                     </View>
-
-                    {/* SUMMARY DETAILS */}
 
                     <View
                       style={{
@@ -888,8 +826,6 @@ export default function TransactionsScreen() {
                     paddingHorizontal: spacing.lg,
                   }}
                 >
-                  {/* TRANSACTIONS IMAGE */}
-
                   <Image
                     source={require("../../../../assets/images/default-transactions.png")}
                     style={{
@@ -898,8 +834,6 @@ export default function TransactionsScreen() {
                     }}
                     resizeMode="contain"
                   />
-
-                  {/* TITLE */}
 
                   <AppText
                     variant="bodyLargeBold"
@@ -910,8 +844,6 @@ export default function TransactionsScreen() {
                   >
                     No transactions yet
                   </AppText>
-
-                  {/* DESCRIPTION */}
 
                   <AppText
                     variant="body"
@@ -925,8 +857,6 @@ export default function TransactionsScreen() {
                     Transactions will appear here when customers make payments
                     through your store.
                   </AppText>
-
-                  {/* CTA */}
 
                   <Button
                     title="Create Payment Link"
@@ -943,8 +873,6 @@ export default function TransactionsScreen() {
                     }}
                     onPress={handleCreatePaymentLink}
                   />
-
-                  {/* SUPPORTING TEXT */}
 
                   <AppText
                     variant="caption"
@@ -1105,69 +1033,71 @@ export default function TransactionsScreen() {
                    5. TRANSACTION LIST
                 ========================================================== */
 
-                <FlatList
-                  data={filteredTransactions}
-                  keyExtractor={(transaction) => transaction.id}
-                  showsVerticalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={isRefetching}
-                      onRefresh={onRefresh}
-                      tintColor={theme.icon.branding.icon}
-                      colors={[theme.icon.branding.icon]}
-                      progressBackgroundColor={theme.background.surface}
-                    />
-                  }
-                  contentContainerStyle={{
-                    paddingTop: spacing.md,
-                    paddingBottom: spacing["2xl"],
+                <Card
+                  style={{
+                    flex: 1,
+                    paddingHorizontal: 0,
+                    paddingVertical: 0,
+                    overflow: "hidden",
                   }}
-                  renderItem={({ item }) => (
-                    <View
-                      style={{
-                        marginBottom: spacing.md,
-                      }}
-                    >
-                      <TransactionList transactions={[item]} />
-                    </View>
-                  )}
-                  onEndReached={loadMoreTransactions}
-                  onEndReachedThreshold={0.5}
-                  ListFooterComponent={
-                    <View
-                      style={{
-                        paddingVertical: spacing.lg,
-                        alignItems: "center",
-                      }}
-                    >
-                      {isLoadingMore ? (
-                        <>
-                          <ActivityIndicator
-                            size="small"
-                            color={theme.icon.branding.icon}
-                          />
+                >
+                  <FlatList
+                    data={filteredTransactions}
+                    keyExtractor={(transaction) => transaction.id}
+                    showsVerticalScrollIndicator={true}
+                    keyboardShouldPersistTaps="handled"
+                    refreshControl={
+                      <RefreshControl
+                        refreshing={isRefetching}
+                        onRefresh={onRefresh}
+                        tintColor={theme.icon.branding.icon}
+                        colors={[theme.icon.branding.icon]}
+                        progressBackgroundColor={theme.background.surface}
+                      />
+                    }
+                    renderItem={({ item }) => (
+                      <TransactionListItem transaction={item} />
+                    )}
+                    ItemSeparatorComponent={() => <Divider />}
+                    onEndReached={loadMoreTransactions}
+                    onEndReachedThreshold={0.5}
+                    contentContainerStyle={{
+                      paddingBottom: spacing["2xl"],
+                    }}
+                    ListFooterComponent={
+                      <View
+                        style={{
+                          paddingVertical: spacing.lg,
+                          alignItems: "center",
+                        }}
+                      >
+                        {isLoadingMore ? (
+                          <>
+                            <ActivityIndicator
+                              size="small"
+                              color={theme.icon.branding.icon}
+                            />
 
-                          <AppText
-                            variant="caption"
-                            color="secondary"
-                            style={{
-                              marginTop: spacing.xs,
-                            }}
-                          >
-                            Loading more transactions...
-                          </AppText>
-                        </>
-                      ) : !hasMoreTransactions ? (
-                        filteredTransactions.length > 0 && (
+                            <AppText
+                              variant="caption"
+                              color="secondary"
+                              style={{
+                                marginTop: spacing.xs,
+                              }}
+                            >
+                              Loading more transactions...
+                            </AppText>
+                          </>
+                        ) : !hasMoreTransactions &&
+                          filteredTransactions.length > 0 ? (
                           <AppText variant="caption" color="muted">
                             You've reached the end of your transactions.
                           </AppText>
-                        )
-                      ) : null}
-                    </View>
-                  }
-                />
+                        ) : null}
+                      </View>
+                    }
+                  />
+                </Card>
               )}
             </View>
           </View>

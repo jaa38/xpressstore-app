@@ -143,6 +143,8 @@ export const ROUTES = {
 
   CHANGE_PASSWORD: "/security/password",
 
+  BIOMETRIC_AUTHENTICATION: "/security/additional-security/biometric",
+
   NOTIFICATIONS: "/(tabs)/more/notifications",
 
   SETTINGS: "/(tabs)/more/settings",

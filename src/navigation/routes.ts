@@ -137,6 +137,12 @@ export const ROUTES = {
 
   SECURITY: "/(tabs)/more/security",
 
+  /**
+   * SECURITY
+   */
+
+  CHANGE_PASSWORD: "/security/password",
+
   NOTIFICATIONS: "/(tabs)/more/notifications",
 
   SETTINGS: "/(tabs)/more/settings",

@@ -944,7 +944,7 @@ export default function DiscountCodesScreen() {
                               <Ionicons
                                 name="chevron-forward"
                                 size={18}
-                                color={theme.text.link}
+                                color={theme.listItem.default.chevron}
                                 style={{
                                   marginLeft: "auto",
                                 }}

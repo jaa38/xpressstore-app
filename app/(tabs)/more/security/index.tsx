@@ -324,7 +324,7 @@ export default function SecurityScreen() {
               LOGIN ACTIVITY
           ================================================================ */}
 
-          <Card
+          {/* <Card
             style={{
               marginTop: spacing.md,
             }}
@@ -332,11 +332,7 @@ export default function SecurityScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="View login activity"
-              onPress={() => {
-                /**
-                 * Navigate to login activity screen.
-                 */
-              }}
+              onPress={() => {}}
               style={({ pressed }) => ({
                 flexDirection: "row",
                 alignItems: "center",
@@ -344,7 +340,6 @@ export default function SecurityScreen() {
                 opacity: pressed ? 0.7 : 1,
               })}
             >
-              {/* ICON */}
 
               <View
                 style={{
@@ -363,7 +358,6 @@ export default function SecurityScreen() {
                 />
               </View>
 
-              {/* CONTENT */}
 
               <View
                 style={{
@@ -378,7 +372,6 @@ export default function SecurityScreen() {
                 </AppText>
               </View>
 
-              {/* CHEVRON */}
 
               <Ionicons
                 name="chevron-forward"
@@ -386,7 +379,7 @@ export default function SecurityScreen() {
                 color={theme.listItem.default.chevron}
               />
             </Pressable>
-          </Card>
+          </Card> */}
         </ScrollView>
       </View>
     </SafeAreaView>

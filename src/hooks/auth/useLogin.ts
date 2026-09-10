@@ -12,51 +12,147 @@ import {
 
 import type { LoginRequest } from "@/types/auth";
 
+/**
+ * ============================================================================
+ * LOGIN MUTATION
+ * ============================================================================
+ *
+ * Handles the complete password login flow:
+ *
+ * 1. Call the Xpress Login API.
+ * 2. Validate the API response.
+ * 3. Map the API response into the application's session format.
+ * 4. Persist the access token.
+ * 5. Persist the refresh token.
+ * 6. Persist the authenticated user.
+ * 7. Return the authenticated session.
+ *
+ * The AuthProvider is responsible for updating the in-memory
+ * authentication state after this mutation succeeds.
+ */
+
 export function useLogin() {
   return useMutation({
-    mutationFn: async (payload: LoginRequest) => {
+    /**
+     * ==========================================================================
+     * LOGIN REQUEST
+     * ==========================================================================
+     */
+
+    mutationFn: async (
+      payload: LoginRequest
+    ) => {
       /**
-       * -----------------------------------------------------------------------
-       * Call Xpress Login API
-       * -----------------------------------------------------------------------
+       * ------------------------------------------------------------------------
+       * CALL XPRESS LOGIN API
+       * ------------------------------------------------------------------------
        */
-      const response = await authService.login(payload);
+
+      const response =
+        await authService.login(
+          payload
+        );
 
       /**
-       * -----------------------------------------------------------------------
-       * Validate API response
-       * -----------------------------------------------------------------------
+       * ------------------------------------------------------------------------
+       * VALIDATE API RESPONSE
+       * ------------------------------------------------------------------------
        *
        * Xpress can return a failed response with:
        *
        * responseCode: "10"
        * data: null
        *
-       * Do not attempt to map a failed response into an authenticated session.
+       * Do not attempt to map a failed response
+       * into an authenticated session.
        */
+
       if (!response.data) {
         throw new Error(
-          response.responseMessage || "Invalid email or password."
+          response.responseMessage ||
+            "Invalid email or password."
         );
       }
 
       /**
-       * -----------------------------------------------------------------------
-       * Map successful API response
-       * -----------------------------------------------------------------------
+       * ------------------------------------------------------------------------
+       * MAP SUCCESSFUL API RESPONSE
+       * ------------------------------------------------------------------------
+       *
+       * Convert the API response into the application's
+       * standard authenticated session format.
        */
-      const session = mapLoginResponse(response.data);
+
+      const session =
+        mapLoginResponse(
+          response.data
+        );
 
       /**
-       * -----------------------------------------------------------------------
-       * Persist authentication session
-       * -----------------------------------------------------------------------
+       * ------------------------------------------------------------------------
+       * VALIDATE SESSION
+       * ------------------------------------------------------------------------
+       *
+       * Ensure the login response produced the values
+       * required to restore the authenticated session.
        */
-      await saveAccessToken(session.accessToken);
 
-      await saveRefreshToken(session.refreshToken);
+      if (!session.accessToken) {
+        throw new Error(
+          "Login succeeded but no access token was returned."
+        );
+      }
 
-      await saveCurrentUser(session.user);
+      if (!session.refreshToken) {
+        throw new Error(
+          "Login succeeded but no refresh token was returned."
+        );
+      }
+
+      if (!session.user) {
+        throw new Error(
+          "Login succeeded but no user information was returned."
+        );
+      }
+
+      /**
+       * ------------------------------------------------------------------------
+       * PERSIST ACCESS TOKEN
+       * ------------------------------------------------------------------------
+       */
+
+      await saveAccessToken(
+        session.accessToken
+      );
+
+      /**
+       * ------------------------------------------------------------------------
+       * PERSIST REFRESH TOKEN
+       * ------------------------------------------------------------------------
+       */
+
+      await saveRefreshToken(
+        session.refreshToken
+      );
+
+      /**
+       * ------------------------------------------------------------------------
+       * PERSIST AUTHENTICATED USER
+       * ------------------------------------------------------------------------
+       */
+
+      await saveCurrentUser(
+        session.user
+      );
+
+      /**
+       * ------------------------------------------------------------------------
+       * RETURN AUTHENTICATED SESSION
+       * ------------------------------------------------------------------------
+       *
+       * The LoginScreen will update AuthProvider
+       * using session.user after this mutation succeeds.
+       */
 
       return session;
     },

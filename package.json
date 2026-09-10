@@ -27,6 +27,7 @@
     "base64-arraybuffer": "^1.0.2",
     "buffer": "^6.0.3",
     "expo": "^57.0.21",
+    "expo-build-properties": "~57.0.17",
     "expo-clipboard": "~57.0.1",
     "expo-constants": "~57.0.17",
     "expo-crypto": "~57.0.2",

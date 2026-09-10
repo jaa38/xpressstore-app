@@ -34,10 +34,20 @@
       "expo-secure-store",
       "expo-sqlite",
       "expo-sharing",
+
       [
         "expo-local-authentication",
         {
           "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID"
+        }
+      ],
+
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "usePrecompiledModules": false
+          }
         }
       ]
     ]

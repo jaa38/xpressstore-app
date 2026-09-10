@@ -1,6 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { Alert, Pressable, ScrollView, Switch, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  Switch,
+  View,
+} from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -10,9 +17,32 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { router } from "expo-router";
 
+import {
+  authenticateWithBiometrics,
+  BiometricAvailability,
+  BiometricType,
+  getBiometricAvailability,
+} from "@/services/biometrics";
+
+import {
+  disableBiometrics,
+  enableBiometrics,
+  isBiometricsEnabled,
+} from "@/services/biometrics/storage";
+
+import { saveBiometricEmail } from "@/services/biometrics/user";
+
+import { getAccessToken, getCurrentUser } from "@/storage/authStorage";
+
+import { useAuth } from "@/providers/AuthProvider";
+
+import { AuthUser } from "@/types/auth";
+
 import { AppText } from "@/components/ui/AppText";
 
 import { Card } from "@/components/ui/Card";
+
+import { Divider } from "@/components/ui/Divider";
 
 import { spacing, theme, radius } from "@/theme";
 
@@ -24,49 +54,285 @@ import { spacing, theme, radius } from "@/theme";
 
 export default function BiometricAuthenticationScreen() {
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
+   * AUTH
+   * ==========================================================================
+   */
+
+  const { user } = useAuth();
+
+  /**
+   * ==========================================================================
    * STATE
-   * --------------------------------------------------------------------------
-   *
-   * This is currently local UI state.
-   *
-   * When biometric authentication is connected to the application security
-   * service, replace this with persisted user settings.
+   * ==========================================================================
    */
 
   const [biometricEnabled, setBiometricEnabled] = useState(false);
 
+  const [availability, setAvailability] =
+    useState<BiometricAvailability | null>(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
   /**
-   * --------------------------------------------------------------------------
-   * BIOMETRIC TOGGLE
-   * --------------------------------------------------------------------------
+   * ==========================================================================
+   * LOAD SETTINGS
+   * ==========================================================================
    */
 
-  function handleBiometricToggle(value: boolean) {
+  useEffect(() => {
+    void loadBiometricSettings();
+  }, []);
+
+  async function loadBiometricSettings() {
+    try {
+      setIsLoading(true);
+
+      const [biometricAvailability, enabled] = await Promise.all([
+        getBiometricAvailability(),
+
+        isBiometricsEnabled(),
+      ]);
+
+      /**
+       * ----------------------------------------------------------------------
+       * SAVE DEVICE AVAILABILITY
+       * ----------------------------------------------------------------------
+       */
+
+      setAvailability(biometricAvailability);
+
+      /**
+       * ----------------------------------------------------------------------
+       * BIOMETRIC STATUS
+       * ----------------------------------------------------------------------
+       *
+       * Do not display biometrics as enabled when the
+       * device no longer supports biometrics or no
+       * biometric method is enrolled.
+       */
+
+      setBiometricEnabled(biometricAvailability.available && enabled);
+    } catch (error) {
+      console.error("Unable to load biometric settings:", error);
+
+      setBiometricEnabled(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  /**
+   * ==========================================================================
+   * BIOMETRIC NAME
+   * ==========================================================================
+   */
+
+  function getBiometricName(type: BiometricType) {
+    switch (type) {
+      case "face":
+        return "Face ID";
+
+      case "fingerprint":
+        return "Fingerprint";
+
+      case "iris":
+        return "Iris Recognition";
+
+      case "biometric":
+        return "Biometrics";
+
+      default:
+        return "Biometric Authentication";
+    }
+  }
+
+  /**
+   * ==========================================================================
+   * BIOMETRIC ICON
+   * ==========================================================================
+   */
+
+  function getBiometricIcon() {
+    switch (availability?.type) {
+      case "face":
+        return "scan-circle-outline";
+
+      case "iris":
+        return "eye-outline";
+
+      case "fingerprint":
+      case "biometric":
+      default:
+        return "finger-print-outline";
+    }
+  }
+
+  /**
+   * ==========================================================================
+   * CURRENT BIOMETRIC NAME
+   * ==========================================================================
+   */
+
+  const biometricName = getBiometricName(availability?.type ?? "none");
+
+  /**
+   * ==========================================================================
+   * BIOMETRIC TOGGLE
+   * ==========================================================================
+   */
+
+  async function handleBiometricToggle(value: boolean) {
     /**
-     * In production:
-     *
-     * 1. Check whether biometric authentication is supported.
-     * 2. Check whether biometrics are enrolled on the device.
-     * 3. Request biometric authentication.
-     * 4. Persist the user's biometric preference.
-     *
-     * For now, this controls the UI state.
+     * ------------------------------------------------------------------------
+     * PREVENT MULTIPLE REQUESTS
+     * ------------------------------------------------------------------------
+     */
+
+    if (isAuthenticating || isLoading) {
+      return;
+    }
+
+    /**
+     * ========================================================================
+     * ENABLE BIOMETRICS
+     * ========================================================================
      */
 
     if (value) {
+      /**
+       * ----------------------------------------------------------------------
+       * BIOMETRICS UNAVAILABLE
+       * ----------------------------------------------------------------------
+       */
+
+      if (!availability?.available) {
+        Alert.alert(
+          "Biometrics Unavailable",
+          availability?.message ??
+            "Biometric authentication is not available on this device."
+        );
+
+        return;
+      }
+
+      /**
+       * ----------------------------------------------------------------------
+       * CONFIRM ENABLE
+       * ----------------------------------------------------------------------
+       */
+
       Alert.alert(
-        "Enable Biometric Authentication",
-        "You will be able to use Face ID, Touch ID, or fingerprint authentication to access your XpressStore account.",
+        `Enable ${biometricName}`,
+        `You will be able to use ${biometricName} to securely access your XpressStore account.`,
         [
           {
             text: "Cancel",
+
             style: "cancel",
           },
+
           {
             text: "Enable",
-            onPress: () => {
-              setBiometricEnabled(true);
+
+            onPress: async () => {
+              try {
+                setIsAuthenticating(true);
+
+                /**
+                 * ============================================================
+                 * VERIFY STORED SESSION
+                 * ============================================================
+                 */
+
+                const [token, storedUser] = await Promise.all([
+                  getAccessToken(),
+
+                  getCurrentUser<AuthUser>(),
+                ]);
+
+                /**
+                 * ------------------------------------------------------------
+                 * SESSION UNAVAILABLE
+                 * ------------------------------------------------------------
+                 */
+
+                if (!token || !storedUser) {
+                  Alert.alert(
+                    "Session Unavailable",
+                    "Please sign in again before enabling biometric authentication."
+                  );
+
+                  return;
+                }
+
+                /**
+                 * ============================================================
+                 * VERIFY BIOMETRIC IDENTITY
+                 * ============================================================
+                 */
+
+                const result = await authenticateWithBiometrics({
+                  promptMessage: `Confirm to enable ${biometricName}`,
+                });
+
+                /**
+                 * ------------------------------------------------------------
+                 * AUTHENTICATION FAILED
+                 * ------------------------------------------------------------
+                 */
+
+                if (!result.success) {
+                  if (result.message !== "Authentication cancelled.") {
+                    Alert.alert("Authentication Failed", result.message);
+                  }
+
+                  return;
+                }
+
+                /**
+                 * ============================================================
+                 * SAVE BIOMETRIC PREFERENCE
+                 * ============================================================
+                 */
+
+                await enableBiometrics();
+
+                /**
+                 * ============================================================
+                 * SAVE BIOMETRIC ACCOUNT EMAIL
+                 * ============================================================
+                 */
+
+                await saveBiometricEmail(user?.email ?? storedUser.email);
+
+                /**
+                 * ============================================================
+                 * UPDATE UI
+                 * ============================================================
+                 */
+
+                setBiometricEnabled(true);
+
+                /**
+                 * ============================================================
+                 * SUCCESS
+                 * ============================================================
+                 */
+
+                Alert.alert(
+                  `${biometricName} Enabled`,
+                  `You can now use ${biometricName} to sign in to XpressStore.`
+                );
+              } catch (error) {
+                console.error("Unable to enable biometrics:", error);
+
+                Alert.alert("Unable to Enable Biometrics", "Please try again.");
+              } finally {
+                setIsAuthenticating(false);
+              }
             },
           },
         ]
@@ -75,19 +341,46 @@ export default function BiometricAuthenticationScreen() {
       return;
     }
 
+    /**
+     * ========================================================================
+     * DISABLE BIOMETRICS
+     * ========================================================================
+     */
+
     Alert.alert(
       "Disable Biometric Authentication",
-      "You will need to use your password to access your XpressStore account.",
+      "You will need to use your email and password to sign in to XpressStore.",
       [
         {
           text: "Cancel",
+
           style: "cancel",
         },
+
         {
           text: "Disable",
+
           style: "destructive",
-          onPress: () => {
-            setBiometricEnabled(false);
+
+          onPress: async () => {
+            try {
+              setIsAuthenticating(true);
+
+              await disableBiometrics();
+
+              setBiometricEnabled(false);
+
+              Alert.alert(
+                "Biometric Authentication Disabled",
+                "You will now use your email and password to sign in."
+              );
+            } catch (error) {
+              console.error("Unable to disable biometrics:", error);
+
+              Alert.alert("Unable to Disable Biometrics", "Please try again.");
+            } finally {
+              setIsAuthenticating(false);
+            }
           },
         },
       ]
@@ -95,15 +388,16 @@ export default function BiometricAuthenticationScreen() {
   }
 
   /**
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    * SCREEN
-   * --------------------------------------------------------------------------
+   * ==========================================================================
    */
 
   return (
     <SafeAreaView
       style={{
         flex: 1,
+
         backgroundColor: theme.background.primary,
       }}
     >
@@ -112,33 +406,36 @@ export default function BiometricAuthenticationScreen() {
       <View
         style={{
           flex: 1,
+
           paddingHorizontal: spacing.lg,
         }}
       >
-        {/* ==================================================================
+        {/* ================================================================
             HEADER
-        ================================================================== */}
+        ================================================================ */}
 
         <View
           style={{
             flexDirection: "row",
+
             alignItems: "center",
+
             gap: spacing.md,
           }}
         >
-          {/* ================================================================
-              BACK BUTTON
-          ================================================================ */}
-
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Go back"
             onPress={() => router.back()}
             style={({ pressed }) => ({
               width: 44,
+
               height: 44,
+
               justifyContent: "center",
+
               alignItems: "center",
+
               opacity: pressed ? 0.6 : 1,
             })}
           >
@@ -149,13 +446,10 @@ export default function BiometricAuthenticationScreen() {
             />
           </Pressable>
 
-          {/* ================================================================
-              TITLE
-          ================================================================ */}
-
           <View
             style={{
               flex: 1,
+
               gap: spacing.xs,
             }}
           >
@@ -167,9 +461,9 @@ export default function BiometricAuthenticationScreen() {
           </View>
         </View>
 
-        {/* ==================================================================
+        {/* ================================================================
             CONTENT
-        ================================================================== */}
+        ================================================================ */}
 
         <ScrollView
           style={{
@@ -177,13 +471,14 @@ export default function BiometricAuthenticationScreen() {
           }}
           contentContainerStyle={{
             paddingTop: spacing.lg,
+
             paddingBottom: spacing.xl,
           }}
           showsVerticalScrollIndicator={false}
         >
-          {/* ================================================================
+          {/* ============================================================
               BIOMETRIC STATUS
-          ================================================================ */}
+          ============================================================ */}
 
           <Card
             style={{
@@ -203,19 +498,22 @@ export default function BiometricAuthenticationScreen() {
             <View
               style={{
                 flexDirection: "row",
+
                 alignItems: "center",
+
                 gap: spacing.md,
               }}
             >
-              {/* ICON */}
-
               <View
                 style={{
                   width: 48,
+
                   height: 48,
+
                   borderRadius: radius.full,
 
                   justifyContent: "center",
+
                   alignItems: "center",
 
                   backgroundColor: biometricEnabled
@@ -227,7 +525,7 @@ export default function BiometricAuthenticationScreen() {
                   name={
                     biometricEnabled
                       ? "shield-checkmark-outline"
-                      : "finger-print-outline"
+                      : getBiometricIcon()
                   }
                   size={26}
                   color={
@@ -238,39 +536,48 @@ export default function BiometricAuthenticationScreen() {
                 />
               </View>
 
-              {/* CONTENT */}
-
               <View
                 style={{
                   flex: 1,
+
                   gap: spacing.xs,
                 }}
               >
                 <AppText variant="bodyLargeBold">
-                  {biometricEnabled
-                    ? "Biometric authentication is enabled"
-                    : "Biometric authentication is not enabled"}
+                  {isLoading
+                    ? "Checking biometric availability..."
+                    : biometricEnabled
+                      ? `${biometricName} is enabled`
+                      : availability?.available
+                        ? `${biometricName} is available`
+                        : "Biometric authentication is unavailable"}
                 </AppText>
 
                 <AppText
                   variant="bodySmall"
                   color={biometricEnabled ? "success" : "muted"}
                 >
-                  {biometricEnabled
-                    ? "You can use your device's biometric security to access your account."
-                    : "Use Face ID, Touch ID, or fingerprint authentication for faster and more secure access."}
+                  {isLoading
+                    ? "Checking your device security settings."
+                    : biometricEnabled
+                      ? `You can use ${biometricName} to securely access your account.`
+                      : availability?.available
+                        ? `Enable ${biometricName} for faster and more secure access.`
+                        : (availability?.message ??
+                          "Biometric authentication is not available on this device.")}
                 </AppText>
               </View>
             </View>
           </Card>
 
-          {/* ================================================================
+          {/* ============================================================
               BIOMETRIC AUTHENTICATION
-          ================================================================ */}
+          ============================================================ */}
 
           <View
             style={{
               marginTop: spacing.xl,
+
               gap: spacing.xs,
             }}
           >
@@ -282,9 +589,9 @@ export default function BiometricAuthenticationScreen() {
             </AppText>
           </View>
 
-          {/* ================================================================
+          {/* ============================================================
               ENABLE BIOMETRICS
-          ================================================================ */}
+          ============================================================ */}
 
           <Card
             style={{
@@ -294,7 +601,9 @@ export default function BiometricAuthenticationScreen() {
             <View
               style={{
                 flexDirection: "row",
+
                 alignItems: "center",
+
                 gap: spacing.md,
               }}
             >
@@ -303,224 +612,81 @@ export default function BiometricAuthenticationScreen() {
               <View
                 style={{
                   width: 44,
+
                   height: 44,
+
                   borderRadius: radius.full,
 
                   justifyContent: "center",
+
                   alignItems: "center",
 
                   backgroundColor: theme.icon.branding.background,
                 }}
               >
                 <Ionicons
-                  name="finger-print-outline"
+                  name={getBiometricIcon()}
                   size={24}
                   color={theme.icon.branding.icon}
                 />
               </View>
 
-              {/* CONTENT */}
+              {/* TEXT */}
 
               <View
                 style={{
                   flex: 1,
+
                   gap: spacing.xs,
                 }}
               >
-                <AppText variant="bodyBold">Use Biometrics</AppText>
+                <AppText variant="bodyBold">Use {biometricName}</AppText>
 
                 <AppText variant="bodySmall" color="muted">
-                  Use Face ID, Touch ID, or fingerprint authentication.
+                  {availability?.available
+                    ? `Use ${biometricName} to securely access your account.`
+                    : (availability?.message ??
+                      "Biometric authentication is not available on this device.")}
                 </AppText>
               </View>
 
               {/* SWITCH */}
 
-              <Switch
-                accessibilityRole="switch"
-                accessibilityLabel="Use biometric authentication"
-                accessibilityState={{
-                  checked: biometricEnabled,
-                }}
-                value={biometricEnabled}
-                onValueChange={handleBiometricToggle}
-              />
-            </View>
-          </Card>
-
-          {/* ================================================================
-              HOW IT WORKS
-          ================================================================ */}
-
-          <View
-            style={{
-              marginTop: spacing.xl,
-              gap: spacing.xs,
-            }}
-          >
-            <AppText variant="bodyLargeBold">How it works</AppText>
-
-            <AppText variant="bodySmall" color="muted">
-              Biometric authentication uses the security features already
-              configured on your device.
-            </AppText>
-          </View>
-
-          {/* ================================================================
-              SECURITY INFORMATION
-          ================================================================ */}
-
-          <Card
-            style={{
-              marginTop: spacing.md,
-            }}
-          >
-            <View
-              style={{
-                gap: spacing.lg,
-              }}
-            >
-              {/* ------------------------------------------------------------
-                  ITEM 1
-              ------------------------------------------------------------ */}
-
               <View
                 style={{
-                  flexDirection: "row",
-                  gap: spacing.md,
+                  justifyContent: "center",
+
+                  alignItems: "center",
+
+                  alignSelf: "stretch",
                 }}
               >
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: radius.full,
-
-                    justifyContent: "center",
-                    alignItems: "center",
-
-                    backgroundColor: theme.icon.default.background,
-                  }}
-                >
-                  <Ionicons
-                    name="phone-portrait-outline"
-                    size={18}
-                    color={theme.icon.default.icon}
+                {isLoading ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.action.primary.background}
                   />
-                </View>
+                ) : (
+                  <Switch
+                    accessibilityRole="switch"
+                    accessibilityLabel={`Use ${biometricName}`}
+                    accessibilityState={{
+                      checked: biometricEnabled,
 
-                <View
-                  style={{
-                    flex: 1,
-                    gap: spacing.xs,
-                  }}
-                >
-                  <AppText variant="bodyBold">Uses your device</AppText>
-
-                  <AppText variant="bodySmall" color="muted">
-                    Your biometric information is managed securely by your
-                    device and operating system.
-                  </AppText>
-                </View>
-              </View>
-
-              {/* ------------------------------------------------------------
-                  ITEM 2
-              ------------------------------------------------------------ */}
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: spacing.md,
-                }}
-              >
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: radius.full,
-
-                    justifyContent: "center",
-                    alignItems: "center",
-
-                    backgroundColor: theme.icon.default.background,
-                  }}
-                >
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={18}
-                    color={theme.icon.default.icon}
+                      disabled: !availability?.available || isAuthenticating,
+                    }}
+                    value={biometricEnabled}
+                    disabled={!availability?.available || isAuthenticating}
+                    onValueChange={handleBiometricToggle}
                   />
-                </View>
-
-                <View
-                  style={{
-                    flex: 1,
-                    gap: spacing.xs,
-                  }}
-                >
-                  <AppText variant="bodyBold">
-                    Your biometric data stays private
-                  </AppText>
-
-                  <AppText variant="bodySmall" color="muted">
-                    XpressStore does not store your fingerprint or facial
-                    biometric information.
-                  </AppText>
-                </View>
-              </View>
-
-              {/* ------------------------------------------------------------
-                  ITEM 3
-              ------------------------------------------------------------ */}
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: spacing.md,
-                }}
-              >
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: radius.full,
-
-                    justifyContent: "center",
-                    alignItems: "center",
-
-                    backgroundColor: theme.icon.default.background,
-                  }}
-                >
-                  <Ionicons
-                    name="key-outline"
-                    size={18}
-                    color={theme.icon.default.icon}
-                  />
-                </View>
-
-                <View
-                  style={{
-                    flex: 1,
-                    gap: spacing.xs,
-                  }}
-                >
-                  <AppText variant="bodyBold">
-                    Your password is still required
-                  </AppText>
-
-                  <AppText variant="bodySmall" color="muted">
-                    You may still be asked to enter your password for important
-                    security actions.
-                  </AppText>
-                </View>
+                )}
               </View>
             </View>
           </Card>
 
-          {/* ================================================================
+          {/* ============================================================
               DEVICE SUPPORT NOTICE
-          ================================================================ */}
+          ============================================================ */}
 
           <Card
             style={{
@@ -534,7 +700,9 @@ export default function BiometricAuthenticationScreen() {
             <View
               style={{
                 flexDirection: "row",
+
                 alignItems: "flex-start",
+
                 gap: spacing.md,
               }}
             >
@@ -547,6 +715,7 @@ export default function BiometricAuthenticationScreen() {
               <View
                 style={{
                   flex: 1,
+
                   gap: spacing.xs,
                 }}
               >

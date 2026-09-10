@@ -18,6 +18,8 @@ type DividerVariant =
   | "strong"
   | "dashed";
 
+
+
 interface DividerProps {
   orientation?: DividerOrientation;
 

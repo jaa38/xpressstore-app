@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Pressable, View, Alert } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 
 import { Link, router } from "expo-router";
 
@@ -18,9 +18,23 @@ import { useAuth } from "@/providers/AuthProvider";
 
 import { LoginSchema, loginSchema } from "@/schemas/login-schema";
 
-import { authenticateWithBiometrics } from "@/services/biometrics";
+import {
+  authenticateWithBiometrics,
+  BiometricAvailability,
+  BiometricType,
+  getBiometricAvailability,
+} from "@/services/biometrics";
 
-import { isBiometricsEnabled } from "@/services/biometrics/storage";
+import {
+  disableBiometrics,
+  isBiometricsEnabled,
+} from "@/services/biometrics/storage";
+
+import {
+  clearBiometricEmail,
+  getBiometricEmail,
+  saveBiometricEmail,
+} from "@/services/biometrics/user";
 
 import { AppText } from "@/components/ui/AppText";
 
@@ -32,11 +46,7 @@ import { spacing, theme } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { getAccessToken } from "@/storage/authStorage";
-
-import { getBiometricEmail } from "@/services/biometrics/user";
-
-import { saveBiometricEmail } from "@/services/biometrics/user";
+import { getAccessToken, getCurrentUser } from "@/storage/authStorage";
 
 import { useLogin } from "@/hooks/auth/useLogin";
 
@@ -44,94 +54,263 @@ import { getApiErrorMessage } from "@/api/errors";
 
 import { AuthUser } from "@/types/auth";
 
-import { getCurrentUser } from "@/storage/authStorage";
+/**
+ * ============================================================================
+ * LOGIN SCREEN
+ * ============================================================================
+ */
 
 export default function LoginScreen() {
+  /**
+   * ==========================================================================
+   * STATE
+   * ==========================================================================
+   */
+
   const [showPassword, setShowPassword] = useState(false);
 
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
 
-  const [loadingBiometric, setLoadingBiometric] = useState(false);
+  const [biometricAvailability, setBiometricAvailability] =
+    useState<BiometricAvailability | null>(null);
 
-  const { login: loginUser } = useAuth();
+  const [loadingBiometric, setLoadingBiometric] = useState(false);
 
   const [biometricEmail, setBiometricEmail] = useState("");
 
+  /**
+   * ==========================================================================
+   * AUTH
+   * ==========================================================================
+   */
+
+  const { login: loginUser } = useAuth();
+
   const loginMutation = useLogin();
 
+  /**
+   * ==========================================================================
+   * LOAD BIOMETRIC SETTINGS
+   * ==========================================================================
+   */
+
   useEffect(() => {
-    checkBiometrics();
+    void checkBiometrics();
   }, []);
 
   async function checkBiometrics() {
-    const enabled = await isBiometricsEnabled();
+    try {
+      const [enabled, availability, email, token, user] = await Promise.all([
+        isBiometricsEnabled(),
 
-    setBiometricsEnabled(enabled);
+        getBiometricAvailability(),
 
-    const email = await getBiometricEmail();
+        getBiometricEmail(),
 
-    if (email) {
-      setBiometricEmail(email);
+        getAccessToken(),
+
+        getCurrentUser<AuthUser>(),
+      ]);
+
+      setBiometricAvailability(availability);
+
+      /**
+       * Biometrics should only be shown when:
+       *
+       * 1. The user enabled biometrics.
+       * 2. Biometrics are available on the device.
+       * 3. A biometric email exists.
+       * 4. A valid stored authentication session exists.
+       */
+
+      const hasValidSession = !!token && !!user;
+
+      const shouldShowBiometrics =
+        enabled && availability.available && !!email && hasValidSession;
+
+      /**
+       * If biometric settings exist but the
+       * authentication session no longer exists,
+       * remove the stale biometric configuration.
+       */
+
+      if (enabled && email && !hasValidSession) {
+        console.log("LOGIN → STALE BIOMETRIC SESSION DETECTED");
+
+        await Promise.all([disableBiometrics(), clearBiometricEmail()]);
+      }
+
+      setBiometricsEnabled(shouldShowBiometrics);
+
+      if (shouldShowBiometrics && email) {
+        setBiometricEmail(email);
+      } else {
+        setBiometricEmail("");
+      }
+    } catch (error) {
+      console.error("Unable to check biometric settings:", error);
+
+      setBiometricsEnabled(false);
+
+      setBiometricEmail("");
     }
   }
 
+  /**
+   * ==========================================================================
+   * BIOMETRIC TYPE
+   * ==========================================================================
+   */
+
+  const biometricType: BiometricType | "none" =
+    biometricAvailability?.type ?? "none";
+
+  /**
+   * ==========================================================================
+   * BIOMETRIC NAME
+   * ==========================================================================
+   */
+
+  function getBiometricName() {
+    switch (biometricType) {
+      case "face":
+        return "Face ID";
+
+      case "fingerprint":
+        return "Fingerprint";
+
+      case "iris":
+        return "Iris Recognition";
+
+      case "biometric":
+        return "Biometrics";
+
+      default:
+        return "Biometrics";
+    }
+  }
+
+  /**
+   * ==========================================================================
+   * BIOMETRIC ICON
+   * ==========================================================================
+   */
+
+  function getBiometricIcon() {
+    switch (biometricType) {
+      case "face":
+        return "scan-circle-outline";
+
+      case "iris":
+        return "eye-outline";
+
+      case "fingerprint":
+      case "biometric":
+      default:
+        return "finger-print-outline";
+    }
+  }
+
+  /**
+   * ==========================================================================
+   * BIOMETRIC LOGIN
+   * ==========================================================================
+   */
+
   async function handleBiometricLogin() {
+    if (loadingBiometric) {
+      return;
+    }
+
     try {
       setLoadingBiometric(true);
 
-      console.log("=================================");
-      console.log("BIOMETRIC LOGIN");
-      console.log("STEP 1: Authenticating biometrics");
-      console.log("=================================");
+      /**
+       * ----------------------------------------------------------------------
+       * AUTHENTICATE
+       * ----------------------------------------------------------------------
+       */
 
-      const result = await authenticateWithBiometrics();
+      const result = await authenticateWithBiometrics({
+        promptMessage: "Sign in to XpressStore",
+      });
 
-      console.log("BIOMETRIC RESULT:", JSON.stringify(result));
+      /**
+       * ----------------------------------------------------------------------
+       * AUTHENTICATION FAILED
+       * ----------------------------------------------------------------------
+       */
 
       if (!result.success) {
+        if (result.message !== "Authentication cancelled.") {
+          Alert.alert("Authentication Failed", result.message);
+        }
+
         return;
       }
 
-      console.log("=================================");
-      console.log("BIOMETRIC LOGIN");
-      console.log("STEP 2: Reading stored session");
-      console.log("=================================");
+      /**
+       * ----------------------------------------------------------------------
+       * RESTORE STORED SESSION
+       * ----------------------------------------------------------------------
+       */
 
-      const token = await getAccessToken();
+      const [token, user] = await Promise.all([
+        getAccessToken(),
 
-      const user = await getCurrentUser<AuthUser>();
+        getCurrentUser<AuthUser>(),
+      ]);
 
-      const email = await getBiometricEmail();
-
-      console.log("BIOMETRIC EMAIL:", email);
-      console.log("HAS ACCESS TOKEN:", !!token);
-      console.log("HAS USER:", !!user);
+      /**
+       * ----------------------------------------------------------------------
+       * SESSION NOT AVAILABLE
+       * ----------------------------------------------------------------------
+       *
+       * The biometric configuration may remain
+       * after the authentication session has been
+       * cleared.
+       *
+       * Remove the stale biometric configuration
+       * so Face ID is not shown again.
+       */
 
       if (!token || !user) {
+        console.log("BIOMETRIC LOGIN → SESSION NOT AVAILABLE");
+
+        await Promise.all([disableBiometrics(), clearBiometricEmail()]);
+
+        setBiometricsEnabled(false);
+
+        setBiometricEmail("");
+
         Alert.alert(
           "Session Expired",
-          "Please sign in with your email and password."
+          "Your previous session is no longer available. Please sign in with your email and password."
         );
 
         return;
       }
 
       /**
-       * Restore the locally stored authenticated user.
+       * ----------------------------------------------------------------------
+       * RESTORE AUTH USER
+       * ----------------------------------------------------------------------
        */
+
       await loginUser(user);
 
-      console.log("=================================");
-      console.log("BIOMETRIC LOGIN");
-      console.log("STEP 3: Session restored");
-      console.log("=================================");
+      /**
+       * ----------------------------------------------------------------------
+       * NAVIGATE INTO APP
+       * ----------------------------------------------------------------------
+       */
 
       router.replace(ROUTES.TABS);
     } catch (error) {
       console.error("Biometric login failed:", error);
 
       Alert.alert(
-        "Unable to sign in",
+        "Unable to Sign In",
         "Please sign in with your email and password."
       );
     } finally {
@@ -139,9 +318,17 @@ export default function LoginScreen() {
     }
   }
 
+  /**
+   * ==========================================================================
+   * FORM
+   * ==========================================================================
+   */
+
   const {
     control,
+
     handleSubmit,
+
     formState: { errors, isValid },
   } = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -149,19 +336,16 @@ export default function LoginScreen() {
     mode: "onChange",
 
     defaultValues: {
-      /**
-       * -----------------------------------------------------------------------
-       * TEST LOGIN CREDENTIALS
-       * -----------------------------------------------------------------------
-       *
-       * Replace these with a real XpressStore test account if one has been
-       * provided by the backend/API team.
-       */
       email: "",
-
       password: "",
     },
   });
+
+  /**
+   * ==========================================================================
+   * PASSWORD LOGIN
+   * ==========================================================================
+   */
 
   async function onSubmit(data: LoginSchema) {
     try {
@@ -171,9 +355,27 @@ export default function LoginScreen() {
         password: data.password,
       });
 
+      /**
+       * ----------------------------------------------------------------------
+       * SAVE BIOMETRIC DISPLAY EMAIL
+       * ----------------------------------------------------------------------
+       */
+
       await saveBiometricEmail(data.email);
 
+      /**
+       * ----------------------------------------------------------------------
+       * UPDATE AUTH CONTEXT
+       * ----------------------------------------------------------------------
+       */
+
       await loginUser(session.user);
+
+      /**
+       * ----------------------------------------------------------------------
+       * NAVIGATE INTO APP
+       * ----------------------------------------------------------------------
+       */
 
       router.replace(ROUTES.TABS);
     } catch (error) {
@@ -181,11 +383,16 @@ export default function LoginScreen() {
     }
   }
 
+  /**
+   * ==========================================================================
+   * SCREEN
+   * ==========================================================================
+   */
+
   return (
     <SafeAreaView
       style={{
         flex: 1,
-
         backgroundColor: theme.background.primary,
       }}
     >
@@ -194,22 +401,16 @@ export default function LoginScreen() {
       <View
         style={{
           flex: 1,
-
           paddingHorizontal: spacing.lg,
         }}
       >
         <View
           style={{
             flex: 1,
-
             justifyContent: "space-between",
           }}
         >
-          {/* TOP SECTION */}
-
           <View>
-            {/* HEADER */}
-
             <View
               style={{
                 marginTop: spacing.lg,
@@ -231,8 +432,6 @@ export default function LoginScreen() {
                 </AppText>
               </View>
 
-              {/* FACE ID */}
-
               {biometricsEnabled && (
                 <>
                   <View
@@ -249,13 +448,13 @@ export default function LoginScreen() {
                     }}
                   >
                     <Ionicons
-                      name="scan-circle-outline"
+                      name={getBiometricIcon()}
                       size={72}
                       color={theme.icon.success.icon}
                     />
 
                     <AppText variant="body" color="strong" align="center">
-                      Continue securely with Face ID
+                      Continue securely with {getBiometricName()}
                     </AppText>
 
                     {biometricEmail && (
@@ -272,7 +471,7 @@ export default function LoginScreen() {
                       title={
                         loadingBiometric
                           ? "Verifying..."
-                          : "Continue with Face ID"
+                          : `Continue with ${getBiometricName()}`
                       }
                       variant="primary"
                       size="large"
@@ -280,8 +479,6 @@ export default function LoginScreen() {
                       onPress={handleBiometricLogin}
                     />
                   </View>
-
-                  {/* DIVIDER */}
 
                   <View
                     style={{
@@ -319,8 +516,6 @@ export default function LoginScreen() {
                 </>
               )}
 
-              {/* EMAIL */}
-
               <Controller
                 control={control}
                 name="email"
@@ -337,8 +532,6 @@ export default function LoginScreen() {
                 )}
               />
 
-              {/* PASSWORD */}
-
               <Controller
                 control={control}
                 name="password"
@@ -353,7 +546,11 @@ export default function LoginScreen() {
                       error={errors.password?.message}
                       rightIcon={
                         <Pressable
-                          onPress={() => setShowPassword(!showPassword)}
+                          accessibilityRole="button"
+                          accessibilityLabel={
+                            showPassword ? "Hide password" : "Show password"
+                          }
+                          onPress={() => setShowPassword((current) => !current)}
                         >
                           <Ionicons
                             name={
@@ -367,6 +564,8 @@ export default function LoginScreen() {
                     />
 
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Forgot password"
                       onPress={() => router.push(ROUTES.FORGOT_PASSWORD)}
                       style={{
                         alignSelf: "flex-end",
@@ -389,8 +588,6 @@ export default function LoginScreen() {
               />
             </View>
           </View>
-
-          {/* BOTTOM */}
 
           <View
             style={{

@@ -12,26 +12,45 @@ import { useOnboardingStore } from "@/store/onboarding/onboardingStore";
 
 import { AuthUser } from "@/types/auth";
 
-import { authenticateWithBiometrics } from "@/services/biometrics";
+import { DEV_SESSION, DEV_SESSION_ENABLED } from "@/config/dev-session.local";
 
-import { isBiometricsEnabled } from "@/services/biometrics/storage";
-
-import { DEV_SESSION } from "@/config/dev-session.local";
+/**
+ * ============================================================================
+ * AUTH CONTEXT
+ * ============================================================================
+ */
 
 interface AuthContextValue {
+  /**
+   * Whether an authenticated user is currently available.
+   */
   isAuthenticated: boolean;
 
+  /**
+   * Whether the initial SecureStore session check
+   * is still running.
+   */
   isLoading: boolean;
 
+  /**
+   * Whether a previously authenticated session exists locally.
+   *
+   * This does NOT mean the user is currently authenticated.
+   */
+  hasStoredSession: boolean;
+
+  /**
+   * Current authenticated user.
+   */
   user: AuthUser | null;
 
   /**
-   * Authenticate the current user.
+   * Authenticate the current user in application state.
    */
   login: (user: AuthUser) => Promise<void>;
 
   /**
-   * Reload the stored user.
+   * Reload the locally persisted authenticated user.
    */
   refreshUser: () => Promise<void>;
 
@@ -47,273 +66,361 @@ interface Props {
   children: React.ReactNode;
 }
 
+/**
+ * ============================================================================
+ * AUTH PROVIDER
+ * ============================================================================
+ */
+
 export function AuthProvider({ children }: Props) {
+  /**
+   * ==========================================================================
+   * STATE
+   * ==========================================================================
+   */
+
   const [user, setUser] = useState<AuthUser | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
 
+  /**
+   * Indicates that a valid session exists in SecureStore.
+   *
+   * The session is intentionally NOT restored into
+   * authenticated React state automatically.
+   */
+  const [hasStoredSession, setHasStoredSession] = useState(false);
+
+  /**
+   * ==========================================================================
+   * INITIAL BOOTSTRAP
+   * ==========================================================================
+   */
+
   useEffect(() => {
-    bootstrap();
+    void bootstrap();
   }, []);
 
   /**
-   * =========================================================================
+   * ==========================================================================
    * BOOTSTRAP
-   * =========================================================================
+   * ==========================================================================
    *
-   * Restores the authenticated session when the application starts.
+   * Checks whether a session exists locally.
    *
-   * The local SecureStore session contains:
+   * IMPORTANT:
    *
-   * - access token
-   * - refresh token
-   * - authenticated user
+   * A stored token does NOT automatically authenticate
+   * the user into the application.
    *
-   * We intentionally do not call FetchStorefrontUser here.
-   *
-   * The backend currently returns 401 for the development JWT on that
-   * endpoint. The locally persisted AuthUser is already available from the
-   * successful login response, so it can safely be used to restore the
-   * application session.
+   * This allows biometric authentication to act as the
+   * unlock mechanism for an existing session.
    */
+
   async function bootstrap() {
     try {
       console.log("=================================");
+
       console.log("AUTH PROVIDER");
+
       console.log("BOOTSTRAP START");
+
       console.log("=================================");
 
       /**
-       * -----------------------------------------------------------------------
-       * Read existing access token
-       * -----------------------------------------------------------------------
+       * ----------------------------------------------------------------------
+       * GET EXISTING ACCESS TOKEN
+       * ----------------------------------------------------------------------
        */
+
       let token = await getAccessToken();
 
-      console.log("AUTH STORAGE → GET ACCESS TOKEN:", !!token);
+      console.log("AUTH PROVIDER → ACCESS TOKEN EXISTS:", !!token);
 
       /**
-       * -----------------------------------------------------------------------
-       * Development API Session
-       * -----------------------------------------------------------------------
-       *
-       * Only inject the development JWT when:
-       *
-       * 1. The app is running in development.
-       * 2. There is no existing access token.
-       * 3. A development token has been configured.
-       *
-       * This prevents the development token from overwriting a real session
-       * that has already been saved after login.
+       * ----------------------------------------------------------------------
+       * DEVELOPMENT SESSION
+       * ----------------------------------------------------------------------
        */
-      if (__DEV__ && DEV_SESSION.accessToken) {
+
+      if (__DEV__ && DEV_SESSION_ENABLED && !token && DEV_SESSION.accessToken) {
         console.log("=================================");
+
         console.log("AUTH PROVIDER");
+
         console.log("DEV SESSION → RESTORING SESSION");
-        console.log("=================================");
 
-        await saveAccessToken(DEV_SESSION.accessToken);
-
-        await saveCurrentUser(DEV_SESSION.user);
-
-        console.log("DEV SESSION → ACCESS TOKEN SAVED");
-        console.log("DEV SESSION → USER SAVED");
-      }
-
-      /**
-       * -----------------------------------------------------------------------
-       * Verify access token
-       * -----------------------------------------------------------------------
-       */
-      token = await getAccessToken();
-
-      console.log("=================================");
-      console.log("AUTH PROVIDER");
-      console.log("BOOTSTRAP → ACCESS TOKEN");
-      console.log("HAS TOKEN:", !!token);
-      console.log("=================================");
-
-      if (!token) {
-        console.log("=================================");
-        console.log("AUTH PROVIDER");
-        console.log("BOOTSTRAP → NO ACCESS TOKEN");
-        console.log("=================================");
-
-        return;
-      }
-
-      /**
-       * -----------------------------------------------------------------------
-       * Check biometric protection
-       * -----------------------------------------------------------------------
-       *
-       * If the user has enabled biometrics, require biometric authentication
-       * before restoring the application session.
-       */
-      const biometricsEnabled = await isBiometricsEnabled();
-
-      console.log("=================================");
-      console.log("AUTH PROVIDER");
-      console.log("BIOMETRICS ENABLED:", biometricsEnabled);
-      console.log("=================================");
-
-      if (biometricsEnabled) {
-        console.log("=================================");
-        console.log("AUTH PROVIDER");
-        console.log("BOOTSTRAP → AUTHENTICATING BIOMETRICS");
-        console.log("=================================");
-
-        const result = await authenticateWithBiometrics();
-
-        if (!result.success) {
-          console.log("=================================");
-          console.log("AUTH PROVIDER");
-          console.log("BOOTSTRAP → BIOMETRIC AUTH FAILED");
-          console.log("MESSAGE:", result.message);
-          console.log("=================================");
-
-          // Do NOT clear the authentication session here.
-          setIsLoading(false);
-
-          return;
-        }
-      }
-
-      /**
-       * -----------------------------------------------------------------------
-       * Restore stored user
-       * -----------------------------------------------------------------------
-       *
-       * The user was persisted when the login completed:
-       *
-       * await saveCurrentUser(session.user)
-       *
-       * Therefore there is no need to make a network request here.
-       */
-      const storedUser = await getCurrentUser<AuthUser>();
-
-      console.log("=================================");
-      console.log("AUTH PROVIDER");
-      console.log("BOOTSTRAP → STORED USER");
-      console.log("HAS USER:", !!storedUser);
-      console.log("=================================");
-
-      if (!storedUser) {
-        console.log("=================================");
-        console.log("AUTH PROVIDER");
-        console.log("BOOTSTRAP → NO STORED USER");
         console.log("=================================");
 
         /**
-         * We have an access token but no user.
-         *
-         * This means the locally persisted authentication session is
-         * incomplete, so don't mark the user as authenticated.
+         * Save development access token.
          */
+
+        await saveAccessToken(DEV_SESSION.accessToken);
+
+        /**
+         * Save development user.
+         */
+
+        await saveCurrentUser(DEV_SESSION.user);
+
+        /**
+         * Reload token.
+         */
+
+        token = await getAccessToken();
+
+        console.log("AUTH PROVIDER → DEV SESSION RESTORED:", !!token);
+      }
+
+      /**
+       * ----------------------------------------------------------------------
+       * NO ACCESS TOKEN
+       * ----------------------------------------------------------------------
+       */
+
+      if (!token) {
+        console.log("=================================");
+
+        console.log("AUTH PROVIDER");
+
+        console.log("BOOTSTRAP → NO ACCESS TOKEN");
+
+        console.log("=================================");
+
         setUser(null);
+
+        setHasStoredSession(false);
 
         return;
       }
 
       /**
-       * -----------------------------------------------------------------------
-       * Restore authenticated user
-       * -----------------------------------------------------------------------
+       * ----------------------------------------------------------------------
+       * RESTORE STORED USER
+       * ----------------------------------------------------------------------
        */
-      setUser(storedUser);
+
+      const storedUser = await getCurrentUser<AuthUser>();
+
+      console.log("AUTH PROVIDER → STORED USER EXISTS:", !!storedUser);
+
+      /**
+       * ----------------------------------------------------------------------
+       * INCOMPLETE SESSION
+       * ----------------------------------------------------------------------
+       */
+
+      if (!storedUser) {
+        console.log("=================================");
+
+        console.log("AUTH PROVIDER");
+
+        console.log("BOOTSTRAP → TOKEN EXISTS BUT USER IS MISSING");
+
+        console.log("=================================");
+
+        await clearSession("INCOMPLETE_SESSION");
+
+        setUser(null);
+
+        setHasStoredSession(false);
+
+        return;
+      }
+
+      /**
+       * ----------------------------------------------------------------------
+       * STORED SESSION FOUND
+       * ----------------------------------------------------------------------
+       *
+       * IMPORTANT:
+       *
+       * Do NOT automatically call:
+       *
+       * setUser(storedUser);
+       *
+       * The stored session must be explicitly unlocked by:
+       *
+       * - Biometric authentication
+       * - Normal email/password login
+       */
+
+      setHasStoredSession(true);
+
+      setUser(null);
 
       console.log("=================================");
+
       console.log("AUTH PROVIDER");
-      console.log("BOOTSTRAP → USER RESTORED");
-      console.log("EMAIL:", storedUser.email);
-      console.log("MERCHANT ID:", storedUser.merchantDetails?.merchantId);
+
+      console.log("BOOTSTRAP → STORED SESSION FOUND");
+
+      console.log("AUTHENTICATION → LOCKED");
+
       console.log("=================================");
     } catch (error) {
+      /**
+       * ----------------------------------------------------------------------
+       * BOOTSTRAP FAILURE
+       * ----------------------------------------------------------------------
+       */
+
       console.error("=================================");
+
       console.error("AUTH PROVIDER → BOOTSTRAP FAILED");
+
       console.error(error);
+
       console.error("=================================");
 
       setUser(null);
+
+      setHasStoredSession(false);
     } finally {
+      /**
+       * ----------------------------------------------------------------------
+       * BOOTSTRAP COMPLETE
+       * ----------------------------------------------------------------------
+       */
+
       setIsLoading(false);
 
       console.log("=================================");
+
       console.log("AUTH PROVIDER");
+
       console.log("BOOTSTRAP COMPLETE");
+
       console.log("=================================");
     }
   }
 
   /**
-   * =========================================================================
+   * ==========================================================================
    * LOGIN
-   * =========================================================================
+   * ==========================================================================
    */
-  async function login(user: AuthUser) {
-    setUser(user);
+
+  async function login(authenticatedUser: AuthUser) {
+    console.log("=================================");
+
+    console.log("AUTH PROVIDER");
+
+    console.log("LOGIN");
+
+    console.log("EMAIL:", authenticatedUser.email);
+
+    console.log("=================================");
+
+    /**
+     * Unlock authenticated application state.
+     */
+
+    setUser(authenticatedUser);
+
+    /**
+     * A valid stored session now exists.
+     */
+
+    setHasStoredSession(true);
   }
 
   /**
-   * =========================================================================
+   * ==========================================================================
    * REFRESH USER
-   * =========================================================================
-   *
-   * Reloads the locally persisted authenticated user.
-   *
-   * This does not make a network request.
+   * ==========================================================================
    */
+
   async function refreshUser() {
+    console.log("=================================");
+
+    console.log("AUTH PROVIDER");
+
+    console.log("REFRESH USER");
+
+    console.log("=================================");
+
     const storedUser = await getCurrentUser<AuthUser>();
 
     setUser(storedUser);
+
+    setHasStoredSession(storedUser !== null);
   }
 
   /**
-   * =========================================================================
+   * ==========================================================================
    * LOGOUT
-   * =========================================================================
+   * ==========================================================================
    */
+
   async function logout() {
     try {
+      console.log("=================================");
+
+      console.log("AUTH PROVIDER");
+
+      console.log("LOGOUT START");
+
+      console.log("=================================");
+
       /**
-       * -----------------------------------------------------------------------
-       * Clear onboarding state
-       * -----------------------------------------------------------------------
-       *
-       * Onboarding data belongs to the currently authenticated merchant.
-       *
-       * Clear it before ending the session so another merchant cannot inherit
-       * the previous merchant's onboarding state.
+       * ----------------------------------------------------------------------
+       * CLEAR ONBOARDING STATE
+       * ----------------------------------------------------------------------
        */
+
       useOnboardingStore.getState().reset();
 
       /**
-       * -----------------------------------------------------------------------
-       * Clear authentication session
-       * -----------------------------------------------------------------------
+       * ----------------------------------------------------------------------
+       * CLEAR AUTHENTICATION SESSION
+       * ----------------------------------------------------------------------
        */
-      console.log("=================================");
-      console.log("AUTH PROVIDER");
-      console.log("LOGOUT");
+
+      await clearSession("LOGOUT");
+
+      console.log("AUTH PROVIDER → SESSION CLEARED");
+    } catch (error) {
+      console.error("=================================");
+
+      console.error("AUTH PROVIDER → LOGOUT FAILED");
+
+      console.error(error);
+
+      console.error("=================================");
+    } finally {
+      /**
+       * Always lock the application state.
+       */
+
+      setUser(null);
+
+      setHasStoredSession(false);
+
       console.log("=================================");
 
-      await clearSession();
-    } finally {
-      setUser(null);
+      console.log("AUTH PROVIDER");
+
+      console.log("LOGOUT COMPLETE");
+
+      console.log("=================================");
     }
   }
 
   /**
-   * =========================================================================
+   * ==========================================================================
    * CONTEXT VALUE
-   * =========================================================================
+   * ==========================================================================
    */
+
   const value = useMemo(
     () => ({
       user,
 
       isLoading,
+
+      hasStoredSession,
 
       isAuthenticated: user !== null,
 
@@ -323,17 +430,24 @@ export function AuthProvider({ children }: Props) {
 
       logout,
     }),
-    [user, isLoading]
+    [user, isLoading, hasStoredSession]
   );
+
+  /**
+   * ==========================================================================
+   * PROVIDER
+   * ==========================================================================
+   */
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 /**
- * ===========================================================================
+ * ============================================================================
  * USE AUTH
- * ===========================================================================
+ * ============================================================================
  */
+
 export function useAuth() {
   const context = useContext(AuthContext);
 

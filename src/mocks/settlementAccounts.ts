@@ -25,10 +25,6 @@ let mockSettlementAccounts: SettlementAccount[] = [];
  * ============================================================================
  * MOCK BANK ACCOUNTS
  * ============================================================================
- *
- * These simulate successful bank account verification.
- *
- * In a real application this would be handled by the API.
  */
 
 const MOCK_ACCOUNT_NAMES: Record<string, string> = {
@@ -79,13 +75,6 @@ export function validateMockSettlementAccount(
 
       bankCode: payload.bankCode,
 
-      /**
-       * The actual bank name is normally returned by the API.
-       *
-       * The settlement screen already knows the selected bank,
-       * so this value only needs to satisfy the response contract.
-       */
-
       bankName: "Access Bank",
     },
   };
@@ -102,9 +91,93 @@ export function updateMockSettlementAccount(
 ): ApiResponse<void> {
   /**
    * --------------------------------------------------------------------------
-   * CREATE SETTLEMENT ACCOUNT
+   * UPDATE EXISTING ACCOUNT
    * --------------------------------------------------------------------------
    */
+
+  if (payload.settlementAccountId !== undefined) {
+    const existingAccount = mockSettlementAccounts.find(
+      (account) =>
+        String(account.settlementAccountId) ===
+        String(payload.settlementAccountId)
+    );
+
+    if (!existingAccount) {
+      throw new Error("Settlement account not found.");
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * PRIMARY LOGIC
+     * ------------------------------------------------------------------------
+     */
+
+    const shouldBePrimary = payload.isPrimary ?? existingAccount.isDefault;
+
+    if (shouldBePrimary) {
+      mockSettlementAccounts = mockSettlementAccounts.map((account) => ({
+        ...account,
+
+        isDefault:
+          String(account.settlementAccountId) ===
+          String(payload.settlementAccountId),
+      }));
+    }
+
+    mockSettlementAccounts = mockSettlementAccounts.map((account) => {
+      if (
+        String(account.settlementAccountId) !==
+        String(payload.settlementAccountId)
+      ) {
+        return account;
+      }
+
+      return {
+        settlementAccountId: account.settlementAccountId,
+
+        accountNumber: payload.accountNumber,
+
+        accountName: payload.accountName,
+
+        bankName: payload.bankName,
+
+        bankCode: payload.bankCode,
+
+        isDefault: shouldBePrimary,
+      };
+    });
+
+    return {
+      responseCode: "00",
+
+      responseMessage: "Settlement account updated successfully",
+
+      data: undefined,
+    };
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * CREATE NEW ACCOUNT
+   * --------------------------------------------------------------------------
+   */
+
+  const shouldBePrimary =
+    payload.isPrimary ?? mockSettlementAccounts.length === 0;
+
+  /**
+   * --------------------------------------------------------------------------
+   * ENSURE ONLY ONE PRIMARY ACCOUNT
+   * --------------------------------------------------------------------------
+   */
+
+  if (shouldBePrimary) {
+    mockSettlementAccounts = mockSettlementAccounts.map((account) => ({
+      ...account,
+
+      isDefault: false,
+    }));
+  }
 
   const settlementAccount: SettlementAccount = {
     settlementAccountId: Date.now().toString(),
@@ -117,26 +190,15 @@ export function updateMockSettlementAccount(
 
     bankCode: payload.bankCode,
 
-    /**
-     * API request: isPrimary
-     * Response model: isDefault
-     */
-
-    isDefault: payload.isPrimary ?? true,
+    isDefault: shouldBePrimary,
   };
 
-  /**
-   * --------------------------------------------------------------------------
-   * STORE ACCOUNT
-   * --------------------------------------------------------------------------
-   */
-
-  mockSettlementAccounts = [settlementAccount];
+  mockSettlementAccounts = [...mockSettlementAccounts, settlementAccount];
 
   return {
     responseCode: "00",
 
-    responseMessage: "Settlement account updated successfully",
+    responseMessage: "Settlement account added successfully",
 
     data: undefined,
   };
@@ -151,9 +213,27 @@ export function updateMockSettlementAccount(
 export function deleteMockSettlementAccount(
   settlementId: string | number
 ): ApiResponse<void> {
+  const deletedAccount = mockSettlementAccounts.find(
+    (account) => String(account.settlementAccountId) === String(settlementId)
+  );
+
   mockSettlementAccounts = mockSettlementAccounts.filter(
     (account) => String(account.settlementAccountId) !== String(settlementId)
   );
+
+  /**
+   * --------------------------------------------------------------------------
+   * ENSURE A PRIMARY ACCOUNT EXISTS
+   * --------------------------------------------------------------------------
+   */
+
+  if (deletedAccount?.isDefault && mockSettlementAccounts.length > 0) {
+    mockSettlementAccounts = mockSettlementAccounts.map((account, index) => ({
+      ...account,
+
+      isDefault: index === 0,
+    }));
+  }
 
   return {
     responseCode: "00",

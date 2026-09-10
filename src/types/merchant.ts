@@ -107,10 +107,19 @@ export interface ValidateSettlementAccountResponse {
 }
 
 /**
+ * -----------------------------------------------------------------------------
  * Update Settlement Account
+ * -----------------------------------------------------------------------------
  */
 
 export interface UpdateSettlementAccountRequest {
+  /**
+   * Provided when updating an existing settlement account.
+   *
+   * Omitted when creating a new settlement account.
+   */
+  settlementAccountId?: string | number;
+
   accountNumber: string;
 
   accountName: string;

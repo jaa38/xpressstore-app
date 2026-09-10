@@ -111,6 +111,8 @@ export const ROUTES = {
 
   BUSINESS: "/(tabs)/more/business",
 
+  EDIT_BUSINESS: "/business/edit",
+
   CATEGORIES: "/(tabs)/more/categories",
 
   /**

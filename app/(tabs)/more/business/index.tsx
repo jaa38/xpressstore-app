@@ -20,13 +20,33 @@ import { Card } from "@/components/ui/Card";
 
 import { Divider } from "@/components/ui/Divider";
 
-import { spacing, theme, radius } from "@/theme";
+import { Button } from "@/components/ui/Button";
 
-import { ROUTES } from "@/navigation/routes";
+import { spacing, theme, radius } from "@/theme";
 
 import { useMerchantProfile } from "@/hooks/merchant/useMerchantProfile";
 
 import { useSettlementAccounts } from "@/hooks/merchant/useSettlementAccounts";
+
+import { ROUTES } from "@/navigation/routes";
+
+/**
+ * ============================================================================
+ * HELPERS
+ * ============================================================================
+ */
+
+function maskAccountNumber(accountNumber: string) {
+  if (!accountNumber) {
+    return "Not available";
+  }
+
+  if (accountNumber.length <= 4) {
+    return accountNumber;
+  }
+
+  return `••••••${accountNumber.slice(-4)}`;
+}
 
 /**
  * ============================================================================
@@ -43,11 +63,8 @@ export default function BusinessScreen() {
 
   const {
     profile,
-
     isLoading: isProfileLoading,
-
     error: profileError,
-
     refetch: refetchProfile,
   } = useMerchantProfile();
 
@@ -59,36 +76,10 @@ export default function BusinessScreen() {
 
   const {
     settlementAccounts,
-
     isLoading: isSettlementAccountsLoading,
-
     isError: isSettlementAccountsError,
-
     refetch: refetchSettlementAccounts,
   } = useSettlementAccounts();
-
-  /**
-   * --------------------------------------------------------------------------
-   * REFRESHING STATE
-   * --------------------------------------------------------------------------
-   */
-
-  const isLoading =
-    isProfileLoading || isSettlementAccountsLoading;
-
-  /**
-   * --------------------------------------------------------------------------
-   * REFRESH
-   * --------------------------------------------------------------------------
-   */
-
-  async function handleRefresh() {
-    await Promise.all([
-      refetchProfile(),
-
-      refetchSettlementAccounts(),
-    ]);
-  }
 
   /**
    * --------------------------------------------------------------------------
@@ -97,35 +88,41 @@ export default function BusinessScreen() {
    */
 
   const primarySettlementAccount =
-    settlementAccounts?.find(
-      (account) => account.isDefault
-    ) ??
+    settlementAccounts?.find((account) => account.isDefault) ??
     settlementAccounts?.[0];
 
   /**
-   * --------------------------------------------------------------------------
-   * BUSINESS TYPE LABEL
-   * --------------------------------------------------------------------------
+   * ==========================================================================
+   * REFRESH
+   * ==========================================================================
    */
 
-  const businessType =
-    profile?.businessType ||
-    "Not specified";
+  async function handleRefresh() {
+    await Promise.all([refetchProfile(), refetchSettlementAccounts()]);
+  }
 
   /**
    * ==========================================================================
-   * LOADING
+   * RETRY
    * ==========================================================================
    */
 
-  if (isLoading && !profile) {
+  async function handleRetryProfile() {
+    await handleRefresh();
+  }
+
+  /**
+   * ==========================================================================
+   * INITIAL LOADING
+   * ==========================================================================
+   */
+
+  if (isProfileLoading && !profile) {
     return (
       <SafeAreaView
         style={{
           flex: 1,
-
-          backgroundColor:
-            theme.background.primary,
+          backgroundColor: theme.background.primary,
         }}
       >
         <StatusBar style="auto" />
@@ -133,24 +130,16 @@ export default function BusinessScreen() {
         <View
           style={{
             flex: 1,
-
             justifyContent: "center",
-
             alignItems: "center",
-
+            paddingHorizontal: spacing.lg,
             gap: spacing.md,
           }}
         >
-          <ActivityIndicator
-            size="large"
-            color={theme.icon.branding.icon}
-          />
+          <ActivityIndicator size="large" color={theme.icon.branding.icon} />
 
-          <AppText
-            variant="body"
-            color="secondary"
-          >
-            Loading business information...
+          <AppText variant="body" color="secondary">
+            Loading your business information...
           </AppText>
         </View>
       </SafeAreaView>
@@ -159,7 +148,7 @@ export default function BusinessScreen() {
 
   /**
    * ==========================================================================
-   * ERROR
+   * PROFILE ERROR
    * ==========================================================================
    */
 
@@ -168,9 +157,7 @@ export default function BusinessScreen() {
       <SafeAreaView
         style={{
           flex: 1,
-
-          backgroundColor:
-            theme.background.primary,
+          backgroundColor: theme.background.primary,
         }}
       >
         <StatusBar style="auto" />
@@ -178,110 +165,119 @@ export default function BusinessScreen() {
         <View
           style={{
             flex: 1,
-
-            paddingHorizontal:
-              spacing.lg,
-
-            justifyContent: "center",
-
-            alignItems: "center",
-
-            gap: spacing.md,
+            paddingHorizontal: spacing.lg,
           }}
         >
-          <View
-            style={{
-              width: 56,
-
-              height: 56,
-
-              borderRadius:
-                radius.full,
-
-              justifyContent:
-                "center",
-
-              alignItems:
-                "center",
-
-              backgroundColor:
-                theme.icon.default.background,
-            }}
-          >
-            <Ionicons
-              name="alert-circle-outline"
-              size={28}
-              color={theme.icon.default.icon}
-            />
-          </View>
+          {/* HEADER */}
 
           <View
             style={{
-              alignItems:
-                "center",
-
-              gap: spacing.xs,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing.md,
             }}
           >
-            <AppText
-              variant="bodyLargeBold"
-            >
-              Unable to load business
-            </AppText>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
 
-            <AppText
-              variant="bodySmall"
-              color="secondary"
+                  return;
+                }
+
+                router.replace(ROUTES.MORE);
+              }}
               style={{
-                textAlign:
-                  "center",
+                width: 44,
+                height: 44,
+                justifyContent: "center",
+                alignItems: "center",
               }}
             >
-              We couldn't load your business
-              information. Please try again.
-            </AppText>
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={theme.text.primary}
+              />
+            </Pressable>
+
+            <View
+              style={{
+                flex: 1,
+                gap: spacing.xs,
+              }}
+            >
+              <AppText variant="h1">Business</AppText>
+
+              <AppText variant="bodySmall" color="secondary">
+                Manage your business profile and merchant information.
+              </AppText>
+            </View>
           </View>
 
-          <Pressable
-            onPress={() => {
-              refetchProfile();
+          {/* ERROR */}
 
-              refetchSettlementAccounts();
-            }}
+          <View
             style={{
-              flexDirection:
-                "row",
-
-              alignItems:
-                "center",
-
-              gap: spacing.sm,
-
-              paddingHorizontal:
-                spacing.md,
-
-              paddingVertical:
-                spacing.sm,
-
-              borderRadius:
-                radius.md,
-
-              backgroundColor:
-                theme.background.brand,
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              gap: spacing.lg,
             }}
           >
-            <Ionicons
-              name="refresh-outline"
-              size={18}
-              color={theme.icon.branding.icon}
-            />
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: radius.full,
 
-            <AppText
-              variant="bodyBold"
+                justifyContent: "center",
+                alignItems: "center",
+
+                backgroundColor: theme.icon.default.background,
+              }}
             >
-              Try Again
-            </AppText>
-          </Pressable>
+              <Ionicons
+                name="cloud-offline-outline"
+                size={30}
+                color={theme.icon.default.icon}
+              />
+            </View>
+
+            <View
+              style={{
+                alignItems: "center",
+                gap: spacing.xs,
+              }}
+            >
+              <AppText variant="bodyLargeBold">Unable to load business</AppText>
+
+              <AppText
+                variant="bodySmall"
+                color="secondary"
+                style={{
+                  textAlign: "center",
+                }}
+              >
+                We couldn't load your business information. Please check your
+                connection and try again.
+              </AppText>
+            </View>
+
+            <View
+              style={{
+                width: "100%",
+              }}
+            >
+              <Button
+                title="Try Again"
+                variant="primary"
+                onPress={handleRetryProfile}
+              />
+            </View>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -297,9 +293,7 @@ export default function BusinessScreen() {
     <SafeAreaView
       style={{
         flex: 1,
-
-        backgroundColor:
-          theme.background.primary,
+        backgroundColor: theme.background.primary,
       }}
     >
       <StatusBar style="auto" />
@@ -307,606 +301,358 @@ export default function BusinessScreen() {
       <View
         style={{
           flex: 1,
-
-          paddingHorizontal:
-            spacing.lg,
+          paddingHorizontal: spacing.lg,
         }}
       >
-        {/* ================================================================
+        {/* ==================================================================
             HEADER
-        ================================================================ */}
+        ================================================================== */}
 
         <View
           style={{
-            flexDirection:
-              "row",
-
-            alignItems:
-              "center",
-
+            flexDirection: "row",
+            alignItems: "center",
             gap: spacing.md,
           }}
         >
-          {/* BACK BUTTON */}
-
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Go back"
-            onPress={() =>
-              router.back()
-            }
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+
+                return;
+              }
+
+              router.replace(ROUTES.MORE);
+            }}
             style={{
               width: 44,
-
               height: 44,
-
-              justifyContent:
-                "center",
-
-              alignItems:
-                "center",
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
             <Ionicons
               name="chevron-back"
               size={24}
-              color={
-                theme.text.primary
-              }
+              color={theme.text.primary}
             />
           </Pressable>
-
-          {/* TITLE */}
 
           <View
             style={{
               flex: 1,
-
               gap: spacing.xs,
             }}
           >
-            <AppText variant="h1">
-              Business
-            </AppText>
+            <AppText variant="h1">Business</AppText>
 
-            <AppText
-              variant="bodySmall"
-              color="secondary"
-            >
-              Manage your business profile and
-              merchant information.
+            <AppText variant="bodySmall" color="secondary">
+              Manage your business profile and merchant information.
             </AppText>
           </View>
         </View>
 
-        {/* ================================================================
+        {/* ==================================================================
             CONTENT
-        ================================================================ */}
+        ================================================================== */}
 
         <ScrollView
           style={{
             flex: 1,
           }}
           contentContainerStyle={{
-            paddingTop:
-              spacing.lg,
-
-            paddingBottom:
-              spacing.xl,
-
-            gap:
-              spacing.lg,
+            paddingTop: spacing.lg,
+            paddingBottom: spacing.xl,
+            gap: spacing.lg,
           }}
-          showsVerticalScrollIndicator={
-            false
-          }
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={isLoading}
-              onRefresh={
-                handleRefresh
-              }
-              tintColor={
-                theme.icon.branding.icon
-              }
+              refreshing={isProfileLoading || isSettlementAccountsLoading}
+              onRefresh={handleRefresh}
+              tintColor={theme.icon.branding.icon}
             />
           }
         >
-          {/* ============================================================
+          {/* ================================================================
               BUSINESS SUMMARY
-          ============================================================ */}
+          ================================================================ */}
 
           <Card>
             <View
               style={{
-                gap:
-                  spacing.md,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.md,
               }}
             >
               <View
                 style={{
-                  flexDirection:
-                    "row",
-
-                  alignItems:
-                    "center",
-
-                  gap:
-                    spacing.md,
+                  width: 48,
+                  height: 48,
+                  borderRadius: radius.full,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: theme.icon.default.background,
                 }}
               >
-                {/* BUSINESS ICON */}
+                <Ionicons
+                  name="business-outline"
+                  size={24}
+                  color={theme.icon.default.icon}
+                />
+              </View>
 
-                <View
-                  style={{
-                    width: 48,
+              <View
+                style={{
+                  flex: 1,
+                  gap: spacing.xs,
+                }}
+              >
+                <AppText variant="bodyLargeBold">
+                  {profile?.businessName || "Business information"}
+                </AppText>
 
-                    height: 48,
+                <AppText variant="bodySmall" color="secondary">
+                  Merchant Code: {profile?.merchantCode || "Not available"}
+                </AppText>
+              </View>
 
-                    borderRadius:
-                      radius.full,
-
-                    justifyContent:
-                      "center",
-
-                    alignItems:
-                      "center",
-
-                    backgroundColor:
-                      theme.icon
-                        .default
-                        .background,
-                  }}
-                >
-                  <Ionicons
-                    name="business-outline"
-                    size={24}
-                    color={
-                      theme.icon
-                        .default.icon
-                    }
-                  />
-                </View>
-
-                {/* BUSINESS NAME */}
-
-                <View
-                  style={{
-                    flex: 1,
-
-                    gap:
-                      spacing.xs,
-                  }}
-                >
-                  <AppText
-                    variant="bodyLargeBold"
-                  >
-                    {profile?.businessName ||
-                      "Business"}
-                  </AppText>
-
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
-                    {profile?.merchantCode
-                      ? `Merchant ID: ${profile.merchantCode}`
-                      : "Merchant account"}
-                  </AppText>
-                </View>
-
-                {/* VERIFIED STATUS */}
-
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.xs,
+                  paddingHorizontal: spacing.sm,
+                  paddingVertical: spacing.xs,
+                  borderRadius: radius.full,
+                  backgroundColor: profile?.isVerified
+                    ? theme.background.brand
+                    : theme.icon.default.background,
+                }}
+              >
                 <Ionicons
                   name={
-                    profile?.isVerified
-                      ? "checkmark-circle"
-                      : "time-outline"
+                    profile?.isVerified ? "checkmark-circle" : "time-outline"
                   }
-                  size={24}
+                  size={16}
                   color={
                     profile?.isVerified
                       ? theme.icon.success.icon
                       : theme.icon.default.icon
                   }
                 />
-              </View>
 
-              <Divider variant="subtle" />
-
-              <View
-                style={{
-                  flexDirection:
-                    "row",
-
-                  justifyContent:
-                    "space-between",
-
-                  alignItems:
-                    "center",
-                }}
-              >
-                <View
-                  style={{
-                    gap: 2,
-                  }}
-                >
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
-                    Verification Status
-                  </AppText>
-
-                  <AppText
-                    variant="bodyBold"
-                  >
-                    {profile?.isVerified
-                      ? "Verified"
-                      : "Pending verification"}
-                  </AppText>
-                </View>
-
-                <View
-                  style={{
-                    flexDirection:
-                      "row",
-
-                    alignItems:
-                      "center",
-
-                    gap:
-                      spacing.xs,
-                  }}
-                >
-                  <Ionicons
-                    name={
-                      profile?.isVerified
-                        ? "shield-checkmark-outline"
-                        : "shield-outline"
-                    }
-                    size={18}
-                    color={
-                      profile?.isVerified
-                        ? theme.icon.success.icon
-                        : theme.icon.default.icon
-                    }
-                  />
-                </View>
+                <AppText variant="bodySmallBold">
+                  {profile?.isVerified ? "Verified" : "Pending"}
+                </AppText>
               </View>
             </View>
           </Card>
 
-          {/* ============================================================
+          {/* ================================================================
               BUSINESS INFORMATION
-          ============================================================ */}
+          ================================================================ */}
 
           <View
             style={{
-              gap:
-                spacing.sm,
+              gap: spacing.sm,
             }}
           >
             <View
               style={{
-                gap:
-                  spacing.xs,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              <AppText
-                variant="bodyLargeBold"
-              >
-                Business Information
-              </AppText>
+              <AppText variant="bodyLargeBold">Business Information</AppText>
 
-              <AppText
-                variant="bodySmall"
-                color="secondary"
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Edit business information"
+                onPress={() => router.push("/business/edit")}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.xs,
+                }}
               >
-                Your registered business details.
-              </AppText>
+                <AppText variant="bodySmallBold" color="secondary">
+                  Edit
+                </AppText>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={theme.icon.default.icon}
+                />
+              </Pressable>
             </View>
 
             <Card>
-              <View>
-                {/* BUSINESS NAME */}
-
+              <View
+                style={{
+                  gap: spacing.md,
+                }}
+              >
                 <View
                   style={{
-                    paddingVertical:
-                      spacing.sm,
-
-                    gap:
-                      spacing.xs,
+                    gap: spacing.xs,
                   }}
                 >
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
+                  <AppText variant="bodySmall" color="muted">
                     Business Name
                   </AppText>
 
-                  <AppText
-                    variant="bodyBold"
-                  >
-                    {profile?.businessName ||
-                      "Not specified"}
+                  <AppText variant="bodyBold">
+                    {profile?.businessName || "Not available"}
                   </AppText>
                 </View>
 
                 <Divider variant="subtle" />
 
-                {/* TRADING NAME */}
-
                 <View
                   style={{
-                    paddingVertical:
-                      spacing.md,
-
-                    gap:
-                      spacing.xs,
+                    gap: spacing.xs,
                   }}
                 >
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
+                  <AppText variant="bodySmall" color="muted">
                     Trading Name
                   </AppText>
 
-                  <AppText
-                    variant="bodyBold"
-                  >
-                    {profile?.tradingName ||
-                      "Not specified"}
+                  <AppText variant="bodyBold">
+                    {profile?.tradingName || "Not available"}
                   </AppText>
                 </View>
 
                 <Divider variant="subtle" />
 
-                {/* BUSINESS TYPE */}
-
                 <View
                   style={{
-                    paddingVertical:
-                      spacing.md,
-
-                    gap:
-                      spacing.xs,
+                    gap: spacing.xs,
                   }}
                 >
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
+                  <AppText variant="bodySmall" color="muted">
                     Business Type
                   </AppText>
 
-                  <AppText
-                    variant="bodyBold"
-                  >
-                    {businessType}
+                  <AppText variant="bodyBold">
+                    {profile?.businessType || "Not available"}
                   </AppText>
                 </View>
 
                 <Divider variant="subtle" />
 
-                {/* BUSINESS CATEGORY */}
-
                 <View
                   style={{
-                    paddingTop:
-                      spacing.md,
-
-                    gap:
-                      spacing.xs,
+                    gap: spacing.xs,
                   }}
                 >
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
+                  <AppText variant="bodySmall" color="muted">
                     Business Category
                   </AppText>
 
-                  <AppText
-                    variant="bodyBold"
-                  >
-                    {profile?.businessCategory ||
-                      "Not specified"}
+                  <AppText variant="bodyBold">
+                    {profile?.businessCategory || "Not available"}
+                  </AppText>
+                </View>
+
+                <Divider variant="subtle" />
+
+                <View
+                  style={{
+                    gap: spacing.xs,
+                  }}
+                >
+                  <AppText variant="bodySmall" color="muted">
+                    Business Address
+                  </AppText>
+
+                  <AppText variant="bodyBold">
+                    {profile?.businessAddress || "Not available"}
                   </AppText>
                 </View>
               </View>
             </Card>
           </View>
 
-          {/* ============================================================
+          {/* ================================================================
               CONTACT DETAILS
-          ============================================================ */}
+          ================================================================ */}
 
           <View
             style={{
-              gap:
-                spacing.sm,
+              gap: spacing.sm,
             }}
           >
-            <View
-              style={{
-                gap:
-                  spacing.xs,
-              }}
-            >
-              <AppText
-                variant="bodyLargeBold"
-              >
-                Contact Details
-              </AppText>
-
-              <AppText
-                variant="bodySmall"
-                color="secondary"
-              >
-                Contact information linked to your
-                business.
-              </AppText>
-            </View>
+            <AppText variant="bodyLargeBold">Contact Details</AppText>
 
             <Card>
-              <View>
-                {/* EMAIL */}
-
+              <View
+                style={{
+                  gap: spacing.md,
+                }}
+              >
                 <View
                   style={{
-                    flexDirection:
-                      "row",
-
-                    alignItems:
-                      "center",
-
-                    gap:
-                      spacing.md,
-
-                    paddingBottom:
-                      spacing.md,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: spacing.md,
                   }}
                 >
                   <Ionicons
                     name="mail-outline"
                     size={20}
-                    color={
-                      theme.icon
-                        .default.icon
-                    }
+                    color={theme.icon.default.icon}
                   />
 
                   <View
                     style={{
                       flex: 1,
-
-                      gap:
-                        spacing.xs,
+                      gap: spacing.xs,
                     }}
                   >
-                    <AppText
-                      variant="bodySmall"
-                      color="secondary"
-                    >
+                    <AppText variant="bodySmall" color="muted">
                       Business Email
                     </AppText>
 
-                    <AppText
-                      variant="bodyBold"
-                    >
-                      {profile?.businessEmail ||
-                        "Not specified"}
+                    <AppText variant="bodyBold">
+                      {profile?.businessEmail || "Not available"}
                     </AppText>
                   </View>
                 </View>
 
                 <Divider variant="subtle" />
 
-                {/* PHONE */}
-
                 <View
                   style={{
-                    flexDirection:
-                      "row",
-
-                    alignItems:
-                      "center",
-
-                    gap:
-                      spacing.md,
-
-                    paddingVertical:
-                      spacing.md,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: spacing.md,
                   }}
                 >
                   <Ionicons
                     name="call-outline"
                     size={20}
-                    color={
-                      theme.icon
-                        .default.icon
-                    }
+                    color={theme.icon.default.icon}
                   />
 
                   <View
                     style={{
                       flex: 1,
-
-                      gap:
-                        spacing.xs,
+                      gap: spacing.xs,
                     }}
                   >
-                    <AppText
-                      variant="bodySmall"
-                      color="secondary"
-                    >
-                      Business Phone
+                    <AppText variant="bodySmall" color="muted">
+                      Business Phone Number
                     </AppText>
 
-                    <AppText
-                      variant="bodyBold"
-                    >
-                      {profile?.businessPhoneNumber ||
-                        "Not specified"}
-                    </AppText>
-                  </View>
-                </View>
-
-                <Divider variant="subtle" />
-
-                {/* ADDRESS */}
-
-                <View
-                  style={{
-                    flexDirection:
-                      "row",
-
-                    alignItems:
-                      "flex-start",
-
-                    gap:
-                      spacing.md,
-
-                    paddingTop:
-                      spacing.md,
-                  }}
-                >
-                  <Ionicons
-                    name="location-outline"
-                    size={20}
-                    color={
-                      theme.icon
-                        .default.icon
-                    }
-                    style={{
-                      marginTop: 2,
-                    }}
-                  />
-
-                  <View
-                    style={{
-                      flex: 1,
-
-                      gap:
-                        spacing.xs,
-                    }}
-                  >
-                    <AppText
-                      variant="bodySmall"
-                      color="secondary"
-                    >
-                      Business Address
-                    </AppText>
-
-                    <AppText
-                      variant="bodyBold"
-                    >
-                      {profile?.businessAddress ||
-                        "Not specified"}
+                    <AppText variant="bodyBold">
+                      {profile?.businessPhoneNumber || "Not available"}
                     </AppText>
                   </View>
                 </View>
@@ -914,289 +660,230 @@ export default function BusinessScreen() {
             </Card>
           </View>
 
-          {/* ============================================================
+          {/* ================================================================
               SETTLEMENT ACCOUNT
-          ============================================================ */}
+          ================================================================ */}
 
           <View
             style={{
-              gap:
-                spacing.sm,
+              gap: spacing.sm,
             }}
           >
             <View
               style={{
-                gap:
-                  spacing.xs,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              <AppText
-                variant="bodyLargeBold"
-              >
-                Settlement Account
-              </AppText>
+              <AppText variant="bodyLargeBold">Settlement Account</AppText>
 
-              <AppText
-                variant="bodySmall"
-                color="secondary"
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Manage settlement account"
+                onPress={() => router.push(ROUTES.SETTLEMENTS)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.xs,
+                }}
               >
-                Where your transaction payments are
-                deposited.
-              </AppText>
+                <AppText variant="bodySmallBold" color="secondary">
+                  Manage
+                </AppText>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={theme.icon.default.icon}
+                />
+              </Pressable>
             </View>
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Manage settlement account"
-              onPress={() =>
-                router.push(
-                  ROUTES.SETTLEMENTS
-                )
-              }
-            >
+            {/* ============================================================
+                SETTLEMENT ACCOUNT ERROR
+            ============================================================ */}
+
+            {isSettlementAccountsError ? (
               <Card>
-                <View>
-                  {primarySettlementAccount ? (
-                    <>
-                      <View
-                        style={{
-                          flexDirection:
-                            "row",
+                <View
+                  style={{
+                    alignItems: "center",
+                    gap: spacing.sm,
+                    paddingVertical: spacing.md,
+                  }}
+                >
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={28}
+                    color={theme.icon.default.icon}
+                  />
 
-                          alignItems:
-                            "center",
+                  <AppText variant="bodyBold">
+                    Unable to load settlement account
+                  </AppText>
 
-                          gap:
-                            spacing.md,
-                        }}
-                      >
-                        <View
-                          style={{
-                            width: 40,
+                  <AppText
+                    variant="bodySmall"
+                    color="secondary"
+                    style={{
+                      textAlign: "center",
+                    }}
+                  >
+                    We couldn't load your settlement account information.
+                  </AppText>
 
-                            height: 40,
-
-                            borderRadius:
-                              radius.full,
-
-                            justifyContent:
-                              "center",
-
-                            alignItems:
-                              "center",
-
-                            backgroundColor:
-                              theme.icon
-                                .default
-                                .background,
-                          }}
-                        >
-                          <Ionicons
-                            name="card-outline"
-                            size={20}
-                            color={
-                              theme.icon
-                                .default.icon
-                            }
-                          />
-                        </View>
-
-                        <View
-                          style={{
-                            flex: 1,
-
-                            gap:
-                              spacing.xs,
-                          }}
-                        >
-                          <AppText
-                            variant="bodyBold"
-                          >
-                            {
-                              primarySettlementAccount.bankName
-                            }
-                          </AppText>
-
-                          <AppText
-                            variant="bodySmall"
-                            color="secondary"
-                          >
-                            {
-                              primarySettlementAccount.accountNumber
-                            }
-                          </AppText>
-                        </View>
-
-                        <Ionicons
-                          name="chevron-forward"
-                          size={20}
-                          color={
-                            theme.text.secondary
-                          }
-                        />
-                      </View>
-
-                      <Divider
-                        variant="subtle"
-                        style={{
-                          marginVertical:
-                            spacing.md,
-                        }}
+                  <View
+                    style={{
+                      marginTop: spacing.xs,
+                    }}
+                  >
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Retry settlement account"
+                      onPress={() => refetchSettlementAccounts()}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: spacing.xs,
+                      }}
+                    >
+                      <Ionicons
+                        name="refresh-outline"
+                        size={16}
+                        color={theme.icon.default.icon}
                       />
 
-                      <View
-                        style={{
-                          gap:
-                            spacing.xs,
-                        }}
-                      >
-                        <AppText
-                          variant="bodySmall"
-                          color="secondary"
-                        >
-                          Account Name
-                        </AppText>
-
-                        <AppText
-                          variant="bodyBold"
-                        >
-                          {
-                            primarySettlementAccount.accountName
-                          }
-                        </AppText>
-                      </View>
-                    </>
-                  ) : (
+                      <AppText variant="bodySmallBold">Try Again</AppText>
+                    </Pressable>
+                  </View>
+                </View>
+              </Card>
+            ) : (
+              <Card>
+                {primarySettlementAccount ? (
+                  <View
+                    style={{
+                      gap: spacing.md,
+                    }}
+                  >
                     <View
                       style={{
-                        flexDirection:
-                          "row",
-
-                        alignItems:
-                          "center",
-
-                        gap:
-                          spacing.md,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: spacing.md,
                       }}
                     >
                       <View
                         style={{
                           width: 40,
-
                           height: 40,
-
-                          borderRadius:
-                            radius.full,
-
-                          justifyContent:
-                            "center",
-
-                          alignItems:
-                            "center",
-
-                          backgroundColor:
-                            theme.icon
-                              .default
-                              .background,
+                          borderRadius: radius.full,
+                          justifyContent: "center",
+                          alignItems: "center",
+                          backgroundColor: theme.icon.default.background,
                         }}
                       >
                         <Ionicons
-                          name="add-circle-outline"
-                          size={22}
-                          color={
-                            theme.icon
-                              .default.icon
-                          }
+                          name="card-outline"
+                          size={20}
+                          color={theme.icon.default.icon}
                         />
                       </View>
 
                       <View
                         style={{
                           flex: 1,
-
-                          gap:
-                            spacing.xs,
+                          gap: spacing.xs,
                         }}
                       >
-                        <AppText
-                          variant="bodyBold"
-                        >
-                          Add settlement account
+                        <AppText variant="bodyBold">
+                          {primarySettlementAccount.bankName}
                         </AppText>
 
-                        <AppText
-                          variant="bodySmall"
-                          color="secondary"
-                        >
-                          Add an account to receive
-                          your transaction payments.
+                        <AppText variant="bodySmall" color="secondary">
+                          {maskAccountNumber(
+                            primarySettlementAccount.accountNumber
+                          )}
                         </AppText>
                       </View>
 
-                      <Ionicons
-                        name="chevron-forward"
-                        size={20}
-                        color={
-                          theme.text.secondary
-                        }
-                      />
+                      {primarySettlementAccount.isDefault && (
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={20}
+                          color={theme.icon.success.icon}
+                        />
+                      )}
                     </View>
-                  )}
-                </View>
-              </Card>
-            </Pressable>
 
-            {isSettlementAccountsError && (
-              <AppText
-                variant="bodySmall"
-                color="secondary"
-              >
-                We couldn't load your settlement
-                account. Pull down to try again.
-              </AppText>
+                    <Divider variant="subtle" />
+
+                    <View
+                      style={{
+                        gap: spacing.xs,
+                      }}
+                    >
+                      <AppText variant="bodySmall" color="muted">
+                        Account Name
+                      </AppText>
+
+                      <AppText variant="bodyBold">
+                        {primarySettlementAccount.accountName}
+                      </AppText>
+                    </View>
+                  </View>
+                ) : (
+                  <View
+                    style={{
+                      alignItems: "center",
+                      paddingVertical: spacing.md,
+                      gap: spacing.sm,
+                    }}
+                  >
+                    <Ionicons
+                      name="card-outline"
+                      size={28}
+                      color={theme.icon.default.icon}
+                    />
+
+                    <AppText variant="bodyBold">No settlement account</AppText>
+
+                    <AppText
+                      variant="bodySmall"
+                      color="secondary"
+                      style={{
+                        textAlign: "center",
+                      }}
+                    >
+                      Add a settlement account to receive payments from your
+                      transactions.
+                    </AppText>
+
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Add settlement account"
+                      onPress={() => router.push(ROUTES.SETTLEMENTS)}
+                      style={{
+                        marginTop: spacing.xs,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: spacing.xs,
+                      }}
+                    >
+                      <AppText variant="bodySmallBold">Add account</AppText>
+
+                      <Ionicons
+                        name="arrow-forward"
+                        size={16}
+                        color={theme.icon.default.icon}
+                      />
+                    </Pressable>
+                  </View>
+                )}
+              </Card>
             )}
           </View>
-
-          {/* ============================================================
-              MERCHANT DETAILS
-          ============================================================ */}
-
-          {profile?.merchantId && (
-            <View
-              style={{
-                gap:
-                  spacing.sm,
-              }}
-            >
-              <AppText
-                variant="bodyLargeBold"
-              >
-                Merchant Details
-              </AppText>
-
-              <Card>
-                <View
-                  style={{
-                    gap:
-                      spacing.xs,
-                  }}
-                >
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
-                    Merchant ID
-                  </AppText>
-
-                  <AppText
-                    variant="bodySmall"
-                  >
-                    {profile.merchantId}
-                  </AppText>
-                </View>
-              </Card>
-            </View>
-          )}
         </ScrollView>
       </View>
     </SafeAreaView>

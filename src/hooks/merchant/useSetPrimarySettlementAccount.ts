@@ -10,15 +10,29 @@ import { queryKeys } from "@/lib/queryKeys";
 
 /**
  * ============================================================================
- * DELETE SETTLEMENT ACCOUNT
+ * SET PRIMARY SETTLEMENT ACCOUNT
  * ============================================================================
  */
 
-export function useDeleteSettlementAccount() {
+export function useSetPrimarySettlementAccount() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: merchantService.deleteSettlementAccount,
+    mutationFn: async (account: SettlementAccount) => {
+      return merchantService.updateSettlementAccount({
+        settlementAccountId: account.settlementAccountId,
+
+        accountNumber: account.accountNumber,
+
+        accountName: account.accountName,
+
+        bankName: account.bankName,
+
+        bankCode: account.bankCode,
+
+        isPrimary: true,
+      });
+    },
 
     /**
      * ------------------------------------------------------------------------
@@ -26,7 +40,7 @@ export function useDeleteSettlementAccount() {
      * ------------------------------------------------------------------------
      */
 
-    onMutate: async (settlementAccountId) => {
+    onMutate: async (selectedAccount) => {
       await queryClient.cancelQueries({
         queryKey: queryKeys.settlementAccounts,
       });
@@ -45,11 +59,13 @@ export function useDeleteSettlementAccount() {
           return {
             ...oldData,
 
-            data: oldData.data.filter(
-              (account) =>
-                String(account.settlementAccountId) !==
-                String(settlementAccountId)
-            ),
+            data: oldData.data.map((account) => ({
+              ...account,
+
+              isDefault:
+                String(account.settlementAccountId) ===
+                String(selectedAccount.settlementAccountId),
+            })),
           };
         }
       );
@@ -65,7 +81,7 @@ export function useDeleteSettlementAccount() {
      * ------------------------------------------------------------------------
      */
 
-    onError: (_error, _settlementAccountId, context) => {
+    onError: (_error, _account, context) => {
       if (context?.previousAccounts) {
         queryClient.setQueryData(
           queryKeys.settlementAccounts,

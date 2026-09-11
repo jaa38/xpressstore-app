@@ -397,13 +397,6 @@ export default function SettlementsScreen() {
 
   const [accountResolutionMessage, setAccountResolutionMessage] = useState("");
 
-  /**
-   * Track the specific account currently being mutated.
-   *
-   * This prevents one mutation from making every card
-   * appear to be loading.
-   */
-
   const [deletingAccountId, setDeletingAccountId] = useState<
     string | number | null
   >(null);
@@ -494,14 +487,6 @@ export default function SettlementsScreen() {
       return;
     }
 
-    /**
-     * When editing an existing account, we already know
-     * the current account details are valid.
-     *
-     * The resolution effect should only run again after
-     * the user changes bank or account number.
-     */
-
     resolveRequestRef.current += 1;
 
     const requestId = resolveRequestRef.current;
@@ -517,11 +502,6 @@ export default function SettlementsScreen() {
 
       return;
     }
-
-    /**
-     * Avoid immediately resolving the existing account
-     * when entering change mode.
-     */
 
     const isExistingAccountUnchanged =
       mode === "change" &&
@@ -796,9 +776,9 @@ export default function SettlementsScreen() {
 
     Alert.alert(
       "Delete Settlement Account?",
-      `Are you sure you want to remove your ${account.bankName} account ending in ${account.accountNumber.slice(
-        -4
-      )}?`,
+      `Are you sure you want to remove your ${
+        account.bankName
+      } account ending in ${account.accountNumber.slice(-4)}?`,
       [
         {
           text: "Cancel",
@@ -907,12 +887,6 @@ export default function SettlementsScreen() {
 
     try {
       await updateSettlementAccount.mutateAsync({
-        /**
-         * Existing account → include ID.
-         *
-         * New account → omit ID.
-         */
-
         settlementAccountId: isChangingAccount
           ? selectedAccount?.settlementAccountId
           : undefined,
@@ -924,12 +898,6 @@ export default function SettlementsScreen() {
         bankName: selectedBank.label,
 
         bankCode: data.bankCode,
-
-        /**
-         * Preserve primary status when editing.
-         *
-         * Automatically make the first account primary.
-         */
 
         isPrimary: isChangingAccount
           ? selectedAccount?.isDefault
@@ -1142,28 +1110,27 @@ export default function SettlementsScreen() {
                   </AppText>
                 </View>
 
-                {hasVerifiedBVN && (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Add settlement account"
-                    onPress={handleAddAccount}
-                    style={{
-                      flexDirection: "row",
+                {/* FIX: ALWAYS ALLOW THE USER TO START ADDING */}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Add settlement account"
+                  onPress={handleAddAccount}
+                  style={{
+                    flexDirection: "row",
 
-                      alignItems: "center",
+                    alignItems: "center",
 
-                      gap: spacing.xs,
-                    }}
-                  >
-                    <Ionicons
-                      name="add-circle-outline"
-                      size={20}
-                      color={theme.icon.default.icon}
-                    />
+                    gap: spacing.xs,
+                  }}
+                >
+                  <Ionicons
+                    name="add-circle-outline"
+                    size={20}
+                    color={theme.icon.default.icon}
+                  />
 
-                    <AppText variant="bodySmallBold">Add</AppText>
-                  </Pressable>
-                )}
+                  <AppText variant="bodySmallBold">Add</AppText>
+                </Pressable>
               </View>
 
               {isSettlementAccountsLoading && (
@@ -1254,13 +1221,12 @@ export default function SettlementsScreen() {
                       </AppText>
                     </View>
 
-                    {hasVerifiedBVN && (
-                      <Button
-                        title="Add Settlement Account"
-                        variant="primary"
-                        onPress={handleAddAccount}
-                      />
-                    )}
+                    {/* FIX: ALWAYS ALLOW ADD */}
+                    <Button
+                      title="Add Settlement Account"
+                      variant="primary"
+                      onPress={handleAddAccount}
+                    />
                   </View>
                 )}
 

@@ -19,6 +19,8 @@ import { router } from "expo-router";
 
 import { Controller, useForm } from "react-hook-form";
 
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+
 import { AppText } from "@/components/ui/AppText";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -123,6 +125,92 @@ function maskAccountNumber(accountNumber: string) {
 
 /**
  * ============================================================================
+ * SWIPE ACTIONS
+ * ============================================================================
+ */
+
+function RightActions({
+  onSetPrimary,
+  onDelete,
+  isPrimary,
+  disabled,
+}: {
+  onSetPrimary: () => void;
+  onDelete: () => void;
+  isPrimary: boolean;
+  disabled: boolean;
+}) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+
+        gap: spacing.sm,
+      }}
+    >
+      {!isPrimary && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Set settlement account as primary"
+          disabled={disabled}
+          onPress={onSetPrimary}
+          style={{
+            width: 90,
+
+            justifyContent: "center",
+
+            alignItems: "center",
+
+            backgroundColor: theme.action.primary.background,
+
+            borderRadius: radius.md,
+
+            opacity: disabled ? 0.5 : 1,
+          }}
+        >
+          <Ionicons
+            name="star-outline"
+            size={24}
+            color={theme.action.primary.text}
+          />
+
+          <AppText color="inverse">Set Primary</AppText>
+        </Pressable>
+      )}
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Delete settlement account"
+        disabled={disabled}
+        onPress={onDelete}
+        style={{
+          width: 90,
+
+          justifyContent: "center",
+
+          alignItems: "center",
+
+          backgroundColor: theme.action.destructive.background,
+
+          borderRadius: radius.md,
+
+          opacity: disabled ? 0.5 : 1,
+        }}
+      >
+        <Ionicons
+          name="trash-outline"
+          size={24}
+          color={theme.action.destructive.text}
+        />
+
+        <AppText color="inverse">Delete</AppText>
+      </Pressable>
+    </View>
+  );
+}
+
+/**
+ * ============================================================================
  * SETTLEMENT ACCOUNT CARD
  * ============================================================================
  */
@@ -155,116 +243,126 @@ function SettlementAccountCard({
   const isBusy = isDeleting || isSettingPrimary || isUpdating;
 
   return (
-    <View
-      style={{
-        padding: spacing.md,
-
-        borderRadius: radius.md,
-
-        backgroundColor: theme.card.default.background,
-
-        borderWidth: 1,
-
-        borderColor: theme.card.default.border,
-
-        gap: spacing.md,
-      }}
+    <Swipeable
+      enabled={!isBusy}
+      renderRightActions={() => (
+        <RightActions
+          isPrimary={account.isDefault}
+          disabled={isBusy}
+          onSetPrimary={onSetPrimary}
+          onDelete={onDelete}
+        />
+      )}
     >
       <View
         style={{
-          flexDirection: "row",
+          padding: spacing.md,
 
-          alignItems: "center",
+          borderRadius: radius.md,
+
+          backgroundColor: theme.card.default.background,
+
+          borderWidth: 1,
+
+          borderColor: theme.card.default.border,
 
           gap: spacing.md,
         }}
       >
         <View
           style={{
-            width: 44,
-
-            height: 44,
-
-            borderRadius: radius.full,
-
-            justifyContent: "center",
+            flexDirection: "row",
 
             alignItems: "center",
 
-            backgroundColor: theme.icon.default.background,
+            gap: spacing.md,
           }}
         >
-          <Ionicons
-            name="card-outline"
-            size={22}
-            color={theme.icon.default.icon}
-          />
-        </View>
-
-        <View
-          style={{
-            flex: 1,
-
-            gap: spacing.xs,
-          }}
-        >
-          <AppText variant="bodyBold">{account.bankName}</AppText>
-
-          <AppText variant="bodySmall" color="secondary">
-            {maskAccountNumber(account.accountNumber)}
-          </AppText>
-        </View>
-
-        {account.isDefault && (
           <View
             style={{
-              flexDirection: "row",
+              width: 44,
+
+              height: 44,
+
+              borderRadius: radius.full,
+
+              justifyContent: "center",
 
               alignItems: "center",
+
+              backgroundColor: theme.icon.default.background,
+            }}
+          >
+            <Ionicons
+              name="card-outline"
+              size={22}
+              color={theme.icon.default.icon}
+            />
+          </View>
+
+          <View
+            style={{
+              flex: 1,
 
               gap: spacing.xs,
             }}
           >
-            <Ionicons
-              name="checkmark-circle"
-              size={18}
-              color={theme.icon.success.icon}
-            />
+            <AppText variant="bodyBold">{account.bankName}</AppText>
 
-            <AppText variant="bodySmallBold">Primary</AppText>
+            <AppText variant="bodySmall" color="secondary">
+              {maskAccountNumber(account.accountNumber)}
+            </AppText>
           </View>
-        )}
-      </View>
 
-      <View
-        style={{
-          gap: spacing.xs,
-        }}
-      >
-        <AppText variant="bodySmall" color="muted">
-          Account Name
-        </AppText>
+          {account.isDefault && (
+            <View
+              style={{
+                flexDirection: "row",
 
-        <AppText variant="bodyBold">{account.accountName}</AppText>
-      </View>
+                alignItems: "center",
 
-      <View
-        style={{
-          flexDirection: "row",
+                gap: spacing.xs,
+              }}
+            >
+              <Ionicons
+                name="checkmark-circle"
+                size={18}
+                color={theme.icon.success.icon}
+              />
 
-          alignItems: "center",
+              <AppText variant="bodySmallBold">Primary</AppText>
+            </View>
+          )}
+        </View>
 
-          flexWrap: "wrap",
+        <View
+          style={{
+            gap: spacing.xs,
+          }}
+        >
+          <AppText variant="bodySmall" color="muted">
+            Account Name
+          </AppText>
 
-          gap: spacing.lg,
-        }}
-      >
-        {!account.isDefault && (
+          <AppText variant="bodyBold">{account.accountName}</AppText>
+        </View>
+
+        <View
+          style={{
+            flexDirection: "row",
+
+            alignItems: "center",
+
+            flexWrap: "wrap",
+
+            gap: spacing.lg,
+          }}
+        >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Set as primary settlement account"
+            accessibilityLabel="Change settlement account"
             disabled={isBusy}
-            onPress={onSetPrimary}
+            onPress={onChange}
             style={{
               flexDirection: "row",
 
@@ -275,77 +373,17 @@ function SettlementAccountCard({
               opacity: isBusy ? 0.5 : 1,
             }}
           >
-            {isSettingPrimary ? (
-              <ActivityIndicator size="small" color={theme.icon.default.icon} />
-            ) : (
-              <Ionicons
-                name="star-outline"
-                size={18}
-                color={theme.icon.default.icon}
-              />
-            )}
-
-            <AppText variant="bodySmallBold">
-              {isSettingPrimary ? "Setting..." : "Set Primary"}
-            </AppText>
-          </Pressable>
-        )}
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Change settlement account"
-          disabled={isBusy}
-          onPress={onChange}
-          style={{
-            flexDirection: "row",
-
-            alignItems: "center",
-
-            gap: spacing.xs,
-
-            opacity: isBusy ? 0.5 : 1,
-          }}
-        >
-          <Ionicons
-            name="create-outline"
-            size={18}
-            color={theme.icon.default.icon}
-          />
-
-          <AppText variant="bodySmallBold">Change</AppText>
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Delete settlement account"
-          disabled={isBusy}
-          onPress={onDelete}
-          style={{
-            flexDirection: "row",
-
-            alignItems: "center",
-
-            gap: spacing.xs,
-
-            opacity: isBusy ? 0.5 : 1,
-          }}
-        >
-          {isDeleting ? (
-            <ActivityIndicator size="small" color={theme.icon.error.icon} />
-          ) : (
             <Ionicons
-              name="trash-outline"
+              name="create-outline"
               size={18}
-              color={theme.icon.error.icon}
+              color={theme.icon.default.icon}
             />
-          )}
 
-          <AppText variant="bodySmallBold">
-            {isDeleting ? "Deleting..." : "Delete"}
-          </AppText>
-        </Pressable>
+            <AppText variant="bodySmallBold">Change</AppText>
+          </Pressable>
+        </View>
       </View>
-    </View>
+    </Swipeable>
   );
 }
 
@@ -1110,7 +1148,6 @@ export default function SettlementsScreen() {
                   </AppText>
                 </View>
 
-                {/* FIX: ALWAYS ALLOW THE USER TO START ADDING */}
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Add settlement account"
@@ -1221,7 +1258,6 @@ export default function SettlementsScreen() {
                       </AppText>
                     </View>
 
-                    {/* FIX: ALWAYS ALLOW ADD */}
                     <Button
                       title="Add Settlement Account"
                       variant="primary"

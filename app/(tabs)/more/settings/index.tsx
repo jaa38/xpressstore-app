@@ -240,7 +240,7 @@ export default function SettingsScreen() {
               APPEARANCE
           ============================================================== */}
 
-          <View style={{ gap: spacing.sm }}>
+          {/* <View style={{ gap: spacing.sm }}>
             <AppText variant="bodyLargeBold">Appearance</AppText>
 
             <Card>
@@ -308,7 +308,7 @@ export default function SettingsScreen() {
                 </View>
               </View>
             </Card>
-          </View>
+          </View> */}
 
           {/* ==============================================================
               CURRENCY

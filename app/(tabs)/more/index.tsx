@@ -149,9 +149,7 @@ export default function MoreScreen() {
             }}
           >
             <AppText variant="h3">
-              {isLoading
-                ? "Loading..."
-                : (profile?.businessName ?? "Merchant")}
+              {isLoading ? "Loading..." : (profile?.businessName ?? "Merchant")}
             </AppText>
 
             <AppText variant="bodySmall" color="muted">

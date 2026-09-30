@@ -12,7 +12,7 @@ import { useOnboardingStore } from "@/store/onboarding/onboardingStore";
 
 import { AuthUser } from "@/types/auth";
 
-import { DEV_SESSION, DEV_SESSION_ENABLED } from "@/config/dev-session.local";
+import { DEV_ACCESS_TOKEN } from "@/config/devAuth";
 
 /**
  * ============================================================================
@@ -143,7 +143,7 @@ export function AuthProvider({ children }: Props) {
        * ----------------------------------------------------------------------
        */
 
-      if (__DEV__ && DEV_SESSION_ENABLED && !token && DEV_SESSION.accessToken) {
+      if (__DEV__ && !token && DEV_ACCESS_TOKEN) {
         console.log("=================================");
 
         console.log("AUTH PROVIDER");
@@ -152,21 +152,7 @@ export function AuthProvider({ children }: Props) {
 
         console.log("=================================");
 
-        /**
-         * Save development access token.
-         */
-
-        await saveAccessToken(DEV_SESSION.accessToken);
-
-        /**
-         * Save development user.
-         */
-
-        await saveCurrentUser(DEV_SESSION.user);
-
-        /**
-         * Reload token.
-         */
+        await saveAccessToken(DEV_ACCESS_TOKEN);
 
         token = await getAccessToken();
 

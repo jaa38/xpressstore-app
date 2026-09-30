@@ -135,6 +135,8 @@ export const ROUTES = {
 
   SETTLEMENTS: "/(tabs)/more/settlements",
 
+  ADD_SETTLEMENT_ACCOUNT: "/(tabs)/more/settlements/add",
+
   CUSTOMERS: "/(tabs)/more/customers",
 
   SECURITY: "/(tabs)/more/security",

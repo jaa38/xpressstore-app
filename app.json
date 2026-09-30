@@ -50,7 +50,8 @@
             "usePrecompiledModules": false
           }
         }
-      ]
+      ],
+      "@react-native-vector-icons/material-design-icons"
     ],
     "extra": {
       "router": {},

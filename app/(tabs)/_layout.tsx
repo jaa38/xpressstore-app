@@ -125,23 +125,13 @@ import { NativeTabs } from "expo-router/unstable-native-tabs";
 
 import { theme } from "@/theme";
 
-/**
- * ============================================================================
- * MAIN APPLICATION NATIVE TAB NAVIGATION
- * ============================================================================
- */
-
 export default function TabsLayout() {
   return (
     <NativeTabs
       tintColor={theme.icon.branding.icon}
       disableTransparentOnScrollEdge
-      tabBarRespectsIMEInsets
+      minimizeBehavior="never"
     >
-      {/* ==================================================================
-          HOME
-      ================================================================== */}
-
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
 
@@ -152,10 +142,6 @@ export default function TabsLayout() {
           }}
         />
       </NativeTabs.Trigger>
-
-      {/* ==================================================================
-          STOREFRONT
-      ================================================================== */}
 
       <NativeTabs.Trigger name="store">
         <NativeTabs.Trigger.Label>Storefront</NativeTabs.Trigger.Label>
@@ -168,10 +154,6 @@ export default function TabsLayout() {
         />
       </NativeTabs.Trigger>
 
-      {/* ==================================================================
-          ORDERS
-      ================================================================== */}
-
       <NativeTabs.Trigger name="orders">
         <NativeTabs.Trigger.Label>Orders</NativeTabs.Trigger.Label>
 
@@ -183,10 +165,6 @@ export default function TabsLayout() {
         />
       </NativeTabs.Trigger>
 
-      {/* ==================================================================
-          PRODUCTS
-      ================================================================== */}
-
       <NativeTabs.Trigger name="products">
         <NativeTabs.Trigger.Label>Products</NativeTabs.Trigger.Label>
 
@@ -197,10 +175,6 @@ export default function TabsLayout() {
           }}
         />
       </NativeTabs.Trigger>
-
-      {/* ==================================================================
-          MORE
-      ================================================================== */}
 
       <NativeTabs.Trigger name="more">
         <NativeTabs.Trigger.Label>More</NativeTabs.Trigger.Label>

@@ -213,11 +213,20 @@ export default function LoginScreen() {
 
   /**
    * ==========================================================================
-   * BIOMETRIC LOGIN
+   * BIOMETRIC UNLOCK
    * ==========================================================================
+   *
+   * Biometrics do not create a new authentication session.
+   *
+   * They unlock the existing securely stored session:
+   *
+   * 1. Authenticate the device owner.
+   * 2. Read the stored access token and user.
+   * 3. Restore the user into AuthProvider.
+   * 4. Navigate into the authenticated application.
    */
 
-  async function handleBiometricLogin() {
+  async function handleBiometricUnlock() {
     if (loadingBiometric) {
       return;
     }
@@ -227,7 +236,7 @@ export default function LoginScreen() {
 
       /**
        * ----------------------------------------------------------------------
-       * AUTHENTICATE
+       * AUTHENTICATE WITH DEVICE BIOMETRICS
        * ----------------------------------------------------------------------
        */
 
@@ -237,7 +246,7 @@ export default function LoginScreen() {
 
       /**
        * ----------------------------------------------------------------------
-       * AUTHENTICATION FAILED
+       * AUTHENTICATION FAILED / CANCELLED
        * ----------------------------------------------------------------------
        */
 
@@ -253,6 +262,9 @@ export default function LoginScreen() {
        * ----------------------------------------------------------------------
        * RESTORE STORED SESSION
        * ----------------------------------------------------------------------
+       *
+       * Biometrics only unlock the existing session.
+       * No API login or refresh-token request is made here.
        */
 
       const [token, user] = await Promise.all([
@@ -266,16 +278,15 @@ export default function LoginScreen() {
        * SESSION NOT AVAILABLE
        * ----------------------------------------------------------------------
        *
-       * The biometric configuration may remain
-       * after the authentication session has been
-       * cleared.
+       * The biometric configuration can remain after
+       * the stored authentication session has been cleared.
        *
-       * Remove the stale biometric configuration
-       * so Face ID is not shown again.
+       * In that situation biometrics are no longer valid
+       * for this account and must be disabled.
        */
 
       if (!token || !user) {
-        console.log("BIOMETRIC LOGIN → SESSION NOT AVAILABLE");
+        console.log("BIOMETRIC UNLOCK → SESSION NOT AVAILABLE");
 
         await Promise.all([disableBiometrics(), clearBiometricEmail()]);
 
@@ -295,6 +306,12 @@ export default function LoginScreen() {
        * ----------------------------------------------------------------------
        * RESTORE AUTH USER
        * ----------------------------------------------------------------------
+       *
+       * AuthProvider deliberately keeps a stored session locked
+       * until the user explicitly authenticates.
+       *
+       * Successful biometric authentication unlocks that
+       * existing stored session.
        */
 
       await loginUser(user);
@@ -307,7 +324,7 @@ export default function LoginScreen() {
 
       router.replace(ROUTES.TABS);
     } catch (error) {
-      console.error("Biometric login failed:", error);
+      console.error("Biometric unlock failed:", error);
 
       Alert.alert(
         "Unable to Sign In",
@@ -476,7 +493,7 @@ export default function LoginScreen() {
                       variant="primary"
                       size="large"
                       disabled={loadingBiometric}
-                      onPress={handleBiometricLogin}
+                      onPress={handleBiometricUnlock}
                     />
                   </View>
 

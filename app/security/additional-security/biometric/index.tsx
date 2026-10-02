@@ -42,8 +42,6 @@ import { AppText } from "@/components/ui/AppText";
 
 import { Card } from "@/components/ui/Card";
 
-import { Divider } from "@/components/ui/Divider";
-
 import { spacing, theme, radius } from "@/theme";
 
 /**
@@ -245,6 +243,9 @@ export default function BiometricAuthenticationScreen() {
                  * ============================================================
                  * VERIFY STORED SESSION
                  * ============================================================
+                 *
+                 * Biometrics are only enabled for an account that already
+                 * has a complete authenticated session.
                  */
 
                 const [token, storedUser] = await Promise.all([
@@ -304,9 +305,12 @@ export default function BiometricAuthenticationScreen() {
                  * ============================================================
                  * SAVE BIOMETRIC ACCOUNT EMAIL
                  * ============================================================
+                 *
+                 * Use the securely stored authenticated user as the source
+                 * of truth for the account associated with biometrics.
                  */
 
-                await saveBiometricEmail(user?.email ?? storedUser.email);
+                await saveBiometricEmail(storedUser.email);
 
                 /**
                  * ============================================================
@@ -324,7 +328,7 @@ export default function BiometricAuthenticationScreen() {
 
                 Alert.alert(
                   `${biometricName} Enabled`,
-                  `You can now use ${biometricName} to sign in to XpressStore.`
+                  `You can now use ${biometricName} to unlock XpressStore.`
                 );
               } catch (error) {
                 console.error("Unable to enable biometrics:", error);

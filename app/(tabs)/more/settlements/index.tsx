@@ -49,6 +49,8 @@ import { ROUTES } from "@/navigation/routes";
 
 import { SettlementAccount } from "@/types/merchant";
 
+import { BANK_CONFIG, BANK_OPTIONS } from "@/constants/banks";
+
 /**
  * ============================================================================
  * TYPES
@@ -62,108 +64,9 @@ type SettlementForm = {
   accountName: string;
 };
 
-type AccountResolutionStatus =
-  | "idle"
-  | "resolving"
-  | "success"
-  | "error";
+type AccountResolutionStatus = "idle" | "resolving" | "success" | "error";
 
 type SettlementMode = "view" | "add" | "change";
-
-/**
- * ============================================================================
- * CONSTANTS
- * ============================================================================
- */
-
-const BANK_OPTIONS = [
-  {
-    label: "Access Bank",
-    value: "044",
-  },
-  {
-    label: "GTBank",
-    value: "058",
-  },
-  {
-    label: "First Bank",
-    value: "011",
-  },
-  {
-    label: "Zenith Bank",
-    value: "057",
-  },
-  {
-    label: "UBA",
-    value: "033",
-  },
-  {
-    label: "Opay",
-    value: "999992",
-  },
-  {
-    label: "PalmPay",
-    value: "999991",
-  },
-];
-
-/**
- * ============================================================================
- * BANK CARD CONFIGURATION
- * ============================================================================
- */
-
-const BANK_CARD_CONFIG: Record<
-  string,
-  {
-    background: string;
-    logo?: any;
-    logoBackground?: string;
-    accent?: string;
-  }
-> = {
-  "Access Bank": {
-    background: "#991F22",
-    logo: require("../../../../assets/banks/access-bank.png"),
-    logoBackground: "#FFFFFF",
-  },
-
-  GTBank: {
-    background: "#F96A16",
-    logo: require("../../../../assets/banks/gtbank.png"),
-    logoBackground: "#FFFFFF",
-  },
-
-  "First Bank": {
-    background: "#003B7A",
-    logo: require("../../../../assets/banks/first-bank.png"),
-    logoBackground: "#FFFFFF",
-  },
-
-  "Zenith Bank": {
-    background: "#E21D2B",
-    logo: require("../../../../assets/banks/zenith-bank.png"),
-    logoBackground: "#FFFFFF",
-  },
-
-  UBA: {
-    background: "#D71920",
-    logo: require("../../../../assets/banks/uba.png"),
-    logoBackground: "#FFFFFF",
-  },
-
-  Opay: {
-    background: "#00B875",
-    logo: require("../../../../assets/banks/opay.png"),
-    logoBackground: "#FFFFFF",
-  },
-
-  PalmPay: {
-    background: "#7C3AED",
-    logo: require("../../../../assets/banks/palmpay.png"),
-    logoBackground: "#FFFFFF",
-  },
-};
 
 /**
  * ============================================================================
@@ -185,7 +88,10 @@ function maskAccountNumber(accountNumber: string) {
 
 function getBankCardConfig(bankName: string) {
   return (
-    BANK_CARD_CONFIG[bankName] ?? {
+    BANK_CONFIG[bankName] ?? {
+      label: bankName,
+      code: "",
+      logo: undefined,
       background: theme.icon.branding.icon,
       logoBackground: "#FFFFFF",
     }
@@ -237,9 +143,7 @@ function RightActions({
             color={theme.action.primary.text}
           />
 
-          <AppText color="inverse">
-            Set Primary
-          </AppText>
+          <AppText color="inverse">Set Primary</AppText>
         </Pressable>
       )}
 
@@ -263,9 +167,7 @@ function RightActions({
           color={theme.action.destructive.text}
         />
 
-        <AppText color="inverse">
-          Delete
-        </AppText>
+        <AppText color="inverse">Delete</AppText>
       </Pressable>
     </View>
   );
@@ -302,14 +204,9 @@ function SettlementAccountCard({
   onDelete,
   onSetPrimary,
 }: SettlementAccountCardProps) {
-  const isBusy =
-    isDeleting ||
-    isSettingPrimary ||
-    isUpdating;
+  const isBusy = isDeleting || isSettingPrimary || isUpdating;
 
-  const cardConfig = getBankCardConfig(
-    account.bankName
-  );
+  const cardConfig = getBankCardConfig(account.bankName);
 
   return (
     <Swipeable
@@ -366,8 +263,7 @@ function SettlementAccountCard({
 
             top: -100,
 
-            backgroundColor:
-              "rgba(255,255,255,0.08)",
+            backgroundColor: "rgba(255,255,255,0.08)",
           }}
         />
 
@@ -386,8 +282,7 @@ function SettlementAccountCard({
 
             bottom: -110,
 
-            backgroundColor:
-              "rgba(255,255,255,0.06)",
+            backgroundColor: "rgba(255,255,255,0.06)",
           }}
         />
 
@@ -427,9 +322,7 @@ function SettlementAccountCard({
 
                 borderRadius: 14,
 
-                backgroundColor:
-                  cardConfig.logoBackground ??
-                  "#FFFFFF",
+                backgroundColor: cardConfig.logoBackground ?? "#FFFFFF",
 
                 justifyContent: "center",
 
@@ -454,8 +347,7 @@ function SettlementAccountCard({
                 <AppText
                   variant="bodyBold"
                   style={{
-                    color:
-                      cardConfig.background,
+                    color: cardConfig.background,
 
                     textAlign: "center",
 
@@ -523,14 +415,10 @@ function SettlementAccountCard({
               <Ionicons
                 name="checkmark-circle"
                 size={18}
-                color={
-                  theme.icon.success.icon
-                }
+                color={theme.icon.success.icon}
               />
 
-              <AppText variant="bodySmallBold">
-                Primary
-              </AppText>
+              <AppText variant="bodySmallBold">Primary</AppText>
             </View>
           )}
         </View>
@@ -573,11 +461,7 @@ function SettlementAccountCard({
               ACCOUNT NAME
             </AppText>
 
-            <AppText
-              variant="bodyBold"
-              color="inverse"
-              numberOfLines={1}
-            >
+            <AppText variant="bodyBold" color="inverse" numberOfLines={1}>
               {account.accountName}
             </AppText>
           </View>
@@ -628,38 +512,27 @@ function SettlementAccountCard({
  */
 
 export default function SettlementsScreen() {
-  const {
-    bvn,
-    setBVN,
-    setVerifiedBVN,
-  } = useOnboardingStore();
+  const { bvn, setBVN, setVerifiedBVN } = useOnboardingStore();
 
   const verifyBVN = useVerifyBVN();
 
-  const {
-    mutateAsync: validateSettlementAccount,
-  } = useValidateSettlementAccount();
+  const { mutateAsync: validateSettlementAccount } =
+    useValidateSettlementAccount();
 
-  const updateSettlementAccount =
-    useUpdateSettlementAccount();
+  const updateSettlementAccount = useUpdateSettlementAccount();
 
-  const deleteSettlementAccount =
-    useDeleteSettlementAccount();
+  const deleteSettlementAccount = useDeleteSettlementAccount();
 
-  const setPrimarySettlementAccount =
-    useSetPrimarySettlementAccount();
+  const setPrimarySettlementAccount = useSetPrimarySettlementAccount();
 
   const {
     settlementAccounts = [],
 
-    isLoading:
-      isSettlementAccountsLoading,
+    isLoading: isSettlementAccountsLoading,
 
-    isError:
-      isSettlementAccountsError,
+    isError: isSettlementAccountsError,
 
-    refetch:
-      refetchSettlementAccounts,
+    refetch: refetchSettlementAccounts,
   } = useSettlementAccounts();
 
   /**
@@ -668,53 +541,27 @@ export default function SettlementsScreen() {
    * ==========================================================================
    */
 
-  const [
-    mode,
-    setMode,
-  ] = useState<SettlementMode>("view");
+  const [mode, setMode] = useState<SettlementMode>("view");
 
-  const [
-    selectedAccount,
-    setSelectedAccount,
-  ] =
-    useState<SettlementAccount | null>(
-      null
-    );
+  const [selectedAccount, setSelectedAccount] =
+    useState<SettlementAccount | null>(null);
 
-  const [
-    isRefreshing,
-    setIsRefreshing,
-  ] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const [
-    accountResolutionStatus,
-    setAccountResolutionStatus,
-  ] =
-    useState<AccountResolutionStatus>(
-      "idle"
-    );
+  const [accountResolutionStatus, setAccountResolutionStatus] =
+    useState<AccountResolutionStatus>("idle");
 
-  const [
-    accountResolutionMessage,
-    setAccountResolutionMessage,
-  ] = useState("");
+  const [accountResolutionMessage, setAccountResolutionMessage] = useState("");
 
-  const [
-    deletingAccountId,
-    setDeletingAccountId,
-  ] = useState<string | number | null>(
-    null
-  );
+  const [deletingAccountId, setDeletingAccountId] = useState<
+    string | number | null
+  >(null);
 
-  const [
-    settingPrimaryAccountId,
-    setSettingPrimaryAccountId,
-  ] = useState<string | number | null>(
-    null
-  );
+  const [settingPrimaryAccountId, setSettingPrimaryAccountId] = useState<
+    string | number | null
+  >(null);
 
-  const resolveRequestRef =
-    useRef(0);
+  const resolveRequestRef = useRef(0);
 
   /**
    * ==========================================================================
@@ -732,18 +579,17 @@ export default function SettlementsScreen() {
     setValue,
 
     reset,
-  } =
-    useForm<SettlementForm>({
-      defaultValues: {
-        bvn: bvn ?? "",
+  } = useForm<SettlementForm>({
+    defaultValues: {
+      bvn: bvn ?? "",
 
-        bankCode: "",
+      bankCode: "",
 
-        accountNumber: "",
+      accountNumber: "",
 
-        accountName: "",
-      },
-    });
+      accountName: "",
+    },
+  });
 
   const {
     bvn: enteredBVN,
@@ -761,26 +607,18 @@ export default function SettlementsScreen() {
    * ==========================================================================
    */
 
-  const hasVerifiedBVN =
-    Boolean(bvn);
+  const hasVerifiedBVN = Boolean(bvn);
 
-  const isBVNValid =
-    /^\d{11}$/.test(
-      enteredBVN
-    );
+  const isBVNValid = /^\d{11}$/.test(enteredBVN);
 
-  const isAccountNumberValid =
-    /^\d{10}$/.test(
-      accountNumber
-    );
+  const isAccountNumberValid = /^\d{10}$/.test(accountNumber);
 
   const isSettlementFormValid =
     hasVerifiedBVN &&
     Boolean(bankCode) &&
     isAccountNumberValid &&
     Boolean(accountName.trim()) &&
-    accountResolutionStatus ===
-      "success";
+    accountResolutionStatus === "success";
 
   /**
    * ==========================================================================
@@ -790,10 +628,7 @@ export default function SettlementsScreen() {
 
   useEffect(() => {
     if (bvn) {
-      setValue(
-        "bvn",
-        bvn
-      );
+      setValue("bvn", bvn);
     }
   }, [bvn, setValue]);
 
@@ -810,30 +645,16 @@ export default function SettlementsScreen() {
 
     resolveRequestRef.current += 1;
 
-    const requestId =
-      resolveRequestRef.current;
+    const requestId = resolveRequestRef.current;
 
-    const isValidAccountNumber =
-      /^\d{10}$/.test(
-        accountNumber
-      );
+    const isValidAccountNumber = /^\d{10}$/.test(accountNumber);
 
-    if (
-      !bankCode ||
-      !isValidAccountNumber
-    ) {
-      setValue(
-        "accountName",
-        ""
-      );
+    if (!bankCode || !isValidAccountNumber) {
+      setValue("accountName", "");
 
-      setAccountResolutionStatus(
-        "idle"
-      );
+      setAccountResolutionStatus("idle");
 
-      setAccountResolutionMessage(
-        ""
-      );
+      setAccountResolutionMessage("");
 
       return;
     }
@@ -841,126 +662,69 @@ export default function SettlementsScreen() {
     const isExistingAccountUnchanged =
       mode === "change" &&
       selectedAccount &&
-      selectedAccount.bankCode ===
-        bankCode &&
-      selectedAccount.accountNumber ===
-        accountNumber;
+      selectedAccount.bankCode === bankCode &&
+      selectedAccount.accountNumber === accountNumber;
 
-    if (
-      isExistingAccountUnchanged
-    ) {
-      setValue(
-        "accountName",
-        selectedAccount.accountName
-      );
+    if (isExistingAccountUnchanged) {
+      setValue("accountName", selectedAccount.accountName);
 
-      setAccountResolutionStatus(
-        "success"
-      );
+      setAccountResolutionStatus("success");
 
-      setAccountResolutionMessage(
-        ""
-      );
+      setAccountResolutionMessage("");
 
       return;
     }
 
-    setValue(
-      "accountName",
-      ""
-    );
+    setValue("accountName", "");
 
-    setAccountResolutionStatus(
-      "resolving"
-    );
+    setAccountResolutionStatus("resolving");
 
-    setAccountResolutionMessage(
-      ""
-    );
+    setAccountResolutionMessage("");
 
-    const timeout =
-      setTimeout(
-        async () => {
-          try {
-            const response =
-              await validateSettlementAccount(
-                {
-                  bankCode,
+    const timeout = setTimeout(async () => {
+      try {
+        const response = await validateSettlementAccount({
+          bankCode,
 
-                  accountNumber,
-                }
-              );
+          accountNumber,
+        });
 
-            if (
-              requestId !==
-              resolveRequestRef.current
-            ) {
-              return;
-            }
+        if (requestId !== resolveRequestRef.current) {
+          return;
+        }
 
-            const resolvedAccountName =
-              response.data?.accountName?.trim();
+        const resolvedAccountName = response.data?.accountName?.trim();
 
-            if (
-              !resolvedAccountName
-            ) {
-              setAccountResolutionStatus(
-                "error"
-              );
+        if (!resolvedAccountName) {
+          setAccountResolutionStatus("error");
 
-              setAccountResolutionMessage(
-                response.responseMessage ||
-                  "We could not verify this account."
-              );
+          setAccountResolutionMessage(
+            response.responseMessage || "We could not verify this account."
+          );
 
-              return;
-            }
+          return;
+        }
 
-            setValue(
-              "accountName",
-              resolvedAccountName
-            );
+        setValue("accountName", resolvedAccountName);
 
-            setAccountResolutionStatus(
-              "success"
-            );
+        setAccountResolutionStatus("success");
 
-            setAccountResolutionMessage(
-              ""
-            );
-          } catch (
-            error
-          ) {
-            if (
-              requestId !==
-              resolveRequestRef.current
-            ) {
-              return;
-            }
+        setAccountResolutionMessage("");
+      } catch (error) {
+        if (requestId !== resolveRequestRef.current) {
+          return;
+        }
 
-            setValue(
-              "accountName",
-              ""
-            );
+        setValue("accountName", "");
 
-            setAccountResolutionStatus(
-              "error"
-            );
+        setAccountResolutionStatus("error");
 
-            setAccountResolutionMessage(
-              getApiErrorMessage(
-                error
-              )
-            );
-          }
-        },
-        600
-      );
+        setAccountResolutionMessage(getApiErrorMessage(error));
+      }
+    }, 600);
 
     return () => {
-      clearTimeout(
-        timeout
-      );
+      clearTimeout(timeout);
     };
   }, [
     mode,
@@ -979,15 +743,11 @@ export default function SettlementsScreen() {
 
   async function handleRefresh() {
     try {
-      setIsRefreshing(
-        true
-      );
+      setIsRefreshing(true);
 
       await refetchSettlementAccounts();
     } finally {
-      setIsRefreshing(
-        false
-      );
+      setIsRefreshing(false);
     }
   }
 
@@ -1010,17 +770,11 @@ export default function SettlementsScreen() {
       accountName: "",
     });
 
-    setAccountResolutionStatus(
-      "idle"
-    );
+    setAccountResolutionStatus("idle");
 
-    setAccountResolutionMessage(
-      ""
-    );
+    setAccountResolutionMessage("");
 
-    setSelectedAccount(
-      null
-    );
+    setSelectedAccount(null);
   }
 
   /**
@@ -1041,35 +795,24 @@ export default function SettlementsScreen() {
    * ==========================================================================
    */
 
-  function handleChangeAccount(
-    account: SettlementAccount
-  ) {
+  function handleChangeAccount(account: SettlementAccount) {
     resolveRequestRef.current += 1;
 
-    setSelectedAccount(
-      account
-    );
+    setSelectedAccount(account);
 
     reset({
       bvn: bvn ?? "",
 
-      bankCode:
-        account.bankCode,
+      bankCode: account.bankCode,
 
-      accountNumber:
-        account.accountNumber,
+      accountNumber: account.accountNumber,
 
-      accountName:
-        account.accountName,
+      accountName: account.accountName,
     });
 
-    setAccountResolutionStatus(
-      "success"
-    );
+    setAccountResolutionStatus("success");
 
-    setAccountResolutionMessage(
-      ""
-    );
+    setAccountResolutionMessage("");
 
     setMode("change");
   }
@@ -1093,62 +836,36 @@ export default function SettlementsScreen() {
    */
 
   async function onVerifyBVN() {
-    if (
-      verifyBVN.isPending
-    ) {
+    if (verifyBVN.isPending) {
       return;
     }
 
     try {
       if (!isBVNValid) {
-        Alert.alert(
-          "Invalid BVN",
-          "Please enter a valid 11-digit BVN."
-        );
+        Alert.alert("Invalid BVN", "Please enter a valid 11-digit BVN.");
 
         return;
       }
 
-      const response =
-        await verifyBVN.mutateAsync(
-          {
-            bvn: enteredBVN,
-          }
-        );
+      const response = await verifyBVN.mutateAsync({
+        bvn: enteredBVN,
+      });
 
       if (!response.data) {
         throw new Error(
-          response.responseMessage ||
-            "Unable to verify your BVN."
+          response.responseMessage || "Unable to verify your BVN."
         );
       }
 
-      setBVN(
-        enteredBVN
-      );
+      setBVN(enteredBVN);
 
-      setVerifiedBVN(
-        response.data
-      );
+      setVerifiedBVN(response.data);
 
-      setValue(
-        "bvn",
-        enteredBVN
-      );
+      setValue("bvn", enteredBVN);
 
-      Alert.alert(
-        "BVN Verified",
-        "Your BVN has been successfully verified."
-      );
-    } catch (
-      error
-    ) {
-      Alert.alert(
-        "Verification Failed",
-        getApiErrorMessage(
-          error
-        )
-      );
+      Alert.alert("BVN Verified", "Your BVN has been successfully verified.");
+    } catch (error) {
+      Alert.alert("Verification Failed", getApiErrorMessage(error));
     }
   }
 
@@ -1158,20 +875,14 @@ export default function SettlementsScreen() {
    * ==========================================================================
    */
 
-  function handleSetPrimaryAccount(
-    account: SettlementAccount
-  ) {
-    if (
-      setPrimarySettlementAccount.isPending
-    ) {
+  function handleSetPrimaryAccount(account: SettlementAccount) {
+    if (setPrimarySettlementAccount.isPending) {
       return;
     }
 
     Alert.alert(
       "Set Primary Account?",
-      `${
-        account.bankName
-      } account ending in ${account.accountNumber.slice(
+      `${account.bankName} account ending in ${account.accountNumber.slice(
         -4
       )} will become your primary settlement account.`,
       [
@@ -1184,36 +895,25 @@ export default function SettlementsScreen() {
         {
           text: "Set Primary",
 
-          onPress:
-            async () => {
-              setSettingPrimaryAccountId(
-                account.settlementAccountId
+          onPress: async () => {
+            setSettingPrimaryAccountId(account.settlementAccountId);
+
+            try {
+              await setPrimarySettlementAccount.mutateAsync(account);
+
+              Alert.alert(
+                "Primary Account Updated",
+                "Your primary settlement account has been updated."
               );
-
-              try {
-                await setPrimarySettlementAccount.mutateAsync(
-                  account
-                );
-
-                Alert.alert(
-                  "Primary Account Updated",
-                  "Your primary settlement account has been updated."
-                );
-              } catch (
-                error
-              ) {
-                Alert.alert(
-                  "Unable to Update Primary Account",
-                  getApiErrorMessage(
-                    error
-                  )
-                );
-              } finally {
-                setSettingPrimaryAccountId(
-                  null
-                );
-              }
-            },
+            } catch (error) {
+              Alert.alert(
+                "Unable to Update Primary Account",
+                getApiErrorMessage(error)
+              );
+            } finally {
+              setSettingPrimaryAccountId(null);
+            }
+          },
         },
       ]
     );
@@ -1225,12 +925,8 @@ export default function SettlementsScreen() {
    * ==========================================================================
    */
 
-  function handleDeleteSettlementAccount(
-    account: SettlementAccount
-  ) {
-    if (
-      deleteSettlementAccount.isPending
-    ) {
+  function handleDeleteSettlementAccount(account: SettlementAccount) {
+    if (deleteSettlementAccount.isPending) {
       return;
     }
 
@@ -1238,9 +934,7 @@ export default function SettlementsScreen() {
       "Delete Settlement Account?",
       `Are you sure you want to remove your ${
         account.bankName
-      } account ending in ${account.accountNumber.slice(
-        -4
-      )}?`,
+      } account ending in ${account.accountNumber.slice(-4)}?`,
       [
         {
           text: "Cancel",
@@ -1253,52 +947,37 @@ export default function SettlementsScreen() {
 
           style: "destructive",
 
-          onPress:
-            async () => {
-              setDeletingAccountId(
+          onPress: async () => {
+            setDeletingAccountId(account.settlementAccountId);
+
+            try {
+              await deleteSettlementAccount.mutateAsync(
                 account.settlementAccountId
               );
 
-              try {
-                await deleteSettlementAccount.mutateAsync(
-                  account.settlementAccountId
-                );
-
-                if (
-                  selectedAccount &&
-                  String(
-                    selectedAccount.settlementAccountId
-                  ) ===
-                    String(
-                      account.settlementAccountId
-                    )
-                ) {
-                  resetSettlementForm();
-
-                  setMode(
-                    "view"
-                  );
-                }
-
-                Alert.alert(
-                  "Settlement Account Deleted",
-                  "Your settlement account has been successfully removed."
-                );
-              } catch (
-                error
+              if (
+                selectedAccount &&
+                String(selectedAccount.settlementAccountId) ===
+                  String(account.settlementAccountId)
               ) {
-                Alert.alert(
-                  "Unable to Delete Account",
-                  getApiErrorMessage(
-                    error
-                  )
-                );
-              } finally {
-                setDeletingAccountId(
-                  null
-                );
+                resetSettlementForm();
+
+                setMode("view");
               }
-            },
+
+              Alert.alert(
+                "Settlement Account Deleted",
+                "Your settlement account has been successfully removed."
+              );
+            } catch (error) {
+              Alert.alert(
+                "Unable to Delete Account",
+                getApiErrorMessage(error)
+              );
+            } finally {
+              setDeletingAccountId(null);
+            }
+          },
         },
       ]
     );
@@ -1310,12 +989,8 @@ export default function SettlementsScreen() {
    * ==========================================================================
    */
 
-  async function onSubmit(
-    data: SettlementForm
-  ) {
-    if (
-      updateSettlementAccount.isPending
-    ) {
+  async function onSubmit(data: SettlementForm) {
+    if (updateSettlementAccount.isPending) {
       return;
     }
 
@@ -1329,19 +1004,12 @@ export default function SettlementsScreen() {
     }
 
     if (!data.bankCode) {
-      Alert.alert(
-        "Bank Required",
-        "Please select your bank."
-      );
+      Alert.alert("Bank Required", "Please select your bank.");
 
       return;
     }
 
-    if (
-      !/^\d{10}$/.test(
-        data.accountNumber
-      )
-    ) {
+    if (!/^\d{10}$/.test(data.accountNumber)) {
       Alert.alert(
         "Invalid Account Number",
         "Please enter a valid 10-digit account number."
@@ -1350,11 +1018,7 @@ export default function SettlementsScreen() {
       return;
     }
 
-    if (
-      accountResolutionStatus !==
-        "success" ||
-      !data.accountName.trim()
-    ) {
+    if (accountResolutionStatus !== "success" || !data.accountName.trim()) {
       Alert.alert(
         "Account Verification Required",
         "Please wait for your account to be successfully verified."
@@ -1363,62 +1027,42 @@ export default function SettlementsScreen() {
       return;
     }
 
-    const selectedBank =
-      BANK_OPTIONS.find(
-        (bank) =>
-          bank.value ===
-          data.bankCode
-      );
+    const selectedBank = BANK_OPTIONS.find(
+      (bank) => bank.value === data.bankCode
+    );
 
     if (!selectedBank) {
-      Alert.alert(
-        "Bank Required",
-        "Please select a valid bank."
-      );
+      Alert.alert("Bank Required", "Please select a valid bank.");
 
       return;
     }
 
-    const isChangingAccount =
-      mode === "change";
+    const isChangingAccount = mode === "change";
 
-    const shouldBePrimary =
-      mode === "add" &&
-      settlementAccounts.length ===
-        0;
+    const shouldBePrimary = mode === "add" && settlementAccounts.length === 0;
 
     try {
-      await updateSettlementAccount.mutateAsync(
-        {
-          settlementAccountId:
-            isChangingAccount
-              ? selectedAccount?.settlementAccountId
-              : undefined,
+      await updateSettlementAccount.mutateAsync({
+        settlementAccountId: isChangingAccount
+          ? selectedAccount?.settlementAccountId
+          : undefined,
 
-          accountNumber:
-            data.accountNumber,
+        accountNumber: data.accountNumber,
 
-          accountName:
-            data.accountName.trim(),
+        accountName: data.accountName.trim(),
 
-          bankName:
-            selectedBank.label,
+        bankName: selectedBank.label,
 
-          bankCode:
-            data.bankCode,
+        bankCode: data.bankCode,
 
-          isPrimary:
-            isChangingAccount
-              ? selectedAccount?.isDefault
-              : shouldBePrimary,
-        }
-      );
+        isPrimary: isChangingAccount
+          ? selectedAccount?.isDefault
+          : shouldBePrimary,
+      });
 
       resetSettlementForm();
 
-      setMode(
-        "view"
-      );
+      setMode("view");
 
       Alert.alert(
         isChangingAccount
@@ -1429,15 +1073,8 @@ export default function SettlementsScreen() {
           ? "Your settlement account has been successfully updated."
           : "Your settlement account has been successfully added."
       );
-    } catch (
-      error
-    ) {
-      Alert.alert(
-        "Unable to Save Account",
-        getApiErrorMessage(
-          error
-        )
-      );
+    } catch (error) {
+      Alert.alert("Unable to Save Account", getApiErrorMessage(error));
     }
   }
 
@@ -1452,8 +1089,7 @@ export default function SettlementsScreen() {
       style={{
         flex: 1,
 
-        backgroundColor:
-          theme.background.primary,
+        backgroundColor: theme.background.primary,
       }}
     >
       <StatusBar style="auto" />
@@ -1462,8 +1098,7 @@ export default function SettlementsScreen() {
         style={{
           flex: 1,
 
-          paddingHorizontal:
-            spacing.lg,
+          paddingHorizontal: spacing.lg,
         }}
       >
         {/* ================================================================ */}
@@ -1472,11 +1107,9 @@ export default function SettlementsScreen() {
 
         <View
           style={{
-            flexDirection:
-              "row",
+            flexDirection: "row",
 
-            alignItems:
-              "center",
+            alignItems: "center",
 
             gap: spacing.md,
           }}
@@ -1485,44 +1118,34 @@ export default function SettlementsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
             onPress={() => {
-              if (
-                mode !== "view"
-              ) {
+              if (mode !== "view") {
                 handleCancelForm();
 
                 return;
               }
 
-              if (
-                router.canGoBack()
-              ) {
+              if (router.canGoBack()) {
                 router.back();
 
                 return;
               }
 
-              router.replace(
-                ROUTES.MORE
-              );
+              router.replace(ROUTES.MORE);
             }}
             style={{
               width: 44,
 
               height: 44,
 
-              justifyContent:
-                "center",
+              justifyContent: "center",
 
-              alignItems:
-                "center",
+              alignItems: "center",
             }}
           >
             <Ionicons
               name="chevron-back"
               size={24}
-              color={
-                theme.text.primary
-              }
+              color={theme.text.primary}
             />
           </Pressable>
 
@@ -1533,16 +1156,10 @@ export default function SettlementsScreen() {
               gap: spacing.xs,
             }}
           >
-            <AppText variant="h1">
-              Settlement Accounts
-            </AppText>
+            <AppText variant="h1">Settlement Accounts</AppText>
 
-            <AppText
-              variant="bodySmall"
-              color="secondary"
-            >
-              Manage where your transaction settlements are
-              paid.
+            <AppText variant="bodySmall" color="secondary">
+              Manage where your transaction settlements are paid.
             </AppText>
           </View>
         </View>
@@ -1552,27 +1169,19 @@ export default function SettlementsScreen() {
             flex: 1,
           }}
           contentContainerStyle={{
-            paddingTop:
-              spacing.lg,
+            paddingTop: spacing.lg,
 
-            paddingBottom:
-              spacing.xl,
+            paddingBottom: spacing.xl,
 
             gap: spacing.lg,
           }}
           refreshControl={
             <RefreshControl
-              refreshing={
-                isRefreshing
-              }
-              onRefresh={
-                handleRefresh
-              }
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
             />
           }
-          showsVerticalScrollIndicator={
-            false
-          }
+          showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           {/* ============================================================ */}
@@ -1581,26 +1190,20 @@ export default function SettlementsScreen() {
 
           <View
             style={{
-              padding:
-                spacing.md,
+              padding: spacing.md,
 
-              backgroundColor:
-                theme.background
-                  .success,
+              backgroundColor: theme.background.success,
 
-              borderRadius:
-                radius.md,
+              borderRadius: radius.md,
 
               gap: spacing.sm,
             }}
           >
             <View
               style={{
-                flexDirection:
-                  "row",
+                flexDirection: "row",
 
-                alignItems:
-                  "center",
+                alignItems: "center",
 
                 gap: spacing.sm,
               }}
@@ -1614,12 +1217,8 @@ export default function SettlementsScreen() {
                 size={24}
                 color={
                   hasVerifiedBVN
-                    ? theme.icon
-                        .success
-                        .icon
-                    : theme.icon
-                        .default
-                        .icon
+                    ? theme.icon.success.icon
+                    : theme.icon.default.icon
                 }
               />
 
@@ -1630,10 +1229,7 @@ export default function SettlementsScreen() {
               </AppText>
             </View>
 
-            <AppText
-              variant="bodySmall"
-              color="secondary"
-            >
+            <AppText variant="bodySmall" color="secondary">
               {hasVerifiedBVN
                 ? "Your verified BVN is linked to your settlement accounts."
                 : "Verify your BVN before adding a settlement account."}
@@ -1648,14 +1244,11 @@ export default function SettlementsScreen() {
             <>
               <View
                 style={{
-                  flexDirection:
-                    "row",
+                  flexDirection: "row",
 
-                  alignItems:
-                    "center",
+                  alignItems: "center",
 
-                  justifyContent:
-                    "space-between",
+                  justifyContent: "space-between",
 
                   gap: spacing.md,
                 }}
@@ -1667,31 +1260,21 @@ export default function SettlementsScreen() {
                     gap: spacing.xs,
                   }}
                 >
-                  <AppText variant="bodyLargeBold">
-                    Your Accounts
-                  </AppText>
+                  <AppText variant="bodyLargeBold">Your Accounts</AppText>
 
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
-                    Select which account receives your
-                    settlements.
+                  <AppText variant="bodySmall" color="secondary">
+                    Select which account receives your settlements.
                   </AppText>
                 </View>
 
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Add settlement account"
-                  onPress={
-                    handleAddAccount
-                  }
+                  onPress={handleAddAccount}
                   style={{
-                    flexDirection:
-                      "row",
+                    flexDirection: "row",
 
-                    alignItems:
-                      "center",
+                    alignItems: "center",
 
                     gap: spacing.xs,
                   }}
@@ -1699,16 +1282,10 @@ export default function SettlementsScreen() {
                   <Ionicons
                     name="add-circle-outline"
                     size={20}
-                    color={
-                      theme.icon
-                        .default
-                        .icon
-                    }
+                    color={theme.icon.default.icon}
                   />
 
-                  <AppText variant="bodySmallBold">
-                    Add
-                  </AppText>
+                  <AppText variant="bodySmallBold">Add</AppText>
                 </Pressable>
               </View>
 
@@ -1719,28 +1296,19 @@ export default function SettlementsScreen() {
               {isSettlementAccountsLoading && (
                 <View
                   style={{
-                    alignItems:
-                      "center",
+                    alignItems: "center",
 
-                    paddingVertical:
-                      spacing.xl,
+                    paddingVertical: spacing.xl,
 
                     gap: spacing.sm,
                   }}
                 >
                   <ActivityIndicator
                     size="small"
-                    color={
-                      theme.icon
-                        .branding
-                        .icon
-                    }
+                    color={theme.icon.branding.icon}
                   />
 
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
+                  <AppText variant="bodySmall" color="secondary">
                     Loading settlement accounts...
                   </AppText>
                 </View>
@@ -1755,33 +1323,22 @@ export default function SettlementsScreen() {
                   style={{
                     gap: spacing.sm,
 
-                    padding:
-                      spacing.md,
+                    padding: spacing.md,
 
-                    borderRadius:
-                      radius.md,
+                    borderRadius: radius.md,
 
-                    backgroundColor:
-                      theme.card
-                        .default
-                        .background,
+                    backgroundColor: theme.card.default.background,
 
                     borderWidth: 1,
 
-                    borderColor:
-                      theme.card
-                        .default
-                        .border,
+                    borderColor: theme.card.default.border,
                   }}
                 >
                   <AppText variant="bodyBold">
                     Unable to load settlement accounts
                   </AppText>
 
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
+                  <AppText variant="bodySmall" color="secondary">
                     Pull down to try again.
                   </AppText>
                 </View>
@@ -1793,15 +1350,12 @@ export default function SettlementsScreen() {
 
               {!isSettlementAccountsLoading &&
                 !isSettlementAccountsError &&
-                settlementAccounts.length ===
-                  0 && (
+                settlementAccounts.length === 0 && (
                   <View
                     style={{
-                      alignItems:
-                        "center",
+                      alignItems: "center",
 
-                      paddingVertical:
-                        spacing.xl,
+                      paddingVertical: spacing.xl,
 
                       gap: spacing.md,
                     }}
@@ -1809,17 +1363,12 @@ export default function SettlementsScreen() {
                     <Ionicons
                       name="card-outline"
                       size={48}
-                      color={
-                        theme.icon
-                          .default
-                          .icon
-                      }
+                      color={theme.icon.default.icon}
                     />
 
                     <View
                       style={{
-                        alignItems:
-                          "center",
+                        alignItems: "center",
 
                         gap: spacing.xs,
                       }}
@@ -1832,21 +1381,18 @@ export default function SettlementsScreen() {
                         variant="bodySmall"
                         color="secondary"
                         style={{
-                          textAlign:
-                            "center",
+                          textAlign: "center",
                         }}
                       >
-                        Add a bank account to receive your
-                        transaction settlements.
+                        Add a bank account to receive your transaction
+                        settlements.
                       </AppText>
                     </View>
 
                     <Button
                       title="Add Settlement Account"
                       variant="primary"
-                      onPress={
-                        handleAddAccount
-                      }
+                      onPress={handleAddAccount}
                     />
                   </View>
                 )}
@@ -1857,64 +1403,30 @@ export default function SettlementsScreen() {
 
               {!isSettlementAccountsLoading &&
                 !isSettlementAccountsError &&
-                settlementAccounts.map(
-                  (
-                    account
-                  ) => {
-                    const isDeletingThisAccount =
-                      deleteSettlementAccount.isPending &&
-                      String(
-                        deletingAccountId
-                      ) ===
-                        String(
-                          account.settlementAccountId
-                        );
+                settlementAccounts.map((account) => {
+                  const isDeletingThisAccount =
+                    deleteSettlementAccount.isPending &&
+                    String(deletingAccountId) ===
+                      String(account.settlementAccountId);
 
-                    const isSettingThisAccountPrimary =
-                      setPrimarySettlementAccount.isPending &&
-                      String(
-                        settingPrimaryAccountId
-                      ) ===
-                        String(
-                          account.settlementAccountId
-                        );
+                  const isSettingThisAccountPrimary =
+                    setPrimarySettlementAccount.isPending &&
+                    String(settingPrimaryAccountId) ===
+                      String(account.settlementAccountId);
 
-                    return (
-                      <SettlementAccountCard
-                        key={String(
-                          account.settlementAccountId
-                        )}
-                        account={
-                          account
-                        }
-                        isDeleting={
-                          isDeletingThisAccount
-                        }
-                        isSettingPrimary={
-                          isSettingThisAccountPrimary
-                        }
-                        isUpdating={
-                          false
-                        }
-                        onChange={() =>
-                          handleChangeAccount(
-                            account
-                          )
-                        }
-                        onDelete={() =>
-                          handleDeleteSettlementAccount(
-                            account
-                          )
-                        }
-                        onSetPrimary={() =>
-                          handleSetPrimaryAccount(
-                            account
-                          )
-                        }
-                      />
-                    );
-                  }
-                )}
+                  return (
+                    <SettlementAccountCard
+                      key={String(account.settlementAccountId)}
+                      account={account}
+                      isDeleting={isDeletingThisAccount}
+                      isSettingPrimary={isSettingThisAccountPrimary}
+                      isUpdating={false}
+                      onChange={() => handleChangeAccount(account)}
+                      onDelete={() => handleDeleteSettlementAccount(account)}
+                      onSetPrimary={() => handleSetPrimaryAccount(account)}
+                    />
+                  );
+                })}
             </>
           )}
 
@@ -1935,10 +1447,7 @@ export default function SettlementsScreen() {
                     : "Change Settlement Account"}
                 </AppText>
 
-                <AppText
-                  variant="bodySmall"
-                  color="secondary"
-                >
+                <AppText variant="bodySmall" color="secondary">
                   {mode === "add"
                     ? "Enter and verify the bank account you want to use for settlements."
                     : "Update the details of your settlement account."}
@@ -1957,31 +1466,17 @@ export default function SettlementsScreen() {
                 <Controller
                   control={control}
                   name="bvn"
-                  render={({
-                    field: {
-                      value,
-                      onChange,
-                    },
-                  }) => (
+                  render={({ field: { value, onChange } }) => (
                     <Input
                       label="BVN"
                       placeholder="Enter your 11-digit BVN"
                       keyboardType="number-pad"
                       maxLength={11}
                       value={value}
-                      onChangeText={(
-                        text
-                      ) => {
-                        onChange(
-                          text.replace(
-                            /\D/g,
-                            ""
-                          )
-                        );
+                      onChangeText={(text) => {
+                        onChange(text.replace(/\D/g, ""));
                       }}
-                      editable={
-                        !hasVerifiedBVN
-                      }
+                      editable={!hasVerifiedBVN}
                       helperText={
                         hasVerifiedBVN
                           ? "Your BVN has already been verified."
@@ -1994,18 +1489,11 @@ export default function SettlementsScreen() {
                 {!hasVerifiedBVN && (
                   <Button
                     title={
-                      verifyBVN.isPending
-                        ? "Verifying BVN..."
-                        : "Verify BVN"
+                      verifyBVN.isPending ? "Verifying BVN..." : "Verify BVN"
                     }
                     variant="primary"
-                    disabled={
-                      !isBVNValid ||
-                      verifyBVN.isPending
-                    }
-                    onPress={
-                      onVerifyBVN
-                    }
+                    disabled={!isBVNValid || verifyBVN.isPending}
+                    onPress={onVerifyBVN}
                   />
                 )}
               </View>
@@ -2023,22 +1511,13 @@ export default function SettlementsScreen() {
                   <Controller
                     control={control}
                     name="bankCode"
-                    render={({
-                      field: {
-                        value,
-                        onChange,
-                      },
-                    }) => (
+                    render={({ field: { value, onChange } }) => (
                       <Dropdown
                         label="Bank"
                         placeholder="Select your bank"
                         value={value}
-                        options={
-                          BANK_OPTIONS
-                        }
-                        onSelect={
-                          onChange
-                        }
+                        options={BANK_OPTIONS}
+                        onSelect={onChange}
                       />
                     )}
                   />
@@ -2046,71 +1525,44 @@ export default function SettlementsScreen() {
                   <Controller
                     control={control}
                     name="accountNumber"
-                    render={({
-                      field: {
-                        value,
-                        onChange,
-                      },
-                    }) => (
+                    render={({ field: { value, onChange } }) => (
                       <Input
                         label="Account Number"
                         placeholder="Enter your 10-digit account number"
                         keyboardType="number-pad"
                         maxLength={10}
                         value={value}
-                        onChangeText={(
-                          text
-                        ) => {
-                          onChange(
-                            text.replace(
-                              /\D/g,
-                              ""
-                            )
-                          );
+                        onChangeText={(text) => {
+                          onChange(text.replace(/\D/g, ""));
                         }}
                         helperText="Your account name will be verified automatically."
                       />
                     )}
                   />
 
-                  {accountResolutionStatus ===
-                    "resolving" && (
+                  {accountResolutionStatus === "resolving" && (
                     <View
                       style={{
-                        flexDirection:
-                          "row",
+                        flexDirection: "row",
 
-                        alignItems:
-                          "center",
+                        alignItems: "center",
 
                         gap: spacing.sm,
 
-                        padding:
-                          spacing.md,
+                        padding: spacing.md,
 
-                        borderRadius:
-                          radius.md,
+                        borderRadius: radius.md,
 
-                        backgroundColor:
-                          theme.card
-                            .default
-                            .background,
+                        backgroundColor: theme.card.default.background,
 
                         borderWidth: 1,
 
-                        borderColor:
-                          theme.card
-                            .default
-                            .border,
+                        borderColor: theme.card.default.border,
                       }}
                     >
                       <ActivityIndicator
                         size="small"
-                        color={
-                          theme.icon
-                            .branding
-                            .icon
-                        }
+                        color={theme.icon.branding.icon}
                       />
 
                       <AppText variant="bodySmall">
@@ -2119,96 +1571,65 @@ export default function SettlementsScreen() {
                     </View>
                   )}
 
-                  {accountResolutionStatus ===
-                    "success" &&
-                    accountName && (
+                  {accountResolutionStatus === "success" && accountName && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+
+                        alignItems: "center",
+
+                        gap: spacing.sm,
+
+                        padding: spacing.md,
+
+                        borderRadius: radius.md,
+
+                        backgroundColor: theme.background.brand,
+                      }}
+                    >
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={24}
+                        color={theme.icon.success.icon}
+                      />
+
                       <View
                         style={{
-                          flexDirection:
-                            "row",
+                          flex: 1,
 
-                          alignItems:
-                            "center",
-
-                          gap: spacing.sm,
-
-                          padding:
-                            spacing.md,
-
-                          borderRadius:
-                            radius.md,
-
-                          backgroundColor:
-                            theme.background
-                              .brand,
+                          gap: 2,
                         }}
                       >
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={24}
-                          color={
-                            theme.icon
-                              .success
-                              .icon
-                          }
-                        />
+                        <AppText variant="bodySmall" color="secondary">
+                          Account Holder
+                        </AppText>
 
-                        <View
-                          style={{
-                            flex: 1,
-
-                            gap: 2,
-                          }}
-                        >
-                          <AppText
-                            variant="bodySmall"
-                            color="secondary"
-                          >
-                            Account Holder
-                          </AppText>
-
-                          <AppText variant="bodyBold">
-                            {
-                              accountName
-                            }
-                          </AppText>
-                        </View>
+                        <AppText variant="bodyBold">{accountName}</AppText>
                       </View>
-                    )}
+                    </View>
+                  )}
 
-                  {accountResolutionStatus ===
-                    "error" && (
+                  {accountResolutionStatus === "error" && (
                     <View
                       style={{
                         gap: spacing.xs,
 
-                        padding:
-                          spacing.md,
+                        padding: spacing.md,
 
-                        borderRadius:
-                          radius.md,
+                        borderRadius: radius.md,
 
-                        backgroundColor:
-                          theme.card
-                            .default
-                            .background,
+                        backgroundColor: theme.card.default.background,
 
                         borderWidth: 1,
 
-                        borderColor:
-                          theme.card
-                            .default
-                            .border,
+                        borderColor: theme.card.default.border,
                       }}
                     >
                       <AppText variant="bodySmallBold">
                         Unable to verify account
                       </AppText>
 
-                      <AppText
-                        variant="bodySmall"
-                        color="secondary"
-                      >
+                      <AppText variant="bodySmall" color="secondary">
                         {accountResolutionMessage ||
                           "Check the bank and account number, then try again."}
                       </AppText>
@@ -2223,41 +1644,27 @@ export default function SettlementsScreen() {
 
               <View
                 style={{
-                  flexDirection:
-                    "row",
+                  flexDirection: "row",
 
-                  alignItems:
-                    "flex-start",
+                  alignItems: "flex-start",
 
                   gap: spacing.sm,
 
-                  padding:
-                    spacing.md,
+                  padding: spacing.md,
 
-                  borderRadius:
-                    radius.md,
+                  borderRadius: radius.md,
 
-                  backgroundColor:
-                    theme.card
-                      .default
-                      .background,
+                  backgroundColor: theme.card.default.background,
 
                   borderWidth: 1,
 
-                  borderColor:
-                    theme.card
-                      .default
-                      .border,
+                  borderColor: theme.card.default.border,
                 }}
               >
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={
-                    theme.icon
-                      .default
-                      .icon
-                  }
+                  color={theme.icon.default.icon}
                 />
 
                 <View
@@ -2271,13 +1678,9 @@ export default function SettlementsScreen() {
                     Your account information is secure
                   </AppText>
 
-                  <AppText
-                    variant="bodySmall"
-                    color="secondary"
-                  >
-                    Your BVN and settlement details are
-                    securely handled and used only to verify
-                    and process your payouts.
+                  <AppText variant="bodySmall" color="secondary">
+                    Your BVN and settlement details are securely handled and
+                    used only to verify and process your payouts.
                   </AppText>
                 </View>
               </View>
@@ -2296,8 +1699,7 @@ export default function SettlementsScreen() {
                     title={
                       updateSettlementAccount.isPending
                         ? "Saving..."
-                        : mode ===
-                          "change"
+                        : mode === "change"
                           ? "Save Changes"
                           : "Save Settlement Account"
                     }
@@ -2307,21 +1709,15 @@ export default function SettlementsScreen() {
                       !isSettlementFormValid ||
                       updateSettlementAccount.isPending
                     }
-                    onPress={handleSubmit(
-                      onSubmit
-                    )}
+                    onPress={handleSubmit(onSubmit)}
                   />
 
                   <Button
                     title="Cancel"
                     variant="secondary"
                     size="large"
-                    disabled={
-                      updateSettlementAccount.isPending
-                    }
-                    onPress={
-                      handleCancelForm
-                    }
+                    disabled={updateSettlementAccount.isPending}
+                    onPress={handleCancelForm}
                   />
                 </View>
               )}

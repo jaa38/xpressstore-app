@@ -31,6 +31,8 @@ import { useSettlementAccounts } from "@/hooks/merchant/useSettlementAccounts";
 
 import { ROUTES } from "@/navigation/routes";
 
+import { getBankLogo } from "@/constants/banks";
+
 /**
  * ============================================================================
  * HELPERS
@@ -47,30 +49,6 @@ function maskAccountNumber(accountNumber: string) {
   }
 
   return `••••••${accountNumber.slice(-4)}`;
-}
-
-/**
- * ============================================================================
- * BANK LOGOS
- * ============================================================================
- */
-
-const BANK_LOGOS: Record<string, any> = {
-  "Access Bank": require("../../../../assets/banks/access-bank.png"),
-  GTBank: require("../../../../assets/banks/gtbank.png"),
-  "First Bank": require("../../../../assets/banks/first-bank.png"),
-  "Zenith Bank": require("../../../../assets/banks/zenith-bank.png"),
-  UBA: require("../../../../assets/banks/uba.png"),
-  Opay: require("../../../../assets/banks/opay.png"),
-  PalmPay: require("../../../../assets/banks/palmpay.png"),
-};
-
-function getBankLogo(bankName?: string) {
-  if (!bankName) {
-    return undefined;
-  }
-
-  return BANK_LOGOS[bankName];
 }
 
 /**

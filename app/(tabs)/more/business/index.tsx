@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -46,6 +47,30 @@ function maskAccountNumber(accountNumber: string) {
   }
 
   return `••••••${accountNumber.slice(-4)}`;
+}
+
+/**
+ * ============================================================================
+ * BANK LOGOS
+ * ============================================================================
+ */
+
+const BANK_LOGOS: Record<string, any> = {
+  "Access Bank": require("../../../../assets/banks/access-bank.png"),
+  GTBank: require("../../../../assets/banks/gtbank.png"),
+  "First Bank": require("../../../../assets/banks/first-bank.png"),
+  "Zenith Bank": require("../../../../assets/banks/zenith-bank.png"),
+  UBA: require("../../../../assets/banks/uba.png"),
+  Opay: require("../../../../assets/banks/opay.png"),
+  PalmPay: require("../../../../assets/banks/palmpay.png"),
+};
+
+function getBankLogo(bankName?: string) {
+  if (!bankName) {
+    return undefined;
+  }
+
+  return BANK_LOGOS[bankName];
 }
 
 /**
@@ -781,14 +806,28 @@ export default function BusinessScreen() {
                           borderRadius: radius.full,
                           justifyContent: "center",
                           alignItems: "center",
-                          backgroundColor: theme.icon.default.background,
+                          backgroundColor: "#FFFFFF",
+                          overflow: "hidden",
                         }}
                       >
-                        <Ionicons
-                          name="card-outline"
-                          size={20}
-                          color={theme.icon.default.icon}
-                        />
+                        {getBankLogo(primarySettlementAccount.bankName) ? (
+                          <Image
+                            source={getBankLogo(
+                              primarySettlementAccount.bankName
+                            )}
+                            style={{
+                              width: 34,
+                              height: 34,
+                              resizeMode: "contain",
+                            }}
+                          />
+                        ) : (
+                          <Ionicons
+                            name="card-outline"
+                            size={20}
+                            color={theme.icon.default.icon}
+                          />
+                        )}
                       </View>
 
                       <View

@@ -717,7 +717,7 @@ export default function MoreScreen() {
               {/* NOTIFICATIONS */}
 
               <Pressable
-                onPress={() => router.push(ROUTES.NOTIFICATIONS)}
+                onPress={() => router.push(ROUTES.NOTIFICATION_SETTINGS)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",

@@ -149,8 +149,10 @@ export const ROUTES = {
 
   BIOMETRIC_AUTHENTICATION: "/security/additional-security/biometric",
 
-  NOTIFICATIONS: "/(tabs)/more/notifications",
+  NOTIFICATION_INBOX: "/notifications",
 
+  NOTIFICATION_SETTINGS: "/(tabs)/more/notifications",
+  
   SETTINGS: "/(tabs)/more/settings",
 
   SUPPORT: "/(tabs)/more/support",

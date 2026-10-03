@@ -426,6 +426,7 @@ export default function HomeScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Notifications"
+            onPress={() => router.push(ROUTES.NOTIFICATION_INBOX)}
           >
             <View
               style={{

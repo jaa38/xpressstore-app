@@ -28,6 +28,7 @@ export {
   USE_MOCK_BUSINESS_CATEGORIES,
   USE_MOCK_DASHBOARD,
   USE_MOCK_SETTLEMENT_ACCOUNTS,
+  USE_MOCK_NOTIFICATIONS,
 } from "./config";
 
 /**
@@ -161,6 +162,14 @@ export {
   updateMockDashboardBusinessName,
   resetMockDashboard,
 } from "./dashboard";
+
+/**
+ * ---------------------------------------------------------------------------
+ * Notifications
+ * ---------------------------------------------------------------------------
+ */
+
+export { MOCK_NOTIFICATIONS, getMockNotifications } from "./notifications";
 
 /**
  * ---------------------------------------------------------------------------

@@ -39,6 +39,8 @@ export const USE_MOCK_DISCOUNTS = true;
 
 export const USE_MOCK_MERCHANT_PROFILE = true;
 
+export const USE_MOCK_NOTIFICATIONS = true;
+
 /**
  * ---------------------------------------------------------------------------
  * Onboarding

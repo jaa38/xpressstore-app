@@ -9,7 +9,7 @@ import {
 
 import { useEffect, useMemo, useState } from "react";
 
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/ui/AppText";
 
@@ -50,6 +50,7 @@ import { useSettlementAccounts } from "@/hooks/merchant/useSettlementAccounts";
  */
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
   /**
    * --------------------------------------------------------------------------
    * MERCHANT PROFILE
@@ -378,11 +379,11 @@ export default function HomeScreen() {
    */
 
   return (
-    <SafeAreaView
-      edges={["top"]}
+    <View
       style={{
         flex: 1,
         backgroundColor: theme.background.primary,
+        paddingTop: insets.top,
       }}
     >
       <View
@@ -430,13 +431,9 @@ export default function HomeScreen() {
               style={{
                 width: 40,
                 height: 40,
-
                 justifyContent: "center",
-
                 alignItems: "center",
-
                 backgroundColor: theme.icon.default.background,
-
                 borderRadius: radius.full,
               }}
             >
@@ -460,30 +457,20 @@ export default function HomeScreen() {
             onPress={() => router.push(ROUTES.SETTLEMENTS)}
             style={({ pressed }) => ({
               alignItems: "center",
-
               justifyContent: "center",
-
               marginHorizontal: -spacing.lg,
-
               marginTop: spacing.md,
-
               marginBottom: spacing.xs,
-
               backgroundColor: theme.background.pending,
-
               paddingVertical: spacing.sm,
-
               paddingHorizontal: spacing.lg,
-
               opacity: pressed ? 0.85 : 1,
             })}
           >
             <View
               style={{
                 flexDirection: "row",
-
                 alignItems: "center",
-
                 gap: spacing.sm,
               }}
             >
@@ -537,11 +524,8 @@ export default function HomeScreen() {
             <View
               style={{
                 flex: 1,
-
                 minHeight: 500,
-
                 justifyContent: "center",
-
                 alignItems: "center",
               }}
             >
@@ -554,7 +538,6 @@ export default function HomeScreen() {
                 color="secondary"
                 style={{
                   marginTop: spacing.md,
-
                   textAlign: "center",
                 }}
               >
@@ -571,11 +554,8 @@ export default function HomeScreen() {
                 <Card
                   style={{
                     marginTop: spacing.lg,
-
                     alignItems: "center",
-
                     paddingVertical: spacing.xl,
-
                     paddingHorizontal: spacing.lg,
                   }}
                 >
@@ -592,7 +572,6 @@ export default function HomeScreen() {
                     variant="bodyLargeBold"
                     style={{
                       marginTop: spacing.md,
-
                       textAlign: "center",
                     }}
                   >
@@ -604,9 +583,7 @@ export default function HomeScreen() {
                     color="secondary"
                     style={{
                       marginTop: spacing.xs,
-
                       textAlign: "center",
-
                       maxWidth: 320,
                     }}
                   >
@@ -617,11 +594,8 @@ export default function HomeScreen() {
                   <View
                     style={{
                       width: "100%",
-
                       flexDirection: "row",
-
                       gap: spacing.sm,
-
                       marginTop: spacing.lg,
                     }}
                   >
@@ -685,9 +659,7 @@ export default function HomeScreen() {
                   <View
                     style={{
                       flexDirection: "row",
-
                       gap: spacing.md,
-
                       marginTop: spacing.md,
                     }}
                   >
@@ -699,27 +671,16 @@ export default function HomeScreen() {
                       }
                       style={({ pressed }) => ({
                         flex: 1,
-
                         flexDirection: "row",
-
                         alignItems: "center",
-
                         justifyContent: "center",
-
                         gap: spacing.sm,
-
                         paddingHorizontal: spacing.md,
-
                         paddingVertical: spacing.md,
-
                         borderWidth: 1,
-
                         borderRadius: radius.md,
-
                         backgroundColor: theme.card.default.background,
-
                         borderColor: theme.card.default.border,
-
                         opacity: pressed ? 0.8 : 1,
                       })}
                     >
@@ -738,27 +699,16 @@ export default function HomeScreen() {
                       onPress={() => router.push(ROUTES.ADD_STORE_INFORMATION)}
                       style={({ pressed }) => ({
                         flex: 1,
-
                         flexDirection: "row",
-
                         alignItems: "center",
-
                         justifyContent: "center",
-
                         gap: spacing.sm,
-
                         paddingHorizontal: spacing.md,
-
                         paddingVertical: spacing.md,
-
                         borderWidth: 1,
-
                         borderRadius: radius.md,
-
                         backgroundColor: theme.card.default.background,
-
                         borderColor: theme.card.default.border,
-
                         opacity: pressed ? 0.8 : 1,
                       })}
                     >
@@ -789,9 +739,7 @@ export default function HomeScreen() {
                   <View
                     style={{
                       flexDirection: "row",
-
                       justifyContent: "space-between",
-
                       alignItems: "center",
                     }}
                   >
@@ -821,9 +769,7 @@ export default function HomeScreen() {
                       <Card
                         style={{
                           alignItems: "center",
-
                           paddingVertical: spacing.lg,
-
                           paddingHorizontal: spacing.lg,
                         }}
                       >
@@ -837,7 +783,6 @@ export default function HomeScreen() {
                           variant="bodyBold"
                           style={{
                             marginTop: spacing.sm,
-
                             textAlign: "center",
                           }}
                         >
@@ -849,9 +794,7 @@ export default function HomeScreen() {
                           color="secondary"
                           style={{
                             textAlign: "center",
-
                             marginTop: spacing.xs,
-
                             maxWidth: 300,
                           }}
                         >
@@ -867,6 +810,6 @@ export default function HomeScreen() {
           )}
         </ScrollView>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

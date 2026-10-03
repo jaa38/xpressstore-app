@@ -4,13 +4,17 @@ import { Stack } from "expo-router";
 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from "react-native-safe-area-context";
+
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 import { registerInterceptors } from "@/api/interceptors";
 
 import { AppProvider } from "@/providers/app-provider";
 import { ToastProvider } from "@/providers/toast-provider";
-
 
 /**
  * Register Axios interceptors once.
@@ -19,22 +23,24 @@ registerInterceptors();
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView
-      style={{
-        flex: 1,
-      }}
-    >
-      <BottomSheetModalProvider>
-        <AppProvider>
-          <ToastProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <GestureHandlerRootView
+        style={{
+          flex: 1,
+        }}
+      >
+        <BottomSheetModalProvider>
+          <AppProvider>
+            <ToastProvider>
               <Stack
                 screenOptions={{
                   headerShown: false,
                 }}
               />
-          </ToastProvider>
-        </AppProvider>
-      </BottomSheetModalProvider>
-    </GestureHandlerRootView>
+            </ToastProvider>
+          </AppProvider>
+        </BottomSheetModalProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }

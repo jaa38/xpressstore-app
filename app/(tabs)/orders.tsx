@@ -10,7 +10,7 @@ import {
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { StatusBar } from "expo-status-bar";
 
@@ -67,6 +67,7 @@ const ORDERS_PER_BATCH = 10;
  */
 
 export default function OrdersScreen() {
+  const insets = useSafeAreaInsets();
   /**
    * -------------------------------------------------------------------------
    * ORDERS API
@@ -501,10 +502,11 @@ export default function OrdersScreen() {
 
   return (
     <>
-      <SafeAreaView
+      <View
         style={{
           flex: 1,
           backgroundColor: theme.background.primary,
+          paddingTop: insets.top,
         }}
       >
         <StatusBar style="auto" />
@@ -1127,7 +1129,7 @@ export default function OrdersScreen() {
             </View>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* ======================================================================
           FILTER

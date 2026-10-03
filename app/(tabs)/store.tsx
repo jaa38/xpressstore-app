@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { StatusBar } from "expo-status-bar";
 
@@ -278,6 +278,7 @@ function StoreCard({
  */
 
 export default function StoreScreen() {
+  const insets = useSafeAreaInsets();
   /**
    * --------------------------------------------------------------------------
    * STORES
@@ -647,10 +648,11 @@ export default function StoreScreen() {
    */
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: theme.background.primary,
+        paddingTop: insets.top,
       }}
     >
       <StatusBar style="auto" />
@@ -1231,6 +1233,6 @@ export default function StoreScreen() {
         selectedFilter={selectedFilter}
         onFilterChange={setSelectedFilter}
       />
-    </SafeAreaView>
+    </View>
   );
 }

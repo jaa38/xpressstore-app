@@ -1,6 +1,6 @@
 import { Alert, Pressable, ScrollView, View, Image } from "react-native";
 
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { StatusBar } from "expo-status-bar";
 
@@ -31,6 +31,7 @@ import { useSettlementAccounts } from "@/hooks/merchant/useSettlementAccounts";
  */
 
 export default function MoreScreen() {
+  const insets = useSafeAreaInsets();
   /**
    * ==========================================================================
    * AUTHENTICATION
@@ -87,10 +88,11 @@ export default function MoreScreen() {
    */
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: theme.background.primary,
+        paddingTop: insets.top,
       }}
     >
       <StatusBar style="auto" />
@@ -899,6 +901,6 @@ export default function MoreScreen() {
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

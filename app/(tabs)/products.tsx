@@ -9,7 +9,7 @@ import {
   Image
 } from "react-native";
 
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { StatusBar } from "expo-status-bar";
 
@@ -224,6 +224,7 @@ function ProductCard({
  */
 
 export default function ProductScreen() {
+  const insets = useSafeAreaInsets();
   /**
    * ==========================================================================
    * PRODUCTS
@@ -691,10 +692,11 @@ export default function ProductScreen() {
    */
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: theme.background.primary,
+        paddingTop: insets.top,
       }}
     >
       <StatusBar style="auto" />
@@ -1164,6 +1166,6 @@ export default function ProductScreen() {
           </View>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

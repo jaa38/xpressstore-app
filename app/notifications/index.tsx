@@ -1,4 +1,5 @@
 import {
+  Alert,
   Image,
   Pressable,
   RefreshControl,
@@ -19,52 +20,140 @@ import { router } from "expo-router";
 import { AppText } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
 
-import { spacing, theme } from "@/theme";
+import { spacing, theme, radius } from "@/theme";
 
 import { ROUTES } from "@/navigation/routes";
 
-import { getMockNotifications } from "@/mocks";
-
 import { Notification } from "@/types/notification";
+
+import { useNotificationStore } from "@/store/notifications/notificationStore";
+
+/**
+ * ============================================================================
+ * NOTIFICATION SCREEN
+ * ============================================================================
+ */
 
 export default function NotificationInboxScreen() {
   const insets = useSafeAreaInsets();
 
-  const [notifications, setNotifications] = useState<Notification[]>(
-    getMockNotifications()
+  /**
+   * ==========================================================================
+   * NOTIFICATION STORE
+   * ==========================================================================
+   */
+
+  const notifications = useNotificationStore((state) => state.notifications);
+
+  const markAsRead = useNotificationStore((state) => state.markAsRead);
+
+  const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
+
+  const clearNotifications = useNotificationStore(
+    (state) => state.clearNotifications
   );
 
+  const resetNotifications = useNotificationStore(
+    (state) => state.resetNotifications
+  );
+
+  /**
+   * ==========================================================================
+   * LOCAL STATE
+   * ==========================================================================
+   */
+
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  /**
+   * ==========================================================================
+   * DERIVED STATE
+   * ==========================================================================
+   */
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.isRead).length,
     [notifications]
   );
 
-  const handleRefresh = useCallback(async () => {
+  /**
+   * ==========================================================================
+   * REFRESH NOTIFICATIONS
+   * ==========================================================================
+   *
+   * For now notifications are mocked. When the backend inbox endpoint is
+   * available, resetNotifications() can be replaced with the API query.
+   */
+
+  const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
 
-    try {
-      const mockNotifications = getMockNotifications();
-
-      setNotifications(mockNotifications);
-    } finally {
+    setTimeout(() => {
+      resetNotifications();
       setIsRefreshing(false);
-    }
-  }, []);
+    }, 500);
+  }, [resetNotifications]);
 
-  const handleNotificationPress = useCallback((notificationId: string) => {
-    setNotifications((currentNotifications) =>
-      currentNotifications.map((notification) =>
-        notification.id === notificationId
-          ? {
-              ...notification,
-              isRead: true,
-            }
-          : notification
-      )
+  /**
+   * ==========================================================================
+   * MARK NOTIFICATION AS READ
+   * ==========================================================================
+   */
+
+  const handleNotificationPress = useCallback(
+    (notificationId: string) => {
+      markAsRead(notificationId);
+    },
+    [markAsRead]
+  );
+
+  /**
+   * ==========================================================================
+   * MARK ALL NOTIFICATIONS AS READ
+   * ==========================================================================
+   */
+
+  const handleMarkAllAsRead = useCallback(() => {
+    if (unreadCount === 0) {
+      return;
+    }
+
+    markAllAsRead();
+  }, [markAllAsRead, unreadCount]);
+
+  /**
+   * ==========================================================================
+   * CLEAR ALL NOTIFICATIONS
+   * ==========================================================================
+   */
+
+  const handleClearNotifications = useCallback(() => {
+    if (notifications.length === 0) {
+      return;
+    }
+
+    Alert.alert(
+      "Clear notifications",
+      "Are you sure you want to clear all notifications?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: clearNotifications,
+        },
+      ]
     );
-  }, []);
+  }, [clearNotifications, notifications.length]);
+
+  /**
+   * ==========================================================================
+   * NOTIFICATION ICON
+   * ==========================================================================
+   */
 
   const getNotificationIcon = (
     type: Notification["type"]
@@ -88,6 +177,64 @@ export default function NotificationInboxScreen() {
     }
   };
 
+  /**
+   * ==========================================================================
+   * DATE HELPERS
+   * ==========================================================================
+   */
+
+  const getDateKey = (date: string) => {
+    const notificationDate = new Date(date);
+
+    return `${notificationDate.getFullYear()}-${String(
+      notificationDate.getMonth() + 1
+    ).padStart(2, "0")}-${String(notificationDate.getDate()).padStart(2, "0")}`;
+  };
+
+  const isToday = (date: string) => {
+    const notificationDate = new Date(date);
+    const today = new Date();
+
+    return (
+      notificationDate.getFullYear() === today.getFullYear() &&
+      notificationDate.getMonth() === today.getMonth() &&
+      notificationDate.getDate() === today.getDate()
+    );
+  };
+
+  const isYesterday = (date: string) => {
+    const notificationDate = new Date(date);
+    const yesterday = new Date();
+
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    return (
+      notificationDate.getFullYear() === yesterday.getFullYear() &&
+      notificationDate.getMonth() === yesterday.getMonth() &&
+      notificationDate.getDate() === yesterday.getDate()
+    );
+  };
+
+  const formatDateHeading = (date: string) => {
+    if (isToday(date)) {
+      return "TODAY";
+    }
+
+    if (isYesterday(date)) {
+      return "YESTERDAY";
+    }
+
+    const notificationDate = new Date(date);
+
+    return notificationDate
+      .toLocaleDateString("en-NG", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+      .toUpperCase();
+  };
+
   const formatNotificationDate = (date: string) => {
     const notificationDate = new Date(date);
 
@@ -98,6 +245,37 @@ export default function NotificationInboxScreen() {
     });
   };
 
+  /**
+   * ==========================================================================
+   * GROUP NOTIFICATIONS BY DATE
+   * ==========================================================================
+   */
+
+  const groupedNotifications = useMemo(() => {
+    const groups: Record<string, Notification[]> = {};
+
+    notifications.forEach((notification) => {
+      const key = getDateKey(notification.createdAt);
+
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+
+      groups[key].push(notification);
+    });
+
+    return Object.entries(groups).sort(
+      ([dateA], [dateB]) =>
+        new Date(dateB).getTime() - new Date(dateA).getTime()
+    );
+  }, [notifications]);
+
+  /**
+   * ==========================================================================
+   * UI
+   * ==========================================================================
+   */
+
   return (
     <View
       style={{
@@ -106,271 +284,418 @@ export default function NotificationInboxScreen() {
         paddingTop: insets.top,
       }}
     >
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
 
-      <View
-        style={{
-          flex: 1,
+      <ScrollView
+        contentContainerStyle={{
           paddingHorizontal: spacing.lg,
+          paddingBottom: spacing.xl,
         }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={theme.icon.branding.icon}
+          />
+        }
+        showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
+        {/* ================================================================
+            HEADER
+        ================================================================ */}
+
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: spacing.md,
+            paddingTop: spacing.sm,
           }}
         >
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-                return;
-              }
-
-              router.replace(ROUTES.HOME);
-            }}
+          <View
             style={{
-              width: 44,
-              height: 44,
-              justifyContent: "center",
+              flexDirection: "row",
               alignItems: "center",
             }}
           >
-            <Ionicons
-              name="chevron-back"
-              size={28}
-              color={theme.text.primary}
-            />
-          </Pressable>
+            {/* BACK BUTTON */}
 
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
+                  return;
+                }
+
+                router.replace(ROUTES.HOME);
+              }}
+              hitSlop={8}
+              style={{
+                width: 40,
+                height: 40,
+                justifyContent: "center",
+                alignItems: "center",
+                marginLeft: -spacing.xs,
+              }}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={28}
+                color={theme.text.primary}
+              />
+            </Pressable>
+
+            {/* TITLE + SUBTITLE */}
+
+            <View
+              style={{
+                flex: 1,
+                marginLeft: spacing.sm,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.sm,
+                }}
+              >
+                <AppText
+                  variant="h1"
+                  style={{
+                    flex: 1,
+                  }}
+                >
+                  Notifications
+                </AppText>
+
+                {unreadCount > 0 && (
+                  <View
+                    style={{
+                      minWidth: 28,
+                      height: 28,
+                      paddingHorizontal: spacing.xs,
+                      borderRadius: radius.full,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: theme.background.pending,
+                    }}
+                  >
+                    <AppText
+                      variant="caption"
+                      color="inverse"
+                      style={{
+                        fontWeight: "700",
+                        textAlign: "center",
+                      }}
+                    >
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </AppText>
+                  </View>
+                )}
+              </View>
+
+              <AppText
+                variant="bodySmall"
+                color="secondary"
+                style={{
+                  marginTop: spacing.xs,
+                }}
+              >
+                Stay up to date with activity on your account
+              </AppText>
+            </View>
+          </View>
+
+          {/* MARK ALL AS READ */}
+
+          {unreadCount > 0 && (
+            <View
+              style={{
+                alignItems: "flex-end",
+                marginTop: spacing.md,
+              }}
+            >
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Mark all notifications as read"
+                onPress={handleMarkAllAsRead}
+                hitSlop={8}
+              >
+                <AppText
+                  variant="bodySmall"
+                  style={{
+                    color: theme.icon.branding.icon,
+                    fontWeight: "700",
+                  }}
+                >
+                  Mark all as read
+                </AppText>
+              </Pressable>
+            </View>
+          )}
+        </View>
+
+        {/* ================================================================
+            NOTIFICATIONS
+        ================================================================ */}
+
+        {notifications.length === 0 ? (
           <View
             style={{
               flex: 1,
-              gap: spacing.xs,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: spacing["3xl"] ?? spacing.xl,
             }}
           >
-            <View
+            <Image
+              source={require("../../assets/images/default-notifications.png")}
+              accessibilityLabel="No notifications"
+              resizeMode="contain"
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: spacing.sm,
+                width: 180,
+                height: 180,
+              }}
+            />
+
+            <AppText
+              variant="h3"
+              style={{
+                marginTop: spacing.lg,
+                textAlign: "center",
               }}
             >
-              <AppText variant="h1">Notifications</AppText>
+              No notifications yet
+            </AppText>
 
-              {unreadCount > 0 && (
-                <View
-                  style={{
-                    minWidth: 24,
-                    height: 24,
-                    paddingHorizontal: spacing.xs,
-                    borderRadius: 12,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: theme.icon.branding.background,
-                  }}
-                >
-                  <AppText
-                    variant="caption"
-                    color="inverse"
-                    style={{
-                      textAlign: "center",
-                    }}
-                  >
-                    {unreadCount}
-                  </AppText>
-                </View>
-              )}
-            </View>
-
-            <AppText variant="bodySmall" color="secondary">
-              Stay up to date with activity on your account
+            <AppText
+              variant="bodySmall"
+              color="secondary"
+              style={{
+                marginTop: spacing.sm,
+                textAlign: "center",
+                maxWidth: 300,
+              }}
+            >
+              Notifications about your XpressStore account will appear here
             </AppText>
           </View>
-        </View>
+        ) : (
+          <>
+            {/* ============================================================
+                NOTIFICATION GROUPS
+            ============================================================ */}
 
-        {/* Content */}
-        <ScrollView
-          style={{
-            flex: 1,
-          }}
-          contentContainerStyle={{
-            paddingTop: spacing.lg,
-            paddingBottom: spacing.xl,
-          }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={handleRefresh}
-              tintColor={theme.icon.branding.icon}
-              colors={[theme.icon.branding.icon]}
-              progressBackgroundColor={theme.background.surface}
-            />
-          }
-        >
-          {notifications.length === 0 ? (
-            <Card
-              style={{
-                alignItems: "center",
-                paddingVertical: spacing.xl,
-                paddingHorizontal: spacing.lg,
-              }}
-            >
-              <Image
-                source={require("../../assets/images/default-notifications.png")}
-                style={{
-                  width: 160,
-                  height: 160,
-                  resizeMode: "contain",
-                }}
-                accessibilityLabel="No notifications"
-              />
+            {groupedNotifications.map(([dateKey, items]) => {
+              const firstNotification = items[0];
 
-              <AppText
-                variant="bodyLargeBold"
-                style={{
-                  marginTop: spacing.lg,
-                  textAlign: "center",
-                }}
-              >
-                No notifications yet
-              </AppText>
+              if (!firstNotification) {
+                return null;
+              }
 
-              <AppText
-                variant="body"
-                color="secondary"
-                style={{
-                  marginTop: spacing.sm,
-                  textAlign: "center",
-                  maxWidth: 340,
-                  lineHeight: 28,
-                }}
-              >
-                Notifications about your XpressStore account will appear here
-                when there&apos;s something important to see.
-              </AppText>
-            </Card>
-          ) : (
-            <View
-              style={{
-                gap: spacing.sm,
-              }}
-            >
-              {notifications.map((notification) => {
-                const iconName = getNotificationIcon(notification.type);
+              return (
+                <View
+                  key={dateKey}
+                  style={{
+                    marginTop: spacing.xl,
+                  }}
+                >
+                  {/* DATE HEADING */}
 
-                return (
-                  <Pressable
-                    key={notification.id}
-                    accessibilityRole="button"
-                    accessibilityLabel={notification.title}
-                    onPress={() => handleNotificationPress(notification.id)}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: spacing.sm,
+                      marginBottom: spacing.md,
+                    }}
                   >
-                    <Card
+                    <AppText
+                      variant="bodySmall"
                       style={{
-                        paddingVertical: spacing.md,
-                        paddingHorizontal: spacing.md,
-                        borderWidth: notification.isRead ? 0 : 1,
-                        borderColor: notification.isRead
-                          ? "transparent"
-                          : theme.icon.branding.icon,
+                        fontWeight: "700",
+                        letterSpacing: 1,
+                        color: theme.text.secondary,
                       }}
                     >
-                      <View
+                      {formatDateHeading(firstNotification.createdAt)}
+                    </AppText>
+
+                    <View
+                      style={{
+                        flex: 1,
+                        height: 1,
+                        backgroundColor: theme.divider.strong,
+                      }}
+                    />
+                  </View>
+
+                  {/* NOTIFICATIONS */}
+
+                  {items.map((notification) => {
+                    const iconName = getNotificationIcon(notification.type);
+
+                    return (
+                      <Pressable
+                        key={notification.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={notification.title}
+                        onPress={() => handleNotificationPress(notification.id)}
                         style={{
-                          flexDirection: "row",
-                          alignItems: "flex-start",
-                          gap: spacing.md,
+                          marginBottom: spacing.md,
                         }}
                       >
-                        {/* Notification icon */}
-                        <View
+                        <Card
                           style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 24,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: theme.icon.default.background,
+                            position: "relative",
+                            overflow: "hidden",
+                            borderWidth: notification.isRead ? 0 : 1,
+                            borderColor: notification.isRead
+                              ? "transparent"
+                              : theme.divider.strong,
+                            backgroundColor: theme.card.default.background,
+                            padding: spacing.lg,
                           }}
                         >
-                          <Ionicons
-                            name={iconName}
-                            size={24}
-                            color={theme.icon.default.icon}
-                          />
-                        </View>
+                          {/* UNREAD ACCENT */}
 
-                        {/* Notification content */}
-                        <View
-                          style={{
-                            flex: 1,
-                            gap: spacing.xs,
-                          }}
-                        >
+                          {!notification.isRead && (
+                            <View
+                              style={{
+                                position: "absolute",
+                                left: 0,
+                                top: spacing.lg,
+                                bottom: spacing.lg,
+                                width: 3,
+                                backgroundColor: theme.icon.branding.icon,
+                              }}
+                            />
+                          )}
+
                           <View
                             style={{
                               flexDirection: "row",
-                              alignItems: "flex-start",
-                              gap: spacing.sm,
+                              alignItems: "center",
+                              gap: spacing.md,
                             }}
                           >
-                            <AppText
-                              variant="bodyLargeBold"
+                            {/* NOTIFICATION ICON */}
+
+                            <View
                               style={{
-                                flex: 1,
+                                width: 44,
+                                height: 44,
+                                borderRadius: radius.full,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: theme.icon.default.background,
                               }}
                             >
-                              {notification.title}
-                            </AppText>
+                              <Ionicons
+                                name={iconName}
+                                size={22}
+                                color={theme.icon.default.icon}
+                              />
+                            </View>
 
-                            {!notification.isRead && (
+                            {/* NOTIFICATION CONTENT */}
+
+                            <View
+                              style={{
+                                flex: 1,
+                                gap: spacing.xs,
+                              }}
+                            >
                               <View
                                 style={{
-                                  width: 8,
-                                  height: 8,
-                                  marginTop: 6,
-                                  borderRadius: 4,
-                                  backgroundColor: theme.icon.branding.icon,
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  gap: spacing.sm,
                                 }}
-                              />
-                            )}
+                              >
+                                <AppText
+                                  variant="bodyLargeBold"
+                                  style={{
+                                    flex: 1,
+                                  }}
+                                >
+                                  {notification.title}
+                                </AppText>
+
+                                {!notification.isRead && (
+                                  <View
+                                    style={{
+                                      width: 10,
+                                      height: 10,
+                                      borderRadius: radius.full,
+                                      backgroundColor: theme.icon.branding.icon,
+                                    }}
+                                  />
+                                )}
+                              </View>
+
+                              <AppText
+                                variant="body"
+                                color="secondary"
+                                style={{
+                                  lineHeight: 26,
+                                }}
+                              >
+                                {notification.message}
+                              </AppText>
+
+                              <AppText
+                                variant="bodySmall"
+                                color="secondary"
+                                style={{
+                                  marginTop: spacing.xs,
+                                }}
+                              >
+                                {formatNotificationDate(notification.createdAt)}
+                              </AppText>
+                            </View>
                           </View>
+                        </Card>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              );
+            })}
 
-                          <AppText
-                            variant="body"
-                            color="secondary"
-                            style={{
-                              lineHeight: 22,
-                            }}
-                          >
-                            {notification.message}
-                          </AppText>
+            {/* ============================================================
+                CLEAR NOTIFICATIONS
+            ============================================================ */}
 
-                          <AppText
-                            variant="caption"
-                            color="secondary"
-                            style={{
-                              marginTop: spacing.xs,
-                            }}
-                          >
-                            {formatNotificationDate(notification.createdAt)}
-                          </AppText>
-                        </View>
-                      </View>
-                    </Card>
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
-        </ScrollView>
-      </View>
+            {notifications.length > 0 && (
+              <View
+                style={{
+                  alignItems: "center",
+                  paddingTop: spacing.lg,
+                  paddingBottom: spacing.xl,
+                }}
+              >
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear notifications"
+                  onPress={handleClearNotifications}
+                  hitSlop={8}
+                >
+                  <AppText
+                    variant="bodySmall"
+                    style={{
+                      color: theme.text.error,
+                      fontWeight: "700",
+                    }}
+                  >
+                    Clear notifications
+                  </AppText>
+                </Pressable>
+              </View>
+            )}
+          </>
+        )}
+      </ScrollView>
     </View>
   );
 }

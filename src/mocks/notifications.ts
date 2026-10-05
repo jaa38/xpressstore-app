@@ -44,7 +44,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     id: "notification-004",
     type: "product",
     title: "Product updated",
-    message: 'Your product "Premium Subscription" was successfully updated.',
+    message: "Your product \"Premium Subscription\" was successfully updated.",
     createdAt: "2026-10-02T15:20:00.000Z",
     isRead: true,
   },

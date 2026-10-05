@@ -51,6 +51,8 @@ import { SettlementAccount } from "@/types/merchant";
 
 import { BANK_CONFIG, BANK_OPTIONS } from "@/constants/banks";
 
+import { Card } from "@/components/ui/Card";
+
 /**
  * ============================================================================
  * TYPES
@@ -1351,50 +1353,72 @@ export default function SettlementsScreen() {
               {!isSettlementAccountsLoading &&
                 !isSettlementAccountsError &&
                 settlementAccounts.length === 0 && (
-                  <View
+                  <Card
                     style={{
                       alignItems: "center",
-
                       paddingVertical: spacing.xl,
-
-                      gap: spacing.md,
+                      paddingHorizontal: spacing.lg,
                     }}
                   >
-                    <Ionicons
-                      name="card-outline"
-                      size={48}
-                      color={theme.icon.default.icon}
+                    <Image
+                      source={require("../../../../assets/images/default-settlement-account.png")}
+                      style={{
+                        width: 220,
+                        height: 180,
+                      }}
+                      resizeMode="contain"
                     />
 
-                    <View
+                    <AppText
+                      variant="bodyLargeBold"
                       style={{
-                        alignItems: "center",
-
-                        gap: spacing.xs,
+                        marginTop: spacing.md,
+                        textAlign: "center",
                       }}
                     >
-                      <AppText variant="bodyLargeBold">
-                        No Settlement Account
-                      </AppText>
+                      No Settlement Account
+                    </AppText>
 
-                      <AppText
-                        variant="bodySmall"
-                        color="secondary"
-                        style={{
-                          textAlign: "center",
-                        }}
-                      >
-                        Add a bank account to receive your transaction
-                        settlements.
-                      </AppText>
-                    </View>
+                    <AppText
+                      variant="body"
+                      color="secondary"
+                      style={{
+                        marginTop: spacing.xs,
+                        textAlign: "center",
+                        maxWidth: 320,
+                      }}
+                    >
+                      Add a bank account to receive your transaction
+                      settlements.
+                    </AppText>
 
                     <Button
                       title="Add Settlement Account"
                       variant="primary"
+                      leftIcon={
+                        <Ionicons
+                          name="add"
+                          size={20}
+                          color={theme.action.primary.text}
+                        />
+                      }
+                      style={{
+                        marginTop: spacing.lg,
+                      }}
                       onPress={handleAddAccount}
                     />
-                  </View>
+
+                    <AppText
+                      variant="caption"
+                      color="muted"
+                      style={{
+                        marginTop: spacing.sm,
+                        textAlign: "center",
+                      }}
+                    >
+                      Add your first settlement account to receive payments.
+                    </AppText>
+                  </Card>
                 )}
 
               {/* ======================================================== */}

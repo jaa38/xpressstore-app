@@ -43,6 +43,8 @@ import { Button } from "@/components/ui/Button";
 
 import { useSettlementAccounts } from "@/hooks/merchant/useSettlementAccounts";
 
+import { useNotificationStore } from "@/store/notifications/notificationStore";
+
 /**
  * ============================================================================
  * HOME SCREEN
@@ -372,6 +374,11 @@ export default function HomeScreen() {
 
   const isContentLoading = isInitialLoading;
 
+  const unreadNotificationCount = useNotificationStore(
+    (state) =>
+      state.notifications.filter((notification) => !notification.isRead).length
+  );
+
   /**
    * ==========================================================================
    * UI
@@ -425,7 +432,11 @@ export default function HomeScreen() {
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Notifications"
+            accessibilityLabel={
+              unreadNotificationCount > 0
+                ? `${unreadNotificationCount} unread notifications`
+                : "Notifications"
+            }
             onPress={() => router.push(ROUTES.NOTIFICATION_INBOX)}
           >
             <View
@@ -443,6 +454,40 @@ export default function HomeScreen() {
                 size={24}
                 color={theme.icon.default.icon}
               />
+
+              {unreadNotificationCount > 0 && (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: -2,
+                    right: -2,
+                    minWidth: 18,
+                    height: 18,
+                    paddingHorizontal: 4,
+                    borderRadius: 9,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: theme.background.pending,
+                    borderWidth: 2,
+                    borderColor: theme.background.primary,
+                  }}
+                >
+                  <AppText
+                    variant="caption"
+                    color="inverse"
+                    style={{
+                      fontSize: 10,
+                      lineHeight: 12,
+                      textAlign: "center",
+                      fontWeight: "700",
+                    }}
+                  >
+                    {unreadNotificationCount > 99
+                      ? "99+"
+                      : unreadNotificationCount}
+                  </AppText>
+                </View>
+              )}
             </View>
           </Pressable>
         </View>

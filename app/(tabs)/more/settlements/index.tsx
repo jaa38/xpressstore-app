@@ -1666,7 +1666,7 @@ export default function SettlementsScreen() {
               {/* SECURITY */}
               {/* ======================================================== */}
 
-              <View
+              {/* <View
                 style={{
                   flexDirection: "row",
 
@@ -1707,7 +1707,7 @@ export default function SettlementsScreen() {
                     used only to verify and process your payouts.
                   </AppText>
                 </View>
-              </View>
+              </View> */}
 
               {/* ======================================================== */}
               {/* ACTIONS */}
@@ -1717,6 +1717,7 @@ export default function SettlementsScreen() {
                 <View
                   style={{
                     gap: spacing.sm,
+                    flexDirection: "row",
                   }}
                 >
                   <Button
@@ -1725,7 +1726,7 @@ export default function SettlementsScreen() {
                         ? "Saving..."
                         : mode === "change"
                           ? "Save Changes"
-                          : "Save Settlement Account"
+                          : "Save"
                     }
                     variant="primary"
                     size="large"
@@ -1734,14 +1735,20 @@ export default function SettlementsScreen() {
                       updateSettlementAccount.isPending
                     }
                     onPress={handleSubmit(onSubmit)}
+                    style={{
+                      flex: 1,
+                    }}
                   />
 
                   <Button
                     title="Cancel"
-                    variant="secondary"
+                    variant="tertiary"
                     size="large"
                     disabled={updateSettlementAccount.isPending}
                     onPress={handleCancelForm}
+                    style={{
+                      flex: 1,
+                    }}
                   />
                 </View>
               )}

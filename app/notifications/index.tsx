@@ -286,10 +286,154 @@ export default function NotificationInboxScreen() {
     >
       <StatusBar style="dark" />
 
+      {/* ================================================================== 
+          FIXED HEADER
+      ================================================================== */}
+
+      <View
+        style={{
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing.sm,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          {/* BACK BUTTON */}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+                return;
+              }
+
+              router.replace(ROUTES.HOME);
+            }}
+            hitSlop={8}
+            style={{
+              width: 40,
+              height: 40,
+              justifyContent: "center",
+              alignItems: "center",
+              marginLeft: -spacing.xs,
+            }}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={28}
+              color={theme.text.primary}
+            />
+          </Pressable>
+
+          {/* TITLE + SUBTITLE */}
+
+          <View
+            style={{
+              flex: 1,
+              marginLeft: spacing.sm,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.sm,
+              }}
+            >
+              <AppText
+                variant="h1"
+                style={{
+                  flex: 1,
+                }}
+              >
+                Notifications
+              </AppText>
+
+              {unreadCount > 0 && (
+                <View
+                  style={{
+                    minWidth: 28,
+                    height: 28,
+                    paddingHorizontal: spacing.xs,
+                    borderRadius: radius.full,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: theme.background.pending,
+                  }}
+                >
+                  <AppText
+                    variant="caption"
+                    color="inverse"
+                    style={{
+                      fontWeight: "700",
+                      textAlign: "center",
+                    }}
+                  >
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </AppText>
+                </View>
+              )}
+            </View>
+
+            <AppText
+              variant="bodySmall"
+              color="secondary"
+              style={{
+                marginTop: spacing.xs,
+              }}
+            >
+              Stay up to date with activity on your account
+            </AppText>
+          </View>
+        </View>
+
+        {/* MARK ALL AS READ */}
+
+        {unreadCount > 0 && (
+          <View
+            style={{
+              alignItems: "flex-end",
+              marginTop: spacing.md,
+            }}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Mark all notifications as read"
+              onPress={handleMarkAllAsRead}
+              hitSlop={8}
+            >
+              <AppText
+                variant="bodySmall"
+                style={{
+                  color: theme.icon.branding.icon,
+                  fontWeight: "700",
+                }}
+              >
+                Mark all as read
+              </AppText>
+            </Pressable>
+          </View>
+        )}
+      </View>
+
+      {/* ==================================================================
+          SCROLLABLE CONTENT
+      ================================================================== */}
+
       <ScrollView
+        style={{
+          flex: 1,
+        }}
         contentContainerStyle={{
           paddingHorizontal: spacing.lg,
-          paddingBottom: spacing.xl,
+          // paddingTop: spacing.lg,
+          // paddingBottom: spacing.xl,
         }}
         refreshControl={
           <RefreshControl
@@ -300,141 +444,6 @@ export default function NotificationInboxScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* ================================================================
-            HEADER
-        ================================================================ */}
-
-        <View
-          style={{
-            paddingTop: spacing.sm,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            {/* BACK BUTTON */}
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-              onPress={() => {
-                if (router.canGoBack()) {
-                  router.back();
-                  return;
-                }
-
-                router.replace(ROUTES.HOME);
-              }}
-              hitSlop={8}
-              style={{
-                width: 40,
-                height: 40,
-                justifyContent: "center",
-                alignItems: "center",
-                marginLeft: -spacing.xs,
-              }}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={28}
-                color={theme.text.primary}
-              />
-            </Pressable>
-
-            {/* TITLE + SUBTITLE */}
-
-            <View
-              style={{
-                flex: 1,
-                marginLeft: spacing.sm,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: spacing.sm,
-                }}
-              >
-                <AppText
-                  variant="h1"
-                  style={{
-                    flex: 1,
-                  }}
-                >
-                  Notifications
-                </AppText>
-
-                {unreadCount > 0 && (
-                  <View
-                    style={{
-                      minWidth: 28,
-                      height: 28,
-                      paddingHorizontal: spacing.xs,
-                      borderRadius: radius.full,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: theme.background.pending,
-                    }}
-                  >
-                    <AppText
-                      variant="caption"
-                      color="inverse"
-                      style={{
-                        fontWeight: "700",
-                        textAlign: "center",
-                      }}
-                    >
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </AppText>
-                  </View>
-                )}
-              </View>
-
-              <AppText
-                variant="bodySmall"
-                color="secondary"
-                style={{
-                  marginTop: spacing.xs,
-                }}
-              >
-                Stay up to date with activity on your account
-              </AppText>
-            </View>
-          </View>
-
-          {/* MARK ALL AS READ */}
-
-          {unreadCount > 0 && (
-            <View
-              style={{
-                alignItems: "flex-end",
-                marginTop: spacing.md,
-              }}
-            >
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Mark all notifications as read"
-                onPress={handleMarkAllAsRead}
-                hitSlop={8}
-              >
-                <AppText
-                  variant="bodySmall"
-                  style={{
-                    color: theme.icon.branding.icon,
-                    fontWeight: "700",
-                  }}
-                >
-                  Mark all as read
-                </AppText>
-              </Pressable>
-            </View>
-          )}
-        </View>
-
         {/* ================================================================
             NOTIFICATIONS
         ================================================================ */}

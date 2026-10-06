@@ -1,11 +1,7 @@
 import { Alert, Pressable, ScrollView, View, Image } from "react-native";
-
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import { StatusBar } from "expo-status-bar";
-
 import { Ionicons } from "@expo/vector-icons";
-
 import { router } from "expo-router";
 
 import { AppText } from "@/components/ui/AppText";
@@ -15,13 +11,10 @@ import { Divider } from "@/components/ui/Divider";
 import { UICard } from "@/components/ui/UICard";
 
 import { spacing, theme, radius } from "@/theme";
-
 import { ROUTES } from "@/navigation/routes";
 
 import { useAuth } from "@/providers/AuthProvider";
-
 import { useMerchantProfile } from "@/hooks/merchant/useMerchantProfile";
-
 import { useSettlementAccounts } from "@/hooks/merchant/useSettlementAccounts";
 
 /**
@@ -32,6 +25,7 @@ import { useSettlementAccounts } from "@/hooks/merchant/useSettlementAccounts";
 
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
+
   /**
    * ==========================================================================
    * AUTHENTICATION
@@ -100,12 +94,16 @@ export default function MoreScreen() {
       <ScrollView
         style={{
           flex: 1,
-          paddingHorizontal: spacing.lg,
         }}
         contentContainerStyle={{
-          paddingBottom: spacing.lg,
+          paddingHorizontal: spacing.lg,
+          paddingBottom: spacing.lg + insets.bottom,
         }}
         showsVerticalScrollIndicator={false}
+        bounces
+        overScrollMode="always"
+        keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={16}
       >
         {/* ================================================================= */}
         {/* HEADER */}
@@ -184,22 +182,15 @@ export default function MoreScreen() {
             onPress={() => router.push(ROUTES.SETTLEMENTS)}
             style={({ pressed }) => ({
               marginTop: spacing.md,
-
               paddingHorizontal: spacing.md,
               paddingVertical: spacing.md,
-
               borderRadius: radius.md,
-
               backgroundColor: theme.background.warning,
-
               borderWidth: 1,
               borderColor: theme.border.warning,
-
               flexDirection: "row",
               alignItems: "center",
-
               gap: spacing.sm,
-
               opacity: pressed ? 0.8 : 1,
             })}
           >
@@ -624,9 +615,7 @@ export default function MoreScreen() {
                         style={{
                           paddingHorizontal: spacing.sm,
                           paddingVertical: 2,
-
                           borderRadius: 999,
-
                           backgroundColor: theme.background.warning,
                         }}
                       >

@@ -1,9 +1,7 @@
 import { z } from "zod";
 
 export const pricingSchema = z.object({
-  sellingPrice: z
-    .string()
-    .min(1, "Selling price is required"),
+  sellingPrice: z.string().min(1, "Selling price is required"),
 
   costPrice: z.string(),
 
@@ -11,8 +9,9 @@ export const pricingSchema = z.object({
 
   lowStockAlert: z.string(),
 
+  soldOutLevel: z.string(),
+
   reorderLevel: z.string(),
 });
 
-export type PricingFormData =
-  z.infer<typeof pricingSchema>;
+export type PricingFormData = z.infer<typeof pricingSchema>;

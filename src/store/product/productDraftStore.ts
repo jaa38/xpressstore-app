@@ -23,6 +23,7 @@ const INITIAL_PRODUCT: ProductDraft = {
 
   stock: 0,
   lowStockAlert: 0,
+  soldOutLevel: 0,
   reorderLevel: 0,
 
   image: "",
@@ -72,7 +73,9 @@ export const useProductDraftStore = create<ProductDraftStore>((set) => ({
             }
           : state.product.dimensions,
 
-        variants: data.variants ? [...data.variants] : state.product.variants,
+        variants: data.variants
+          ? [...data.variants]
+          : state.product.variants,
       },
     })),
 

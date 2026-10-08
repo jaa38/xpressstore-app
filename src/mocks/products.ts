@@ -1,41 +1,19 @@
-// src/mocks/products.ts
-
-import { getMockStore } from "@/mocks/stores";
-import { MOCK_CATEGORIES } from "@/mocks/categories";
-
 import type {
+  CreateProductRequest,
   MerchantProduct,
   ProductCategoryDto,
-  CreateProductRequest,
+  ProductImageDto,
+  ProductVariationDto,
 } from "@/types/product";
 
-import type { Currency } from "@/types/currency";
+import {
+  getMockCategory,
+  getMockCategories,
+} from "@/mocks/productCategories";
 
-/**
- * ============================================================================
- * MOCK CATEGORY HELPER
- * ============================================================================
- */
-
-function getMockCategory(categoryId: number): ProductCategoryDto {
-  const category = MOCK_CATEGORIES.find((item) => item.id === categoryId);
-
-  if (!category) {
-    return {
-      id: categoryId,
-      name: "Other",
-      description: "",
-      isActive: true,
-    };
-  }
-
-  return {
-    id: category.id,
-    name: category.name,
-    description: "",
-    isActive: true,
-  };
-}
+import {
+  getMockStore,
+} from "@/mocks/stores";
 
 /**
  * ============================================================================
@@ -43,13 +21,7 @@ function getMockCategory(categoryId: number): ProductCategoryDto {
  * ============================================================================
  */
 
-export const MOCK_PRODUCTS: MerchantProduct[] = [
-  /**
-   * ==========================================================================
-   * PRODUCT 1
-   * ==========================================================================
-   */
-
+const MOCK_PRODUCTS: MerchantProduct[] = [
   {
     id: 1,
 
@@ -68,11 +40,13 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
 
     lowStockAlert: 5,
 
+    soldOutLevel: 0,
+
     inStock: true,
 
     isActive: true,
 
-    productCategories: [getMockCategory(3)],
+    productCategories: [],
 
     variations: [],
 
@@ -85,184 +59,15 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
     ],
   },
 
-  /**
-   * ==========================================================================
-   * PRODUCT 2
-   * ==========================================================================
-   */
-
   {
     id: 2,
 
     productReference: "PROD-002",
 
-    productName: "Premium Ankara Tote Bag",
+    productName: "Premium Cotton T-Shirt",
 
     description:
-      "A stylish Ankara tote bag suitable for everyday shopping and casual use.",
-
-    unitPrice: 45000,
-
-    currency: "NGN",
-
-    totalInStock: 4,
-
-    lowStockAlert: 5,
-
-    inStock: true,
-
-    isActive: true,
-
-    productCategories: [getMockCategory(2)],
-
-    variations: [],
-
-    productImages: [
-      {
-        filename: "premium-ankara-tote-bag.jpg",
-
-        url: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7",
-      },
-    ],
-  },
-
-  /**
-   * ==========================================================================
-   * PRODUCT 3
-   * ==========================================================================
-   */
-
-  {
-    id: 3,
-
-    productReference: "PROD-003",
-
-    productName: "Minimalist Wrist Watch",
-
-    description: "Minimalist wrist watch featuring a clean and modern design.",
-
-    unitPrice: 52500,
-
-    currency: "NGN",
-
-    totalInStock: 12,
-
-    lowStockAlert: 4,
-
-    inStock: true,
-
-    isActive: true,
-
-    productCategories: [getMockCategory(5)],
-
-    variations: [],
-
-    productImages: [
-      {
-        filename: "minimalist-wrist-watch.jpg",
-
-        url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-      },
-    ],
-  },
-
-  /**
-   * ==========================================================================
-   * PRODUCT 4
-   * ==========================================================================
-   */
-
-  {
-    id: 4,
-
-    productReference: "PROD-004",
-
-    productName: "Premium Wireless Headphones",
-
-    description:
-      "Premium wireless headphones designed for music, calls and entertainment.",
-
-    unitPrice: 125000,
-
-    currency: "NGN",
-
-    totalInStock: 2,
-
-    lowStockAlert: 5,
-
-    inStock: true,
-
-    isActive: true,
-
-    productCategories: [getMockCategory(4)],
-
-    variations: [],
-
-    productImages: [
-      {
-        filename: "premium-wireless-headphones.jpg",
-
-        url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
-      },
-    ],
-  },
-
-  /**
-   * ==========================================================================
-   * PRODUCT 5
-   * ==========================================================================
-   */
-
-  {
-    id: 5,
-
-    productReference: "PROD-005",
-
-    productName: "Smart Travel Backpack",
-
-    description:
-      "Spacious travel backpack with dedicated compartments for everyday essentials.",
-
-    unitPrice: 100000,
-
-    currency: "NGN",
-
-    totalInStock: 25,
-
-    lowStockAlert: 5,
-
-    inStock: true,
-
-    isActive: false,
-
-    productCategories: [getMockCategory(7)],
-
-    variations: [],
-
-    productImages: [
-      {
-        filename: "smart-travel-backpack.jpg",
-
-        url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62",
-      },
-    ],
-  },
-
-  /**
-   * ==========================================================================
-   * PRODUCT 6
-   * ==========================================================================
-   */
-
-  {
-    id: 6,
-
-    productReference: "PROD-006",
-
-    productName: "Classic Cotton Shirt",
-
-    description:
-      "Comfortable cotton shirt suitable for casual and smart-casual outfits.",
+      "Premium cotton t-shirt designed for everyday comfort and casual wear.",
 
     unitPrice: 22500,
 
@@ -272,11 +77,161 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
 
     lowStockAlert: 5,
 
+    soldOutLevel: 0,
+
     inStock: true,
 
     isActive: true,
 
-    productCategories: [getMockCategory(1)],
+    productCategories: [],
+
+    variations: [],
+
+    productImages: [
+      {
+        filename: "premium-cotton-tshirt.jpg",
+
+        url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab",
+      },
+    ],
+  },
+
+  {
+    id: 3,
+
+    productReference: "PROD-003",
+
+    productName: "Smart Fitness Watch",
+
+    description:
+      "Smart fitness watch with activity tracking, notifications and health monitoring features.",
+
+    unitPrice: 125000,
+
+    currency: "NGN",
+
+    totalInStock: 12,
+
+    lowStockAlert: 5,
+
+    soldOutLevel: 0,
+
+    inStock: true,
+
+    isActive: true,
+
+    productCategories: [],
+
+    variations: [],
+
+    productImages: [
+      {
+        filename: "smart-fitness-watch.jpg",
+
+        url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      },
+    ],
+  },
+
+  {
+    id: 4,
+
+    productReference: "PROD-004",
+
+    productName: "Wireless Headphones",
+
+    description:
+      "Wireless headphones with a comfortable fit and high-quality audio.",
+
+    unitPrice: 95000,
+
+    currency: "NGN",
+
+    totalInStock: 8,
+
+    lowStockAlert: 4,
+
+    soldOutLevel: 0,
+
+    inStock: true,
+
+    isActive: true,
+
+    productCategories: [],
+
+    variations: [],
+
+    productImages: [
+      {
+        filename: "wireless-headphones.jpg",
+
+        url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
+      },
+    ],
+  },
+
+  {
+    id: 5,
+
+    productReference: "PROD-005",
+
+    productName: "Minimalist Backpack",
+
+    description:
+      "Minimalist backpack suitable for work, school and everyday travel.",
+
+    unitPrice: 65000,
+
+    currency: "NGN",
+
+    totalInStock: 6,
+
+    lowStockAlert: 5,
+
+    soldOutLevel: 0,
+
+    inStock: true,
+
+    isActive: true,
+
+    productCategories: [],
+
+    variations: [],
+
+    productImages: [
+      {
+        filename: "minimalist-backpack.jpg",
+
+        url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62",
+      },
+    ],
+  },
+
+  {
+    id: 6,
+
+    productReference: "PROD-006",
+
+    productName: "Classic Cotton Shirt",
+
+    description:
+      "Classic cotton shirt suitable for casual and smart-casual occasions.",
+
+    unitPrice: 22500,
+
+    currency: "NGN",
+
+    totalInStock: 3,
+
+    lowStockAlert: 5,
+
+    soldOutLevel: 0,
+
+    inStock: true,
+
+    isActive: true,
+
+    productCategories: [],
 
     variations: [],
 
@@ -284,16 +239,10 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
       {
         filename: "classic-cotton-shirt.jpg",
 
-        url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf",
+        url: "",
       },
     ],
   },
-
-  /**
-   * ==========================================================================
-   * PRODUCT 7
-   * ==========================================================================
-   */
 
   {
     id: 7,
@@ -313,11 +262,13 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
 
     lowStockAlert: 3,
 
+    soldOutLevel: 0,
+
     inStock: true,
 
     isActive: true,
 
-    productCategories: [getMockCategory(6)],
+    productCategories: [],
 
     variations: [],
 
@@ -325,16 +276,10 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
       {
         filename: "executive-office-chair.jpg",
 
-        url: "https://images.unsplash.com/photo-1580480055273-228ff5388ef8",
+        url: "",
       },
     ],
   },
-
-  /**
-   * ==========================================================================
-   * PRODUCT 8
-   * ==========================================================================
-   */
 
   {
     id: 8,
@@ -343,7 +288,8 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
 
     productName: "Adjustable Laptop Stand",
 
-    description: "Adjustable laptop stand designed to improve desk ergonomics.",
+    description:
+      "Adjustable laptop stand designed to improve desk ergonomics.",
 
     unitPrice: 35000,
 
@@ -353,11 +299,13 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
 
     lowStockAlert: 5,
 
+    soldOutLevel: 0,
+
     inStock: true,
 
     isActive: true,
 
-    productCategories: [getMockCategory(6)],
+    productCategories: [],
 
     variations: [],
 
@@ -365,16 +313,10 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
       {
         filename: "adjustable-laptop-stand.jpg",
 
-        url: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf",
+        url: "",
       },
     ],
   },
-
-  /**
-   * ==========================================================================
-   * PRODUCT 9
-   * ==========================================================================
-   */
 
   {
     id: 9,
@@ -394,11 +336,13 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
 
     lowStockAlert: 3,
 
+    soldOutLevel: 0,
+
     inStock: true,
 
     isActive: false,
 
-    productCategories: [getMockCategory(4)],
+    productCategories: [],
 
     variations: [],
 
@@ -406,16 +350,10 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
       {
         filename: "wireless-keyboard.jpg",
 
-        url: "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
+        url: "",
       },
     ],
   },
-
-  /**
-   * ==========================================================================
-   * PRODUCT 10
-   * ==========================================================================
-   */
 
   {
     id: 10,
@@ -435,11 +373,13 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
 
     lowStockAlert: 5,
 
+    soldOutLevel: 0,
+
     inStock: true,
 
     isActive: true,
 
-    productCategories: [getMockCategory(2)],
+    productCategories: [],
 
     variations: [],
 
@@ -447,16 +387,10 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
       {
         filename: "premium-crossbody-bag.jpg",
 
-        url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa",
+        url: "",
       },
     ],
   },
-
-  /**
-   * ==========================================================================
-   * PRODUCT 11
-   * ==========================================================================
-   */
 
   {
     id: 11,
@@ -465,7 +399,8 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
 
     productName: "Fashion Sunglasses",
 
-    description: "Modern fashion sunglasses designed for everyday wear.",
+    description:
+      "Modern fashion sunglasses designed for everyday wear.",
 
     unitPrice: 25000,
 
@@ -475,11 +410,13 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
 
     lowStockAlert: 5,
 
+    soldOutLevel: 0,
+
     inStock: true,
 
     isActive: true,
 
-    productCategories: [getMockCategory(5)],
+    productCategories: [],
 
     variations: [],
 
@@ -487,16 +424,10 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
       {
         filename: "fashion-sunglasses.jpg",
 
-        url: "https://images.unsplash.com/photo-1511499767150-a48a237f0083",
+        url: "",
       },
     ],
   },
-
-  /**
-   * ==========================================================================
-   * PRODUCT 12
-   * ==========================================================================
-   */
 
   {
     id: 12,
@@ -516,11 +447,13 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
 
     lowStockAlert: 4,
 
+    soldOutLevel: 0,
+
     inStock: true,
 
     isActive: true,
 
-    productCategories: [getMockCategory(7)],
+    productCategories: [],
 
     variations: [],
 
@@ -528,7 +461,7 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
       {
         filename: "modern-canvas-backpack.jpg",
 
-        url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62",
+        url: "",
       },
     ],
   },
@@ -538,21 +471,30 @@ export const MOCK_PRODUCTS: MerchantProduct[] = [
  * ============================================================================
  * MOCK REPOSITORY
  * ============================================================================
+ *
+ * Keep a module-level copy so both:
+ *
+ * app/(tabs)/products.tsx
+ *
+ * and
+ *
+ * app/product/[id].tsx
+ *
+ * work with the same data.
  */
 
-let mockProducts: MerchantProduct[] = MOCK_PRODUCTS.map((product) => ({
-  ...product,
+let mockProducts: MerchantProduct[] = MOCK_PRODUCTS.map(
+  (product) => ({
+    ...product,
 
-  productImages:
-    product.productImages?.map((image) => ({
-      ...image,
-    })) ?? [],
-
-  productCategories:
-    product.productCategories?.map((category) => ({
-      ...category,
-    })) ?? [],
-}));
+    productImages:
+      product.productImages?.map(
+        (image) => ({
+          ...image,
+        })
+      ) ?? [],
+  })
+);
 
 /**
  * ============================================================================
@@ -568,9 +510,21 @@ export function getMockProducts(): MerchantProduct[] {
  * ============================================================================
  * GET PRODUCTS BY STORE
  * ============================================================================
+ *
+ * Returns the products currently assigned to a store.
+ *
+ * The store owns the product relationship through its `products` array.
+ * This repository resolves those product IDs into MerchantProduct objects.
+ *
+ * This mirrors:
+ *
+ * productService.getProductsByStore(storeId)
+ * ============================================================================
  */
 
-export function getMockProductsByStore(storeId: number): MerchantProduct[] {
+export function getMockProductsByStore(
+  storeId: number
+): MerchantProduct[] {
   const store = getMockStore(storeId);
 
   if (!store) {
@@ -580,20 +534,24 @@ export function getMockProductsByStore(storeId: number): MerchantProduct[] {
   const productIds = store.products ?? [];
 
   return productIds
-    .map((productId) => getMockProduct(productId))
-    .filter((product): product is MerchantProduct => product !== undefined)
+    .map((productId) =>
+      getMockProduct(productId)
+    )
+    .filter(
+      (
+        product
+      ): product is MerchantProduct =>
+        product !== undefined
+    )
     .map((product) => ({
       ...product,
 
       productImages:
-        product.productImages?.map((image) => ({
-          ...image,
-        })) ?? [],
-
-      productCategories:
-        product.productCategories?.map((category) => ({
-          ...category,
-        })) ?? [],
+        product.productImages?.map(
+          (image) => ({
+            ...image,
+          })
+        ) ?? [],
     }));
 }
 
@@ -603,134 +561,13 @@ export function getMockProductsByStore(storeId: number): MerchantProduct[] {
  * ============================================================================
  */
 
-export function getMockProduct(productId: number): MerchantProduct | undefined {
-  return mockProducts.find((product) => product.id === productId);
-}
-
-/**
- * ============================================================================
- * CREATE PRODUCT
- * ============================================================================
- */
-
-export function createMockProduct(
-  payload: CreateProductRequest
-): MerchantProduct {
-  /**
-   * ==========================================================================
-   * GENERATE PRODUCT ID
-   * ==========================================================================
-   */
-
-  const nextId =
-    mockProducts.length > 0
-      ? Math.max(...mockProducts.map((product) => product.id)) + 1
-      : 1;
-
-  /**
-   * ==========================================================================
-   * GENERATE PRODUCT REFERENCE
-   * ==========================================================================
-   */
-
-  const productReference = `MOCK-${String(nextId).padStart(4, "0")}`;
-
-  /**
-   * ==========================================================================
-   * CURRENCY
-   * ==========================================================================
-   *
-   * CreateProductRequest currently exposes currency as a string.
-   *
-   * MerchantProduct requires the stricter Currency type.
-   */
-
-  const currency = payload.currency as Currency;
-
-  /**
-   * ==========================================================================
-   * CATEGORIES
-   * ==========================================================================
-   *
-   * Convert category IDs into the same ProductCategoryDto structure
-   * used by the existing mock products.
-   *
-   * This also means the Review screen will display:
-   *
-   *     Category: Fashion
-   *
-   * instead of:
-   *
-   *     Category: 1
-   */
-
-  const productCategories: ProductCategoryDto[] =
-    payload.categoryIds?.map((categoryId) =>
-      getMockCategory(Number(categoryId))
-    ) ?? [];
-
-  /**
-   * ==========================================================================
-   * PRODUCT IMAGES
-   * ==========================================================================
-   */
-
-  const productImages = payload.images ?? [];
-
-  /**
-   * ==========================================================================
-   * BUILD PRODUCT
-   * ==========================================================================
-   */
-
-  const createdProduct: MerchantProduct = {
-    id: nextId,
-
-    productReference,
-
-    productName: payload.name,
-
-    description: payload.description,
-
-    unitPrice: Number(payload.price),
-
-    currency,
-
-    inStock: true,
-
-    totalInStock: 0,
-
-    lowStockAlert: 0,
-
-    isActive: Boolean(payload.publishNow),
-
-    youtubeLink: payload.youtubeLink ?? "",
-
-    unit: payload.unit ?? "",
-
-    productLocation: payload.productLocation ?? "",
-
-    minOrderQty: payload.minOrderQty ?? "",
-
-    productImages,
-
-    productCategories,
-
-    variations: [],
-  };
-
-  /**
-   * ==========================================================================
-   * SAVE TO MOCK REPOSITORY
-   * ==========================================================================
-   *
-   * Add the newly created product to the beginning of the repository so it
-   * immediately appears at the top of the product list.
-   */
-
-  mockProducts = [createdProduct, ...mockProducts];
-
-  return createdProduct;
+export function getMockProduct(
+  productId: number
+): MerchantProduct | undefined {
+  return mockProducts.find(
+    (product) =>
+      product.id === productId
+  );
 }
 
 /**
@@ -743,33 +580,42 @@ export function updateMockProduct(
   productId: number,
   updates: Partial<MerchantProduct>
 ): MerchantProduct | undefined {
-  let updatedProduct: MerchantProduct | undefined;
+  let updatedProduct:
+    | MerchantProduct
+    | undefined;
 
-  mockProducts = mockProducts.map((product) => {
-    if (product.id !== productId) {
-      return product;
+  mockProducts = mockProducts.map(
+    (product) => {
+      if (product.id !== productId) {
+        return product;
+      }
+
+      updatedProduct = {
+        ...product,
+
+        ...updates,
+
+        /**
+         * Keep inStock consistent with
+         * totalInStock and soldOutLevel.
+         */
+        inStock:
+          updates.totalInStock !== undefined ||
+          updates.soldOutLevel !== undefined
+            ? (
+                updates.totalInStock ??
+                product.totalInStock
+              ) >
+              (
+                updates.soldOutLevel ??
+                product.soldOutLevel
+              )
+            : product.inStock,
+      };
+
+      return updatedProduct;
     }
-
-    updatedProduct = {
-      ...product,
-
-      ...updates,
-
-      productImages: updates.productImages ?? product.productImages,
-
-      productCategories: updates.productCategories ?? product.productCategories,
-
-      /**
-       * Keep inStock consistent with totalInStock.
-       */
-      inStock:
-        updates.totalInStock !== undefined
-          ? updates.totalInStock > 0
-          : product.inStock,
-    };
-
-    return updatedProduct;
-  });
+  );
 
   return updatedProduct;
 }
@@ -780,12 +626,22 @@ export function updateMockProduct(
  * ============================================================================
  */
 
-export function deleteMockProduct(productId: number): boolean {
-  const previousLength = mockProducts.length;
+export function deleteMockProduct(
+  productId: number
+): boolean {
+  const previousLength =
+    mockProducts.length;
 
-  mockProducts = mockProducts.filter((product) => product.id !== productId);
+  mockProducts =
+    mockProducts.filter(
+      (product) =>
+        product.id !== productId
+    );
 
-  return mockProducts.length < previousLength;
+  return (
+    mockProducts.length <
+    previousLength
+  );
 }
 
 /**
@@ -798,9 +654,144 @@ export function toggleMockProductStatus(
   productId: number,
   isActive: boolean
 ): MerchantProduct | undefined {
-  return updateMockProduct(productId, {
-    isActive,
-  });
+  return updateMockProduct(
+    productId,
+    {
+      isActive,
+    }
+  );
+}
+
+/**
+ * ============================================================================
+ * CREATE PRODUCT
+ * ============================================================================
+ */
+
+export function createMockProduct(
+  payload: CreateProductRequest
+): MerchantProduct {
+  const existingIds = mockProducts.map(
+    (product) => product.id
+  );
+
+  const nextId =
+    existingIds.length > 0
+      ? Math.max(...existingIds) + 1
+      : 1;
+
+  const productReference =
+    `PROD-${String(nextId).padStart(3, "0")}`;
+
+  const totalInStock =
+    Number(payload.stock ?? 0);
+
+  const lowStockAlert =
+    Number(
+      payload.lowStockAlert ?? 0
+    );
+
+  const soldOutLevel =
+    Number(
+      payload.soldOutLevel ?? 0
+    );
+
+  const productImages =
+    payload.images?.map(
+      (image) => ({
+        ...image,
+      })
+    ) ?? [];
+
+  const productCategories: ProductCategoryDto[] =
+    payload.categoryIds?.map(
+      (categoryId) => {
+        const category =
+          getMockCategory(categoryId);
+
+        if (category) {
+          return category;
+        }
+
+        return {
+          id: categoryId,
+
+          name: `Category ${categoryId}`,
+
+          description: "",
+
+          isActive: true,
+        };
+      }
+    ) ?? [];
+
+  const variations: ProductVariationDto[] =
+    payload.variations?.map(
+      (variation) => ({
+        ...variation,
+
+        options:
+          variation.options ?? [],
+      })
+    ) ?? [];
+
+  const createdProduct: MerchantProduct = {
+    id: nextId,
+
+    productReference,
+
+    productName:
+      payload.name,
+
+    description:
+      payload.description,
+
+    unitPrice:
+      Number(payload.price),
+
+    currency:
+      payload.currency as MerchantProduct["currency"],
+
+    totalInStock,
+
+    lowStockAlert,
+
+    soldOutLevel,
+
+    inStock:
+      totalInStock >
+      soldOutLevel,
+
+    isActive:
+      Boolean(
+        payload.publishNow
+      ),
+
+    youtubeLink:
+      payload.youtubeLink ?? "",
+
+    unit:
+      payload.unit ?? "",
+
+    productLocation:
+      payload.productLocation ?? "",
+
+    minOrderQty:
+      payload.minOrderQty ?? "",
+
+    productImages,
+
+    productCategories,
+
+    variations,
+  };
+
+  mockProducts = [
+    ...mockProducts,
+    createdProduct,
+  ];
+
+  return createdProduct;
 }
 
 /**
@@ -810,17 +801,17 @@ export function toggleMockProductStatus(
  */
 
 export function resetMockProducts(): void {
-  mockProducts = MOCK_PRODUCTS.map((product) => ({
-    ...product,
+  mockProducts =
+    MOCK_PRODUCTS.map(
+      (product) => ({
+        ...product,
 
-    productImages:
-      product.productImages?.map((image) => ({
-        ...image,
-      })) ?? [],
-
-    productCategories:
-      product.productCategories?.map((category) => ({
-        ...category,
-      })) ?? [],
-  }));
+        productImages:
+          product.productImages?.map(
+            (image) => ({
+              ...image,
+            })
+          ) ?? [],
+      })
+    );
 }

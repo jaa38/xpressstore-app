@@ -46,6 +46,8 @@ export interface ProductDraft {
 
   lowStockAlert: number;
 
+  soldOutLevel: number;
+
   reorderLevel: number;
 
   image: string;
@@ -95,6 +97,11 @@ export interface ProductVariationDto {
   options: string[];
 }
 
+export interface CreateProductCategoryRequest {
+  name: string;
+  description?: string;
+}
+
 export interface CreateProductRequest {
   id: number;
 
@@ -125,6 +132,18 @@ export interface CreateProductRequest {
   options: ProductOptionDto[];
 
   publishNow: boolean;
+
+  /**
+   * Inventory fields are optional because the current API contract
+   * does not explicitly require them yet.
+   */
+  stock?: number;
+
+  lowStockAlert?: number;
+
+  soldOutLevel?: number;
+
+  reorderLevel?: number;
 }
 
 export interface CreatedProduct {
@@ -149,7 +168,7 @@ export interface UpdateProductRequest extends CreateProductRequest {}
 
 /**
  * ============================================================================
- * Merchant Product API DTO
+ * MERCHANT PRODUCT API DTO
  * ============================================================================
  */
 
@@ -171,6 +190,8 @@ export interface MerchantProduct {
   totalInStock: number;
 
   lowStockAlert: number;
+
+  soldOutLevel: number;
 
   isActive: boolean;
 
@@ -220,10 +241,4 @@ export interface ProductCategoryDto {
   isActive: boolean;
 
   slug?: string;
-}
-
-export interface CreateProductCategoryRequest {
-  name: string;
-
-  description?: string;
 }

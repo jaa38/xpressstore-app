@@ -25,6 +25,7 @@ interface ProductRow {
   in_stock: number;
   total_in_stock: number;
   low_stock_alert: number;
+  sold_out_level: number;
   is_active: number;
   youtube_link: string | null;
   unit: string | null;
@@ -86,6 +87,8 @@ function mapProductRow(
     totalInStock: row.total_in_stock,
 
     lowStockAlert: row.low_stock_alert,
+
+    soldOutLevel: row.sold_out_level,
 
     isActive: row.is_active === 1,
 
@@ -165,6 +168,7 @@ class SQLiteProductRepository implements ProductRepository {
           in_stock,
           total_in_stock,
           low_stock_alert,
+          sold_out_level,
           is_active,
           youtube_link,
           unit,
@@ -291,6 +295,7 @@ class SQLiteProductRepository implements ProductRepository {
           in_stock,
           total_in_stock,
           low_stock_alert,
+          sold_out_level,
           is_active,
           youtube_link,
           unit,
@@ -325,6 +330,7 @@ class SQLiteProductRepository implements ProductRepository {
           in_stock = excluded.in_stock,
           total_in_stock = excluded.total_in_stock,
           low_stock_alert = excluded.low_stock_alert,
+          sold_out_level = excluded.sold_out_level,
           is_active = excluded.is_active,
           youtube_link = excluded.youtube_link,
           unit = excluded.unit,
@@ -341,6 +347,7 @@ class SQLiteProductRepository implements ProductRepository {
       product.inStock ? 1 : 0,
       product.totalInStock,
       product.lowStockAlert,
+      product.soldOutLevel,
       product.isActive ? 1 : 0,
       product.youtubeLink ?? null,
       product.unit ?? null,

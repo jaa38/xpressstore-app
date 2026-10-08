@@ -722,9 +722,7 @@ export default function ReviewScreen() {
               <View
                 style={{
                   flexDirection: "row",
-
                   justifyContent: "space-between",
-
                   alignItems: "center",
                 }}
               >
@@ -736,7 +734,6 @@ export default function ReviewScreen() {
               <View
                 style={{
                   marginTop: spacing.rg,
-
                   gap: spacing.sm,
                 }}
               >
@@ -745,7 +742,6 @@ export default function ReviewScreen() {
                 <View
                   style={{
                     flexDirection: "row",
-
                     justifyContent: "space-between",
                   }}
                 >
@@ -758,7 +754,6 @@ export default function ReviewScreen() {
                     color={product.trackInventory ? "success" : "secondary"}
                     style={{
                       flexShrink: 1,
-
                       textAlign: "right",
                     }}
                   >
@@ -771,7 +766,6 @@ export default function ReviewScreen() {
                 <View
                   style={{
                     flexDirection: "row",
-
                     justifyContent: "space-between",
                   }}
                 >
@@ -784,11 +778,44 @@ export default function ReviewScreen() {
                     color="primary"
                     style={{
                       flexShrink: 1,
-
                       textAlign: "right",
                     }}
                   >
                     {product.stock}
+                  </AppText>
+                </View>
+
+                {/* LOW STOCK */}
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Low Stock Alert
+                  </AppText>
+
+                  <AppText variant="bodyBold" color="primary">
+                    {product.lowStockAlert}
+                  </AppText>
+                </View>
+
+                {/* SOLD OUT */}
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText variant="body" color="secondary">
+                    Sold Out Level
+                  </AppText>
+
+                  <AppText variant="bodyBold" color="primary">
+                    {product.soldOutLevel}
                   </AppText>
                 </View>
 
@@ -797,7 +824,6 @@ export default function ReviewScreen() {
                 <View
                   style={{
                     flexDirection: "row",
-
                     justifyContent: "space-between",
                   }}
                 >
@@ -807,24 +833,6 @@ export default function ReviewScreen() {
 
                   <AppText variant="bodyBold" color="primary">
                     {product.reorderLevel}
-                  </AppText>
-                </View>
-
-                {/* LOW STOCK */}
-
-                <View
-                  style={{
-                    flexDirection: "row",
-
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <AppText variant="body" color="secondary">
-                    Low Alert
-                  </AppText>
-
-                  <AppText variant="bodyBold" color="primary">
-                    {product.lowStockAlert}
                   </AppText>
                 </View>
               </View>

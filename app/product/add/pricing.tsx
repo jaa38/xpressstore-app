@@ -1,4 +1,4 @@
-import { View, ScrollView, KeyboardTypeOptions, Switch } from "react-native";
+import { View, ScrollView, Switch } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,8 +17,6 @@ import { AddProductFooter } from "@/components/product/AddProductFooter";
 import { CurrencyInput } from "@/components/ui/CurrencyInput";
 
 import { Card } from "@/components/ui/Card";
-
-import { useState } from "react";
 
 import { useForm, Controller } from "react-hook-form";
 
@@ -40,6 +38,8 @@ export default function PricingScreen() {
     handleSubmit,
     formState: { errors },
   } = useForm<PricingFormData>({
+    resolver: zodResolver(pricingSchema),
+
     defaultValues: {
       sellingPrice: product.price ? product.price.toString() : "",
 
@@ -50,6 +50,8 @@ export default function PricingScreen() {
       lowStockAlert: product.lowStockAlert
         ? product.lowStockAlert.toString()
         : "",
+
+      soldOutLevel: product.soldOutLevel ? product.soldOutLevel.toString() : "",
 
       reorderLevel: product.reorderLevel ? product.reorderLevel.toString() : "",
     },
@@ -88,8 +90,13 @@ export default function PricingScreen() {
             paddingTop: spacing.md,
             paddingBottom: spacing.xl,
           }}
-          showsVerticalScrollIndicator={true}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
+          {/* ==================================================================
+              INTRO
+          ================================================================== */}
+
           <View
             style={{
               gap: spacing.xs,
@@ -104,7 +111,9 @@ export default function PricingScreen() {
             </AppText>
           </View>
 
-          {/* SELLING PRICE */}
+          {/* ==================================================================
+              PRICING
+          ================================================================== */}
 
           <View
             style={{
@@ -146,10 +155,15 @@ export default function PricingScreen() {
                   currency={product.currency}
                   disableCurrencySelection
                   onChangeText={field.onChange}
+                  error={errors.costPrice?.message}
                 />
               )}
             />
           </View>
+
+          {/* ==================================================================
+              TAX
+          ================================================================== */}
 
           <View
             style={{
@@ -189,7 +203,9 @@ export default function PricingScreen() {
             </Card>
           </View>
 
-          {/* INVENTORY */}
+          {/* ==================================================================
+              INVENTORY
+          ================================================================== */}
 
           <View
             style={{
@@ -243,6 +259,8 @@ export default function PricingScreen() {
                   gap: spacing.md,
                 }}
               >
+                {/* CURRENT STOCK */}
+
                 <Controller
                   control={control}
                   name="currentStock"
@@ -258,13 +276,19 @@ export default function PricingScreen() {
                   )}
                 />
 
+                {/* LOW STOCK + SOLD OUT */}
+
                 <View
                   style={{
                     flexDirection: "row",
                     gap: spacing.md,
                   }}
                 >
-                  <View style={{ flex: 1 }}>
+                  <View
+                    style={{
+                      flex: 1,
+                    }}
+                  >
                     <Controller
                       control={control}
                       name="lowStockAlert"
@@ -275,29 +299,56 @@ export default function PricingScreen() {
                           keyboardType="numeric"
                           value={field.value}
                           onChangeText={field.onChange}
+                          error={errors.lowStockAlert?.message}
                         />
                       )}
                     />
                   </View>
 
-                  <View style={{ flex: 1 }}>
+                  <View
+                    style={{
+                      flex: 1,
+                    }}
+                  >
                     <Controller
                       control={control}
-                      name="reorderLevel"
+                      name="soldOutLevel"
                       render={({ field }) => (
                         <Input
-                          label="Reorder Level"
+                          label="Sold Out Level"
                           placeholder="0"
                           keyboardType="numeric"
                           value={field.value}
                           onChangeText={field.onChange}
+                          error={errors.soldOutLevel?.message}
                         />
                       )}
                     />
                   </View>
                 </View>
+
+                {/* REORDER LEVEL */}
+
+                <Controller
+                  control={control}
+                  name="reorderLevel"
+                  render={({ field }) => (
+                    <Input
+                      label="Reorder Level"
+                      placeholder="0"
+                      keyboardType="numeric"
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      error={errors.reorderLevel?.message}
+                    />
+                  )}
+                />
               </View>
             )}
+
+            {/* ================================================================
+                PRODUCT STATUS
+            ================================================================ */}
 
             <View
               style={{
@@ -315,7 +366,11 @@ export default function PricingScreen() {
                   marginTop: spacing.md,
                 }}
               >
-                <View style={{ flex: 1 }}>
+                <View
+                  style={{
+                    flex: 1,
+                  }}
+                >
                   <SelectableCard
                     title="Active"
                     description="Live on storefront immediately"
@@ -328,7 +383,11 @@ export default function PricingScreen() {
                   />
                 </View>
 
-                <View style={{ flex: 1 }}>
+                <View
+                  style={{
+                    flex: 1,
+                  }}
+                >
                   <SelectableCard
                     title="Draft"
                     description="Save without publishing"
@@ -357,6 +416,8 @@ export default function PricingScreen() {
               stock: Number(data.currentStock),
 
               lowStockAlert: Number(data.lowStockAlert),
+
+              soldOutLevel: Number(data.soldOutLevel),
 
               reorderLevel: Number(data.reorderLevel),
             });

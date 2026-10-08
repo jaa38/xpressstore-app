@@ -6,7 +6,7 @@ import {
   RefreshControl,
   Switch,
   View,
-  Image
+  Image,
 } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -97,6 +97,56 @@ function RightActions({
 
 /**
  * ============================================================================
+ * STOCK STATUS
+ * ============================================================================
+ */
+
+type StockStatus = "in-stock" | "low-stock" | "sold-out";
+
+function getStockStatus(product: MerchantProduct): StockStatus {
+  const stock = Number(product.totalInStock ?? 0);
+  const lowStockAlert = Number(product.lowStockAlert ?? 0);
+  const soldOutLevel = Number(product.soldOutLevel ?? 0);
+
+  if (stock <= soldOutLevel) {
+    return "sold-out";
+  }
+
+  if (stock <= lowStockAlert) {
+    return "low-stock";
+  }
+
+  return "in-stock";
+}
+
+function getStockStatusLabel(status: StockStatus) {
+  switch (status) {
+    case "sold-out":
+      return "Sold Out";
+
+    case "low-stock":
+      return "Low Stock";
+
+    default:
+      return "In Stock";
+  }
+}
+
+function getStockStatusColor(status: StockStatus) {
+  switch (status) {
+    case "sold-out":
+      return theme.icon.error.icon;
+
+    case "low-stock":
+      return theme.icon.warning.icon;
+
+    default:
+      return theme.icon.success.icon;
+  }
+}
+
+/**
+ * ============================================================================
  * PRODUCT CARD
  * ============================================================================
  */
@@ -110,15 +160,10 @@ function ProductCard({
   toggling,
 }: {
   product: MerchantProduct;
-
   onToggle: (productId: number, value: boolean) => void;
-
   onDelete: (productId: number) => void;
-
   onEdit: (productId: number) => void;
-
   deleting: boolean;
-
   toggling: boolean;
 }) {
   const actionDisabled = deleting || toggling;
@@ -162,9 +207,45 @@ function ProductCard({
             {product.productName}
           </AppText>
 
-          <AppText variant="bodySmall" color="secondary">
-            {product.totalInStock} in stock
-          </AppText>
+          {(() => {
+            const stockStatus = getStockStatus(product);
+
+            return (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.xs,
+                }}
+              >
+                <View
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: radius.full,
+                    backgroundColor: getStockStatusColor(stockStatus),
+                  }}
+                />
+
+                <AppText
+                  variant="bodySmall"
+                  color={
+                    stockStatus === "sold-out"
+                      ? "error"
+                      : stockStatus === "low-stock"
+                        ? "warning"
+                        : "success"
+                  }
+                >
+                  {stockStatus === "sold-out"
+                    ? getStockStatusLabel(stockStatus)
+                    : `${product.totalInStock} ${getStockStatusLabel(
+                        stockStatus
+                      ).toLowerCase()}`}
+                </AppText>
+              </View>
+            );
+          })()}
 
           <AppText variant="bodyBold" color="warning">
             {formatCurrency(product.unitPrice, {
@@ -225,6 +306,7 @@ function ProductCard({
 
 export default function ProductScreen() {
   const insets = useSafeAreaInsets();
+
   /**
    * ==========================================================================
    * PRODUCTS
@@ -370,7 +452,7 @@ export default function ProductScreen() {
 
   /**
    * ==========================================================================
-   * LOW STOCK
+   * LOW STOCK / SOLD OUT
    * ==========================================================================
    */
 
@@ -499,7 +581,19 @@ export default function ProductScreen() {
 
   const lowStockProducts = useMemo(() => {
     return filteredProducts.filter(
-      (product) => product.totalInStock <= product.lowStockAlert
+      (product) => getStockStatus(product) === "low-stock"
+    );
+  }, [filteredProducts]);
+
+  /**
+   * ==========================================================================
+   * SOLD OUT PRODUCTS
+   * ==========================================================================
+   */
+
+  const soldOutProducts = useMemo(() => {
+    return filteredProducts.filter(
+      (product) => getStockStatus(product) === "sold-out"
     );
   }, [filteredProducts]);
 
@@ -602,9 +696,7 @@ export default function ProductScreen() {
 
     Alert.alert(
       "Delete Product",
-
       `Are you sure you want to delete "${product.productName}"? This action cannot be undone.`,
-
       [
         {
           text: "Cancel",
@@ -738,6 +830,7 @@ export default function ProductScreen() {
 
             {/* ============================================================
                 ADD PRODUCT
+
                 Hidden for first-time users.
                 The empty state provides the primary CTA instead.
             ============================================================= */}
@@ -777,11 +870,11 @@ export default function ProductScreen() {
           </View>
 
           {/* ================================================================
-              LOW STOCK BANNER
+              STOCK STATUS BANNER
           ================================================================= */}
 
           {showLowStockBanner &&
-            lowStockProducts.length > 0 &&
+            (lowStockProducts.length > 0 || soldOutProducts.length > 0) &&
             !isLoading &&
             !showProductError &&
             !isFirstTimeUser && (
@@ -790,38 +883,70 @@ export default function ProductScreen() {
                   marginTop: spacing.md,
                   flexDirection: "row",
                   alignItems: "center",
-                  borderColor: theme.border.warning,
-                  backgroundColor: theme.background.warning,
+                  borderColor:
+                    soldOutProducts.length > 0
+                      ? theme.border.error
+                      : theme.border.warning,
+                  backgroundColor:
+                    soldOutProducts.length > 0
+                      ? theme.background.error
+                      : theme.background.warning,
                 }}
               >
                 <Ionicons
-                  name="warning-outline"
+                  name={
+                    soldOutProducts.length > 0
+                      ? "alert-circle-outline"
+                      : "warning-outline"
+                  }
                   size={22}
-                  color={theme.icon.warning.icon}
+                  color={
+                    soldOutProducts.length > 0
+                      ? theme.icon.error.icon
+                      : theme.icon.warning.icon
+                  }
                 />
 
                 <View
                   style={{
                     flex: 1,
                     marginHorizontal: spacing.md,
+                    gap: spacing.xs,
                   }}
                 >
-                  <AppText variant="bodyBold" color="primary">
-                    {lowStockProducts.length}{" "}
-                    {lowStockProducts.length === 1
-                      ? "product is"
-                      : "products are"}{" "}
-                    running low
-                  </AppText>
+                  {soldOutProducts.length > 0 && (
+                    <AppText variant="bodyBold" color="error">
+                      {soldOutProducts.length}{" "}
+                      {soldOutProducts.length === 1
+                        ? "product is"
+                        : "products are"}{" "}
+                      sold out
+                    </AppText>
+                  )}
+
+                  {lowStockProducts.length > 0 && (
+                    <AppText
+                      variant="bodyBold"
+                      color={soldOutProducts.length > 0 ? "primary" : "warning"}
+                    >
+                      {lowStockProducts.length}{" "}
+                      {lowStockProducts.length === 1
+                        ? "product is"
+                        : "products are"}{" "}
+                      running low
+                    </AppText>
+                  )}
 
                   <AppText variant="bodySmall" color="secondary">
-                    Restock soon to avoid missing sales.
+                    {soldOutProducts.length > 0
+                      ? "Restock your products to avoid missing sales."
+                      : "Restock soon to avoid missing sales."}
                   </AppText>
                 </View>
 
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Dismiss low stock warning"
+                  accessibilityLabel="Dismiss stock warning"
                   hitSlop={10}
                   onPress={() => setShowLowStockBanner(false)}
                 >
@@ -836,6 +961,7 @@ export default function ProductScreen() {
 
           {/* ================================================================
               SEARCH
+
               Hidden for first-time users.
           ================================================================= */}
 

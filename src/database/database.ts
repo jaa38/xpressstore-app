@@ -8,7 +8,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
  * ============================================================================
  */
 
-export const DATABASE_VERSION = 10;
+export const DATABASE_VERSION = 11;
 
 /**
  * ============================================================================
@@ -330,6 +330,39 @@ export async function runMigrations(database: SQLiteDatabase): Promise<void> {
       PRAGMA user_version = 10;
     `);
   }
+
+  /**
+   * --------------------------------------------------------------------------
+   * Migration 11
+   * --------------------------------------------------------------------------
+   *
+   * Product sold-out inventory threshold.
+   *
+   * The sold_out_level determines the stock quantity at which a product
+   * should be considered sold out.
+   *
+   * Existing products default to 0 so their existing inventory behaviour
+   * remains unchanged.
+   *
+   * Stock status rules:
+   *
+   * - stock > lowStockAlert
+   *     => In Stock
+   *
+   * - stock > soldOutLevel && stock <= lowStockAlert
+   *     => Low Stock
+   *
+   * - stock <= soldOutLevel
+   *     => Sold Out
+   */
+  if (currentVersion < 11) {
+    await database.execAsync(`
+      ALTER TABLE products
+      ADD COLUMN sold_out_level INTEGER NOT NULL DEFAULT 0;
+
+      PRAGMA user_version = 11;
+    `);
+  }
 }
 
 /**
@@ -353,6 +386,12 @@ export function getDatabase(): Promise<SQLite.SQLiteDatabase> {
 
   return databasePromise;
 }
+
+/**
+ * ============================================================================
+ * DATABASE INITIALIZATION
+ * ============================================================================
+ */
 
 /**
  * Initialize the SQLite database and run

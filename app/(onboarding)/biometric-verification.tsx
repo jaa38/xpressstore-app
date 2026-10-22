@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Alert, Pressable, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 
 import { Link, router } from "expo-router";
 
@@ -11,9 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/ui/AppText";
-
 import { Button } from "@/components/ui/Button";
-
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
 import { radius, spacing, theme } from "@/theme";
@@ -34,26 +32,8 @@ import { saveBiometricEmail } from "@/services/biometrics/user";
 
 import { completeOnboarding } from "@/services/auth/storage";
 
-/**
- * ============================================================================
- * BIOMETRIC VERIFICATION SCREEN
- * ============================================================================
- */
-
 export default function BiometricVerificationScreen() {
-  /**
-   * ==========================================================================
-   * AUTH
-   * ==========================================================================
-   */
-
   const { user } = useAuth();
-
-  /**
-   * ==========================================================================
-   * STATE
-   * ==========================================================================
-   */
 
   const [loading, setLoading] = useState(false);
 
@@ -62,12 +42,6 @@ export default function BiometricVerificationScreen() {
   const [availability, setAvailability] =
     useState<BiometricAvailability | null>(null);
 
-  /**
-   * ==========================================================================
-   * BIOMETRIC LABEL
-   * ==========================================================================
-   */
-
   const biometricLabel =
     availability?.type === "face"
       ? "Face ID"
@@ -75,14 +49,10 @@ export default function BiometricVerificationScreen() {
         ? "Fingerprint"
         : availability?.type === "iris"
           ? "Iris Recognition"
-          : availability?.type === "biometric"
-            ? "Biometrics"
-            : "Biometrics";
+          : "Biometrics";
 
   /**
-   * ==========================================================================
    * LOAD BIOMETRIC AVAILABILITY
-   * ==========================================================================
    */
 
   useEffect(() => {
@@ -93,23 +63,18 @@ export default function BiometricVerificationScreen() {
     try {
       setIsCheckingBiometrics(true);
 
-      const biometricAvailability =
-        await getBiometricAvailability();
+      const biometricAvailability = await getBiometricAvailability();
 
       setAvailability(biometricAvailability);
     } catch (error) {
-      console.error(
-        "Unable to determine biometric availability:",
-        error
-      );
+      console.error("Unable to determine biometric availability:", error);
 
       setAvailability({
         available: false,
         hasHardware: false,
         isEnrolled: false,
         type: "none",
-        message:
-          "Unable to determine biometric availability on this device.",
+        message: "Unable to determine biometric availability on this device.",
       });
     } finally {
       setIsCheckingBiometrics(false);
@@ -117,9 +82,7 @@ export default function BiometricVerificationScreen() {
   }
 
   /**
-   * ==========================================================================
    * COMPLETE ONBOARDING
-   * ==========================================================================
    */
 
   async function completeUserOnboarding() {
@@ -129,21 +92,20 @@ export default function BiometricVerificationScreen() {
   }
 
   /**
-   * ==========================================================================
    * SKIP BIOMETRICS
-   * ==========================================================================
    */
 
   async function handleSkipBiometrics() {
+    if (loading) {
+      return;
+    }
+
     try {
       setLoading(true);
 
       await completeUserOnboarding();
     } catch (error) {
-      console.error(
-        "Unable to complete onboarding:",
-        error
-      );
+      console.error("Unable to complete onboarding:", error);
 
       Alert.alert(
         "Unable to Complete Onboarding",
@@ -155,27 +117,13 @@ export default function BiometricVerificationScreen() {
   }
 
   /**
-   * ==========================================================================
    * ENABLE BIOMETRICS
-   * ==========================================================================
    */
 
   async function handleEnableBiometrics() {
-    /**
-     * ------------------------------------------------------------------------
-     * PREVENT MULTIPLE REQUESTS
-     * ------------------------------------------------------------------------
-     */
-
     if (loading || isCheckingBiometrics) {
       return;
     }
-
-    /**
-     * ------------------------------------------------------------------------
-     * CHECK BIOMETRIC AVAILABILITY
-     * ------------------------------------------------------------------------
-     */
 
     if (!availability?.available) {
       Alert.alert(
@@ -191,9 +139,7 @@ export default function BiometricVerificationScreen() {
       setLoading(true);
 
       /**
-       * ----------------------------------------------------------------------
        * AUTHENTICATE
-       * ----------------------------------------------------------------------
        */
 
       const result = await authenticateWithBiometrics({
@@ -201,42 +147,25 @@ export default function BiometricVerificationScreen() {
       });
 
       /**
-       * ----------------------------------------------------------------------
-       * AUTHENTICATION UNSUCCESSFUL
-       * ----------------------------------------------------------------------
+       * HANDLE UNSUCCESSFUL AUTHENTICATION
        */
 
       if (!result.success) {
-        /**
-         * Cancelling the biometric prompt is an expected
-         * user action and should not display an error.
-         */
-
         if (!result.cancelled) {
-          Alert.alert(
-            "Biometric Authentication",
-            result.message
-          );
+          Alert.alert("Biometric Authentication", result.message);
         }
 
         return;
       }
 
       /**
-       * ----------------------------------------------------------------------
        * ENABLE BIOMETRICS
-       * ----------------------------------------------------------------------
        */
 
       await enableBiometrics();
 
       /**
-       * ----------------------------------------------------------------------
        * SAVE ACCOUNT EMAIL
-       * ----------------------------------------------------------------------
-       *
-       * The email is only used to identify the account
-       * associated with biometric sign-in.
        */
 
       if (user?.email) {
@@ -244,38 +173,27 @@ export default function BiometricVerificationScreen() {
       }
 
       /**
-       * ----------------------------------------------------------------------
        * COMPLETE ONBOARDING
-       * ----------------------------------------------------------------------
        */
 
       await completeUserOnboarding();
     } catch (error) {
-      console.error(
-        "Biometric authentication failed:",
-        error
-      );
+      console.error("Biometric authentication failed:", error);
 
-      Alert.alert(
-        "Error",
-        "Something went wrong. Please try again."
-      );
+      Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
   /**
-   * ==========================================================================
    * SCREEN
-   * ==========================================================================
    */
 
   return (
     <SafeAreaView
       style={{
         flex: 1,
-
         backgroundColor: theme.background.primary,
       }}
     >
@@ -284,22 +202,16 @@ export default function BiometricVerificationScreen() {
       <View
         style={{
           flex: 1,
-
           paddingHorizontal: spacing.lg,
         }}
       >
-        {/* ================================================================
-            HEADER
-        ================================================================ */}
+        {/* HEADER */}
 
         <View
           style={{
             flexDirection: "row",
-
             alignItems: "center",
-
             gap: spacing.sm,
-
             justifyContent: "space-between",
           }}
         >
@@ -323,15 +235,10 @@ export default function BiometricVerificationScreen() {
           <View
             style={{
               flex: 1,
-
               height: 8,
-
               backgroundColor: theme.divider.default,
-
               borderRadius: 999,
-
               overflow: "hidden",
-
               marginHorizontal: spacing.sm,
             }}
           >
@@ -343,222 +250,249 @@ export default function BiometricVerificationScreen() {
           </AppText>
         </View>
 
-        {/* ================================================================
-            CONTENT
-        ================================================================ */}
+        {/* TITLE AND DESCRIPTION */}
 
         <View
           style={{
-            flex: 1,
-
-            justifyContent: "space-between",
+            gap: spacing.xs,
+            paddingTop: spacing.lg,
           }}
         >
-          {/* ============================================================
-              MAIN CONTENT
-          ============================================================ */}
+          <AppText variant="h1" color="heading">
+            Secure your account
+          </AppText>
 
-          <View>
-            {/* ICON */}
+          <AppText variant="body" color="secondary">
+            Set up biometric authentication for faster sign-in and an additional
+            layer of security.
+          </AppText>
+        </View>
 
-            <Ionicons
-              name="scan-circle-outline"
-              size={156}
-              color={theme.icon.branding.icon}
+        {/* SCROLLABLE CONTENT */}
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            paddingTop: spacing.lg,
+            paddingBottom: spacing.lg,
+            gap: spacing.md,
+          }}
+          style={{
+            flex: 1,
+          }}
+        >
+          {/* BIOMETRIC ICON */}
+
+          <View
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: spacing.lg,
+            }}
+          >
+            <View
               style={{
-                marginTop: spacing.xl,
-
-                alignSelf: "center",
+                width: 112,
+                height: 112,
+                borderRadius: 56,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: theme.background.surface,
+                borderWidth: 1,
+                borderColor: theme.border.default,
               }}
-            />
+            >
+              <Ionicons
+                name="scan-circle-outline"
+                size={76}
+                color={theme.icon.branding.icon}
+              />
+            </View>
+          </View>
 
-            {/* TITLE */}
+          {/* BIOMETRIC INTRODUCTION */}
+
+          <View
+            style={{
+              gap: spacing.xs,
+            }}
+          >
+            <AppText
+              variant="h1"
+              color="heading"
+              style={{
+                textAlign: "center",
+              }}
+            >
+              {availability?.available
+                ? `Enable ${biometricLabel}`
+                : "Protect your account"}
+            </AppText>
+
+            <AppText
+              variant="body"
+              color="secondary"
+              style={{
+                textAlign: "center",
+              }}
+            >
+              Use your device's built-in biometrics to access your account
+              conveniently. Your biometric data stays on your device.
+            </AppText>
+          </View>
+
+          {/* BIOMETRIC AVAILABILITY NOTICE */}
+
+          {!isCheckingBiometrics && !availability?.available && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: spacing.sm,
+                padding: spacing.md,
+                borderRadius: radius.lg,
+                backgroundColor: theme.background.surface,
+                borderWidth: 1,
+                borderColor: theme.border.default,
+              }}
+            >
+              <Ionicons
+                name="information-circle-outline"
+                size={22}
+                color={theme.icon.default.icon}
+              />
+
+              <View
+                style={{
+                  flex: 1,
+                  gap: spacing.xs,
+                }}
+              >
+                <AppText variant="bodyBold">Biometrics unavailable</AppText>
+
+                <AppText variant="bodySmall" color="muted">
+                  {availability?.message ??
+                    "Biometric authentication is not available on this device. You can continue and configure it later in Settings."}
+                </AppText>
+              </View>
+            </View>
+          )}
+
+          {/* BENEFITS CARD */}
+
+          <View
+            style={{
+              padding: spacing.md,
+              borderRadius: radius.lg,
+              backgroundColor: theme.background.surface,
+              borderWidth: 1,
+              borderColor: theme.border.default,
+              gap: spacing.md,
+            }}
+          >
+            <AppText variant="bodyBold" color="heading">
+              Why enable biometrics?
+            </AppText>
+
+            {/* FAST SIGN-IN */}
 
             <View
               style={{
-                marginTop: spacing.lg,
-
-                gap: spacing.xs,
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: spacing.sm,
               }}
             >
-              <AppText
-                variant="displayLarge"
-                color="heading"
-                style={{
-                  textAlign: "center",
-                }}
-              >
-                Secure your account with biometrics
-              </AppText>
+              <Ionicons
+                name="checkmark-circle"
+                size={20}
+                color={theme.icon.success.icon}
+              />
 
-              <AppText
-                variant="bodyLarge"
-                color="secondary"
+              <View
                 style={{
-                  textAlign: "center",
+                  flex: 1,
+                  gap: spacing.xs,
                 }}
               >
-                Use biometrics to quickly and securely access your account and
-                confirm payments.
-              </AppText>
+                <AppText variant="body">Faster sign-in</AppText>
+
+                <AppText variant="bodySmall" color="muted">
+                  Access your account without repeatedly entering your
+                  credentials.
+                </AppText>
+              </View>
             </View>
 
-            {/* ============================================================
-                BIOMETRIC AVAILABILITY NOTICE
-            ============================================================ */}
-
-            {!isCheckingBiometrics && !availability?.available ? (
-              <View
-                style={{
-                  marginTop: spacing.md,
-
-                  paddingVertical: spacing.md,
-
-                  paddingHorizontal: spacing.md,
-
-                  borderRadius: radius.lg,
-
-                  backgroundColor: theme.background.surface,
-
-                  borderWidth: 1,
-
-                  borderColor: theme.border.default,
-
-                  flexDirection: "row",
-
-                  alignItems: "flex-start",
-
-                  gap: spacing.sm,
-                }}
-              >
-                <Ionicons
-                  name="information-circle-outline"
-                  size={22}
-                  color={theme.icon.default.icon}
-                />
-
-                <View
-                  style={{
-                    flex: 1,
-
-                    gap: spacing.xs,
-                  }}
-                >
-                  <AppText variant="bodyBold">
-                    Biometrics unavailable
-                  </AppText>
-
-                  <AppText
-                    variant="bodySmall"
-                    color="muted"
-                  >
-                    {availability?.message ??
-                      "Biometric authentication is not available on this device. You can continue and enable it later from Settings."}
-                  </AppText>
-                </View>
-              </View>
-            ) : null}
-
-            {/* ============================================================
-                INFO CARD
-            ============================================================ */}
+            {/* ADDITIONAL SECURITY */}
 
             <View
               style={{
-                marginTop: spacing.md,
-
-                paddingVertical: spacing.lg,
-
-                paddingHorizontal: spacing.md,
-
-                borderRadius: radius.lg,
-
-                backgroundColor: theme.background.surface,
-
-                borderWidth: 1,
-
-                borderColor: theme.border.default,
-
-                gap: spacing.md,
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: spacing.sm,
               }}
             >
-              {/* FAST SIGN-IN */}
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={20}
+                color={theme.icon.success.icon}
+              />
 
               <View
                 style={{
-                  flexDirection: "row",
-
-                  gap: spacing.sm,
-
-                  alignItems: "center",
+                  flex: 1,
+                  gap: spacing.xs,
                 }}
               >
-                <Ionicons
-                  name="checkmark-circle"
-                  size={20}
-                  color={theme.icon.success.icon}
-                />
-
                 <AppText variant="body">
-                  Fast sign-in with biometrics
+                  An additional layer of security
+                </AppText>
+
+                <AppText variant="bodySmall" color="muted">
+                  Use your device's biometric authentication to unlock locally
+                  stored credentials.
                 </AppText>
               </View>
+            </View>
 
-              {/* PAYOUT CONFIRMATION */}
+            {/* SETTINGS */}
 
-              <View
-                style={{
-                  flexDirection: "row",
-
-                  gap: spacing.sm,
-
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons
-                  name="checkmark-circle"
-                  size={20}
-                  color={theme.icon.success.icon}
-                />
-
-                <AppText variant="body">
-                  Confirm payouts and large transactions
-                </AppText>
-              </View>
-
-              {/* SETTINGS */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: spacing.sm,
+              }}
+            >
+              <Ionicons
+                name="settings-outline"
+                size={20}
+                color={theme.icon.success.icon}
+              />
 
               <View
                 style={{
-                  flexDirection: "row",
-
-                  gap: spacing.sm,
-
-                  alignItems: "center",
+                  flex: 1,
+                  gap: spacing.xs,
                 }}
               >
-                <Ionicons
-                  name="checkmark-circle"
-                  size={20}
-                  color={theme.icon.success.icon}
-                />
+                <AppText variant="body">You're in control</AppText>
 
-                <AppText variant="body">
-                  You can change this anytime in Settings
+                <AppText variant="bodySmall" color="muted">
+                  Manage biometric sign-in later in Settings.
                 </AppText>
               </View>
             </View>
           </View>
 
-          {/* ============================================================
-              FOOTER
-          ============================================================ */}
+          {/* ACTION BUTTONS */}
 
           <View
             style={{
-              paddingBottom: spacing.lg,
-
-              gap: spacing.md,
+              paddingTop: spacing.sm,
+              gap: spacing.sm,
             }}
           >
             {/* ENABLE BIOMETRICS */}
@@ -585,14 +519,11 @@ export default function BiometricVerificationScreen() {
               title="Skip for now"
               variant="tertiary"
               size="large"
-              disabled={loading || isCheckingBiometrics}
+              disabled={loading}
               onPress={handleSkipBiometrics}
-              style={{
-                marginTop: spacing.sm,
-              }}
             />
           </View>
-        </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
